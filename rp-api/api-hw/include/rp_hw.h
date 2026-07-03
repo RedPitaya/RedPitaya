@@ -67,7 +67,34 @@ extern "C" {
 #define RP_HW_ESIIC 63
 /** Failed I2C. Buffer is NULL */
 #define RP_HW_EBIIC 64
-
+/** I2C device not initialized */
+#define RP_HW_EINIIC 65
+/** I2C device address out of range */
+#define RP_HW_EAORIIC 66
+/** I2C device path too long */
+#define RP_HW_EPTLIIC 67
+/** I2C mutex lock failed */
+#define RP_HW_EMLKIIC 68
+/** I2C mutex unlock failed */
+#define RP_HW_EMUKIIC 69
+/** I2C invalid buffer length */
+#define RP_HW_EIBLIIC 70
+/** I2C timeout occurred */
+#define RP_HW_ETOIIC 71
+/** I2C NACK received */
+#define RP_HW_ENACKIIC 72
+/** I2C bus busy */
+#define RP_HW_EBUSYIIC 73
+/** I2C arbitration lost */
+#define RP_HW_EARBIIC 74
+/** I2C invalid register address */
+#define RP_HW_EIRGIIC 75
+/** I2C device not responding */
+#define RP_HW_ENRSPIIC 76
+/** I2C invalid speed */
+#define RP_HW_EISPIIC 77
+/** I2C invalid slave address */
+#define RP_HW_EISAIIC 78
 ///@}
 
 /**
@@ -193,7 +220,7 @@ int rp_UartGetTimeout(uint8_t* _out_value);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartRead(unsigned char* buffer, int* _in_out_size);
+int rp_UartRead(uint8_t* buffer, int* _in_out_size);
 
 /**
 * Writes data to UART
@@ -202,7 +229,7 @@ int rp_UartRead(unsigned char* buffer, int* _in_out_size);
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
 */
-int rp_UartWrite(unsigned char* buffer, int size);
+int rp_UartWrite(uint8_t* buffer, int size);
 
 /**
 * Set speed for the UART.
@@ -408,20 +435,20 @@ int rp_SPI_GetCSChangeState(size_t msg, bool* _out_value);
  * Sets the data for the message.
  * @param msg Index of msg. Must be less than message length
  * @param tx_buffer Buffer to send a message. If nothing is sent within this message, then the buffer should be NULL
- * @param init_rx_buffer Initializes a buffer for reading the specified length in the len parameter
  * @param len The length of the buffer for reading and writing, if a buffer for writing is specified, then the buffer for reading will be initialized with the same length.
+ * @param init_rx_buffer Initializes a buffer for reading the specified length in the len parameter
  * @param cs_change Sets the ability to reset the chip selection between messages. Default value should be false
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_SetBufferForMessage(size_t msg, const uint8_t* tx_buffer, bool init_rx_buffer, size_t len, bool cs_change);
+int rp_SPI_SetBufferForMessage(size_t msg, const uint8_t* tx_buffer, size_t len, bool init_rx_buffer, bool cs_change);
 
 /**
  * Deletes messages from the internal buffer
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
  */
-int rp_SPI_DestoryMessage();
+int rp_SPI_DestroyMessage();
 
 /**
 * Get mode of the SPI.

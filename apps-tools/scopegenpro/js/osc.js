@@ -1,6 +1,17 @@
 (function(OSC, $, undefined) {
 
-
+    OSC.set16BitMode = function(new_params) {
+        let val = new_params['16_BIT_MODE'].value
+        var elem = $('#16bit_mode');
+        if (elem != undefined) {
+            if (val == true){
+                elem.html('&check; ADC 16Bit');
+            }
+            else{
+                elem.html('ADC 16Bit');
+            }
+        }
+    }
 
     OSC.chShow = function(ch,new_params) {
         var param_name = ch+"_SHOW";
@@ -95,9 +106,10 @@
         if (!OSC.state.trig_dragging)
             OSC.updateTriggerDragHandle()
         OSC.setXYAxisScale()
-        OSC.updateTitileXAxisTicksXY()
-        OSC.updateTitileYAxisTicksXY()
-        OSC.updateTitileYAxisTicks()
+        OSC.updateTitleXAxisTicksXY()
+        OSC.updateTitleYAxisTicksXY()
+        OSC.updateTitleYAxisTicks()
+        OSC.clearTraceBuffers(ch)
     }
 
 
@@ -191,6 +203,7 @@
     OSC.setTimeScaleOffset = function(param_name){
 
         if (param_name === 'OSC_TIME_SCALE'){
+            if (OSC.params.orig['OSC_TIME_SCALE'] == undefined) return;
             var scale = OSC.params.orig['OSC_TIME_SCALE'].value;
             var field = $('#' + param_name);
             if (field.is('span')) {
@@ -199,6 +212,7 @@
         }
 
         if (param_name === 'OSC_TIME_OFFSET'){
+            if (OSC.params.orig['OSC_TIME_OFFSET'] == undefined) return;
             var scale = OSC.params.orig['OSC_TIME_OFFSET'].value;
             var field = $('#' + param_name);
             if (field.is('span')) {
@@ -207,34 +221,23 @@
         }
 
         if (param_name == 'OSC_TIME_OFFSET' || param_name == 'OSC_TIME_SCALE') {
+
             if (param_name == 'OSC_TIME_OFFSET')
                 OSC.time_offset = OSC.params.orig[param_name].value;
             else
                 OSC.time_scale = OSC.params.orig[param_name].value;
-            $('#time_offset_additional_label').val(parseFloat(OSC.time_offset));
-            $('#trig_out_right').remove();
-            $('#trig_out_left').remove();
 
-            if (OSC.time_offset > OSC.time_scale * 5) {
-                if ($('#trig_out_left').length == 0)
-                    $('.plot').append('<div id="trig_out_left" style="margin-top: 15px; float: left;"><img src="img/trig_out_left.png" /></div>');
-                $('#trig_out_right').remove();
-            } else if (OSC.time_offset < OSC.time_scale * -5) {
-                if ($('#trig_out_right').length == 0)
-                    $('.plot').append('<div id="trig_out_right" style="margin-top: 15px; float: right;"><img src="img/trig_out_right.png" /></div>');
-                $('#trig_out_left').remove();
-            } else {
-                $('#trig_out_right').remove();
-                $('#trig_out_left').remove();
-            }
+            $('#time_offset_additional_label').val(parseFloat(OSC.time_offset));
         }
+
 
         OSC.cursorX()
     }
 
     OSC.setTimeScale = function(new_params){
         OSC.setTimeScaleOffset("OSC_TIME_SCALE")
-        OSC.updateTitileXAxisTicks()
+        OSC.updateTitleXAxisTicks()
+        OSC.clearTraceBuffers()
     }
 
     OSC.trigSlope = function(new_params) {
@@ -444,10 +447,10 @@
             tick.innerText = i;
             graphs.appendChild(tick)
         }
-        OSC.moveTitileXAxisTicks()
+        OSC.moveTitleXAxisTicks()
     }
 
-    OSC.updateTitileXAxisTicks = function(){
+    OSC.updateTitleXAxisTicks = function(){
         var scale = 0
         if (OSC.params.orig['OSC_TIME_SCALE']){
             scale = OSC.params.orig['OSC_TIME_SCALE'].value * -1
@@ -456,10 +459,10 @@
             var v = OSC.convertTime(i * scale)
             $("#xaxis_tick" + (i + 5)).html(v)
         }
-        OSC.moveTitileXAxisTicks()
+        OSC.moveTitleXAxisTicks()
     }
 
-    OSC.moveTitileXAxisTicks = function(){
+    OSC.moveTitleXAxisTicks = function(){
         var gh = $('#graphs_holder').height()
         var gw = $('#graphs_holder').width()
         for(var i = -5; i <= 5; i++){
@@ -479,26 +482,46 @@
             tick.innerText = i
             graphs.appendChild(tick)
         }
-        OSC.updateTitileYAxisTicks()
+        OSC.updateTitleYAxisTicks()
     }
 
-    OSC.updateTitileYAxisTicks = function(){
+    OSC.updateTitleYAxisTicks = function(){
         var itm = OSC.getSettingsActiveChannel()
         if (itm.channel !== ''){
             var color = OSC.config.graph_colors[itm.channel.toLowerCase()]
+            var offset = itm.offset || 0;
+            var scale = Math.abs(itm.scale) || 1;
+
             for(var i = -5; i <= 5; i++){
-                var v = OSC.convertVoltageForAxis(i * -itm.scale) + itm.suffix
+                var value = i * scale + offset;
+                var v = OSC.convertVoltageForAxisWithScale(-value,itm.scale) + itm.suffix
                 $("#yaxis_tick" + (i + 5)).html(v).css('color', color);
             }
-        }else{
+        } else {
             for(var i = -5; i <= 5; i++){
                 $("#yaxis_tick" + (i + 5)).html('')
             }
         }
-        OSC.moveTitileYAxisTicks()
+        OSC.moveTitleYAxisTicks()
+        OSC.updateDraggableGrid()
     }
 
-    OSC.moveTitileYAxisTicks = function(){
+    OSC.clearTraceBuffers = function(channel) {
+        if (channel) {
+            if (OSC.taMode[channel]) {
+                OSC.taMode[channel].clearBuffers();
+            }
+        } else {
+            for (var i = 1; i <= 4; i++) {
+                var ch = 'CH' + i;
+                if (OSC.taMode[ch]) {
+                    OSC.taMode[ch].clearBuffers();
+                }
+            }
+        }
+    };
+
+    OSC.moveTitleYAxisTicks = function(){
         var gh = $('#graphs').height() - 8
         for(var i = -5; i <= 5; i++){
             var ws = $("#yaxis_tick" + (i + 5)).height() / 2

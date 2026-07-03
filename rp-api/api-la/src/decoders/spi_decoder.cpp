@@ -80,7 +80,16 @@ void SPIDecoder::setParameters(const SPIParameters& _new_params) {
 auto SPIDecoder::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
     auto opt = m_impl_miso->m_options;
     if (opt.setDecoderSettingsUInt(key, value)) {
-        setParameters(opt);
+        setParameters(opt);  // Set miso and mosi
+        return true;
+    }
+    return false;
+}
+
+auto SPIDecoder::setDecoderSettingsString(std::string& key, std::string& value) -> bool {
+    auto opt = m_impl_miso->m_options;
+    if (opt.setDecoderSettingsString(key, value)) {
+        setParameters(opt);  // Set miso and mosi
         return true;
     }
     return false;
@@ -88,6 +97,10 @@ auto SPIDecoder::setDecoderSettingsUInt(std::string& key, uint32_t value) -> boo
 
 auto SPIDecoder::getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool {
     return m_impl_miso->m_options.getDecoderSettingsUInt(key, value);
+}
+
+auto SPIDecoder::getDecoderSettingsString(std::string& key, std::string* value) -> bool {
+    return m_impl_miso->m_options.getDecoderSettingsString(key, value);
 }
 
 auto SPIDecoder::getParametersInJSON() -> std::string {

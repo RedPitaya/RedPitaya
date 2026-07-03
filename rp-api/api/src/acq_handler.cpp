@@ -58,6 +58,7 @@ float ch_hyst[4] = {0.005, 0.005, 0.005, 0.005};
 float ch_trash[4] = {0.005, 0.005, 0.005, 0.005};
 float ch_offset_input[4] = {0, 0, 0, 0};
 float ch_offset_input_axi[4] = {0, 0, 0, 0};
+static bool g_split_mode = false;
 
 /*----------------------------------------------------------------------------*/
 /**
@@ -200,10 +201,12 @@ static int setCalibInFPGA(rp_channel_t channel) {
         return RP_EOOR;
     }
 
+    bool is16BitMode = false;
+    acq_Get16BitMode(&is16BitMode);  // Ignore return result
+
     if (is_fpga && calib_id >= RP_HW_PACK_ID_V6) {
         rp_pinState_t mode;
         rp_acq_ac_dc_mode_t power_mode;
-        uint8_t bits = 0;
         double gain = 1;
         int32_t offset = 0;
 
@@ -214,7 +217,7 @@ static int setCalibInFPGA(rp_channel_t channel) {
             return RP_EOOR;
         }
 
-        int ret = rp_HPGetFastADCBits(&bits);
+        int ret = 0;
 
         switch (mode) {
             case RP_LOW:
@@ -235,8 +238,9 @@ static int setCalibInFPGA(rp_channel_t channel) {
             ERROR_LOG("Get calibaration: %d", ret);
             return RP_EOOR;
         }
+
         ret |= osc_SetCalibGainInFPGA(channel, gain);
-        ret |= osc_SetCalibOffsetInFPGA(channel, bits, offset);
+        ret |= osc_SetCalibOffsetInFPGA(channel, offset);
         if (ret == RP_OK) {
             ret |= setState(true);
         } else {
@@ -254,6 +258,7 @@ static int setCalibInFPGA(rp_channel_t channel) {
 /*----------------------------------------------------------------------------*/
 
 int acq_SetSplitTriggerMode(bool enable) {
+    g_split_mode = enable;
     return osc_SetSplitTriggerMode(enable);
 }
 
@@ -277,6 +282,22 @@ int acq_SetArmKeep(rp_channel_t channel, bool enable) {
 
 int acq_GetArmKeep(rp_channel_t channel, bool* state) {
     return osc_GetArmKeep(channel, state);
+}
+
+int acq_Set16BitMode(bool enable) {
+    uint8_t channels = 0;
+    if (rp_HPGetFastADCChannelsCount(&channels) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast ADC channels count");
+        return RP_NOTS;
+    }
+    for (int i = 0; i < channels; i++) {
+        ECHECK(osc_Set16BitMode((rp_channel_t)i, enable))
+    }
+    return RP_OK;
+}
+
+int acq_Get16BitMode(bool* state) {
+    return osc_Get16BitMode(RP_CH_1, state);
 }
 
 int acq_GetBufferFillState(rp_channel_t channel, bool* state) {
@@ -878,12 +899,17 @@ int acq_Stop(rp_channel_t channel) {
 }
 
 int acq_Reset(rp_channel_t channel) {
-    acq_SetSplitTriggerMode(false);
+    // acq_SetSplitTriggerMode(false); // ??
     acq_SetDefault(channel);
     return osc_ResetWriteStateMachine(channel);
 }
 
 int acq_SetUnlockTrigger(rp_channel_t channel) {
+    if (!g_split_mode) {
+        acq_IntClearAll();
+    } else {
+        acq_IntClearAllCh(channel);
+    }
     return osc_SetUnlockTrigger(channel);
 }
 
@@ -937,6 +963,28 @@ static uint32_t getSizeFromStartEndPos(uint32_t start_pos, uint32_t end_pos) {
     return end_pos - start_pos + 1;
 }
 
+int acq_SetInitTimestamp(uint64_t value) {
+    return osc_SetInitTimestamp(value);
+}
+
+int acq_GetTimestamp(rp_channel_t channel, uint64_t* value) {
+
+    CHECK_CHANNEL
+
+    if (value == nullptr) {
+        return RP_EIPV;
+    }
+    static double ts = cmn_GetSampleTimeNS();
+
+    auto ret = osc_GetTimestamp(channel, value);
+    if (ret == RP_OK) {
+        *value = ((double)*value) * ts;
+    } else {
+        *value = 0;
+    }
+    return ret;
+}
+
 uint32_t acq_GetNormalizedDataPos(uint32_t pos) {
     return (pos % ADC_BUFFER_SIZE);
 }
@@ -964,6 +1012,10 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
         return RP_EOOR;
     }
 
+    bool is16BitEnable = false;
+    acq_Get16BitMode(&is16BitEnable);
+    uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
+
     uint_gain_calib_t calib;
     uint8_t bits = 0;
     bool is_sign = false;
@@ -985,6 +1037,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
                 return RP_EOOR;
                 break;
         }
+        calib.offset = calib.offset << bitOffset;
     } else {
         calib.base = 1;
         calib.gain = 1;
@@ -999,7 +1052,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
                 return RP_EOOR;
             };
 
-            if (osc_GetCalibOffsetInFPGA(channel, bits, &fpga_offset) != RP_OK) {
+            if (osc_GetCalibOffsetInFPGA(channel, &fpga_offset) != RP_OK) {
                 ERROR_LOG("Get calibaration: %d", ret);
                 return RP_EOOR;
             }
@@ -1019,7 +1072,7 @@ int acq_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16_t* 
     uint32_t gain = use_calib ? calib.gain : 1;
     uint32_t g_base = use_calib ? calib.base : 1;
     int32_t offset = use_calib ? calib.offset : 0;
-
+    bits = is16BitEnable ? 16 : bits;
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
     for (uint32_t i = 0; i < (*size); ++i) {
@@ -1071,6 +1124,10 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
         return RP_EOOR;
     }
 
+    bool is16BitEnable = false;
+    acq_Get16BitMode(&is16BitEnable);
+    uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
+
     bool is_need_raw = out->ch_i[channel] != NULL;
     bool is_need_vold_f = out->ch_f[channel] != NULL;
     bool is_need_vold_d = out->ch_d[channel] != NULL;
@@ -1097,6 +1154,7 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
                 return RP_EOOR;
                 break;
         }
+        calib.offset = calib.offset << bitOffset;
     } else {
         calib.base = 1;
         calib.gain = 1;
@@ -1111,7 +1169,7 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
                 return RP_EOOR;
             };
 
-            if (osc_GetCalibOffsetInFPGA(channel, bits, &fpga_offset) != RP_OK) {
+            if (osc_GetCalibOffsetInFPGA(channel, &fpga_offset) != RP_OK) {
                 ERROR_LOG("Get calibaration: %d", ret);
                 return RP_EOOR;
             }
@@ -1136,6 +1194,7 @@ int acq_GetDataInBuffer(rp_channel_t channel, uint32_t pos, uint32_t* size, int3
     uint32_t g_base_volt = out->use_calib_for_volts ? calib.base : 1;
     int32_t offset_volt = out->use_calib_for_volts ? calib.offset : 0;
 
+    bits = is16BitEnable ? 16 : bits;
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
     int16_t* iPtr = out->ch_i[channel];
@@ -1300,6 +1359,18 @@ int acq_GetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) 
     return acq_GetDataRaw(channel, pos, size, buffer, false);
 }
 
+int acq_GetOldestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+
+    CHECK_CHANNEL
+
+    uint32_t pos;
+
+    acq_GetWritePointer(channel, &pos);
+    pos++;
+
+    return acq_GetDataRaw(channel, pos, size, buffer, true);
+}
+
 int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
 
     CHECK_CHANNEL
@@ -1317,6 +1388,24 @@ int acq_GetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer) 
     pos -= (*size);
 
     return acq_GetDataRaw(channel, pos, size, buffer, false);
+}
+
+int acq_GetLatestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer) {
+    CHECK_CHANNEL
+
+    *size = MIN(*size, ADC_BUFFER_SIZE);
+
+    uint32_t pos;
+    acq_GetWritePointer(channel, &pos);
+
+    pos++;
+
+    if ((*size) > pos) {
+        pos += ADC_BUFFER_SIZE;
+    }
+    pos -= (*size);
+
+    return acq_GetDataRaw(channel, pos, size, buffer, true);
 }
 
 int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_buffer, bool is_float) {
@@ -1353,6 +1442,10 @@ int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_
         return RP_EOOR;
     }
 
+    bool is16BitEnable = false;
+    acq_Get16BitMode(&is16BitEnable);
+    uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
+
     uint8_t bits = 0;
     uint_gain_calib_t calib;
     bool is_sign = true;
@@ -1375,6 +1468,7 @@ int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_
                 return RP_EOOR;
                 break;
         }
+        calib.offset = calib.offset << bitOffset;
     } else {
         calib.base = 1;
         calib.gain = 1;
@@ -1389,6 +1483,8 @@ int acq_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void* in_
     float* buffer_f = is_float ? (float*)in_buffer : NULL;
     double* buffer_d = !is_float ? (double*)in_buffer : NULL;
     uint32_t cnts;
+
+    bits = is16BitEnable ? 16 : bits;
 
     uint32_t mask = ((uint64_t)1 << bits) - 1;
     for (uint32_t i = 0; i < (*size); ++i) {
@@ -1459,6 +1555,8 @@ int acq_SetDefaultAll() {
         ERROR_LOG("Can't get fast ADC channels count");
         return RP_NOTS;
     }
+    acq_Set16BitMode(false);
+    acq_SetSplitTriggerMode(false);
     for (int i = 0; i < channels; i++) {
         ECHECK(acq_SetDefault((rp_channel_t)i))
     }
@@ -1479,14 +1577,12 @@ int acq_SetDefault(rp_channel_t channel) {
 
     acq_SetDecimation(channel, RP_DEC_1);
     acq_SetTriggerDelay(channel, 0);
-    acq_SetTriggerDelayNs(channel, 0);
     acq_SetChannelThreshold(channel, 0.0);
     acq_SetChannelThresholdHyst(channel, 0.005);
     acq_SetGain(channel, RP_LOW);
     acq_axi_Enable(channel, false);
     acq_axi_SetBufferBytes(channel, start, 0);
-    acq_axi_SetTriggerDelay(channel, 0);
-    acq_axi_SetTriggerDelayNs(channel, 0);
+    acq_axi_SetTriggerDelay(channel, 1);
 
     if (rp_HPGetFastADCIsAC_DCOrDefault()) {
         acq_SetAC_DC(channel, RP_DC);
@@ -1659,6 +1755,80 @@ int acq_GetOffset(rp_channel_t channel, float* voltage) {
             return RP_EIPV;
     }
     return RP_OK;
+}
+
+int acq_SetIntMask(rp_int_mode_t mask, bool enable) {
+    return osc_SetIntMask(mask, enable);
+}
+
+int acq_GetIntMask(rp_int_mode_t mask, bool* enable) {
+    return osc_GetIntMask(mask, enable);
+}
+
+int acq_SetIntMaskCh(rp_channel_t channel, rp_int_mode_t mask, bool enable) {
+    CHECK_CHANNEL
+    return osc_SetIntMaskCh(channel, mask, enable);
+}
+
+int acq_GetIntMaskCh(rp_channel_t channel, rp_int_mode_t mask, bool* enable) {
+    CHECK_CHANNEL
+    return osc_GetIntMaskCh(channel, mask, enable);
+}
+
+int acq_IntUnmask() {
+    osc_ClearInt();
+    return osc_IntUnmask();
+}
+
+int acq_IntUnmaskCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    osc_ClearInt(channel);
+    return osc_IntUnmaskCh(channel);
+}
+
+int acq_IntTriggerRead(uint64_t timeout) {
+    return osc_IntTriggerRead(timeout);
+}
+
+int acq_IntFullRead(uint64_t timeout) {
+    return osc_IntFullRead(timeout);
+}
+
+int acq_IntTriggerReadCh(rp_channel_t channel, uint64_t timeout) {
+    CHECK_CHANNEL
+    return osc_IntTriggerReadCh(channel, timeout);
+}
+
+int acq_IntFullReadCh(rp_channel_t channel, uint64_t timeout) {
+    CHECK_CHANNEL
+    return osc_IntFullReadCh(channel, timeout);
+}
+
+int acq_IntClearTrigger() {
+    return osc_IntClearTrigger();
+}
+
+int acq_IntClearBufferFull() {
+    return osc_IntClearBufferFull();
+}
+
+int acq_IntClearAll() {
+    return osc_IntClearAll();
+}
+
+int acq_IntClearTriggerCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    return osc_IntClearTriggerCh(channel);
+}
+
+int acq_IntClearBufferFullCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    return osc_IntClearBufferFullCh(channel);
+}
+
+int acq_IntClearAllCh(rp_channel_t channel) {
+    CHECK_CHANNEL
+    return osc_IntClearAllCh(channel);
 }
 
 int acq_axi_SetOffset(rp_channel_t channel, float voltage) {
@@ -1933,6 +2103,9 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
     //     return RP_EOOR;
     // }
 
+    bool is16BitEnable = false;
+    acq_Get16BitMode(&is16BitEnable);
+
     uint8_t bits = 0;
     bool is_sign = false;
     int ret = rp_HPGetFastADCBits(&bits);
@@ -1942,6 +2115,8 @@ int acq_axi_GetDataRaw(rp_channel_t channel, uint32_t pos, uint32_t* size, int16
         ERROR_LOG("Get calibaration: %d", ret);
         return RP_EOOR;
     }
+
+    bits = is16BitEnable ? 16 : bits;
 
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
@@ -2052,6 +2227,10 @@ int acq_axi_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void*
         return RP_EOOR;
     }
 
+    bool is16BitEnable = false;
+    acq_Get16BitMode(&is16BitEnable);
+    uint32_t bitOffset = is16BitEnable ? cmn_CalculateBitShiftFor16BitMode() : 0;
+
     uint8_t bits = 0;
     uint_gain_calib_t calib;
     bool is_sign = true;
@@ -2074,6 +2253,7 @@ int acq_axi_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void*
                 return RP_EOOR;
                 break;
         }
+        calib.offset = calib.offset << bitOffset;
     } else {
         calib.base = 1;
         calib.gain = 1;
@@ -2088,6 +2268,9 @@ int acq_axi_GetDataVEx(rp_channel_t channel, uint32_t pos, uint32_t* size, void*
     float* buffer_f = is_float ? (float*)in_buffer : NULL;
     double* buffer_d = !is_float ? (double*)in_buffer : NULL;
     uint32_t cnts;
+
+    bits = is16BitEnable ? 16 : bits;
+
     uint32_t mask = ((uint64_t)1 << bits) - 1;
 
     for (uint32_t i = 0; i < (*size); ++i) {

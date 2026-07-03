@@ -1,10 +1,16 @@
 #!/bin/bash
 
 
-FILENAME=/opt/redpitaya/dts/$(monitor -f)/dtraw.dts
-FILEDEST=/opt/redpitaya/dts/$(monitor -f)/devicetree.dtb
-SEARCH_STRING="buffer@1000000 {"
-REPLACE_STRING="reg = <0x1000000 "$1">;"
+DTS_VERSION=$(monitor -d)
+if [ -z "$DTS_VERSION" ] || [ "$DTS_VERSION" = "undefined" ]; then
+    echo "ERROR: Failed to get DTS version"
+    exit 1
+fi
+FILENAME=/opt/redpitaya/dts/${DTS_VERSION}/dtraw.dts
+FILEDEST=/opt/redpitaya/dts/${DTS_VERSION}/devicetree.dtb
+
+SEARCH_STRING="buffer@2000000_b {"
+REPLACE_STRING="reg = <0x2000000 "$1">;"
 
 LINE_NUMBER=$(grep -n "$SEARCH_STRING" "$FILENAME" | cut -d: -f1)
 

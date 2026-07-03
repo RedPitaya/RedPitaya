@@ -9,14 +9,21 @@
 
 using namespace streaming_lib;
 
-auto CStreamingNet::create(std::string& _host, uint16_t _port) -> CStreamingNet::Ptr {
-    return std::make_shared<CStreamingNet>(_host, _port);
+auto CStreamingNet::create(std::string &_host, uint16_t _port) -> CStreamingNet::Ptr
+{
+	return std::make_shared<CStreamingNet>(_host, _port);
 }
 
-CStreamingNet::CStreamingNet(std::string& _host, uint16_t _port)
-    : m_host(_host), m_port(_port), m_asionet(nullptr), m_index_of_message(0), m_thread(), m_mtx() {
-    getBuffer = nullptr;
-    unlockBufferF = nullptr;
+CStreamingNet::CStreamingNet(std::string &_host, uint16_t _port)
+	: m_host(_host)
+	, m_port(_port)
+	, m_asionet(nullptr)
+	, m_index_of_message(0)
+	, m_thread()
+	, m_mtx()
+{
+	getBuffer = nullptr;
+	unlockBufferF = nullptr;
 }
 
 CStreamingNet::~CStreamingNet() {

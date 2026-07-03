@@ -20,32 +20,35 @@ int gen_Enable(rp_channel_t chanel);
 int gen_EnableSync(bool enable);
 int gen_IsEnable(rp_channel_t channel, bool* value);
 int gen_setAmplitudeAndOffsetOrigin(rp_channel_t channel);
+int gen_setAmplitudeCheck(rp_channel_t channel, float amplitude);
 int gen_setAmplitude(rp_channel_t channel, float amplitude);
 int gen_getAmplitude(rp_channel_t channel, float* amplitude);
+int gen_setOffsetCheck(rp_channel_t channel, float offset);
 int gen_setOffset(rp_channel_t channel, float offset);
 int gen_getOffset(rp_channel_t channel, float* offset);
-int gen_setFrequency(rp_channel_t channel, float frequency);
+int gen_setFrequency(rp_channel_t channel, float frequency);        // The signal is updated in the FPGA
 int gen_setFrequencyDirect(rp_channel_t channel, float frequency);  // Used for sweepmode
 int gen_getFrequency(rp_channel_t channel, float* frequency);
-int gen_setSweepStartFrequency(rp_channel_t channel, float frequency);
+int gen_setSweepStartFrequency(rp_channel_t channel, float frequency);  // The signal is updated in the FPGA
 int gen_getSweepStartFrequency(rp_channel_t channel, float* frequency);
-int gen_setSweepEndFrequency(rp_channel_t channel, float frequency);
+int gen_setSweepEndFrequency(rp_channel_t channel, float frequency);  // The signal is updated in the FPGA
 int gen_getSweepEndFrequency(rp_channel_t channel, float* frequency);
-int gen_setPhase(rp_channel_t channel, float phase);
+int gen_setPhase(rp_channel_t channel, float phase);  // The signal is updated in the FPGA
 int gen_getPhase(rp_channel_t channel, float* phase);
-int gen_setWaveform(rp_channel_t channel, rp_waveform_t type);
+int gen_setWaveform(rp_channel_t channel, rp_waveform_t type);  // The signal is updated in the FPGA
 int gen_getWaveform(rp_channel_t channel, rp_waveform_t* type);
-int gen_setSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode);
+int gen_getWaveformDataV(rp_channel_t channel, const std::vector<float>** data);
+int gen_setSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t mode);  // The signal is updated in the FPGA
 int gen_getSweepMode(rp_channel_t channel, rp_gen_sweep_mode_t* mode);
-int gen_setSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode);
+int gen_setSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t mode);  // The signal is updated in the FPGA
 int gen_getSweepDir(rp_channel_t channel, rp_gen_sweep_dir_t* mode);
-int gen_setArbWaveform(rp_channel_t channel, float* data, uint32_t length);
+int gen_setArbWaveform(rp_channel_t channel, float* data, uint32_t length);  // The signal is updated in the FPGA
 int gen_getArbWaveform(rp_channel_t channel, float* data, uint32_t* length);
-int gen_setDutyCycle(rp_channel_t channel, float ratio);
+int gen_setDutyCycle(rp_channel_t channel, float ratio);  // The signal is updated in the FPGA
 int gen_getDutyCycle(rp_channel_t channel, float* ratio);
-int gen_setRiseTime(rp_channel_t channel, float time);
+int gen_setRiseTime(rp_channel_t channel, float time);  // The signal is updated in the FPGA
 int gen_getRiseTime(rp_channel_t channel, float* time);
-int gen_setFallTime(rp_channel_t channel, float time);
+int gen_setFallTime(rp_channel_t channel, float time);  // The signal is updated in the FPGA
 int gen_getFallTime(rp_channel_t channel, float* time);
 int gen_setRiseFallMin(rp_channel_t channel, float min);
 int gen_setRiseFallMax(rp_channel_t channel, float max);
@@ -57,8 +60,12 @@ int gen_setBurstCount(rp_channel_t channel, int num);
 int gen_getBurstCount(rp_channel_t channel, int* num);
 int gen_setBurstRepetitions(rp_channel_t channel, int repetitions);
 int gen_getBurstRepetitions(rp_channel_t channel, int* repetitions);
-int gen_setBurstPeriod(rp_channel_t channel, uint32_t period);
-int gen_getBurstPeriod(rp_channel_t channel, uint32_t* period);
+int gen_setBurstPeriod(rp_channel_t channel, float period);
+int gen_getBurstPeriod(rp_channel_t channel, float* period);
+int gen_setBurstPeriodD(rp_channel_t channel, double period);
+int gen_getBurstPeriodD(rp_channel_t channel, double* period);
+int gen_setBurstPeriodTicks(rp_channel_t channel, uint32_t ticks);
+int gen_getBurstPeriodTicks(rp_channel_t channel, uint32_t* ticks);
 
 int gen_setLoadMode(rp_channel_t channel, rp_gen_load_mode_t mode);
 int gen_getLoadMode(rp_channel_t channel, rp_gen_load_mode_t* mode);

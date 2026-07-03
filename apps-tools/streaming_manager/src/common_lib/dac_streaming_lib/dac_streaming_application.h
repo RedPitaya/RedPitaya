@@ -20,6 +20,7 @@ class CDACStreamingApplication {
     auto runNonBlock() -> void;
     auto stop() -> bool;
     auto isRun() -> bool { return m_isRun; }
+    auto setVerboseMode(bool mode) -> void;
 
    private:
     void genWorker();
@@ -34,6 +35,7 @@ class CDACStreamingApplication {
     std::atomic_int m_ReadyToPass;
     std::atomic_bool m_isRun;
     std::atomic_bool m_isRunNonBloking;
+    bool m_verbMode;
 };
 
 }  // namespace dac_streaming_lib

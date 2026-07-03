@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <algorithm>
+#include <format>
 
 #ifndef _WIN32
 #include <sys/statvfs.h>
@@ -20,6 +21,7 @@
 #define MIN_ADC_BLOCK MIN_BLOCK_COUNT
 #define MIN_DAC_BLOCK MIN_BLOCK_COUNT
 #define MIN_GPIO_BLOCK MIN_BLOCK_COUNT
+#define DAC_STREAM_MODE_BLOCKS 4
 
 using namespace uio_lib;
 
@@ -41,7 +43,7 @@ auto CMemoryManager::instance() -> Ptr {
     return s;
 }
 
-CMemoryManager::CMemoryManager() : m_lowReservedAddress(0), m_highReservedAddress(0), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()) {
+CMemoryManager::CMemoryManager() : m_lowReservedAddress(0), m_highReservedAddress(0), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()), m_dacStreamMode(false) {
     auto totalSize = getTotalSystemMemory();
     auto calc = totalSize * 0.05;
     m_ramSize = MIN_RAM_SIZE > calc ? MIN_RAM_SIZE : calc;
@@ -55,7 +57,12 @@ CMemoryManager::~CMemoryManager() {
 
 auto CMemoryManager::reallocateBlocks() -> bool {
     if (m_ramSize < getMinRequiredRAM()) {
-        WARNING("Not enough memory to split into blocks. DMA RAM size %d. Required RAM size %d", m_ramSize, getMinRequiredRAM())
+        std::string s = std::format(
+            "Not enough memory to split into blocks. RAM size {}. Required RAM size {}\n5% of RAM is allocated for operation."
+            " If your system doesn't have enough memory, reduce the block size.",
+            m_ramSize,
+            getMinRequiredRAM());
+        WARNING("%s", s.c_str())
         return false;
     }
 
@@ -124,6 +131,9 @@ auto CMemoryManager::releaseMemory(MemoryTAG tag) -> void {
 
 auto CMemoryManager::getMinRequiredRAM() -> uint32_t {
     auto blocks = std::max({MIN_ADC_BLOCK, MIN_DAC_BLOCK, MIN_GPIO_BLOCK});
+    if (m_dacStreamMode) {
+        blocks = DAC_STREAM_MODE_BLOCKS;  // 4 block for streaming data from memory.
+    }
     return blocks * getMemoryBlockSize();
 }
 
@@ -180,4 +190,8 @@ auto CMemoryManager::getMinRAMSize(MemoryTAG _tag) -> uint32_t {
 
 auto CMemoryManager::getMinRAMSize(uint32_t, MemoryTAG) -> uint32_t {
     return 0;
+}
+
+auto CMemoryManager::setDACMemoryStreamMode(bool enable) -> void {
+    m_dacStreamMode = enable;
 }

@@ -40,6 +40,9 @@ class UARTParameters : public DecoderParameters {
     static std::string getUARTAnnotationsString(UARTAnnotations value);
 
     auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+    auto setDecoderSettingsString(std::string&, std::string&) -> bool override;
+
     auto getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool override;
+    auto getDecoderSettingsString(std::string&, std::string*) -> bool override;
 };
 }  // namespace uart

@@ -64,15 +64,12 @@
         }); //end each
 
         var value,
-            step;
+            step,
+            step_direct;
 
         var interval = null,
             timeout = null;
 
-        // function ToggleValue(input) {
-        //     input.val(parseInt(input.val(), 10) + d);
-        //     console.log(input);
-        // }
 
         $('body').on('mousedown', moreVal, function() {
             var el = $(this);
@@ -97,14 +94,26 @@
             }, 200);
         });
 
-        $("#ext_con_but").click(function(event) {
-            $('#ext_connections_dialog').modal("show");
-        });
-
         $(moreVal + ', ' + lessVal).on("mouseup mouseout", function() {
             clearTimeout(timeout);
             clearInterval(interval);
         });
+
+        function getDecimalPlaces(step) {
+            if (step > 1) {
+                console.log("Error. Unsupported step")
+            }
+
+            let s = step;
+            let signs = 0;
+            while (Math.abs(s - Math.round(s)) > 1e-10 && signs < 20) {
+                s *= 10;
+                signs++;
+            }
+            return signs;
+        }
+
+// var signs = getDecimalPlaces(step);
 
         function moreValFn(input) {
             var max;
@@ -113,8 +122,7 @@
             checkInputAttr(input);
 
             var newValue = value + step;
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
+            var signs =  getDecimalPlaces(step)
             newValue = parseFloat(newValue.toFixed(signs));
             if (newValue > max) {
                 newValue = max;
@@ -140,8 +148,7 @@
             checkInputAttr(input);
 
             var newValue = value - step;
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
+            var signs =  getDecimalPlaces(step)
             newValue = parseFloat(newValue.toFixed(signs));
             if (newValue < min) {
                 newValue = min;
@@ -163,9 +170,12 @@
 
             if (input.attr('step')) {
                 step = parseFloat(input.attr('step'));
-                var signs = Math.log10(step)
-                value = parseFloat(value.toFixed(-signs));
-            } else {
+                var signs =  getDecimalPlaces(step)
+                value = parseFloat(value.toFixed(signs));
+            } else if (input.attr('step_direct')) {
+                step = parseFloat(input.attr('step_direct'));
+            }
+            else{
                 step = 1;
             }
         }
@@ -244,116 +254,17 @@
         });
     }
 
-    OSC.updateLimits = function () {
-        // { // OSC_CH1_OFFSET limits
-        //     var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
-        //     var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-        //     var units = $('#OSC_CH1_OFFSET_UNIT').html();
-        //     var multiplier = units == "mV" ? 1000 : 1;
-        //     var newMin = -1 * 10 * jumperSettings * probeAttenuation * multiplier;
-        //     var newMax = 1 * 10 * jumperSettings * probeAttenuation * multiplier;
-        //     $("#OSC_CH1_OFFSET").attr("min", newMin);
-        //     $("#OSC_CH1_OFFSET").attr("max", newMax);
-        // }
-
-        // { // OSC_CH2_OFFSET limits
-        //     var probeAtt1 = parseInt($("#OSC_CH2_PROBE option:selected").text());
-        //     var jumperSettings1 = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-        //     var units = $('#OSC_CH2_OFFSET_UNIT').html();
-        //     var multiplier = units == "mV" ? 1000 : 1;
-        //     var newMin = -1 * 10 * jumperSettings1 * probeAtt1 * multiplier;
-        //     var newMax = 1 * 10 * jumperSettings1 * probeAtt1 * multiplier;
-        //     $("#OSC_CH2_OFFSET").attr("min", newMin);
-        //     $("#OSC_CH2_OFFSET").attr("max", newMax);
-        // }
-
-        // { // OSC_MATH_OFFSET limits
-        //     var scale_val = $("#OSC_MATH_SCALE").text();
-        //     var math_vdiv = parseFloat(scale_val);
-        //     var newMin = -1 * 5 * math_vdiv;
-        //     var newMax = 1 * 5 * math_vdiv;
-        //     // $("#OSC_MATH_OFFSET").attr("min", newMin);
-        //     // $("#OSC_MATH_OFFSET").attr("max", newMax);
-        // }
-
-    }
-
-    OSC.formatVals =function () {
-        // { // OSC_CH1_OFFSET
-        //     var probeAttenuation = parseInt($("#OSC_CH1_PROBE option:selected").text());
-        //     var jumperSettings = $("#OSC_CH1_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-        //     var units = $('#OSC_CH1_OFFSET_UNIT').html();
-        //     var multiplier = units == "mV" ? 1000 : 1;
-        //     var in1_value = parseFloat($("#OSC_CH1_OFFSET").val());
-        //     $("#OSC_CH1_OFFSET").val(OSC.formatInputValue(in1_value, probeAttenuation, units == "mV", jumperSettings == 20));
-        // }
-
-        // { // OSC_CH2_OFFSET
-        //     var probeAtt1 = parseInt($("#OSC_CH2_PROBE option:selected").text());
-        //     var jumperSettings1 = $("#OSC_CH2_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-        //     var units = $('#OSC_CH2_OFFSET_UNIT').html();
-        //     var multiplier = units == "mV" ? 1000 : 1;
-        //     var in2_value = parseFloat($("#OSC_CH2_OFFSET").val());
-        //     $("#OSC_CH2_OFFSET").val(OSC.formatInputValue(in2_value, probeAtt1, units == "mV", jumperSettings1 == 20));
-        // }
-
-        { // OSC_MATH_OFFSET
-            // var scale_val = $("#OSC_MATH_SCALE").text();
-            // var units = $("#munit").text();
-            // var math_vdiv = parseFloat(scale_val);
-
-            // var munit = $('#munit').html().charAt(0);
-            // var precision = 2;
-            // if (munit == 'm')
-            //     precision = 0;
-            // if (math_vdiv < 1)
-            //     precision = 3;
-            // var math_value = parseFloat($("#OSC_MATH_OFFSET").val());
-            // $("#OSC_MATH_OFFSET").val(math_value.toFixed(precision));
-        }
-
-        // { // OSC_TRIG_LEVEL_OFFSET
-        //     var probeAttenuation = 1;
-        //     var jumperSettings = 1;
-        //     var ch = "";
-        //     if ($("#OSC_TRIG_SOURCE").parent().hasClass("active"))
-        //         ch = "CH1";
-        //     else if ($("OSC_TRIG_SOURCE2").parent().hasClass("active"))
-        //         ch = "CH2";
-        //     else {
-        //         probeAttenuation = 1;
-        //     }
-
-        //     if (ch == "CH1" || ch == "CH2") {
-        //         probeAttenuation = parseInt($("#OSC_" + ch + "_PROBE option:selected").text());
-        //         jumperSettings = $("#OSC_" + ch + "_IN_GAIN").parent().hasClass("active") ? 1 : 20;
-        //     }
-
-        //     var trig_value = parseFloat($("#OSC_TRIG_LEVEL").val());
-        //     $("#OSC_TRIG_LEVEL").val(OSC.formatInputValue(trig_value, probeAttenuation, false, jumperSettings == 20));
-        // }
-
-
-        // { // DUTY CYCLE FORMATTING
-        //     var SOUR1_DCYC = parseFloat($("SOUR1_DCYC").val());
-        //     $("SOUR1_DCYC").val(SOUR1_DCYC.toFixed(1));
-        //     var SOUR2_DCYC = parseFloat($("SOUR2_DCYC").val());
-        //     $("SOUR2_DCYC").val(SOUR2_DCYC.toFixed(1));
-
-        //     var SOUR1_PHAS = parseFloat($("SOUR1_PHAS").val());
-        //     $("SOUR1_PHAS").val(SOUR1_PHAS.toFixed(1));
-        //     var SOUR2_PHAS = parseFloat($("SOUR2_PHAS").val());
-        //     $("SOUR2_PHAS").val(SOUR2_PHAS.toFixed(1));
-        // }
-    }
-
-
     OSC.initUI = function(){
+
+
+        $("#ext_con_but").click(function(event) {
+            $('#ext_connections_dialog').modal("show");
+        });
 
 
         $('.btn.menu-btn').onClassChange(function(el, newClass) {
             OSC.getCurrentActiveChannel()
-            OSC.updateTitileYAxisTicks()
+            OSC.updateTitleYAxisTicks()
             OSC.cursorY()
         } );
 
@@ -472,23 +383,23 @@
                 var zero_pos = (buf_width + 2) / 2;
                 var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
                 var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
-                var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio).toFixed(2));
+                var new_value = +(((zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio));
                 var px_offset = -(new_value / ms_per_px + $('#time_offset_arrow').width() / 2 + 1);
+                OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
+                OSC.sendParams();
 
                 $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
                 $('#time_offset_arrow').css('left', (buf_width + 2) / 2 + px_offset);
             },
             stop: function(ev, ui) {
-                if (!OSC.state.simulated_drag) {
-                    var buf_width = $('#buffer').width();
-                    var zero_pos = (buf_width + 2) / 2;
-                    var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
-                    var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
-
-                    OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
-                    OSC.sendParams();
-                    $('#info_box').empty();
-                }
+                var buf_width = $('#buffer').width();
+                var zero_pos = (buf_width + 2) / 2;
+                var ms_per_px = (OSC.params.orig['OSC_TIME_SCALE'].value * 10) / buf_width;
+                var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
+                OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - ui.position.left - ui.helper.width() / 2 - 1) * ms_per_px * ratio };
+                OSC.sendParams();
+                $('#info_box').empty();
+                $('#buf_time_offset').css('top',0)
             }
         });
 
@@ -618,7 +529,7 @@
                 $('.y-offset-arrow').css('z-index', 10);
                 $('#' + OSC.state.sel_sig_name + '_offset_arrow').css('z-index', 11);
             }
-            OSC.updateTitileYAxisTicks()
+            OSC.updateTitleYAxisTicks()
         });
 
         // Opening a dialog for changing parameters
@@ -779,70 +690,52 @@
         $('#send_report_btn').on('click', function() { OSC.formEmail() });
         $('#restart_app_btn').on('click', function() { location.reload() });
 
-        var laAxesMoving = false;
-        var curXPos = 0;
-        $("#graphs").mousedown(function(event) {
-            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.cursor_dragging_measure) {
-                laAxesMoving = false;
-                return;
-            }
-            laAxesMoving = true;
-            curXPos = event.pageX;
-        });
+        function isValidOffset(diff) {
+            const $buffer = $('#buffer');
+            const $bufArrow = $('#buf_time_offset');
 
-        $(".full-content").mouseup(function(event) {
-            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.cursor_dragging_measure) {
-                laAxesMoving = false;
-                return;
-            }
-            laAxesMoving = false;
-            OSC.endTimeMove($('#time_offset_arrow').position().left);
-        });
-        $(".full-content").mouseout(function(event) {
-            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.cursor_dragging_measure) {
-                OSC.endTimeMove($('#time_offset_arrow').position().left);
-                laAxesMoving = false;
-                return;
-            }
-            //laAxesMoving = false;
-        });
-        $(".full-content").mousemove(function(event) {
-            if (OSC.state.trig_dragging || OSC.state.cursor_dragging || OSC.state.trig_in || OSC.state.cursor_dragging_measure) {
-                laAxesMoving = false;
-                return;
-            }
-            if (OSC.state.line_moving) return;
-            if (laAxesMoving && !OSC.state.cursor_dragging && !OSC.state.trig_dragging &&!OSC.state.cursor_dragging_measure && !OSC.state.mouseover) {
-                if (!$.isEmptyObject(OSC.graphs)) {
-                    var diff = event.pageX - curXPos;
-                    curXPos = event.pageX;
-                    var graphs_width = $('#graphs').width();
-                    var graphs_offset = $('#graphs').offset().left;
+            const bufferOffset = $buffer.offset().left;
+            const bufferWidth = $buffer.width();
+            const bufArrowOffset = $bufArrow.offset().left;
+            const bufArrowWidth = $bufArrow.width();
 
-                    var arrow_left = $('#time_offset_arrow').offset().left;
-                    var arrow_width = $('#time_offset_arrow').width();
+            if (diff < 0 && bufArrowOffset + diff <= bufferOffset) return false;
+            if (diff > 0 && bufArrowOffset + diff >= bufferOffset + bufferWidth - bufArrowWidth) return false;
 
-                    // For limits left and right moving of signals
-                    var buffer_width = $('#buffer').width();
-                    var buffer_offset = $('#buffer').offset().left;
-                    var buf_arrow_width = $('#buf_time_offset').width();
-                    var buf_arrow_offset = $('#buf_time_offset').offset().left;
+            return true;
+        }
 
-                    if ((buf_arrow_offset + diff) <= buffer_offset && diff < 0) {
-                        return;
-                    }
+        $('#graphs').draggable({
+            axis: 'x',
+            containment: 'parent',
+            start: function(event, ui) {
+                curXPos = event.pageX;
+            },
+            drag: function(event, ui) {
+                if ($.isEmptyObject(OSC.graphs)) return;
 
-                    if ((buf_arrow_offset + diff) >= (buffer_offset + buffer_width - buf_arrow_width) && diff > 0) {
-                        return;
-                    }
+                const diff = event.pageX - curXPos;
+                if (!isValidOffset(diff)) return;
 
-                    $('#time_offset_arrow').offset({ left: ($('#time_offset_arrow').offset().left + diff) })
-                    OSC.moveTimeOffset($('#time_offset_arrow').position().left);
-                }
+                curXPos = event.pageX;
+                const arrow = $('#time_offset_arrow');
+                arrow.offset({ left: arrow.offset().left + diff });
+                OSC.moveTimeOffset(arrow.position().left);
+            },
+            stop: function(event, ui) {
+                if ($.isEmptyObject(OSC.graphs)) return;
+
+                const diff = event.pageX - curXPos;
+                if (!isValidOffset(diff)) return;
+
+                curXPos = event.pageX;
+                const arrow = $('#time_offset_arrow');
+                arrow.offset({ left: arrow.offset().left + diff });
+                OSC.endTimeMove(arrow.position().left);
             }
         });
 
-        $('#time_offset_arrow, #time_offset_static_img').dblclick(function() {
+        $('#time_offset_arrow, #time_offset_static_img, #trig_out_left, #trig_out_right').dblclick(function() {
             OSC.params.local['OSC_TIME_OFFSET'] = { value: 0 };
             OSC.sendParams();
         });
@@ -896,6 +789,12 @@
             }
         });
 
+        $('#16bit_mode').click(function() {
+            let val = OSC.params.orig['16_BIT_MODE'].value
+            OSC.params.local['16_BIT_MODE'] = { value: val == true ? 0 : 1 }; // REQUEST_RESET
+            OSC.sendParams();
+        });
+
         $('#slow_adc_info').click(function() {
             var elem = $(this);
             if (elem.text() == 'IN/E2') {
@@ -915,45 +814,6 @@
             OSC.params.local['CONTROL_CONFIG_SETTINGS'] = { value: 1 }; // REQUEST_RESET
             OSC.sendParams();
         });
-
-        // $(".btn").mouseup(function() {
-        //     setTimeout(function() {
-        //         OSC.updateLimits();
-        //         OSC.formatVals();
-        //     }, 20);
-        // });
-
-        // TODO need fix
-        // $('#OSC_CH1_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
-        //     // OSC.updateLimits();
-        //     OSC.formatVals();
-        // });
-
-        // // TODO need fix
-        // $('#OSC_CH2_OFFSET_UNIT').bind("DOMSubtreeModified", function() {
-        //     // OSC.updateLimits();
-        //     OSC.formatVals();
-        // });
-
-        // // TODO need fix
-        // $("#OSC_MATH_SCALE").bind("DOMSubtreeModified", function() {
-        //     // OSC.updateLimits();
-        //     OSC.formatVals();
-        // });
-
-        // // TODO need fix
-        // $("#OSC_CH1_PROBE").change(function() {
-        //     OSC.updateLimits();
-        // });
-
-        // // TODO need fix
-        // $("#OSC_CH2_PROBE").change(function() {
-        //     OSC.updateLimits();
-        // });
-
-        // OSC.updateLimits();
-        OSC.formatVals();
-
 
     }
 
@@ -1008,9 +868,25 @@
             }
         }
 
+        if (params['OSC_IS_16_BIT_MODE'] !== undefined){
+            if (params['OSC_IS_16_BIT_MODE'].value == false){
+                var nodes = document.getElementsByClassName("hires_16bit");
+                [...nodes].forEach((element, index, array) => {
+                                        element.parentNode.removeChild(element);
+                                    });
+
+            }
+        }
+
         for(let ch = 1; ch <= 2; ch++){
             if (params['SOUR'+ch+'_FREQ_FIX'] !== undefined){
                 $('#SOUR'+ch+'_FREQ_FIX').attr("max", params['SOUR'+ch+'_FREQ_FIX'].max).attr("min", params['SOUR'+ch+'_FREQ_FIX'].min);
+            }
+            if (params['SOUR'+ch+'_SWEEP_FREQ_START'] !== undefined){
+                $('#SOUR'+ch+'_SWEEP_FREQ_START').attr("max", params['SOUR'+ch+'_SWEEP_FREQ_START'].max).attr("min", params['SOUR'+ch+'_SWEEP_FREQ_START'].min);
+            }
+            if (params['SOUR'+ch+'_SWEEP_FREQ_END'] !== undefined){
+                $('#SOUR'+ch+'_SWEEP_FREQ_END').attr("max", params['SOUR'+ch+'_SWEEP_FREQ_END'].max).attr("min", params['SOUR'+ch+'_SWEEP_FREQ_END'].min);
             }
             if (params['SOUR'+ch+'_B_INIT_VOLT'] !== undefined){
                 $('#SOUR'+ch+'_B_INIT_VOLT').attr("max", params['SOUR'+ch+'_B_INIT_VOLT'].max).attr("min", params['SOUR'+ch+'_B_INIT_VOLT'].min);

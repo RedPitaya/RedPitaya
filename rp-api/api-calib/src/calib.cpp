@@ -26,8 +26,8 @@ CCalib::CCalib(COscilloscope::Ptr _acq) : m_acq(_acq), m_current_step(""), m_cha
 
 CCalib::~CCalib() {}
 
-int CCalib::resetCalibToZero() {
-    return rp_CalibrationReset(false, true, false, RP_HW_PACK_ID_V6);
+int CCalib::resetCalibToZero(rp_calib_filter_mode mode) {
+    return rp_CalibrationReset(false, true, mode, RP_HW_PACK_ID_V6);
 }
 
 int CCalib::resetCalibToFactory() {
@@ -39,7 +39,7 @@ void CCalib::restoreCalib() {
     rp_CalibInit();
 }
 
-int CCalib::calib(std::string& _step, float _refdc) {
+int CCalib::calib(std::string& _step, float _refdc, bool bypass, rp_calib_filter_mode mode) {
     switch (getModel()) {
         case STEM_125_10_v1_0:
         case STEM_125_14_v1_0:
@@ -51,8 +51,11 @@ int CCalib::calib(std::string& _step, float _refdc) {
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_LL_v1_1:
@@ -60,7 +63,7 @@ int CCalib::calib(std::string& _step, float _refdc) {
         case STEM_65_16_Z7020_LL_v1_1:
         case STEM_65_16_Z7020_TI_v1_3:
         case STEM_125_14_Z7020_TI_v1_3:
-            return calib_board_z10(_step, _refdc);
+            return calib_board_z10(_step, _refdc, bypass, mode);
 
         case STEM_122_16SDR_v1_0:
         case STEM_122_16SDR_v1_1: {
@@ -72,7 +75,7 @@ int CCalib::calib(std::string& _step, float _refdc) {
         case STEM_125_14_Z7020_4IN_v1_2:
         case STEM_125_14_Z7020_4IN_v1_3:
         case STEM_125_14_Z7020_4IN_BO_v1_3:
-            return calib_board_z20_4ch(_step, _refdc);
+            return calib_board_z20_4ch(_step, _refdc, bypass, mode);
 
         case STEM_250_12_v1_0:
         case STEM_250_12_v1_1:
@@ -103,7 +106,7 @@ CCalib::DataPass CCalib::getCalibData() {
     return m_pass_data;
 }
 
-int CCalib::calib_board_z10(std::string& _step, float _refdc) {
+int CCalib::calib_board_z10(std::string& _step, float _refdc, bool bypass, rp_calib_filter_mode mode) {
 
     if (m_current_step == _step)
         return 0;
@@ -119,11 +122,16 @@ int CCalib::calib_board_z10(std::string& _step, float _refdc) {
         m_acq->setAvgFilter(false);
         m_acq->resetAvgFilter();
         m_acq->setDeciamtion(1024);
-        m_acq->setFilterBypass(true);
+        m_acq->setFilterBypass(bypass);
         m_acq->startNormal();
         m_calib_parameters_old = rp_GetCalibrationSettings();
-        resetCalibToZero();
+        resetCalibToZero(mode);
         m_calib_parameters = rp_GetCalibrationSettings();
+        if (mode == rp_calib_filter_mode::RP_HW_CFM_KEEP || bypass) {
+            m_calib_parameters_old.copyFilter(m_calib_parameters);
+        }
+        rp_CalibrationWriteParams(m_calib_parameters, false);
+        rp_CalibInit();  // init new calib
         return 0;
     }
 
@@ -144,6 +152,7 @@ int CCalib::calib_board_z10(std::string& _step, float _refdc) {
         rp_CalibInit();
         m_calib_parameters = rp_GetCalibrationSettings();
         m_acq->setHV();  // init calib values in FPGA
+        WARNING("setHV")
         FOR(m_pass_data.ch[i] = m_calib_parameters.fast_adc_1_20[i].offset)
         FOR(m_pass_data.ch_gain[i] = m_calib_parameters.fast_adc_1_20[i].gainCalc)
         return 0;
@@ -301,7 +310,7 @@ int CCalib::calib_board_z10(std::string& _step, float _refdc) {
     return 0;
 }
 
-int CCalib::calib_board_z20_4ch(std::string& _step, float _refdc) {
+int CCalib::calib_board_z20_4ch(std::string& _step, float _refdc, bool bypass, rp_calib_filter_mode mode) {
     if (m_current_step == _step)
         return 0;
     m_current_step = _step;
@@ -310,11 +319,16 @@ int CCalib::calib_board_z20_4ch(std::string& _step, float _refdc) {
         m_acq->setAvgFilter(false);
         m_acq->resetAvgFilter();
         m_acq->setDeciamtion(1024);
-        m_acq->setFilterBypass(true);
+        m_acq->setFilterBypass(bypass);
         m_acq->startNormal();
         m_calib_parameters_old = rp_GetCalibrationSettings();
-        resetCalibToZero();
+        resetCalibToZero(mode);
         m_calib_parameters = rp_GetCalibrationSettings();
+        if (mode == rp_calib_filter_mode::RP_HW_CFM_KEEP || bypass) {
+            m_calib_parameters_old.copyFilter(m_calib_parameters);
+        }
+        rp_CalibrationWriteParams(m_calib_parameters, false);
+        rp_CalibInit();  // init new calib
         return 0;
     }
 
@@ -396,8 +410,10 @@ int CCalib::calib_board_z20_250_12(std::string& _step, float _refdc) {
         m_acq->setDeciamtion(1024);
         m_acq->startNormal();
         m_calib_parameters_old = rp_GetCalibrationSettings();
-        resetCalibToZero();
+        resetCalibToZero(rp_calib_filter_mode::RP_HW_CFM_DEFAULT);
         m_calib_parameters = rp_GetCalibrationSettings();
+        rp_CalibrationWriteParams(m_calib_parameters, false);
+        rp_CalibInit();  // init new calib
         return 0;
     }
 

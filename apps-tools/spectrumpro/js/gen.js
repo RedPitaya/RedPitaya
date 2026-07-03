@@ -37,6 +37,22 @@
         }else{
             $(".sweep_button").hide();
         }
+
+        if (SPEC.state.sweep_ch1 == true) {
+            if ($("#OUTPUT1_SWEEP_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT1_SWEEP_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT1_SWEEP_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT1_SWEEP_LED").attr("src","img/red_led.png");
+        }
+
+        if (SPEC.state.sweep_ch2 == true) {
+            if ($("#OUTPUT2_SWEEP_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT2_SWEEP_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT2_SWEEP_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT2_SWEEP_LED").attr("src","img/red_led.png");
+        }
     }
 
     GEN.srcVoltOffset = function(new_params,param_name) {

@@ -64,8 +64,10 @@ class CANParameters : public DecoderParameters {
 
     auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
     auto setDecoderSettingsFloat(std::string& key, float value) -> bool override;
+    auto setDecoderSettingsString(std::string&, std::string&) -> bool override;
 
     auto getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool override;
     auto getDecoderSettingsFloat(std::string& key, float* value) -> bool override;
+    auto getDecoderSettingsString(std::string&, std::string*) -> bool override;
 };
 }  // namespace can

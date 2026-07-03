@@ -88,6 +88,12 @@
 #define RP_EANI 27
 /** Execution error */
 #define RP_EOP 28
+/** Interrupt wait timeout. */
+#define RP_ETIM 29
+/** Interrupt does not match interrupt status. */
+#define RP_EIS 30
+/** Interruptions are disabled in the settings. */
+#define RP_EID 31
 
 #define SPECTR_OUT_SIG_LEN (2 * 1024)
 
@@ -103,7 +109,7 @@
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 
-int rp_InitAdresses();
+int rp_InitAdressess();
 
 /**
  * Initializes the library. It must be called first, before any other library method.
@@ -173,6 +179,13 @@ int rp_PrintOscRegset();
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_PrintAsgRegset();
+
+/**
+ * Prints a channel data for Arbitrary Signal Generator.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_PrintAsgChannelData(rp_channel_t channel);
 
 /**
  * Prints a set of registers for Analog Mixed Signals (AMS).
@@ -379,7 +392,7 @@ int rp_GetSourceTrigOutput(rp_outTiggerMode_t* mode);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_SetEnableDiasyChainClockSync(bool enable);
+int rp_SetEnableDaisyChainClockSync(bool enable);
 
 /*
  * Returns the current state of the SATA daisy chain mode.
@@ -387,7 +400,7 @@ int rp_SetEnableDiasyChainClockSync(bool enable);
  * @return If the function is successful, the return value is RP_OK.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
-int rp_GetEnableDiasyChainClockSync(bool* state);
+int rp_GetEnableDaisyChainClockSync(bool* state);
 
 ///@}
 

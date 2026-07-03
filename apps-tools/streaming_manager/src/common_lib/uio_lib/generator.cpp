@@ -21,11 +21,15 @@ inline void setRegister(__attribute__((unused)) volatile GeneratorMapT* baseOsc_
     *reg = value;
 }
 
+inline void setRegister2(__attribute__((unused)) volatile GeneratorMapT* baseOsc_addr, volatile uint32_t* reg, int32_t value, __attribute__((unused)) const char* info = nullptr) {
+    *reg = value;
+}
+
 #define XSTR(s) STR(s)
 #define STR(s) #s
 #define setRegisterVal(X, Y, Z)                                                    \
     {                                                                              \
-        /* acprintf(stderr, PColor::RED, "\tSet %s <- 0x%X %s\n",XSTR(X),Y, Z); */ \
+        /*acprintf(stderr, PColor::RED, "\tSet %s <- 0x%X %s\n", XSTR(X), Y, Z);*/ \
         X = Y;                                                                     \
     }
 
@@ -70,7 +74,8 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
       m_Map(nullptr),
       m_waitLock(),
       m_maxDacSpeedHz(maxDacHz),
-      m_dacSpeedHz(dacHz) {
+      m_dacSpeedHz(dacHz),
+      m_is8Bit{false, false} {
     // m_BufferNumber[0] = m_BufferNumber[1] = 0;
     m_calib_offset_ch1 = 0;
     m_calib_gain_ch1 = 0x2000;
@@ -93,12 +98,12 @@ auto CGenerator::getDacHz() -> uint32_t {
 auto CGenerator::setDacHz(uint32_t hz) -> bool {
     if ((hz <= m_maxDacSpeedHz) && (((double)hz / (double)m_maxDacSpeedHz) * (1 << 16) < 1))
         return false;
-    m_dacSpeedHz = hz;
     double coff = (double)m_dacSpeedHz / (double)m_maxDacSpeedHz;
     uint32_t step = (1 << 16) * coff;
     if (step == 0) {
         return false;
     }
+    m_dacSpeedHz = hz;
     return true;
 }
 
@@ -196,12 +201,12 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
         if (b1Wait) {
             // WARNING("status B1 0x%X",status)
             if (chBuf1Wait[0] && ch1 != 0)
-                setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
+                setRegister2(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
             if (chBuf1Wait[1] && ch2 != 0)
-                setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
-            setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
+                setRegister2(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
+            setRegister2(m_Map, &(m_Map->dma_size), size, "Buffer size");
             int command = (ch1 != 0 ? 1 << 6 : 0) | (ch2 != 0 ? 1 << 14 : 0);
-            setRegister(m_Map, &(m_Map->dma_control), command, "Reset index 1");
+            setRegister2(m_Map, &(m_Map->dma_control), command, "Reset index 1");
             ret = true;
         }
     }
@@ -210,12 +215,12 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
         if (b2Wait) {
             // WARNING("status B2 0x%X",status)
             if (chBuf2Wait[0] && ch1 != 0)
-                setRegister(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
+                setRegister2(m_Map, &(m_Map->chA_dma_addr2), ch1, "Address chA buff 2");
             if (chBuf2Wait[1] && ch2 != 0)
-                setRegister(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");
-            setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
+                setRegister2(m_Map, &(m_Map->chB_dma_addr2), ch2, "Address chB buff 2");
+            setRegister2(m_Map, &(m_Map->dma_size), size, "Buffer size");
             int command = (ch1 != 0 ? 1 << 7 : 0) | (ch2 != 0 ? 1 << 15 : 0);
-            setRegister(m_Map, &(m_Map->dma_control), command, "Reset index 2");
+            setRegister2(m_Map, &(m_Map->dma_control), command, "Reset index 2");
             ret = true;
         }
     }
@@ -226,6 +231,8 @@ auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint3
 auto CGenerator::setDataBits(bool is8BitCh1, bool is8BitCh2) -> void {
     setRegisterVal(m_Map->config.use8Bit_chA, is8BitCh1 ? 0x1 : 0, "Set trig immediately chA");
     setRegisterVal(m_Map->config.use8Bit_chB, is8BitCh2 ? 0x1 : 0, "Set trig immediately chB");
+    m_is8Bit[0] = is8BitCh1;
+    m_is8Bit[1] = is8BitCh2;
 }
 
 auto CGenerator::setDataSize(uint32_t size) -> void {

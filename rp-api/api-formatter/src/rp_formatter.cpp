@@ -8,38 +8,40 @@
  */
 
 #include <cassert>
-#include <sstream>
 #include <fstream>
-#include <vector>
 #include <map>
+#include <sstream>
+#include <vector>
 
 #include "rp_formatter.h"
+#include "writers/rp_csv_writer.h"
 #include "writers/rp_tdms_writer.h"
 #include "writers/rp_wav_writer.h"
-#include "writers/rp_csv_writer.h"
 
 #include "writers/common.h"
 
-
-namespace rp_formatter_api{
+namespace rp_formatter_api {
 
 struct CFormatter::Impl {
     rp_mode_t m_mode;
     uint32_t m_oscRate;
     SBufferPack m_pack;
-    std::fstream *m_file = NULL;
-    CWaveWriter *m_wave = NULL;
-    CTDMSWriter *m_tdms = NULL;
-    CCSVWriter  *m_csv = NULL;
+    std::fstream* m_file = NULL;
+    CWaveWriter* m_wave = NULL;
+    CTDMSWriter* m_tdms = NULL;
+    CCSVWriter* m_csv = NULL;
 
-    ~Impl(){
+    ~Impl() {
         delete m_wave;
         delete m_tdms;
         delete m_csv;
     };
+
+    auto setChannelData(rp_channel_t _channel, void* _buffer, size_t _samplesCount, rp_bits_t _bits, std::string& _name) -> void;
+    auto getMaxSamples() -> size_t;
 };
 
-CFormatter::CFormatter(rp_mode_t _mode,uint32_t _oscRate) {
+CFormatter::CFormatter(rp_mode_t _mode, uint32_t _oscRate) {
     m_pimpl = new Impl();
     m_pimpl->m_oscRate = _oscRate;
     m_pimpl->m_wave = _mode == RP_F_WAV ? new CWaveWriter(_oscRate) : NULL;
@@ -47,7 +49,7 @@ CFormatter::CFormatter(rp_mode_t _mode,uint32_t _oscRate) {
     m_pimpl->m_csv = _mode == RP_F_CSV ? new CCSVWriter(_oscRate) : NULL;
 }
 
-CFormatter::~CFormatter(){
+CFormatter::~CFormatter() {
     closeFile();
     delete m_pimpl;
 }
@@ -58,6 +60,14 @@ auto CFormatter::setEndiannes(rp_endianness_t _endiannes) -> bool {
         return true;
     }
     return false;
+}
+
+auto CFormatter::Impl::getMaxSamples() -> size_t {
+    size_t s = 0;
+    for (auto ch_s : m_pack.m_samplesCount) {
+        s = std::max(s, ch_s.second);
+    }
+    return s;
 }
 
 auto CFormatter::resetWriter() -> void {
@@ -73,51 +83,82 @@ auto CFormatter::clearBuffer() -> void {
     m_pimpl->m_pack.clear();
 }
 
-auto CFormatter::setChannelData(rp_channel_t _channel,void* _buffer,size_t _samplesCount,rp_bits_t _bits,std::string &_name) -> void {
-    m_pimpl->m_pack.m_bits[_channel] = _bits;
-    m_pimpl->m_pack.m_samplesCount[_channel] = _samplesCount;
-    m_pimpl->m_pack.m_buffer[_channel] = _buffer;
-    m_pimpl->m_pack.m_name[_channel] = _name;
+auto CFormatter::Impl::setChannelData(rp_channel_t _channel, void* _buffer, size_t _samplesCount, rp_bits_t _bits, std::string& _name) -> void {
+    m_pack.m_bits[_channel] = _bits;
+    m_pack.m_samplesCount[_channel] = _samplesCount;
+    m_pack.m_buffer[_channel] = _buffer;
+    m_pack.m_name[_channel] = _name;
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,uint8_t* _buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_buffer,_samplesCount,RP_F_8_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, uint8_t* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_ui8_Bit, _name);
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,uint16_t* _buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_buffer,_samplesCount,RP_F_16_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, uint16_t* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_ui16_Bit, _name);
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,float* _buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_buffer,_samplesCount,RP_F_32_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, uint32_t* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_ui32_Bit, _name);
 }
 
-auto CFormatter::setChannel(rp_channel_t _channel,double* _buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_buffer,_samplesCount,RP_F_64_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, int32_t* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_i32_Bit, _name);
 }
 
-auto CFormatter::setChannelUI8NP(rp_channel_t _channel,uint8_t* _np_buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_8_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, uint64_t* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_ui64_Bit, _name);
 }
 
-auto CFormatter::setChannelUI16NP(rp_channel_t _channel,uint16_t* _np_buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_16_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, int64_t* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_i64_Bit, _name);
 }
 
-auto CFormatter::setChannelFNP(rp_channel_t _channel,float* _np_buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_32_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, float* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_f32_Bit, _name);
 }
 
-auto CFormatter::setChannelDNP(rp_channel_t _channel,double* _np_buffer,int _samplesCount,std::string _name) -> void {
-    setChannelData(_channel,_np_buffer,_samplesCount,RP_F_64_Bit,_name);
+auto CFormatter::setChannel(rp_channel_t _channel, double* _buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _buffer, _samplesCount, RP_F_d64_Bit, _name);
+}
+
+auto CFormatter::setChannelUI8NP(rp_channel_t _channel, uint8_t* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_ui8_Bit, _name);
+}
+
+auto CFormatter::setChannelUI16NP(rp_channel_t _channel, uint16_t* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_ui16_Bit, _name);
+}
+auto CFormatter::setChannelI32NP(rp_channel_t _channel, int32_t* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_i32_Bit, _name);
+}
+
+auto CFormatter::setChannelUI32NP(rp_channel_t _channel, uint32_t* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_ui32_Bit, _name);
+}
+
+auto CFormatter::setChannelI64NP(rp_channel_t _channel, int64_t* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_i64_Bit, _name);
+}
+
+auto CFormatter::setChannelUI64NP(rp_channel_t _channel, uint64_t* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_ui64_Bit, _name);
+}
+
+auto CFormatter::setChannelFNP(rp_channel_t _channel, float* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_f32_Bit, _name);
+}
+
+auto CFormatter::setChannelDNP(rp_channel_t _channel, double* _np_buffer, int _samplesCount, std::string _name) -> void {
+    m_pimpl->setChannelData(_channel, _np_buffer, _samplesCount, RP_F_d64_Bit, _name);
 }
 
 auto CFormatter::openFile(std::string _path) -> bool {
-    if (m_pimpl->m_file){
+    if (m_pimpl->m_file) {
         return false;
     }
-    m_pimpl->m_file = new std::fstream(_path,std::ios::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
-    if (m_pimpl->m_file->is_open()){
+    m_pimpl->m_file = new std::fstream(_path, std::ios::binary | std::fstream::in | std::fstream::out | std::fstream::trunc);
+    if (m_pimpl->m_file->is_open()) {
         return true;
     }
     delete m_pimpl->m_file;
@@ -126,8 +167,8 @@ auto CFormatter::openFile(std::string _path) -> bool {
 }
 
 auto CFormatter::closeFile() -> bool {
-    if (m_pimpl->m_file){
-        if (m_pimpl->m_file->is_open()){
+    if (m_pimpl->m_file) {
+        if (m_pimpl->m_file->is_open()) {
             m_pimpl->m_file->flush();
             m_pimpl->m_file->close();
         }
@@ -138,9 +179,9 @@ auto CFormatter::closeFile() -> bool {
     return false;
 }
 
-auto CFormatter::isOpenFile() -> bool{
-    if (m_pimpl->m_file){
-        if (m_pimpl->m_file->is_open()){
+auto CFormatter::isOpenFile() -> bool {
+    if (m_pimpl->m_file) {
+        if (m_pimpl->m_file->is_open()) {
             return true;
         }
     }
@@ -148,32 +189,36 @@ auto CFormatter::isOpenFile() -> bool{
 }
 
 auto CFormatter::writeToFile() -> bool {
-    if (!isOpenFile()){
+    if (!isOpenFile()) {
         return false;
     }
-    if (m_pimpl->m_wave){
-        return m_pimpl->m_wave->writeToStream(&m_pimpl->m_pack,m_pimpl->m_file);
+    if (m_pimpl->m_wave) {
+        return m_pimpl->m_wave->writeToStream(&m_pimpl->m_pack, m_pimpl->m_file);
     }
-    if (m_pimpl->m_tdms){
-        return m_pimpl->m_tdms->writeToStream(&m_pimpl->m_pack,m_pimpl->m_file);
+    if (m_pimpl->m_tdms) {
+        return m_pimpl->m_tdms->writeToStream(&m_pimpl->m_pack, m_pimpl->m_file);
     }
-    if (m_pimpl->m_csv){
-        return m_pimpl->m_csv->writeToStream(&m_pimpl->m_pack,m_pimpl->m_file);
-    }
-    return false;
-}
-
-auto CFormatter::writeToStream(std::iostream *_memory) -> bool {
-    if (m_pimpl->m_wave){
-        return m_pimpl->m_wave->writeToStream(&m_pimpl->m_pack,_memory);
-    }
-    if (m_pimpl->m_tdms){
-        return m_pimpl->m_tdms->writeToStream(&m_pimpl->m_pack,_memory);
-    }
-    if (m_pimpl->m_csv){
-        return m_pimpl->m_csv->writeToStream(&m_pimpl->m_pack,_memory);
+    if (m_pimpl->m_csv) {
+        return m_pimpl->m_csv->writeToStream(&m_pimpl->m_pack, m_pimpl->m_file);
     }
     return false;
 }
 
+auto CFormatter::writeToStream(std::iostream* _memory) -> bool {
+    if (m_pimpl->m_wave) {
+        return m_pimpl->m_wave->writeToStream(&m_pimpl->m_pack, _memory);
+    }
+    if (m_pimpl->m_tdms) {
+        return m_pimpl->m_tdms->writeToStream(&m_pimpl->m_pack, _memory);
+    }
+    if (m_pimpl->m_csv) {
+        return m_pimpl->m_csv->writeToStream(&m_pimpl->m_pack, _memory);
+    }
+    return false;
 }
+
+auto CFormatter::getMaxSamples() -> size_t {
+    return m_pimpl->getMaxSamples();
+}
+
+}  // namespace rp_formatter_api

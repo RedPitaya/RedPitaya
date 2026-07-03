@@ -230,6 +230,39 @@
         MAIN.dacRateFocusOutValue();
     }
 
+    MAIN.setCommand = function(new_params) {
+    }
+
+    MAIN.setClockState = function(new_params) {
+        MAIN.is_clock = new_params['RP_SYSTEM_CLOCK_STATE'].value
+        if (new_params['RP_SYSTEM_CLOCK_STATE'].value){
+            $('.info-icon img').removeClass('blinking');
+        }else{
+            $('.info-icon img').addClass('blinking');
+        }
+    }
+
+     MAIN.setClockRate = function(new_params) {
+        var val = new_params['RP_SYSTEM_CLOCK_RATE'].value
+        if (MAIN.is_clock){
+            if (val >= 1000000) {
+                val = val / 1000000;
+                result = val.toFixed(2) + " MHz";
+            } else if (val >= 1000) {
+                val = val / 1000;
+                result = val.toFixed(2) + " kHz";
+            } else {
+                result = val + " Hz";
+            }
+
+            $('#CLOCK_RATE_ID').text(result);
+            $('#CLOCK_RATE_ID').removeClass('blinking');
+        }else{
+            $('#CLOCK_RATE_ID').text("MISSING");
+            $('#CLOCK_RATE_ID').addClass('blinking');
+        }
+
+    }
 
 
     MAIN.param_callbacks["RP_SYSTEM_TOTAL_RAM"] = MAIN.processTRam;
@@ -256,6 +289,10 @@
     MAIN.param_callbacks["RP_ADC_BASE_RATE"] = MAIN.setADCBaseRate;
     MAIN.param_callbacks["RP_DAC_BASE_RATE"] = MAIN.setDACBaseRate;
 
+    MAIN.param_callbacks["RP_COMMAND"] = MAIN.setCommand;
+
+    MAIN.param_callbacks["RP_SYSTEM_CLOCK_STATE"] = MAIN.setClockState;
+    MAIN.param_callbacks["RP_SYSTEM_CLOCK_RATE"] = MAIN.setClockRate;
 
 }(window.MAIN = window.MAIN || {}, jQuery));
 
@@ -312,6 +349,74 @@ $(function() {
         CLIENT.requestParameters()
         $("#adc_base_rate").val('-');
         $("#dac_base_rate").val('-');
+    });
+
+    $("#bug_report").click(async function (event){
+
+        RP_WS_CLIENT.connectWebSocket(function onOpen(){
+                    console.log("Open");
+                    $("#build_log_dialog").modal("show");
+                    CLIENT.parametersCache["RP_COMMAND"] = { value:  1}; // Start build log
+                    CLIENT.sendParameters();
+                },
+
+                function onClose(){
+                    console.log("Close");
+                },
+                function onError(){
+                    console.log("Error");
+                },
+                function onMessage(receive){
+
+                    if (receive.build_log_step){
+                        let step = receive.build_log_step.value
+                        const $progressBar = $('#build_progress_bar');
+                        $progressBar.css('width', step + '%');
+                        console.log("build_log_step " + step);
+                    }
+
+                    if (receive.build_log_done){
+                        let done = receive.build_log_done.value
+                        RP_WS_CLIENT.closeWS()
+                        console.log("build_log_done " + done);
+
+                        if (done == 0){
+
+                            setTimeout(async function(){
+                                const blob =  await fetch('/get_bug_report', {
+                                    method: 'POST'
+                                })
+                                .then(resp => resp.blob());
+
+                            if( window.showSaveFilePicker ) {
+                                const handle = await showSaveFilePicker({
+                                    suggestedName: new Date().toJSON().slice(0,22) + ".zip" });
+                                const writable = await handle.createWritable();
+                                await writable.write( blob );
+                                writable.close();
+                            }
+                            else {
+                                const saveImg = document.createElement( "a" );
+                                saveImg.href = URL.createObjectURL( blob );;
+                                saveImg.download= new Date().toJSON().slice(0,22) + ".zip";
+                                saveImg.click();
+                                setTimeout(() => URL.revokeObjectURL( saveImg.href ), 60000 );
+                            }}
+                            ,1000)
+
+                        }
+                        $("#build_log_dialog").modal('hide');
+                    }
+                }
+        )
+
+
+
+    });
+
+    $("#cancel_build_log_id").click(async function (event){
+        CLIENT.parametersCache["RP_COMMAND"] = { value:  2}; // Stop build log
+        CLIENT.sendParameters();
     });
 
 });

@@ -26,8 +26,8 @@
 
 /* These structures are a direct API mirror
 and should not be altered! */
-const scpi_choice_def_t scpi_RpWForm[] = {{"SINE", 0}, {"SQUARE", 1}, {"TRIANGLE", 2},  {"SAWU", 3},   {"SAWD", 4},
-                                          {"DC", 5},   {"PWM", 6},    {"ARBITRARY", 7}, {"DC_NEG", 8}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_RpWForm[] =
+    {{"SINE", 0}, {"SQUARE", 1}, {"TRIANGLE", 2}, {"SAWU", 3}, {"SAWD", 4}, {"DC", 5}, {"PWM", 6}, {"ARBITRARY", 7}, {"DC_NEG", 8}, SCPI_CHOICE_LIST_END};
 
 const scpi_choice_def_t scpi_RpGenTrig[] = {{"INT", 1}, {"EXT_PE", 2}, {"EXT_NE", 3}, {"GATED", 4}, SCPI_CHOICE_LIST_END};
 
@@ -573,11 +573,11 @@ scpi_result_t RP_GenBurstRepetitionsQ(scpi_t* context) {
 
 scpi_result_t RP_GenBurstPeriod(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
-    uint32_t period = 0;
+    float period = 0;
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
         return SCPI_RES_ERR;
     }
-    if (!SCPI_ParamUInt32(context, &period, true)) {
+    if (!SCPI_ParamFloat(context, &period, true)) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
         return SCPI_RES_ERR;
     }
@@ -592,7 +592,7 @@ scpi_result_t RP_GenBurstPeriod(scpi_t* context) {
 
 scpi_result_t RP_GenBurstPeriodQ(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
-    uint32_t period = 0;
+    float period = 0;
     if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
         if (getRetOnError())
             requestSendNewLine(context);
@@ -605,7 +605,7 @@ scpi_result_t RP_GenBurstPeriodQ(scpi_t* context) {
             requestSendNewLine(context);
         return SCPI_RES_ERR;
     }
-    SCPI_ResultUInt32Base(context, period, 10);
+    SCPI_ResultFloat(context, period);
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }
@@ -645,6 +645,47 @@ scpi_result_t RP_GenBurstLastValueQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
     SCPI_ResultFloat(context, value);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenUseLastSample(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    scpi_bool_t value = FALSE;
+    // read first parameter (OFF,ON)
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_GenSetUseLastSample(channel, value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set 'use last sample' mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_GenUseLastSampleQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvDAC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    bool value = false;
+    auto result = rp_GenGetUseLastSample(channel, &value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get 'use last sample' mode: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }

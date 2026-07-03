@@ -20,7 +20,27 @@
         var inp_field = $('#' + param_name_offset);
         var inp_field_units = $('#' + param_name_offset+"_UNIT");
 
+        // var units;
+        // if (scale !== undefined) {
+        //     if (Math.abs(scale) >= 1) {
+        //         units = 'V';
+        //     } else {
+        //         units = 'mV';
+        //     }
+        //     inp_field_units.text(units)
+        // } else {
+        //     units = inp_field_units.html();
+        // }
+
+        // if (offset !== undefined){
+        //     var multiplier = units == "mV" ? 1000 : 1;
+        //     var step = units == "mV" ? 0.1 : 0.001;
+        //     inp_field.val(OSC.formatInputValueOut(offset * multiplier, step));
+        //     inp_field.attr("step",step);
+        // }
+
         var units;
+        var step = 1;
         if (scale !== undefined) {
             if (Math.abs(scale) >= 1) {
                 units = 'V';
@@ -28,15 +48,23 @@
                 units = 'mV';
             }
             inp_field_units.text(units)
+            step = scale / 10;
         } else {
             units = inp_field_units.html();
         }
 
         if (offset !== undefined){
             var multiplier = units == "mV" ? 1000 : 1;
-            var step = units == "mV" ? 0.1 : 0.001;
-            inp_field.val(OSC.formatInputValueOut(offset * multiplier, step));
-            inp_field.attr("step",step);
+            var step_direct = step * multiplier;
+            var value = offset * multiplier;
+
+            var roundedValue = Math.round(value / step_direct) * step_direct;
+
+            var decimals = (step_direct.toString().split('.')[1] || '').length;
+            roundedValue = +roundedValue.toFixed(decimals);
+
+            inp_field.val(roundedValue);
+            inp_field.attr("step_direct", step_direct);
         }
     }
 

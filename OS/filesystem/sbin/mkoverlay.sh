@@ -5,7 +5,7 @@ MODEL=$(/opt/redpitaya/bin/profiles -f)
 if [ "$?" = "0" ]
 then
 
-/opt/redpitaya/bin/fpgautil -b $FPGAS/$MODEL/$1/fpga.bit.bin -o $FPGAS/$MODEL/$1/fpga.dtbo -n Full
+/opt/redpitaya/bin/fpgautil -b $FPGAS/$MODEL/$1/fpga.bin -o $FPGAS/$MODEL/$1/fpga.dtbo -n Full
 
 if [ "$?" = '0' ]
 then

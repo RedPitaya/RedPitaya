@@ -97,35 +97,71 @@ uint64_t findDT(float* _buffer, int _size, uint64_t _rms) {
     return ret;
 }
 
+// double calculate(float* _buffer, int _size, float _last_max, int _cross1, int _cross2, double& _deviation) {
+//     if (_cross1 + 1 > _size)
+//         return -1;
+//     _cross1++;
+//     if (_cross1 >= _cross2)
+//         return -1;
+//     int count = 0;
+//     double sum = 0;
+//     auto ch = _buffer;
+//     auto coff = 1 / _last_max;
+//     //auto ch = filterBuffer(_buffer,_size);
+//     float w = 10;
+//     for (int i = _cross1; i < _cross2 - 1; i++) {
+//         if (fabs(sin(1.0 / (ch[i] - ch[i + 1])) - 1) > 0.05) {
+//             sum += fabs(ch[i] * coff - 1) * w;
+//             count++;
+//             w--;
+//             if (w < 1)
+//                 w = 1;
+//         }
+//     }
+//     _deviation = 0;
+//     for (int i = _cross1; i < _cross2 - 1; i++) {
+//         if (fabs(sin(1.0 / (ch[i] - ch[i + 1])) - 1) > 0.03) {
+//             auto z = fabs(ch[i] * coff - ch[i + 1] * coff);
+//             _deviation += z;
+//         }
+//     }
+//     _deviation /= 1000.0;
+//     return sum;
+// }
+
 double calculate(float* _buffer, int _size, float _last_max, int _cross1, int _cross2, double& _deviation) {
-    if (_cross1 + 1 > _size)
+    if (_cross1 < 0 || _cross2 >= _size || _last_max == 0)
         return -1;
-    _cross1++;
-    if (_cross1 >= _cross2)
-        return -1;
-    int count = 0;
+
     double sum = 0;
-    auto ch = _buffer;
-    auto coff = 1 / _last_max;
-    //auto ch = filterBuffer(_buffer,_size);
-    float w = 10;
+    float w = 10.0f;
+
     for (int i = _cross1; i < _cross2 - 1; i++) {
-        if (fabs(sin(1.0 / (ch[i] - ch[i + 1])) - 1) > 0.05) {
-            sum += fabs(ch[i] * coff - 1) * w;
-            count++;
-            w--;
-            if (w < 1)
-                w = 1;
+        float delta = std::abs(_buffer[i] - _buffer[i + 1]) / _last_max;
+
+        float shape_factor = std::cos(delta * 1.5708f);
+
+        if (shape_factor > 0.95) {
+            sum += std::abs(_buffer[i] / _last_max - 1.0) * w;
+            if (w > 1.0)
+                w -= 0.5;
+        } else {
+            sum += (1.0 - shape_factor) * 2.0;
         }
     }
+
     _deviation = 0;
+    int flat_points = 0;
     for (int i = _cross1; i < _cross2 - 1; i++) {
-        if (fabs(sin(1.0 / (ch[i] - ch[i + 1])) - 1) > 0.03) {
-            auto z = fabs(ch[i] * coff - ch[i + 1] * coff);
-            _deviation += z;
+        float delta = std::abs(_buffer[i] - _buffer[i + 1]);
+        if (delta < (_last_max * 0.05)) {
+            _deviation += std::abs(_buffer[i] - _last_max);
+            flat_points++;
         }
     }
-    _deviation /= 1000.0;
+    if (flat_points > 0)
+        _deviation /= flat_points;
+
     return sum;
 }
 

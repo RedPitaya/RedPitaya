@@ -79,7 +79,12 @@ typedef enum {
     STEM_125_14_Z7020_TI_v1_3 = 28,
     STEM_65_16_Z7020_TI_v1_3 = 29,
 
-    STEM_125_14_Z7020_4IN_BO_v1_3 = 30
+    STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    STEM_125_14_BO_v2_0 = 31,
+    STEM_125_14_Pro_BO_v2_0 = 32,
+    STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
+    STEM_MODEL_COUNT  // Must be the last element
 } rp_HPeModels_t;
 
 /**
@@ -196,6 +201,42 @@ uint32_t rp_HPGetBaseFastADCSpeedHzOrDefault();
 */
 int rp_HPGetSpectrumFastADCSpeedHz(uint32_t* _out_value);
 uint32_t rp_HPGetSpectrumFastADCSpeedHzOrDefault();
+
+/**
+* Returns the maximum value of the low-pass filter at the Fast ADC input.
+* Function rp_HPGetFastADCMaxLowPassFilterHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetFastADCMaxLowPassFilterHz(uint32_t* _out_value);
+uint32_t rp_HPGetFastADCMaxLowPassFilterHzOrDefault();
+
+/**
+* Returns the maximum value of the low-pass filter at the Fast DAC output.
+* Function rp_HPGetFastDACMaxLowPassFilterHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetFastDACMaxLowPassFilterHz(uint32_t* _out_value);
+uint32_t rp_HPGetFastDACMaxLowPassFilterHzOrDefault();
+
+/**
+* Returns the minimum sample rate of the signal generator in Hz.
+* Function rp_HPGetGenMinSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetGenMinSpeedHz(uint32_t* _out_value);
+uint32_t rp_HPGetGenMinSpeedHzOrDefault();
+
+/**
+* Returns the maximum sample rate of the signal generator in Hz.
+* Function rp_HPGetGenMaxSpeedHzOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetGenMaxSpeedHz(uint32_t* _out_value);
+uint32_t rp_HPGetGenMaxSpeedHzOrDefault();
 
 /**
 * Returns the number of channels for ADC
@@ -451,12 +492,12 @@ bool rp_HPGetIsExternalTriggerLevelPresentOrDefault();
 
 /**
 * Returns the full scale for external trigger
-* Function rp_HPGetIsExternalTriggerFullScalePresentOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Function rp_HPGetIsExternalTriggerFullScaleOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
 int rp_HPGetIsExternalTriggerFullScale(float* _out_value);
-float rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+float rp_HPGetIsExternalTriggerFullScaleOrDefault();
 
 /**
 * Returns whether the external trigger has a signed value
@@ -469,7 +510,7 @@ bool rp_HPGetIsExternalTriggerIsSignedOrDefault();
 
 /**
 * Returns the availability clock synchronization through the daisy chain.
-* Function rp_HPGetIsDaisyChainAvailableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* Function rp_HPGetIsDaisyChainClockAvailableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
@@ -486,7 +527,7 @@ int rp_HPGetIsDMAinv0_94(bool* _out_value);
 bool rp_HPGetIsDMAinv0_94OrDefault();
 
 /**
-* Returns the ability to separate trigger logic for fast ADC for v0.94.
+* Returns the ability to separate trigger logic for fast ADC for FPGA prj v0.94.
 * Function rp_HPGetFastADCIsSplitTriggerOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
@@ -558,11 +599,27 @@ int rp_HPGetIsCalibInFPGA(bool* _out_value);
 bool rp_HPGetIsCalibInFPGAOrDefault();
 
 /**
+* The function returns the ability to expand data to 16 bits for Fast ADC.
+* Function rp_HPGetIsFastADC16BitModeOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsFastADC16BitMode(bool* _out_value);
+bool rp_HPGetIsFastADC16BitModeOrDefault();
+
+/**
 * Returns the name for the path to the FPGA files.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
 */
 int rp_HPGetFPGAVersion(const char** _no_free_value);
+
+/**
+* Returns the name for the path to the DTS files.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetDTSVersion(const char** _no_free_value);
 
 /**
  * Print all parameters for current profile
@@ -583,6 +640,40 @@ int rp_HPPrintKeys();
  * Prints a pivot table
  */
 int rp_HPPrintPivotTable(char* keys);
+
+/**
+* Checks if the board model specified in the eeprom is valid.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsValidEepromModel(bool* _out_value);
+
+/**
+* Returns information about whether the board supports X-Streaming.
+* Function rp_HPGetIsXStreamingAvailableOrDefault. If it was not possible to determine the model, then the function returns a value for the model: STEMLab 125-10.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetIsXStreamingAvailable(bool* _out_value);
+bool rp_HPGetIsXStreamingAvailableOrDefault();
+
+/**
+* Writes a user-defined key-value pair to the device.
+* @param key - The key identifier for the user-defined value.
+* @param value - The integer value to associate with the specified key.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful, the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPWriteUserDefinedValue(const char* key, int value);
+
+/**
+* Deletes a user-defined key-value pair from the device.
+* This function removes the specified key and its associated value from the user-defined storage.
+* @param key - The key identifier of the user-defined value to delete.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful (e.g., the key does not exist), the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPDeleteUserDefinedValue(const char* key);
 
 #ifdef __cplusplus
 }

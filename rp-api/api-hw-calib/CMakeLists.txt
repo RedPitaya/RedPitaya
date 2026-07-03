@@ -65,7 +65,11 @@ file(GLOB PR_HW_SOURCES "src/*.cpp")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -Wno-psabi -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wno-psabi -Wextra -Wpedantic -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
 
@@ -77,13 +81,29 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE NUMPY_FOUND
+        )
+
+        if(NOT NUMPY_FOUND EQUAL 0)
+            message(FATAL_ERROR "NumPy not found. Install with: pip3 install numpy")
+        endif()
+
+        message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
+
+        include_directories(${Python3_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIR})
 
         set_property(SOURCE src/rp_hw_calib.i PROPERTY CPLUSPLUS ON)
+        set(CMAKE_SWIG_FLAGS -threads -O)
 
         SWIG_ADD_LIBRARY(rp_hw_calib_py LANGUAGE python SOURCES src/rp_hw_calib.i ${PR_HW_SOURCES})
-        SWIG_LINK_LIBRARIES(rp_hw_calib_py ${PYTHON_LIBRARIES} rp-hw-profiles.a)
+        SWIG_LINK_LIBRARIES(rp_hw_calib_py ${Python3_LIBRARIES} rp-hw-profiles.a)
+
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

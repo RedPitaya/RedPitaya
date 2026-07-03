@@ -8,9 +8,9 @@
 #include "libjson/libjson.h"
 
 #include <math.h>
-#include <sys/stat.h>
 #include <unistd.h>
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <future>
 #include <iostream>
@@ -35,49 +35,9 @@ struct BinarySignal {
 
 // Creates the directory and subdirectories if needed.
 auto rp_WSCreateDirectory(const std::string& _path) -> bool {
-    auto isDirectory = [](const std::string& _path) -> bool {
-        struct stat st;
-
-        if (stat(_path.c_str(), &st) == 0) {
-            return st.st_mode & S_IFDIR;
-        }
-
-        return false;
-    };
-
-    size_t pos = 0;
-
-    for (;;) {
-        pos = _path.find('/', pos);
-
-        if (pos == std::string::npos) {
-            // Create the last directory
-            if (!isDirectory(_path.c_str())) {
-                int mkdir_err = mkdir(_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-                return (mkdir_err == 0) || (mkdir_err == EEXIST);
-            } else {
-                return true;
-            }
-        } else {
-            ++pos;
-            std::string sub_path = _path.substr(0, pos);
-
-            // Create subdirectory
-            if (!isDirectory(sub_path.c_str())) {
-                int mkdir_err = mkdir(sub_path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
-                if (!((mkdir_err == 0) || (mkdir_err == EEXIST))) {
-                    return false;
-                }
-            }
-
-            if (pos >= _path.size()) {
-                return true;
-            }
-        }
-    }
-
-    return false;
+    std::error_code ec;
+    std::filesystem::create_directories(_path, ec);
+    return !ec;
 }
 
 rp_websocket_server::rp_websocket_server() : m_params(NULL), m_OnClosed(false) {}

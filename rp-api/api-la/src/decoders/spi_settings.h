@@ -40,6 +40,9 @@ class SPIParameters : public DecoderParameters {
     static std::string getSPIAnnotationsString(SPIAnnotations value);
 
     auto setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool override;
+    auto setDecoderSettingsString(std::string&, std::string&) -> bool override;
+
     auto getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool override;
+    auto getDecoderSettingsString(std::string&, std::string*) -> bool override;
 };
 }  // namespace spi

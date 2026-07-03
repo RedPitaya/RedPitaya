@@ -67,7 +67,7 @@ auto ClientNetConfigManager::removeHadlers() -> void {
 }
 
 auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> void {
-    m_pBroadcast = broadcast_lib::CAsioBroadcastSocket::create(broadcast_lib::CLIENT, host, port);
+    m_pBroadcast = broadcast_lib::CAsioBroadcastSocket::create(0, "", host, port);
     m_pBroadcast->initClient();
     m_pBroadcast->errorNotify.connect([=, this](std::error_code er) {
         ERROR_LOG("Broadcast client error: %s (%d)", er.message().c_str(), er.value());
@@ -83,26 +83,41 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
             cl.mode = broadcast_lib::AB_NONE;
             cl.ts = std::time(0);
             std::string s = std::string((char*)buf, size);
-            uint8_t model = s[s.size() - 1] - '0';
-            cl.model = static_cast<broadcast_lib::EModel>(model);
-            s.pop_back();
-            if (s[s.size() - 1] == 'M') {
-                cl.mode = broadcast_lib::AB_SERVER_MASTER;
-            } else if (s[s.size() - 1] == 'S') {
-                cl.mode = broadcast_lib::AB_SERVER_SLAVE;
-            } else {
+            std::vector<const char*> pointers;
+            pointers.push_back((char*)buf);
+            for (size_t idx = 0; idx < size; idx++) {
+                if (buf[idx] == '\n') {
+                    buf[idx] = '\0';
+                    if (idx + 1 < size) {
+                        pointers.push_back((char*)buf + idx + 1);
+                    }
+                }
+            }
+            if (pointers.size() != 4) {
+                TRACE_SHORT("[FATAL ERROR] Broadcast parse error \'%s\'", s.c_str())
                 errorNofiy(Errors::BROADCAST_ERROR_PARSE, host, er);
-            }
-            s.pop_back();
-            cl.host = h = s;
-            auto find =
-                std::find_if(std::begin(m_broadcastClients), std::end(m_broadcastClients), [&cl](const BroadCastClients& c) { return c.host == cl.host; });
-            if (find == std::end(m_broadcastClients)) {
-                m_broadcastClients.push_back(cl);
-                riseEmit = true;
             } else {
-                find->ts = std::time(0);
+                h = std::string(pointers[0]);
+                if (pointers[2][0] == 'M') {
+                    cl.mode = broadcast_lib::AB_SERVER_MASTER;
+                } else if (pointers[2][0] == 'S') {
+                    cl.mode = broadcast_lib::AB_SERVER_SLAVE;
+                } else {
+                    cl.mode = broadcast_lib::AB_NONE;
+                }
+                cl.model = atoi(pointers[3]);
+                cl.mac = std::string(pointers[0]);
+                cl.host = h = std::string(pointers[1]);
+
+                auto find = std::find_if(std::begin(m_broadcastClients), std::end(m_broadcastClients), [&cl](const BroadCastClients& c) { return c.host == cl.host; });
+                if (find == std::end(m_broadcastClients)) {
+                    m_broadcastClients.push_back(cl);
+                    riseEmit = true;
+                } else {
+                    find->ts = std::time(0);
+                }
             }
+
             m_broadcastClients.remove_if([](const BroadCastClients& c) { return (std::time(0) - c.ts > BROADCAST_TIMEOUT); });
         } else {
             ERROR_LOG("Broadcast client error: %s (%d)", er.message().c_str(), er.value());
@@ -140,10 +155,8 @@ auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts, u
 
         auto cl_weak = std::weak_ptr<Clients>(cl);
 
-        cl->m_manager->receivedCommandNotify.connect(
-            std::bind(&ClientNetConfigManager::receiveCommand, this, std::placeholders::_1, std::placeholders::_2, cl_weak));
-        cl->m_manager->receivedStringNotify.connect(
-            std::bind(&ClientNetConfigManager::receiveStrStr, this, std::placeholders::_1, std::placeholders::_2, cl_weak));
+        cl->m_manager->receivedCommandNotify.connect(std::bind(&ClientNetConfigManager::receiveCommand, this, std::placeholders::_1, std::placeholders::_2, cl_weak));
+        cl->m_manager->receivedStringNotify.connect(std::bind(&ClientNetConfigManager::receiveStrStr, this, std::placeholders::_1, std::placeholders::_2, cl_weak));
         cl->m_manager->receivedConfigNotify.connect(std::bind(&ClientNetConfigManager::receiveConfig, this, std::placeholders::_1, cl_weak));
 
         cl->m_manager->errorNotify.connect(std::bind(&ClientNetConfigManager::serverError, this, std::placeholders::_1, cl_weak));
@@ -274,10 +287,11 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
     }
 
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_ACTIVE_CHANNELS) {
-        getActiveChannelsNofiy(sender->m_manager->getHost(), tag);
-    }
+		adc_channels_t ac = adc_channels_t::fromString(tag);
+		getActiveChannelsNofiy(sender->m_manager->getHost(), ac);
+	}
 
-    if (c == CNetConfigManager::ECommands::CS_RESPONSE_SERVER_MODE_TCP) {
+	if (c == CNetConfigManager::ECommands::CS_RESPONSE_SERVER_MODE_TCP) {
         serverModeSDNofiy(sender->m_manager->getHost());
     }
 
@@ -444,12 +458,16 @@ auto ClientNetConfigManager::sendADCServerStop(const std::string& host) -> bool 
     return false;
 }
 
-auto ClientNetConfigManager::sendDACServerStart(const std::string& host, const std::string activeChannels) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_START, activeChannels);
-    }
-    return false;
+auto ClientNetConfigManager::sendDACServerStart(const std::string &host, const dac_channels_t &activeChannels) -> bool
+{
+	auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) {
+		return c->m_manager->getHost() == host;
+	});
+	if (it != std::end(m_clients)) {
+		return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_START,
+														activeChannels.toString());
+	}
+	return false;
 }
 
 auto ClientNetConfigManager::sendDACServerStop(const std::string& host) -> bool {

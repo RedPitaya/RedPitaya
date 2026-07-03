@@ -27,10 +27,10 @@ namespace XML
 	std::vector<std::wstring>& XMLParser::GetErrorList(){
 		return ErrorList;
 	}
-	
+
 	XML::XMLDocument* XMLParser::ParseXML(char *_buffer, int BufferLenght){
 		if (namespacevector) DestoryVector<NameSpaceVector>(namespacevector);
-		
+
 		namespacevector = new NameSpaceVector();
 		nodes_stek.clear();
 
@@ -43,7 +43,7 @@ namespace XML
 				delete buffer;
 				buffer = new Buffer(_buffer, BufferLenght);
 			}
-						
+
 			// Check prolog <?xml version="1.0" encoding="UTF-8"?>
 			XMLProlog* prolog = ParseProlog();
 			if (prolog){
@@ -51,8 +51,8 @@ namespace XML
 				document->SetProlog(prolog);
 			}
 
-			XMLNode* node = ParseXMLRootNode();			
-	
+			XMLNode* node = ParseXMLRootNode();
+
 			if (Error != 0){
 				for (int i = 0; i < (int)nodeoflist->size(); i++){
 					nodeoflist->at(i)->ClearChildsWithoutDedtroy();
@@ -128,13 +128,13 @@ namespace XML
 			if (wcscmp(ch, L"version") == 0) found_version = true;
 			if (wcscmp(ch, L"encoding") == 0) found_encoding = true;
 		}
-		
+
 		if (!found_encoding || !found_version){
 			Error = 3;
 			ErrorList.push_back(L"Error get attrubutes in XML prolog: Don't find encoding or version");
 		}
 	}
-	
+
 	AttibuteVector* XMLParser::ParseAttribute(char *_buffer, int BufferLenght){
 		Buffer attributebuf(_buffer, BufferLenght);
 		attributebuf.TrimRight();
@@ -154,7 +154,7 @@ namespace XML
 				ErrorList.emplace_back(L"Error parse xml attribute name");
 				return nullptr;
 			}
-			
+
 			if (IsPunctuationChar(Name->toWString()[0]) || IsNumber(Name->getText()[0]) || !CheckFormatWithXMLNS(*Name)){
 				DestoryVector<AttibuteVector>(attributes);
 				Error = 101;
@@ -207,7 +207,7 @@ namespace XML
 			ErrorList.emplace_back(L"Error parse attribute name: Don't find '='");
 			return nullptr;
 		}
-		
+
 		int LenghtName = EndName - buffer.GetPosition();
 		char *Name = new char[LenghtName];
 
@@ -235,14 +235,14 @@ namespace XML
 
 		unsigned int BeginQuote1 = buffer.FindSubANSIString("\"", 1);
 		unsigned int BeginQuote2 = buffer.FindSubANSIString("'" , 1);
-		
+
 		Quote = '\"';
         unsigned int  StartQuote = BeginQuote1;
 		if (BeginQuote1 > BeginQuote2){
 			Quote = '\'';
 			StartQuote = BeginQuote2;
 		}
-		
+
 		buffer.Seek(StartQuote + 1);
 		int EndQuote = buffer.FindSubANSIChar(Quote);
 
@@ -413,7 +413,7 @@ namespace XML
 				endName = buffer->GetPosition()-1;
 				buffer->Seek(i);
 				break;
-			}			
+			}
 
 			if (ch == '<' || ch == '&'  ){
 				Error = 6;
@@ -458,7 +458,7 @@ namespace XML
 
 		auto* node = new XMLNode(*node_name);
 		delete node_name;
-		
+
 		DEBUG_OUT_TREE(L"<" + node->nameFull.toWString() + L">");
 
 		buffer->ReadNextSkipChars();
@@ -474,7 +474,7 @@ namespace XML
 			if (posendattr == -1){
 				Error = 6;
 				ErrorList.push_back(L"Error parse XML: Don't find end of " + node->nameFull.toWString());
-				buffer->End(); 
+				buffer->End();
 			}
 			else{
 				int attributelenght = posendattr - buffer->GetPosition();
@@ -482,7 +482,7 @@ namespace XML
 
 				AttibuteVector *attributes = ParseAttribute(attributbuf, attributelenght);
 
-				if (attributes){					
+				if (attributes){
 					node->SetAttributes(attributes);
 					buffer->MoveNext(attributelenght);
 				}
@@ -496,13 +496,13 @@ namespace XML
 			}
 		}
 		delete[] ch;
-		
+
 		buffer->ReadNextSkipChars();
 		char* ch_node_inner = buffer->ReadANSI(2);
 		if (ch_node_inner[0] == '>'){
 			buffer->MoveNext(1);
 			nodes_stek.push_back(node->nameFull.toWString());
-			DEBUG_OUT_TREE(L"Stek size = " << nodes_stek.size());			
+			DEBUG_OUT_TREE(L"Stek size = " << nodes_stek.size());
 			ParseXMLNode(node);
 		}
 		if (strncmp(ch_node_inner, "/>", 2) == 0){
@@ -533,12 +533,12 @@ namespace XML
 		catch (std::exception &ex)
 		{
 			AddException(ex, 5);
-			delete Name;
+			delete[] Name;
 			return false;
 		}
 
 		DEBUG_OUT_COMMENT(L"Comment block: " << GetWString(Name, lenght));
-		delete Name;
+		delete[] Name;
 #endif // _DEBUG_XMLCOMMENT
 
 		buffer->Seek(endComment + 3);
@@ -546,7 +546,7 @@ namespace XML
 	}
 
 	std::wstring XMLParser::ParseXMLReadCDATA(){
-		
+
 		int endCDATA = buffer->FindSubANSIString("]]>", 3);
 
 		if (endCDATA == -1){
@@ -568,17 +568,17 @@ namespace XML
 		catch (std::exception &ex)
 		{
 			AddException(ex, 6);
-			delete Name;
+			delete[] Name;
 			return NULL;
 		}
 
 		std::wstring wstr = GetWString(Name, lenght);
 		buffer->Seek(endCDATA);
 
-		delete Name;
+		delete[] Name;
 
 		DEBUG_OUT_CDATA(L"CDATA block: " << wstr);
-		
+
 		return wstr;
 	}
 
@@ -607,7 +607,7 @@ namespace XML
 		delete[] Name;
 		return ret_string;
 	}
-	
+
 	std::wstring XMLParser::ParseXMLEndNode(){
 		buffer->MoveNext(2);
 		int EndName = buffer->FindSubANSIString(">", 1);
@@ -673,7 +673,7 @@ namespace XML
 	bool XMLParser::CheckFormatWithXMLNS(XMLString &_text)
 	{
 		if (_text.Lenght() < 2) return true;
-		
+
 		const char *text = _text.getText();
 		int position = -1;
 		for (int i = 0; i < _text.Lenght(); i++){

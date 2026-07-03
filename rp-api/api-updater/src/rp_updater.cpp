@@ -99,6 +99,10 @@ void copyEcosystem() {
         }
     }
     for (size_t i = 0; i < g_files.size(); i++) {
+        std::size_t found = g_files[i].first.find("/bin/updater");
+        if (found != std::string::npos) {
+            continue;
+        }
         copyFile(g_files[i].first.c_str(), g_files[i].second.c_str());
         std::lock_guard lock(g_callbackMutex);
         if (g_callbacks) {
@@ -498,9 +502,10 @@ int rp_UpdaterUpdateBoardEcosystem(std::string fileName, bool stopServices) {
     signal(SIGUSR2, signalHandlerStrong);
 
     char buff[256];
-    sprintf(buff, "mount -o rw,remount  %s", ECOSYSTEM_INSTALL_PATH);
+    sprintf(buff, "mount -o rw,remount  %s 2>/dev/null", ECOSYSTEM_INSTALL_PATH);
     ret = system(buff);
-    if (ret != 0) {
+    auto ret2 = system("systemctl daemon-reload");
+    if (ret != 0 || ret2 != 0) {
         signal(SIGCHLD, signalHandlerDefault);
         signal(SIGHUP, signalHandlerDefault);
         signal(SIGABRT, signalHandlerDefault);

@@ -60,6 +60,19 @@ typedef enum {
 /** @} */  // end of CalibConstants group
 
 /**
+  * @enum rp_calib_filter_mode
+  * @brief Operating mode with filter
+  */
+
+typedef enum {
+    RP_HW_CFM_KEEP = 0,     ///< Saves the current filter value that was loaded from EEPROM into memory.
+    RP_HW_CFM_DEFAULT = 1,  ///< Sets the default value. For new boards, this value is often set to the disabled filter.
+    RP_HW_CFM_ZERO = 2      ///< Sets values ​​similar to the behavior of a disabled filter.
+} rp_calib_filter_mode;
+
+/** @} */  // end of CalibError group
+
+/**
   * @defgroup CalibTypes Calibration Types
   * @brief Hardware calibration data types
   * @{
@@ -131,9 +144,12 @@ typedef struct {
   * @struct rp_calib_params_t
   * @brief Complete calibration parameters structure
   */
-typedef struct {
+typedef struct rp_calib_params_t {
     char dataStructureId;  ///< Data structure identifier
     char wpCheck;          ///< Write protection check
+
+    uint32_t timeStamp;    /// Packed time in seconds since 01-01-2000 00:00:00
+    uint64_t hash_commit;  /// Commit hash
 
     uint8_t fast_adc_count_1_1;               ///< ADC count for 1:1 ratio
     channel_calib_t fast_adc_1_1[4];          ///< ADC calibration (1:1)
@@ -153,6 +169,12 @@ typedef struct {
 
     uint8_t fast_dac_count_x5;  // For 250-12
     channel_calib_t fast_dac_x5[2];
+    auto copyFilter(rp_calib_params_t& dest) -> void {
+        for (uint8_t i = 0; i < 4; i++) {
+            dest.fast_adc_filter_1_1[i] = fast_adc_filter_1_1[i];
+            dest.fast_adc_filter_1_20[i] = fast_adc_filter_1_20[i];
+        }
+    };
 } rp_calib_params_t;
 
 /**
@@ -239,14 +261,26 @@ rp_calib_params_t rp_GetDefaultCalibrationSettings();
 rp_calib_params_t rp_GetDefaultUniCalibrationSettings();
 
 /**
+  * @brief Gets maximum size of calibration data stored in EEPROM
+  * @return Maximum size in bytes
+  */
+uint32_t rp_CalibGetMaxSizeEepromData();
+
+/**
+  * @brief Gets maximum size of calibration data stored in EEPROM using unified format
+  * @return Maximum size in bytes
+  */
+uint32_t rp_CalibGetMaxSizeEepromDataUnify();
+
+/**
   * @brief Resets calibration to default values
   * @param use_factory_zone Use factory calibration zone
   * @param is_new_format Use new format calibration
-  * @param setFilterZero Set filter coefficients to zero
+  * @param mode Sets the behavior when the filter is reset
   * @param version New format version. Versions RP_HW_PACK_ID_V5 and RP_HW_PACK_ID_V6 and higher are available
   * @return Status code (RP_HW_CALIB_OK on success)
   */
-rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version);
+rp_calib_error rp_CalibrationReset(bool use_factory_zone, bool is_new_format, rp_calib_filter_mode mode, uint8_t version);
 
 /**
   * @brief Copies factory calibration to user EEPROM

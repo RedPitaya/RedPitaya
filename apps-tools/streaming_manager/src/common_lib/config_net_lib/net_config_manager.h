@@ -68,14 +68,14 @@ class CNetConfigManager {
         CS_RESPONSE_SERVER_MODE_SD
     };
 
-    using Ptr = std::shared_ptr<CNetConfigManager>;
+	using Ptr = std::shared_ptr<CNetConfigManager>;
 
-    CNetConfigManager();
-    ~CNetConfigManager();
+	CNetConfigManager();
+	~CNetConfigManager();
 
-    auto startAsioNet(net_lib::EMode _mode, std::string _host, uint16_t _port) -> bool;
-    auto stopAsioNet() -> bool;
-    auto isConnected() -> bool;
+	auto startAsioNet(net_lib::EMode _mode, std::string _host, uint16_t _port) -> bool;
+	auto stopAsioNet() -> bool;
+	auto isConnected() -> bool;
     auto getHost() -> std::string;
     auto getPort() -> uint16_t;
 

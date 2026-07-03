@@ -23,7 +23,7 @@
             $("#B_AUTO_CLOSE_CONT").hide();
             $("#B_RESET_CONT").hide();
             $("#B_EEPROM_SHOW_CONT").hide();
-            SW.setWinShow(false)    
+            SW.setWinShow(false)
         } else {
             $("#main_menu_body").hide();
         }
@@ -292,14 +292,16 @@
         });
 
         $('#B_APPLY').on('click', function(ev) {
-            $("#dialog_reset_text").text("Apply new calibration?");
+            $("#dialog_reset_text").text("Save new calibration for all channels?");
+            $('#ADC_RESET_FILTER_MODE').hide()
+            $('#ADC_RESET_FILTER_ALL_CHANNELS').hide()
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
                 CLIENT.parametersCache["calib_sig"] = { value: 5 };
-                CLIENT.requestParameters();
+                CLIENT.sendParameters();
                 CLIENT.parametersCache["calib_sig"] = { value: 8 };
-                CLIENT.requestParameters();
+                CLIENT.sendParameters();
                 OBJ.adcCalibChange = false;
                 OBJ.filterCalibChange = false;
             });
@@ -309,13 +311,18 @@
 
         $('#B_RESET_DEFAULT').on('click', function(ev) {
             $("#dialog_reset_text").text("Reset to default?");
+            $('#ADC_RESET_FILTER_MODE').show()
+            $('#ADC_RESET_FILTER_ALL_CHANNELS').hide()
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
+                var f_mode = $("#ADC_RESET_FILTER_MODE_INPUT").val();
+                CLIENT.parametersCache["ADC_RESET_FILTER_MODE_INPUT"] = { value: f_mode };
+                CLIENT.sendParameters();
                 CLIENT.parametersCache["calib_sig"] = { value: 3 };
-                CLIENT.requestParameters();
+                CLIENT.sendParameters();
                 CLIENT.parametersCache["calib_sig"] = { value: 8 };
-                CLIENT.requestParameters();
+                CLIENT.sendParameters();
                 OBJ.adcCalibChange = false;
             });
             $('#reset_cancel_btn').on('click', function() {});
@@ -324,13 +331,15 @@
 
         $('#B_RESET_FACTORY').on('click', function(ev) {
             $("#dialog_reset_text").text("Reset to factory calibration?");
+            $('#ADC_RESET_FILTER_MODE').hide()
+            $('#ADC_RESET_FILTER_ALL_CHANNELS').hide()
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
                 CLIENT.parametersCache["calib_sig"] = { value: 4 };
-                CLIENT.requestParameters();
+                CLIENT.sendParameters();
                 CLIENT.parametersCache["calib_sig"] = { value: 8 };
-                CLIENT.requestParameters();
+                CLIENT.sendParameters();
                 OBJ.adcCalibChange = false;
             });
             $('#reset_cancel_btn').on('click', function() {});
@@ -341,7 +350,7 @@
             SW.setWinShow(true)
         });
 
-        
+
 
         $('#B_CANCEL_CALIB').on('click', function(ev) {
             SM.param_callbacks["ch1_mean"] = undefined;
@@ -349,7 +358,7 @@
             SM.param_callbacks["ch1_max"] = undefined;
             SM.param_callbacks["ch1_min"] = undefined;
 
-            
+
             SM.param_callbacks["ch2_mean"] = undefined;
             SM.param_callbacks["ch2_avg"] = undefined;
             SM.param_callbacks["ch2_max"] = undefined;
@@ -374,6 +383,8 @@
         $('#B_CLOSE_ADC_CALIB').on('click', function(ev) {
             if (OBJ.adcCalibChange || OBJ.filterCalibChange) {
                 $("#dialog_reset_text").text("Save new parameters?");
+                $('#ADC_RESET_FILTER_MODE').hide()
+                $('#ADC_RESET_FILTER_ALL_CHANNELS').hide()
                 $("#reset_ok_btn").off('click');
                 $('#reset_cancel_btn').off('click');
                 $('#reset_ok_btn').on('click', function() {
@@ -400,11 +411,14 @@
         });
 
         $('#B_DEFAULT').on('click', function(ev) {
-
             $("#dialog_reset_text").text("Set default parameters for current channel?");
+            $('#ADC_RESET_FILTER_MODE').hide()
+            $('#ADC_RESET_FILTER_ALL_CHANNELS').show()
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
+                CLIENT.parametersCache["ADC_RESET_FILTER_ALL_CHANNELS_SW"] = { value: $("#ADC_RESET_FILTER_ALL_CHANNELS_SW").is(':checked') };
+                CLIENT.sendParameters();
                 CLIENT.parametersCache["calib_sig"] = { value: 6 };
                 CLIENT.requestParameters();
             });
@@ -414,11 +428,14 @@
         });
 
         $('#B_DISABLE').on('click', function(ev) {
-
             $("#dialog_reset_text").text("Set parameters that turn off the filter?");
+            $('#ADC_RESET_FILTER_MODE').hide()
+            $('#ADC_RESET_FILTER_ALL_CHANNELS').show()
             $("#reset_ok_btn").off('click');
             $('#reset_cancel_btn').off('click');
             $('#reset_ok_btn').on('click', function() {
+                CLIENT.parametersCache["ADC_RESET_FILTER_ALL_CHANNELS_SW"] = { value: $("#ADC_RESET_FILTER_ALL_CHANNELS_SW").is(':checked') };
+                CLIENT.sendParameters();
                 CLIENT.parametersCache["calib_sig"] = { value: 7 };
                 CLIENT.requestParameters();
             });

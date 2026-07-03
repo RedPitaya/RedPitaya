@@ -91,7 +91,7 @@ OSC.setSourVolt = function(ch){
     if (scale !== undefined){
         $('#GPOS_SCALE_OUTPUT'+ch).html(OSC.convertVoltage(scale));
     }
-    OSC.updateTitileYAxisTicks()
+    OSC.updateTitleYAxisTicks()
 
 }
 
@@ -119,11 +119,25 @@ OSC.sweepResetButton = function(new_params) {
     var field = $('#SOUR1_SWEEP_STATE');
     if (field.is('button')) {
         field[OSC.state.sweep_ch1 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.sweep_ch1 == true) {
+            if ($("#OUTPUT1_SWEEP_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT1_SWEEP_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT1_SWEEP_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT1_SWEEP_LED").attr("src","img/red_led.png");
+        }
     }
 
     field = $('#SOUR2_SWEEP_STATE');
     if (field.is('button')) {
         field[OSC.state.sweep_ch2 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.sweep_ch2 == true) {
+            if ($("#OUTPUT2_SWEEP_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT2_SWEEP_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT2_SWEEP_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT2_SWEEP_LED").attr("src","img/red_led.png");
+        }
     }
 }
 
@@ -138,11 +152,25 @@ OSC.burstResetButton = function(new_params) {
     var field = $('#SOUR1_BURST_STATE');
     if (field.is('button')) {
         field[OSC.state.burst_ch1 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.burst_ch1 == true) {
+            if ($("#OUTPUT1_BURST_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT1_BURST_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT1_BURST_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT1_BURST_LED").attr("src","img/red_led.png");
+        }
     }
 
     field = $('#SOUR2_BURST_STATE');
     if (field.is('button')) {
         field[OSC.state.burst_ch2 === true? 'addClass' : 'removeClass']('active');
+        if (OSC.state.burst_ch2 == true) {
+            if ($("#OUTPUT2_BURST_LED").attr("src")!== "img/green_led.png")
+                $("#OUTPUT2_BURST_LED").attr("src","img/green_led.png");
+        } else {
+            if ($("#OUTPUT2_BURST_LED").attr("src")!== "img/red_led.png")
+                $("#OUTPUT2_BURST_LED").attr("src","img/red_led.png");
+        }
     }
 }
 
@@ -165,14 +193,14 @@ OSC.ch1SetGenScale = function(new_params){
     OSC.setSourVolt("1")
     OSC.out1ShowOffset(new_params)
     OSC.setOutOffsetPlotChLimits("1")
-    OSC.updateTitileYAxisTicks()
+    OSC.updateTitleYAxisTicks()
 }
 
 OSC.ch2SetGenScale = function(new_params){
     OSC.setSourVolt("2")
     OSC.out2ShowOffset(new_params)
     OSC.setOutOffsetPlotChLimits("2")
-    OSC.updateTitileYAxisTicks()
+    OSC.updateTitleYAxisTicks()
 }
 
 OSC.riseFallTime = function(new_params) {
@@ -342,6 +370,22 @@ OSC.updateGenBurstDelay= function(new_params,param_name){
     }
 }
 
+OSC.updateGenBurstInit= function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+        field.val(new_params[param_name].value);
+    }
+}
+
+OSC.updateGenBurstLast= function(new_params,param_name){
+    var state = OSC.params.orig[param_name].value;
+    var field = $('#' + param_name);
+    if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
+        field.val(new_params[param_name].value);
+    }
+}
+
 OSC.updateGenBurstInf = function(new_params,param_name){
     var state = OSC.params.orig[param_name].value;
     var field = $('#' + param_name);
@@ -362,6 +406,12 @@ OSC.updateMaxLimitOnLoadHandler = function(new_params , param_name) {
     if (field.is('select') || (field.is('input') && !field.is('input:radio')) || field.is('input:text')) {
         field.val(new_params[param_name].value);
     }
+}
+
+OSC.updateGenUseLastSample = function(param_name,name){
+    var radios = $('input[name="' + name + '"]');
+    radios.closest('.btn-group').children('.btn.active').removeClass('active');
+    radios.eq([+OSC.params.orig[name].value]).prop('checked', true).parent().addClass('active');
 }
 
 OSC.updateMaxLimitOnLoad = function(ch, value) {

@@ -29,10 +29,13 @@ hk_version_t house_getHKVersion() {
         case STEM_125_14_Z7020_v1_0:
         case STEM_125_14_Z7020_LN_v1_1:
         case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
         case STEM_125_14_Z7020_Ind_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
             return HK_V1;
 
         case STEM_122_16SDR_v1_0:
@@ -235,6 +238,7 @@ int hk_printRegset() {
 
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "FPGA ready", offsetof(housekeeping_control_v4_t, fpga_ready), hk_v4->fpga_ready);
             printReg("%-25s\t0x%X = 0x%08X (%d)\n", "ADC clock frequency meter", offsetof(housekeeping_control_v4_t, acq_clock_counter), hk_v4->acq_clock_counter);
+            printReg("%-25s\t0x%X = 0x%08X (%d)\n", "External trigger", offsetof(housekeeping_control_v4_t, ext_trigger), hk_v4->ext_trigger.reg_full);
 
             break;
         }
@@ -250,11 +254,15 @@ int house_GetPllControlEnable(bool* enable) {
         switch (ver) {
             case HK_V2: {
                 volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+                if (hk_v2 == NULL)
+                    return RP_EANI;
                 *enable = hk_v2->pll_control.reg.enable;
                 return RP_OK;
             }
             case HK_V3: {
                 volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+                if (hk_v3 == NULL)
+                    return RP_EANI;
                 *enable = hk_v3->pll_control.reg.enable;
                 return RP_OK;
             }
@@ -271,11 +279,15 @@ int house_SetPllControlEnable(bool enable) {
         switch (ver) {
             case HK_V2: {
                 volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+                if (hk_v2 == NULL)
+                    return RP_EANI;
                 hk_v2->pll_control.reg.enable = enable;
                 return RP_OK;
             }
             case HK_V3: {
                 volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+                if (hk_v3 == NULL)
+                    return RP_EANI;
                 hk_v3->pll_control.reg.enable = enable;
                 return RP_OK;
             }
@@ -292,11 +304,15 @@ int house_GetPllControlLocked(bool* status) {
         switch (ver) {
             case HK_V2: {
                 volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+                if (hk_v2 == NULL)
+                    return RP_EANI;
                 *status = hk_v2->pll_control.reg.locked;
                 return RP_OK;
             }
             case HK_V3: {
                 volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+                if (hk_v3 == NULL)
+                    return RP_EANI;
                 *status = hk_v3->pll_control.reg.locked;
                 return RP_OK;
             }
@@ -312,17 +328,30 @@ int house_SetEnableDaisyChainSync(bool enable) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             hk_v1->ext_trigger.reg.enable = enable;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             hk_v2->ext_trigger.reg.enable = enable;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             hk_v3->ext_trigger.reg.enable = enable;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            hk_v4->ext_trigger.reg.enable = enable;
             return RP_OK;
         }
         default:
@@ -335,17 +364,30 @@ int house_GetEnableDaisyChainSync(bool* status) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             *status = hk_v1->ext_trigger.reg.enable;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             *status = hk_v2->ext_trigger.reg.enable;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             *status = hk_v3->ext_trigger.reg.enable;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            *status = hk_v4->ext_trigger.reg.enable;
             return RP_OK;
         }
         default:
@@ -358,17 +400,30 @@ int house_SetDpinEnableTrigOutput(bool enable) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             hk_v1->ext_trigger.reg.gpio_adc_dac = enable;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             hk_v2->ext_trigger.reg.gpio_adc_dac = enable;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             hk_v3->ext_trigger.reg.gpio_adc_dac = enable;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            hk_v4->ext_trigger.reg.gpio_adc_dac = enable;
             return RP_OK;
         }
         default:
@@ -381,17 +436,30 @@ int house_GetDpinEnableTrigOutput(bool* enable) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             *enable = hk_v1->ext_trigger.reg.gpio_adc_dac;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             *enable = hk_v2->ext_trigger.reg.gpio_adc_dac;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             *enable = hk_v3->ext_trigger.reg.gpio_adc_dac;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            *enable = hk_v4->ext_trigger.reg.gpio_adc_dac;
             return RP_OK;
         }
         default:
@@ -404,17 +472,30 @@ int house_SetSourceTrigOutput(rp_outTiggerMode_t mode) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             hk_v1->ext_trigger.reg.out_selector = mode;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             hk_v2->ext_trigger.reg.out_selector = mode;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             hk_v3->ext_trigger.reg.out_selector = mode;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            hk_v4->ext_trigger.reg.out_selector = mode;
             return RP_OK;
         }
         default:
@@ -427,17 +508,30 @@ int house_GetSourceTrigOutput(rp_outTiggerMode_t* mode) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             *mode = (rp_outTiggerMode_t)hk_v1->ext_trigger.reg.out_selector;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             *mode = (rp_outTiggerMode_t)hk_v2->ext_trigger.reg.out_selector;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             *mode = (rp_outTiggerMode_t)hk_v3->ext_trigger.reg.out_selector;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            *mode = (rp_outTiggerMode_t)hk_v4->ext_trigger.reg.out_selector;
             return RP_OK;
         }
         default:
@@ -450,17 +544,30 @@ int house_SetCANModeEnable(bool _enable) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             hk_v1->can_control.reg.enable = _enable;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             hk_v2->can_control.reg.enable = _enable;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             hk_v3->can_control.reg.enable = _enable;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            hk_v4->can_control.reg.enable = _enable;
             return RP_OK;
         }
         default:
@@ -473,17 +580,30 @@ int house_GetCANModeEnable(bool* _enable) {
     switch (ver) {
         case HK_V1: {
             volatile housekeeping_control_v1_t* hk_v1 = (volatile housekeeping_control_v1_t*)hk;
+            if (hk_v1 == NULL)
+                return RP_EANI;
             *_enable = hk_v1->can_control.reg.enable;
             return RP_OK;
         }
         case HK_V2: {
             volatile housekeeping_control_v2_t* hk_v2 = (volatile housekeeping_control_v2_t*)hk;
+            if (hk_v2 == NULL)
+                return RP_EANI;
             *_enable = hk_v2->can_control.reg.enable;
             return RP_OK;
         }
         case HK_V3: {
             volatile housekeeping_control_v3_t* hk_v3 = (volatile housekeeping_control_v3_t*)hk;
+            if (hk_v3 == NULL)
+                return RP_EANI;
             *_enable = hk_v3->can_control.reg.enable;
+            return RP_OK;
+        }
+        case HK_V4: {
+            volatile housekeeping_control_v4_t* hk_v4 = (volatile housekeeping_control_v4_t*)hk;
+            if (hk_v4 == NULL)
+                return RP_EANI;
+            *_enable = hk_v4->can_control.reg.enable;
             return RP_OK;
         }
         default:

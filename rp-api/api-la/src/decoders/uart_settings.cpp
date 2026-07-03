@@ -19,46 +19,56 @@ UARTParameters::UARTParameters() {
 }
 
 auto UARTParameters::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
-    if (key == "rx") {
-        m_rx = Lines::from_int(value);
-        return true;
-    }
-    if (key == "tx") {
-        m_tx = Lines::from_int(value);
-        return true;
-    }
-    if (key == "baudrate") {
-        m_baudrate = value;
-        return true;
-    }
-    if (key == "invert") {
-        m_invert = InvertBit::from_int(value);
-        return true;
-    }
-    if (key == "bitOrder") {
-        m_bitOrder = UartBitOrder::from_int(value);
-        return true;
-    }
-    if (key == "num_data_bits") {
-        m_num_data_bits = NumDataBits::from_int(value);
-        return true;
-    }
-    if (key == "parity") {
-        m_parity = Parity::from_int(value);
-        return true;
-    }
-    if (key == "num_stop_bits") {
-        m_num_stop_bits = NumStopBits::from_int(value);
-        return true;
-    }
-    if (key == "acq_speed") {
-        m_samplerate = value;
-        return true;
+    try {
+        if (key == "rx") {
+            m_rx = Lines::from_int(value);
+            return true;
+        }
+        if (key == "tx") {
+            m_tx = Lines::from_int(value);
+            return true;
+        }
+        if (key == "baudrate") {
+            m_baudrate = value;
+            return true;
+        }
+        if (key == "invert") {
+            m_invert = InvertBit::from_int(value);
+            return true;
+        }
+        if (key == "bitOrder") {
+            m_bitOrder = UartBitOrder::from_int(value);
+            return true;
+        }
+        if (key == "num_data_bits") {
+            m_num_data_bits = NumDataBits::from_int(value);
+            return true;
+        }
+        if (key == "parity") {
+            m_parity = Parity::from_int(value);
+            return true;
+        }
+        if (key == "num_stop_bits") {
+            m_num_stop_bits = NumStopBits::from_int(value);
+            return true;
+        }
+        if (key == "acq_speed") {
+            m_samplerate = value;
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %u not found in enumeration.", value)
     }
     return false;
 }
 
 auto UARTParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
     if (key == "rx") {
         *value = m_rx;
         return true;
@@ -93,6 +103,80 @@ auto UARTParameters::getDecoderSettingsUInt(std::string& key, uint32_t* value) -
     }
     if (key == "acq_speed") {
         *value = m_samplerate;
+        return true;
+    }
+    return false;
+}
+
+auto UARTParameters::setDecoderSettingsString(std::string& key, std::string& value) -> bool {
+    try {
+        if (key == "rx") {
+            m_rx = Lines::from_string(value);
+            return true;
+        }
+        if (key == "tx") {
+            m_tx = Lines::from_string(value);
+            return true;
+        }
+        if (key == "invert") {
+            m_invert = InvertBit::from_string(value);
+            return true;
+        }
+        if (key == "bitOrder") {
+            m_bitOrder = UartBitOrder::from_string(value);
+            return true;
+        }
+        if (key == "num_data_bits") {
+            m_num_data_bits = NumDataBits::from_string(value);
+            return true;
+        }
+        if (key == "parity") {
+            m_parity = Parity::from_string(value);
+            return true;
+        }
+        if (key == "num_stop_bits") {
+            m_num_stop_bits = NumStopBits::from_string(value);
+            return true;
+        }
+    } catch (...) {
+        ERROR_LOG("Value %s not found in enumeration.", value.c_str())
+    }
+    return false;
+}
+
+auto UARTParameters::getDecoderSettingsString(std::string& key, std::string* value) -> bool {
+
+    if (value == nullptr) {
+        ERROR_LOG("Value is NULL")
+        return false;
+    }
+
+    if (key == "rx") {
+        *value = m_rx.name();
+        return true;
+    }
+    if (key == "tx") {
+        *value = m_tx.name();
+        return true;
+    }
+    if (key == "invert") {
+        *value = m_invert.name();
+        return true;
+    }
+    if (key == "bitOrder") {
+        *value = m_bitOrder.name();
+        return true;
+    }
+    if (key == "num_data_bits") {
+        *value = m_num_data_bits.name();
+        return true;
+    }
+    if (key == "parity") {
+        *value = m_parity.name();
+        return true;
+    }
+    if (key == "num_stop_bits") {
+        *value = m_num_stop_bits.name();
         return true;
     }
     return false;

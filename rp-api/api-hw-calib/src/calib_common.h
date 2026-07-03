@@ -80,4 +80,10 @@ uint32_t calibBaseScaleFromVoltage(float voltageScale, bool uni_is_calib);
 
 bool isUniversalCalib(uint16_t dataStructureId);
 
+uint64_t getHashCommit();
+uint64_t expandFromYear2000(uint32_t y2kTimestamp);
+std::string formatY2KTimestamp(uint32_t y2kTimestamp);
+uint32_t compressToYear2000(uint64_t unixTimestamp);
+uint32_t getCurrentTimeY2K();
+
 #endif  //__CALIB_H

@@ -13,6 +13,16 @@
 class CViewController {
 
    public:
+    enum AutoScaleState {
+        OASS_NONE = 0,
+        OASS_REQ_DATA = 1,
+        OASS_REQ_DATA_READY = 2,
+        OASS_REQ_DATA_SEC_STAGE = 3,
+        OASS_REQ_DATA_SEC_STAGE_READY = 4,
+        OASS_REQ_DATA_SEC_STAGE_CALC = 5,
+        OASS_REQ_DATA_SEC_STAGE_CALC_READY = 6
+    };
+
     struct OscillogramInfo {
         float m_min = 0;
         float m_max = 0;
@@ -23,8 +33,23 @@ class CViewController {
         float m_minRaw = 0;
         float m_maxRaw = 0;
         float m_meanRaw = 0;
-        uint32_t m_decimatoion = 1;
+        uint32_t m_decimation = 1;
         bool m_dataHasTrigger;
+        uint32_t m_trigPosition = 0;
+        uint32_t m_trigRawPosition = 0;
+        auto print() -> int {
+            WARNING("OscInfo (Min/Mean/Max) (%f/%f/%f) unscale (%f/%f/%f) raw (%f/%f/%f)",
+                    m_min,
+                    m_mean,
+                    m_max,
+                    m_minUnscale,
+                    m_meanUnscale,
+                    m_maxUnscale,
+                    m_minRaw,
+                    m_meanRaw,
+                    m_maxRaw)
+            return 0;
+        };
     };
 
     struct Oscillogram {
@@ -91,6 +116,8 @@ class CViewController {
 
     auto setAutoScale(bool _state) -> void;
     auto getAutoScale() -> bool;
+    auto setAutoScaleState(AutoScaleState _state) -> void;
+    auto getAutoScaleState() -> AutoScaleState;
 
     auto convertSamplesToTime(int32_t _samples) -> double;
     auto calculateTimeOut(float _timeScale) -> double;
@@ -121,6 +148,7 @@ class CViewController {
     auto setViewMode(EViewMode _mode) -> void;
 
     auto getSampledAfterTriggerInView() -> uint32_t;
+    auto getSampledBeforeTriggerInView() -> uint32_t;
     auto calcExtraPoints() -> uint32_t;
 
     auto addOscCounter() -> void;
@@ -158,6 +186,8 @@ class CViewController {
     std::atomic_bool m_updateViewFromADCRequest;
     std::atomic_bool m_updateViewRequest;
     std::atomic_bool m_autoScale;
+
+    AutoScaleState m_autoScaleState;
 
     float m_timeScale;
     float m_timeOffet;

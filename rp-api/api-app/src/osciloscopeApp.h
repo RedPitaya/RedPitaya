@@ -17,12 +17,12 @@
 #define SPECTR_ADC_BITS ADC_BITS
 
 #define SIGNAL_EXISTENCE 0.01  // V
-#define AUTO_SCALE_PERIOD_COUNT 2
-#define AUTO_SCALE_AMP_SCA_FACTOR 1.05
+#define AUTO_SCALE_PERIOD_COUNT 3
+#define AUTO_SCALE_AMP_SCA_FACTOR 1.15
 #define AUTO_SCALE_TIME_OFFSET 0
 #define AUTO_SCALE_PERIOD_ERROR 0.08
 #define AUTO_SCALE_VMEAN_ERROR 0.08
-#define AUTO_SCALE_NUM_OF_SCALE 20
+#define AUTO_SCALE_NUM_OF_SCALE 22
 #define MIN_TIME_TO_DRAW_BEFORE_TIG 100
 
 #define PERIOD_REP_COUNT_MIN 3
@@ -88,7 +88,7 @@ int osc_GetCursorDeltaAmplitude(rpApp_osc_source source, uint32_t cursor1, uint3
 int osc_getCursorDeltaFrequency(uint32_t cursor1, uint32_t cursor2, float* value);
 int osc_getData(rpApp_osc_source source_t, float* data, uint32_t size);
 // int osc_getRawData(rp_channel_t source, uint16_t *data, uint32_t size);
-int osc_getExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float* data, uint32_t* size);
+int osc_getExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, std::vector<float>& data, std::vector<float>& time, uint32_t* decimation);
 
 int osc_setMathOperation(rpApp_osc_math_oper_t op);
 int osc_getMathOperation(rpApp_osc_math_oper_t* op);

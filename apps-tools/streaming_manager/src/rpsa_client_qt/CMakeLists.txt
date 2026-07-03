@@ -143,7 +143,10 @@ if(IS_INSTALL)
 if(WIN32)
 	set(EXE_EXT ".exe")
 endif()
-    install(CODE "execute_process(COMMAND /usr/bin/cqtdeployer -bin ${INSTALL_DIR}/streaming/out/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/rpsa_client_qt${EXE_EXT} -qmake ${QT}/bin/qmake -qmlDir ${QT}/qml -targetDir ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX})")
+    install(CODE "execute_process(COMMAND /usr/bin/cqtdeployer -bin ${INSTALL_DIR}/streaming/out/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/rpsa_client_qt${EXE_EXT}
+     -qmake ${QT}/bin/qmake -qmlDir ${QT}/qml
+     -libDir ${QT}/lib/libicui18n.so.73,${QT}/lib/libicuuc.so.73,${QT}/lib/libicudata.so.73
+     -targetDir ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX})")
 if(WIN32)
 #    install(CODE "execute_process(COMMAND cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/libwinpthread-1.dll)")
 #    install(CODE "execute_process(COMMAND cp -f /usr/lib/gcc/x86_64-w64-mingw32/9.3-posix/*.dll ${INSTALL_DIR}/streaming/rpsa_client-qt_${VERSION}-${REVISION}${WIN_SUFFIX}/lib/)")

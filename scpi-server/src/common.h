@@ -45,10 +45,16 @@ const scpi_choice_def_t scpi_RpAC_DC[] = {{"DC", 0}, {"AC", 1}, SCPI_CHOICE_LIST
 //     SCPI_CHOICE_LIST_END
 // };
 
-const scpi_choice_def_t scpi_RpTrigSrc[] = {{"DISABLED", 0}, {"NOW", 1},    {"CH1_PE", 2},  {"CH1_NE", 3},  {"CH2_PE", 4},  {"CH2_NE", 5},  {"EXT_PE", 6},       {"EXT_NE", 7},
-                                            {"AWG_PE", 8},   {"AWG_NE", 9}, {"CH3_PE", 10}, {"CH3_NE", 11}, {"CH4_PE", 12}, {"CH4_NE", 13}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_RpTrigSrc[] = {{"DISABLED", RP_TRIG_SRC_DISABLED}, {"NOW", RP_TRIG_SRC_NOW},       {"CH1_PE", RP_TRIG_SRC_CHA_PE},
+                                            {"CH1_NE", RP_TRIG_SRC_CHA_NE},     {"CH2_PE", RP_TRIG_SRC_CHB_PE}, {"CH2_NE", RP_TRIG_SRC_CHB_NE},
+                                            {"EXT_PE", RP_TRIG_SRC_EXT_PE},     {"EXT_NE", RP_TRIG_SRC_EXT_NE}, {"AWG_PE", RP_TRIG_SRC_AWG_PE},
+                                            {"AWG_NE", RP_TRIG_SRC_AWG_NE},     {"CH3_PE", RP_TRIG_SRC_CHC_PE}, {"CH3_NE", RP_TRIG_SRC_CHC_NE},
+                                            {"CH4_PE", RP_TRIG_SRC_CHD_PE},     {"CH4_NE", RP_TRIG_SRC_CHD_NE}, {"CH1_AE", RP_TRIG_SRC_CHA_AE},
+                                            {"CH2_AE", RP_TRIG_SRC_CHB_AE},     {"EXT_AE", RP_TRIG_SRC_EXT_AE}, {"AWG_AE", RP_TRIG_SRC_AWG_AE},
+                                            {"CH3_AE", RP_TRIG_SRC_CHC_AE},     {"CH4_AE", RP_TRIG_SRC_CHD_AE}, SCPI_CHOICE_LIST_END};
 
 const scpi_choice_def_t scpi_RpTrigStat[] = {{"TD", 0}, {"WAIT", 1}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_RpIntStat[] = {{"OK", RP_OK}, {"TIMEOUT", RP_ETIM}, {"ERROR", RP_EOP}, SCPI_CHOICE_LIST_END};
 
 auto getCmdName(scpi_t* context) -> const char*;
 auto rp_Log(scpi_t* context, int mode, int rp_err_code, const char* format, ...) -> void;
@@ -136,5 +142,8 @@ scpi_result_t RP_ExtTriggerDebouncerUsQ(scpi_t* context);
 void requestSendNewLine(scpi_t* context);
 
 void stopAllThreads(scpi_t* context);
+
+scpi_result_t RP_ExtTriggerLevel(scpi_t* context);
+scpi_result_t RP_ExtTriggerLevelQ(scpi_t* context);
 
 #endif /* COMMON_H_ */

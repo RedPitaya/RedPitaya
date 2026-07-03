@@ -1,8 +1,9 @@
 # load extra enviroment form eeprom
-i2c dev 0
-# Offset 0x1800 + 0x4 (crc32)
-eeprom read  0 0x50 0 0x1804 0x400
+# Offset 0x1800
+eeprom read 0 0x1800 0x400
+echo "Read eeprom [DONE] ret = $?"
 env import -b 0 0x400 hw_rev serial ethaddr
+echo "env import -b 0 0x400 hw_rev serial ethaddr"
 
 # set main memory address table
 setenv addr_script 0x02000000
@@ -13,7 +14,7 @@ setenv addr_fpga   0x10000000
 setenv zynq        z7020
 
 # set default Linux kernel boot parameters
-setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio"
+setenv bootargs console=ttyPS0,115200 root=/dev/mmcblk0p2 ro rootfstype=ext4 earlyprintk rootwait uio_pdrv_genirq.of_id="generic-uio" net.ifnames=0 biosdevname=0
 
 # Worked only with 250 12 (1Gb Ram)
 
@@ -116,6 +117,11 @@ then
   setenv dts_path z20_125_v2
 fi
 
+if test ${hw_rev} == 'STEM_125-14_Z7020_Pro_BO_v2.0'
+then
+  setenv dts_path z20_125_v2
+fi
+
 if test ${hw_rev} == 'STEM_125-14_Ind_v2.0'
 then
   setenv dts_path z20_125_v2
@@ -143,7 +149,12 @@ fatload mmc 0 ${addr_linux} uImage
 echo Load dts/${dts_path}/devicetree.dtb
 fatload mmc 0 ${addr_dtb}   dts/${dts_path}/devicetree.dtb
 
+# Set the size to 1GB
+fdt addr ${addr_dtb}
+fdt set /memory reg <0x00 ${high}>
+
 echo Booting Linux kernel with ramdisk and devicetree
 setenv sdboot bootm ${addr_linux} - ${addr_dtb}
 setenv bootdelay 0
+printenv
 bootd

@@ -73,7 +73,7 @@ auto CDataDecimator::precalculateOffset(const float* _data, vsize_t _dataSize) -
     std::lock_guard lock(m_settingsMutex);
     if (_dataSize == 0)
         return -1;
-    if (m_decimationFactor < 1) {
+    if (m_decimationFactor < 1 && m_decimationFactor > 0) {
         double offset = 0;
         double xLen = 1.0 / m_decimationFactor;
         double d1 = _data[_dataSize - 1];  // Pre trigger
@@ -82,12 +82,12 @@ auto CDataDecimator::precalculateOffset(const float* _data, vsize_t _dataSize) -
         double w = d2 - d1;
         double v2 = xLen;
 
-        if (w != 0 && v2 != 0) {
+        if (w != 0 && v2 != 0 && v != 0) {
             double t2 = (v * m_triggerLevel - v * d1) / (w * v2);
-            double t = (v2 * t2) / v;
-            if (t >= 0 || t <= 1 || t2 >= 0 || t2 <= 1) {
-                offset = v2 * t2;
-            }
+            // double t = (v2 * t2) / v;
+            // if (t >= 0 && t <= 1 && t2 >= 0 && t2 <= 1) {
+            offset = v2 * t2;
+            // }
         }
         m_dataOffset = offset;
     } else {
@@ -136,20 +136,23 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
             return INT32_MAX;
         if (x < -_dataSize / 2.0)
             return INT32_MAX;
-        if (range.m_validBeforeTrigger != -1 && -range.m_validBeforeTrigger > x)
+        // x is relative to trigger (trigger is at buffer index 0)
+        // validBeforeTrigger: how many samples before trigger are valid (negative x)
+        // validAfterTrigger: how many samples after trigger are valid (positive x)
+        if (range.m_validBeforeTrigger != -1 && x < -range.m_validBeforeTrigger)
             return INT32_MAX;
-        if (range.m_validAfterTrigger != -1 && range.m_validAfterTrigger < x)
+        if (range.m_validAfterTrigger != -1 && x > range.m_validAfterTrigger)
             return INT32_MAX;
-        if (x >= 0) {
-            return x;
-        } else {
+        if (x < 0) {
             x += _dataSize;
         }
         return x;
     };
+
     auto viewSize = _view->size();
     int centerView = viewSize / 2;
-    int trigPostInView = centerView - _triggerPointPos;
+    int trigPosInView = centerView - _triggerPointPos;
+    int trigPosInViewOrigin = trigPosInView;
 
     if (((float)viewSize * m_decimationFactor) > (_dataSize)) {
         //   TRACE("Buffer size is smaller than needed for display buffer size %d factor %f",_dataSize,m_decimationFactor)
@@ -174,9 +177,9 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
     float scaleFuncCof1 = 1, scaleFuncCof2 = 1;
     ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel, scaleFuncCof1, scaleFuncCof2))
     if (m_decimationFactor < 1) {
-        trigPostInView -= m_dataOffset;
-        startView = 0 - trigPostInView;
-        stopView = viewSize - trigPostInView;
+        trigPosInView -= m_dataOffset;
+        startView = 0 - trigPosInView;
+        stopView = viewSize - trigPosInView;
 
         float t = 0;
         float t_prev = 0;
@@ -184,6 +187,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
         uint16_t iView = 0;
         uint32_t count = 0;
         for (int idx = startView; idx < stopView; idx++, iView++) {
+            if (_unscaledView)
+                (*_unscaledView)[iView] = std::numeric_limits<float>::quiet_NaN();
             int dataIndex1 = screenToBuffer(idx, m_decimationFactor, &t);
             y = 0;
             scaledValue = 0;
@@ -192,7 +197,7 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 switch (m_mode[_channel]) {
 
                     case DISABLED: {
-                        (*_view)[iView] = std::numeric_limits<float>::signaling_NaN();
+                        (*_view)[iView] = std::numeric_limits<float>::quiet_NaN();
                         if (t < t_prev) {
                             y = _data[dataIndex1];
                             t_prev = t;
@@ -246,8 +251,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 _viewInfo->m_mean += scaledValue;
                 count++;
             } else {
-                scaledValue = std::numeric_limits<float>::signaling_NaN();
-                y = std::numeric_limits<float>::signaling_NaN();
+                scaledValue = std::numeric_limits<float>::quiet_NaN();
+                y = std::numeric_limits<float>::quiet_NaN();
             }
             // ECHECK_APP_NO_RET(m_scaleFunc((rpApp_osc_source)_channel,y,&scaledValue))
             // x -> y
@@ -258,9 +263,10 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
         }
         _viewInfo->m_mean /= count ? count : 1;
         _viewInfo->m_meanUnscale /= count ? count : 1;
+        _viewInfo->m_trigPosition = trigPosInViewOrigin;
     } else {
-        startView = 0 - trigPostInView;
-        stopView = viewSize - trigPostInView;
+        startView = 0 - trigPosInView;
+        stopView = viewSize - trigPosInView;
 
         float t = 0;
         float scaledValue = 0;
@@ -287,14 +293,19 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 _viewInfo->m_mean += scaledValue;
                 count++;
             } else {
-                scaledValue = std::numeric_limits<float>::signaling_NaN();
+                scaledValue = std::numeric_limits<float>::quiet_NaN();
             }
             (*_view)[iView] = scaledValue;
             if (_unscaledView)
                 (*_unscaledView)[iView] = _data[dataIndex];
+
+            if (idx == 0) {
+                _viewInfo->m_trigPosition = iView;
+            }
         }
         _viewInfo->m_mean /= count ? count : 1;
         _viewInfo->m_meanUnscale /= count ? count : 1;
+        _viewInfo->m_trigPosition = trigPosInViewOrigin;
     }
 
     if (_originalData) {
@@ -313,7 +324,8 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
             x--;
         }
         uint32_t count = 0;
-        for (int idx = dataIndexStart; idx != dataIndexEnd; idx = (idx + 1) % ADC_BUFFER_SIZE) {
+        uint32_t trigId = 0;
+        for (int idx = dataIndexStart; idx != dataIndexEnd; idx = (idx + 1) % ADC_BUFFER_SIZE, trigId++) {
             auto y = _data[idx];
             _originalData->push_back(y);
             if (_viewRawInfo->m_maxUnscale < y)
@@ -322,6 +334,9 @@ auto CDataDecimator::decimate(rp_channel_t _channel, const float* _data, vsize_t
                 _viewRawInfo->m_minUnscale = y;
             _viewRawInfo->m_meanUnscale += y;
             count++;
+            if (idx == 0) {
+                _viewRawInfo->m_trigPosition = trigId - 1;
+            }
         }
         _originalData->push_back(_data[dataIndexEnd]);
         _viewRawInfo->m_meanUnscale /= count ? count : 1;

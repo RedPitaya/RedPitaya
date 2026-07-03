@@ -1,55 +1,150 @@
+#include "measure_controller.h"
 #include <float.h>
 #include <math.h>
-#include "measure_controller.h"
+#include <algorithm>
 #include "common.h"
 
-CMeasureController::CMeasureController():
-    m_unscaleFunc(NULL),
-    m_scaleFunc(NULL),
-    m_attAmplFunc(NULL)
-{
-    if (getADCSamplePeriod(&m_sample_per) != RP_OK){
+CMeasureController::CMeasureController() : m_unscaleFunc(NULL), m_scaleFunc(NULL), m_attAmplFunc(NULL) {
+    if (getADCSamplePeriod(&m_sample_per) != RP_OK) {
         FATAL("Can't get a period of samples")
     }
     m_osc_fpga_smpl_freq = getADCRate();
 
-    if (rp_HPGetFastADCBits(&m_adc_bits)  != RP_OK){
+    if (rp_HPGetFastADCBits(&m_adc_bits) != RP_OK) {
         FATAL("Can't get a adc bits")
+    }
+
+    createDSPforAutoScale(ADC_BUFFER_SIZE);
+}
+
+CMeasureController::~CMeasureController() {
+    setUnScaleFunction(NULL);
+    for (auto idx = 0; idx < 2; idx++) {
+        delete m_cdsp[idx];
+        m_cdsp[idx] = nullptr;
     }
 }
 
-CMeasureController::~CMeasureController(){
-    setUnScaleFunction(NULL);
+auto CMeasureController::createDSPforAutoScale(uint32_t bufferSize) -> void {
+    uint8_t channels = 0;
+    if (rp_HPGetFastADCChannelsCount(&channels) != RP_OK) {
+        FATAL("Can't get channels count")
+    }
+    m_cdsp.resize(2);
+    m_cdspDec.push_back(RP_DEC_1);
+    m_cdspDec.push_back(RP_DEC_128);
+
+    for (auto idx = 0; idx < 2; idx++) {
+        m_cdsp[idx] = new rp_dsp_api::CDSP(channels, bufferSize, m_osc_fpga_smpl_freq, true);
+
+        if (m_cdsp[idx]->setSignalLengthDiv2(bufferSize)) {
+            ERROR_LOG("Can't set buffer size for FFT")
+        }
+
+        m_cdsp[idx]->fftInit();
+        m_cdsp[idx]->prepareFreqVector(m_cdsp[idx]->getStoredData(), m_cdspDec[idx]);
+
+        if (m_cdsp[idx]->window_init(rp_dsp_api::FLAT_TOP)) {
+            ERROR_LOG("Can't init window")
+        }
+    }
 }
 
-auto CMeasureController::setUnScaleFunction(func_t _func) -> void{
+auto CMeasureController::getAutoScaleStoredData(uint32_t idx) -> rp_dsp_api::data_t* {
+    if (idx >= m_cdsp.size()) {
+        ERROR_LOG("The index is greater than the permissible value.")
+        return nullptr;
+    }
+    return m_cdsp[idx]->getStoredData();
+}
+
+auto CMeasureController::calculateAutoScaleFreq(uint32_t channels, AutoScaleInfo& info) -> void {
+
+    std::vector<std::vector<float>> vpp;
+    vpp.resize(m_cdsp.size());
+
+    for (auto idx = 0u; idx < m_cdsp.size(); idx++) {
+        auto data = m_cdsp[idx]->getStoredData();
+        m_cdsp[idx]->windowFilter(data);
+        m_cdsp[idx]->fft(data);
+        m_cdsp[idx]->decimate(data, m_cdsp[idx]->getOutSignalLength(), m_cdsp[idx]->getOutSignalLength());
+        m_cdsp[idx]->cnvToMetric(data, m_cdspDec[idx]);
+        vpp[idx].resize(data->m_in.size());
+        for (auto ch = 0u; ch < data->m_in.size(); ch++) {
+            auto min = std::numeric_limits<float>::max();
+            auto max = std::numeric_limits<float>::lowest();
+            for (auto i = 0u; i < data->m_in[ch].size(); i++) {
+                min = MIN(min, data->m_in[ch][i]);
+                max = MAX(max, data->m_in[ch][i]);
+            }
+            vpp[idx][ch] = max - min;
+        }
+    }
+    info.freqByChannels.resize(channels);
+    info.powerByChannels.resize(channels);
+    info.vppByChannels.resize(channels);
+    for (auto c = 0u; c < channels; c++) {
+        info.freqByChannels[c] = 0;
+        info.powerByChannels[c] = 0;
+        info.vppByChannels[c] = 0;
+    }
+
+    for (auto idx = 0u; idx < m_cdsp.size(); idx++) {
+        auto data = m_cdsp[idx]->getStoredData();
+        auto max_Freq = data->m_converted.m_maxFreq;
+        for (auto c = 0u; c < channels; c++) {
+            auto freq_p = data->m_converted.m_peak_freq[rp_dsp_api::VOLT][c];
+            auto volt_p = data->m_converted.m_peak_power[rp_dsp_api::VOLT][c];
+            TRACE("idx %d ch %d max freq %d freq %f volt %f", idx, c, max_Freq, freq_p, volt_p)
+            freq_p = volt_p < 0.0005 ? 0.f : freq_p;
+            if (info.freqByChannels[c] <= max_Freq && info.powerByChannels[c] <= volt_p) {
+                info.freqByChannels[c] = freq_p;
+                info.powerByChannels[c] = volt_p;
+                info.vppByChannels[c] = vpp[idx][c];
+            }
+        }
+    }
+    info.channel = -1;
+    auto power_limit = MAX(std::ranges::max(info.powerByChannels) * 0.1f, 0.01);
+    TRACE("power limit %f", power_limit)
+    for (auto ch = 0u; ch < info.powerByChannels.size(); ch++) {
+        if (info.powerByChannels[ch] >= power_limit) {
+            info.channel = ch;
+            info.freq = info.freqByChannels[ch];
+            info.power = info.powerByChannels[ch];
+            break;
+        }
+    }
+}
+
+auto CMeasureController::setUnScaleFunction(func_t _func) -> void {
     std::lock_guard lock(m_settingsMutex);
     m_unscaleFunc = _func;
 }
 
-auto CMeasureController::getUnScaleFunction() const -> func_t{
+auto CMeasureController::getUnScaleFunction() const -> func_t {
     return m_unscaleFunc;
 }
 
-auto CMeasureController::setAttenuateAmplitudeChannelFunction(func_t _func) -> void{
+auto CMeasureController::setAttenuateAmplitudeChannelFunction(func_t _func) -> void {
     std::lock_guard lock(m_settingsMutex);
     m_attAmplFunc = _func;
 }
 
-auto CMeasureController::getAttenuateAmplitudeChannelFunction() const -> func_t{
+auto CMeasureController::getAttenuateAmplitudeChannelFunction() const -> func_t {
     return m_attAmplFunc;
 }
 
-auto CMeasureController::setscaleFunction(func_t _func) -> void{
+auto CMeasureController::setscaleFunction(func_t _func) -> void {
     std::lock_guard lock(m_settingsMutex);
     m_scaleFunc = _func;
 }
 
-auto CMeasureController::getscaleFunction() const -> func_t{
+auto CMeasureController::getscaleFunction() const -> func_t {
     return m_scaleFunc;
 }
 
-auto CMeasureController::check(const void *_data, vsize_t _sizeView) -> int{
+auto CMeasureController::check(const void* _data, vsize_t _sizeView) -> int {
     if (m_unscaleFunc == NULL) {
         WARNING("Undefined unscale function")
         return RP_EOOR;
@@ -72,10 +167,24 @@ auto CMeasureController::check(const void *_data, vsize_t _sizeView) -> int{
     return RP_OK;
 }
 
-auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Vpp) -> int{
+auto CMeasureController::scaleValue(const rpApp_osc_source _channel, float _value) -> float {
+    std::lock_guard lock(m_settingsMutex);
+    float ret = 0;
+    ECHECK_APP(m_scaleFunc(_channel, _value, &ret));
+    return ret;
+}
+
+auto CMeasureController::unscaleValue(const rpApp_osc_source _channel, float _value) -> float {
+    std::lock_guard lock(m_settingsMutex);
+    float ret = 0;
+    ECHECK_APP(m_unscaleFunc(_channel, _value, &ret));
+    return ret;
+}
+
+auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::vector<float>* _data, float* _Vpp) -> int {
     std::lock_guard lock(m_settingsMutex);
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
@@ -83,8 +192,8 @@ auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::
 
     for (vsize_t i = 0; i < _data->size(); ++i) {
         auto z = (*_data)[i];
-        max = MAX(z,max);
-        min = MIN(z,min);
+        max = MAX(z, max);
+        min = MIN(z, min);
     }
 
     ECHECK_APP(m_unscaleFunc(_channel, max, &resMax));
@@ -95,18 +204,17 @@ auto CMeasureController::measureVpp(const rpApp_osc_source _channel, const std::
     return RP_OK;
 }
 
-auto CMeasureController::measureMax(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Max) -> int{
+auto CMeasureController::measureMax(const rpApp_osc_source _channel, const std::vector<float>* _data, float* _Max) -> int {
     std::lock_guard lock(m_settingsMutex);
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
-
 
     float resMax, max = -FLT_MAX;
 
     for (vsize_t i = 0; i < _data->size(); ++i) {
-        max = MAX((*_data)[i],max);
+        max = MAX((*_data)[i], max);
     }
 
     ECHECK_APP(m_unscaleFunc(_channel, max, &resMax));
@@ -114,17 +222,17 @@ auto CMeasureController::measureMax(const rpApp_osc_source _channel, const std::
     return RP_OK;
 }
 
-auto CMeasureController::measureMin(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_Min) -> int{
+auto CMeasureController::measureMin(const rpApp_osc_source _channel, const std::vector<float>* _data, float* _Min) -> int {
     std::lock_guard lock(m_settingsMutex);
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
     float resMax, min = FLT_MAX;
 
     for (vsize_t i = 0; i < _data->size(); ++i) {
-        min = MIN((*_data)[i],min);
+        min = MIN((*_data)[i], min);
     }
 
     ECHECK_APP(m_unscaleFunc(_channel, min, &resMax));
@@ -132,10 +240,10 @@ auto CMeasureController::measureMin(const rpApp_osc_source _channel, const std::
     return RP_OK;
 }
 
-auto CMeasureController::measureMeanVoltage(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_meanVoltage) -> int{
+auto CMeasureController::measureMeanVoltage(const rpApp_osc_source _channel, const std::vector<float>* _data, float* _meanVoltage) -> int {
     std::lock_guard lock(m_settingsMutex);
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
@@ -150,10 +258,10 @@ auto CMeasureController::measureMeanVoltage(const rpApp_osc_source _channel, con
     return RP_OK;
 }
 
-auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float> *_data, float *_Vmax) -> int{
+auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float>* _data, float* _Vmax) -> int {
     std::lock_guard lock(m_settingsMutex);
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
@@ -171,10 +279,10 @@ auto CMeasureController::measureMaxVoltage(const rpApp_osc_source _channel, bool
     return RP_OK;
 }
 
-auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float> *_data, float *_Vmin) -> int{
+auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool _inverted, const std::vector<float>* _data, float* _Vmin) -> int {
     std::lock_guard lock(m_settingsMutex);
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
@@ -192,14 +300,14 @@ auto CMeasureController::measureMinVoltage(const rpApp_osc_source _channel, bool
     return RP_OK;
 }
 
-auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_dutyCycle) -> int{
+auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const std::vector<float>* _data, float* _dutyCycle) -> int {
     int highTime = 0;
     float meanValue;
     ECHECK_APP(measureMeanVoltage(_channel, _data, &meanValue));
     ECHECK_APP(m_scaleFunc(_channel, meanValue, &meanValue))
 
     std::lock_guard lock(m_settingsMutex);
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
@@ -211,113 +319,175 @@ auto CMeasureController::measureDutyCycle(const rpApp_osc_source _channel, const
 
     *_dutyCycle = (float)highTime / (float)(_data->size());
     return RP_OK;
-
 }
 
-auto CMeasureController::measureRootMeanSquare(const rpApp_osc_source _channel, const std::vector<float> *_data, float *_rms) -> int{
+auto CMeasureController::measureRootMeanSquare(const rpApp_osc_source _channel, const std::vector<float>* _data, float* _rms) -> int {
     std::lock_guard lock(m_settingsMutex);
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
     double rmsValue = 0;
+    size_t count = 0;
     for (vsize_t i = 0; i < _data->size(); ++i) {
         auto z = (*_data)[i];
-        float tmp;
+        float tmp = 0;
         ECHECK_APP(m_unscaleFunc(_channel, z, &tmp));
-        rmsValue += tmp * tmp;
+        if (!isnan(tmp)) {
+            count++;
+            rmsValue += tmp * tmp;
+        }
     }
-    *_rms = (double) sqrt(rmsValue / (double)(_data->size()));
+    if (count == 0) {
+        *_rms = 0;
+    } else {
+        *_rms = (double)sqrt(rmsValue / (double)(count));
+    }
     ECHECK_APP(m_attAmplFunc(_channel, *_rms, _rms));
     return RP_OK;
 }
 
+// auto CMeasureController::measurePeriodCh(const float* _dataRaw, vsize_t _dataSize, float* period) -> int {
+//     auto ret = check(_dataRaw, _dataSize);
+//     if (ret != RP_OK)
+//         return ret;
 
+//     static const float c_meas_freq_thr = 0.0005;
 
-auto CMeasureController::measurePeriodCh(const float *_dataRaw, vsize_t _dataSize, float *period) -> int{
-    auto ret = check(_dataRaw,_dataSize);
+//     int size = _dataSize;
+//     const int c_meas_time_thr = _dataSize / m_sample_per;
+//     const double c_min_period = 2.0 / m_osc_fpga_smpl_freq;  // fpga rate / 2
+//     float thr1, thr2, cen;
+//     int state = 0;
+//     int trig_t[2] = {0, 0};
+//     int trig_cnt = 0;
+//     int ix;
+
+//     float meas_max, meas_min;
+//     float z = _dataRaw[0];
+//     meas_max = z;
+//     meas_min = z;
+//     for (vsize_t i = 0; i < size; i++) {
+//         z = _dataRaw[i];
+//         meas_max = MAX(z, meas_max);
+//         meas_min = MIN(z, meas_min);
+//     }
+
+//     uint32_t dec_factor = 1;
+//     ECHECK(rp_AcqGetDecimationFactor(&dec_factor));
+
+//     float acq_dur = (float)(size) / (m_osc_fpga_smpl_freq) * (float)dec_factor;
+//     cen = (meas_max + meas_min) / 2;
+//     thr1 = cen + 0.2 * (meas_min - cen);
+//     thr2 = cen + 0.2 * (meas_max - cen);
+//     float res_period = 0;
+//     for (ix = 0; ix < size; ix++) {
+//         auto sa = _dataRaw[ix];
+
+//         /* Lower transitions */
+//         if ((state == 0) && (sa < thr1)) {
+//             state = 1;
+//         }
+//         /* Upper transitions - count them & store edge times. */
+//         if ((state == 1) && (sa >= thr2)) {
+//             state = 0;
+//             if (trig_cnt++ == 0) {
+//                 trig_t[0] = ix;
+//             } else {
+//                 trig_t[1] = ix;
+//             }
+//         }
+//         if ((trig_t[1] - trig_t[0]) > c_meas_time_thr) {
+//             break;
+//         }
+//     }
+//     /* Period calculation - taking into account at least meas_time_thr samples */
+//     if (trig_cnt >= 2) {
+//         res_period = (float)(trig_t[1] - trig_t[0]) / (m_osc_fpga_smpl_freq * (trig_cnt - 1)) * dec_factor;
+//     }
+
+//     if (((thr2 - thr1) < c_meas_freq_thr) || (res_period * 3 >= acq_dur) || (res_period < c_min_period)) {
+//         res_period = 0;
+//     }
+
+//     *period = res_period * 1000.f;
+//     return RP_OK;
+// }
+
+auto CMeasureController::measurePeriodCh(const float* _dataRaw, vsize_t _dataSize, float* period) -> int {
+    auto ret = check(_dataRaw, _dataSize);
     if (ret != RP_OK)
         return ret;
 
-    static const float c_meas_freq_thr = 0.0005;
+    uint32_t dec_factor = 1;
+    rp_AcqGetDecimationFactor(&dec_factor);
 
-    int size = _dataSize;
-    const int c_meas_time_thr = _dataSize / m_sample_per;
-    const double c_min_period = 2.0 / m_osc_fpga_smpl_freq; // fpga rate / 2
-    float thr1, thr2, cen;
+    double fs = (double)m_osc_fpga_smpl_freq / dec_factor;
+    static const float c_meas_freq_thr = 0.001f;
+
+    float meas_max = _dataRaw[0], meas_min = _dataRaw[0];
+    for (size_t i = 1; i < _dataSize; i++) {
+        if (_dataRaw[i] > meas_max)
+            meas_max = _dataRaw[i];
+        if (_dataRaw[i] < meas_min)
+            meas_min = _dataRaw[i];
+    }
+
+    float amplitude = meas_max - meas_min;
+    float cen = (meas_max + meas_min) / 2.0f;
+    float thr_low = cen - 0.2f * amplitude;
+    float thr_high = cen + 0.2f * amplitude;
+
     int state = 0;
-    int trig_t[2] = { 0, 0 };
+    double first_trigger_time = -1.0;
+    double last_trigger_time = -1.0;
     int trig_cnt = 0;
-    int ix;
 
-    float meas_max, meas_min;
-    float z = _dataRaw[0];
-    meas_max = z;
-    meas_min = z;
-    for(vsize_t i = 0; i < size; i++)
-    {
-        z = _dataRaw[i];
-        meas_max = MAX(z,meas_max);
-        meas_min = MIN(z,meas_max);
-    }
+    for (size_t i = 1; i < _dataSize; i++) {
+        float prev = _dataRaw[i - 1];
+        float curr = _dataRaw[i];
 
-	uint32_t dec_factor = 1;
-    ECHECK(rp_AcqGetDecimationFactor(&dec_factor));
-
-    float acq_dur = (float)(size)/(m_osc_fpga_smpl_freq) * (float) dec_factor;
-    cen = (meas_max + meas_min) / 2;
-    thr1 = cen + 0.2 * (meas_min - cen);
-    thr2 = cen + 0.2 * (meas_max - cen);
-    float res_period = 0;
-    for(ix = 0; ix < size; ix++) {
-        auto sa = _dataRaw[ix];
-
-        /* Lower transitions */
-        if((state == 0) && (sa < thr1)) {
+        if (state == 0 && curr < thr_low) {
             state = 1;
-        }
-        /* Upper transitions - count them & store edge times. */
-        if((state == 1) && (sa >= thr2) ) {
-            state = 0;
-            if (trig_cnt++ == 0) {
-                trig_t[0] = ix;
-            } else {
-                trig_t[1] = ix;
+        } else if (state == 1 && curr >= thr_high) {
+            double precise_idx = (double)(i - 1) + (double)(cen - prev) / (curr - prev);
+
+            if (trig_cnt == 0) {
+                first_trigger_time = precise_idx;
             }
+            last_trigger_time = precise_idx;
+
+            trig_cnt++;
+            state = 0;
         }
-        if ((trig_t[1] - trig_t[0]) > c_meas_time_thr) {
-            break;
-        }
-    }
-    /* Period calculation - taking into account at least meas_time_thr samples */
-    if(trig_cnt >= 2) {
-       res_period = (float)(trig_t[1] - trig_t[0]) /
-            (m_osc_fpga_smpl_freq * (trig_cnt - 1)) * dec_factor;
     }
 
-    if( ((thr2 - thr1) < c_meas_freq_thr) ||
-         (res_period * 3 >= acq_dur)    ||
-         (res_period < c_min_period) )
-    {
+    float res_period = 0;
+    if (trig_cnt >= 2) {
+        res_period = (float)((last_trigger_time - first_trigger_time) / (trig_cnt - 1)) / fs;
+    }
+
+    float acq_dur = (float)_dataSize / fs;
+    if (amplitude < c_meas_freq_thr || res_period > acq_dur || res_period <= 0) {
         res_period = 0;
     }
 
-    *period = res_period * 1000.f;
+    *period = res_period * 1000.0f;
     return RP_OK;
 }
 
-auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, const std::vector<float> *_data, float *period) -> int{
+auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, const std::vector<float>* _data, float* period) -> int {
     float m_viewTmp[VIEW_SIZE_MAX];
     float xcorr[VIEW_SIZE_MAX];
 
-    auto ret = check(_data,_data->size());
+    auto ret = check(_data, _data->size());
     if (ret != RP_OK)
         return ret;
 
     auto size = _data->size();
 
-    if (size > VIEW_SIZE_MAX){
+    if (size > VIEW_SIZE_MAX) {
         FATAL("The view buffer is larger than the allocated memory")
         return RP_EOOR;
     }
@@ -329,7 +499,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     }
 
     mean = mean / size;
-    for (vsize_t i = 0; i < size; ++i){
+    for (vsize_t i = 0; i < size; ++i) {
         m_viewTmp[i] -= mean;
     }
 
@@ -337,10 +507,10 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
 
     for (vsize_t i = 0; i < size; ++i) {
         xcorr[i] = 0;
-        for (vsize_t j = 0; j < size-i; ++j) {
-            xcorr[i] += m_viewTmp[j] * m_viewTmp[j+i];
+        for (vsize_t j = 0; j < size - i; ++j) {
+            xcorr[i] += m_viewTmp[j] * m_viewTmp[j + i];
         }
-        xcorr[i] /= size-i;
+        xcorr[i] /= size - i;
     }
 
     // The main problem is the presence lot of noise in the signal
@@ -362,35 +532,35 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     int left_idx = 0;
     int right_idx = 0;
     int left_edge_idx = 0;
-    int right_edge_idx = size-2;
+    int right_edge_idx = size - 2;
 
     // search for left point where correlation function is less than it's expected
-    for (vsize_t i = 1; i < size-1; ++i) {
-        if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
+    for (vsize_t i = 1; i < size - 1; ++i) {
+        if ((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             left_edge_idx = i;
             break;
         }
     }
 
-    if(left_edge_idx == 0) {
+    if (left_edge_idx == 0) {
         return RP_APP_ECP;
     }
 
     // search for left point where correlation function is greater than it's expected
-    for (vsize_t i = left_edge_idx; i < size-1; ++i) {
-        if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
+    for (vsize_t i = left_edge_idx; i < size - 1; ++i) {
+        if ((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
             left_idx = i;
             break;
         }
     }
 
-    if(left_idx == 0) {
+    if (left_idx == 0) {
         return RP_APP_ECP;
     }
 
     // search for right point where correlation function is less than it's expected
-    for (vsize_t i = left_idx; i < size-1; ++i) {
-        if((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
+    for (vsize_t i = left_idx; i < size - 1; ++i) {
+        if ((xcorr[i] / xcorr[0]) < PERIOD_EXISTS_MIN_THRESHOLD) {
             right_edge_idx = i;
             break;
         }
@@ -398,7 +568,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
 
     // search for right point where correlation function is greater than it's expected
     for (vsize_t i = right_edge_idx; i >= left_idx; --i) {
-        if((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
+        if ((xcorr[i] / xcorr[0]) >= PERIOD_EXISTS_MAX_THRESHOLD) {
             right_idx = i;
             break;
         }
@@ -408,7 +578,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     float loc_max = xcorr[left_idx];
     int max_idx = left_idx;
     for (int i = left_idx; i <= right_idx; ++i) {
-        if(loc_max < xcorr[i]) {
+        if (loc_max < xcorr[i]) {
             loc_max = xcorr[i];
             max_idx = i;
         }
@@ -418,7 +588,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
     vsize_t left_amax_idx = max_idx;
     vsize_t right_amax_idx = max_idx;
     for (vsize_t i = left_idx; i <= right_idx; ++i) {
-        if(xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
+        if (xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
             left_amax_idx = i;
             break;
         }
@@ -426,7 +596,7 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
 
     // search for right point which is almost equal to maximum
     for (vsize_t i = right_edge_idx; i >= left_idx; --i) {
-        if(xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
+        if (xcorr[i] >= loc_max * PERIOD_EXISTS_PEAK_THRESHOLD) {
             right_amax_idx = i;
             break;
         }
@@ -440,4 +610,3 @@ auto CMeasureController::measurePeriodMath(float _timeScale, float _sampPerDev, 
 
     return RP_OK;
 }
-

@@ -11,7 +11,8 @@
 <html lang="en">
 
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"></meta>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    </meta>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -50,7 +51,8 @@
             <div class="navbar navbar-inverse" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
-                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse"
+                            data-target=".navbar-collapse">
                             <span class="sr-only">T</span>
                             <span class="icon-bar"></span>
                             <span class="icon-bar"></span>
@@ -78,11 +80,15 @@
                             <dev id="eth0_status">
                                 <div id="eth0_inputs_labels" class="status_labels" style="min-height: 125px;">
                                     <div style="font-size: 15pt; padding-top: 10px;">Address:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">Mask:</div>
                                     <div style="font-size: 15pt; padding-top: 10px;">Gateway:</div>
                                 </div>
                                 <div id="eth0_inputs_entry" class="status_entry" style="min-height: 125px;">
                                     <div style="padding-top: 10px;">
                                         <label id="eth0_address_label" style="font-size: 13pt;">None</label>
+                                    </div>
+                                    <div style="padding-top: 10px;">
+                                        <label id="eth0_mask_label" style="font-size: 13pt;">None</label>
                                     </div>
                                     <div style="padding-top: 10px;">
                                         <label id="eth0_gateway_label" style="font-size: 13pt;">None</label>
@@ -99,18 +105,26 @@
                                 <dev id="eth0_inputs">
                                     <div id="eth0_inputs_labels" class="status_labels">
                                         <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
+                                        <div style="font-size: 15pt; padding-top: 10px;">Mask:</div>
                                         <div style="font-size: 15pt; padding-top: 10px;">Gateway:</div>
                                         <div style="font-size: 15pt; padding-top: 10px;">DNS:</div>
                                     </div>
                                     <div id="eth0_inputs_entry" class="status_entry">
                                         <div style="padding-top: 6px;">
-                                            <input id="ip_address_and_mask_input" type="text" placeholder="xxx.xxx.xxx.xxx/xx" class="form-control inputs" style="border-width: 1px;">
+                                            <input id="ip_address_input" type="text" placeholder="xxx.xxx.xxx.xxx"
+                                                class="form-control inputs" style="border-width: 1px;">
                                         </div>
                                         <div style="padding-top: 6px;">
-                                            <input id="gateway_input" type="text" class="form-control inputs" placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
+                                            <input id="ip_mask_input" type="text" placeholder="xxx.xxx.xxx.xxx"
+                                                class="form-control inputs" style="border-width: 1px;">
                                         </div>
                                         <div style="padding-top: 6px;">
-                                            <input id="dns_address_input" type="text" class="form-control inputs" placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
+                                            <input id="gateway_input" type="text" class="form-control inputs"
+                                                placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
+                                        </div>
+                                        <div style="padding-top: 6px;">
+                                            <input id="dns_address_input" type="text" class="form-control inputs"
+                                                placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
                                         </div>
                                     </div>
                                 </dev>
@@ -119,14 +133,21 @@
                                 <dev id="eth0_inputs">
                                     <div id="eth0_inputs_labels" class="status_labels">
                                         <div style="font-size: 15pt; padding-top: 10px;">IP address:</div>
+                                        <div style="font-size: 15pt; padding-top: 10px;">Mask:</div>
                                         <div style="font-size: 15pt; padding-top: 10px;">DNS:</div>
                                     </div>
                                     <div id="eth0_inputs_entry" class="status_entry">
                                         <div style="padding-top: 6px;">
-                                            <input id="ip_address_and_mask_input_dhcp" type="text" placeholder="xxx.xxx.xxx.xxx/xx" class="form-control inputs" style="border-width: 1px;">
+                                            <input id="ip_address_input_dhcp" type="text" placeholder="xxx.xxx.xxx.xxx"
+                                                class="form-control inputs" style="border-width: 1px;">
                                         </div>
                                         <div style="padding-top: 6px;">
-                                            <input id="dns_address_input_dhcp" type="text" class="form-control inputs" placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
+                                            <input id="ip_mask_input_dhcp" type="text" placeholder="xxx.xxx.xxx.xxx"
+                                                class="form-control inputs" style="border-width: 1px;">
+                                        </div>
+                                        <div style="padding-top: 6px;">
+                                            <input id="dns_address_input_dhcp" type="text" class="form-control inputs"
+                                                placeholder="xxx.xxx.xxx.xxx" style="border-width: 1px;">
                                         </div>
                                     </div>
                                 </dev>
@@ -156,6 +177,7 @@
                                     <div style="font-size: 15pt; padding-top: 10px;">Mode:</div>
                                     <div style="font-size: 15pt; padding-top: 10px;">SSID:</div>
                                     <div style="font-size: 15pt; padding-top: 10px;">Address:</div>
+                                    <div style="font-size: 15pt; padding-top: 10px;">Mask:</div>
                                 </div>
                                 <div id="wlan0_inputs_entry" class="status_entry" style="min-height: 160px;">
                                     <div style="padding-top: 10px;">
@@ -166,6 +188,9 @@
                                     </div>
                                     <div style="padding-top: 10px;">
                                         <label id="wlan0_address_label" style="font-size: 13pt;">None</label>
+                                    </div>
+                                    <div style="padding-top: 10px;">
+                                        <label id="wlan0_mask_label" style="font-size: 13pt;">None</label>
                                     </div>
                                 </div>
                             </dev>
@@ -184,7 +209,9 @@
                                         <input id="ssid_input" type="text" class="form-control inputs">
                                     </div>
                                 </div>
-                                <div id="ssid_check_len" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>                              
+                                <div id="ssid_check_len"
+                                    style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or
+                                    more characters</div>
                                 <div id="eth0_inputs_labels" class="status_labels">
                                     <div style="font-size: 15pt;">Password:</div>
                                 </div>
@@ -193,8 +220,12 @@
                                         <input id="password_input" type="password" class="form-control inputs">
                                     </div>
                                 </div>
-                                <div id="pass_check_len" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
-                                <div id="pass_check_sym" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
+                                <div id="pass_check_len"
+                                    style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">
+                                    *Use 8 or more characters</div>
+                                <div id="pass_check_sym"
+                                    style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">
+                                    *Contains incorrect symbols</div>
                                 <div>
                                     <button id="access_point_create" class="form-control btn eth0_apply">Create</button>
                                 </div>
@@ -202,7 +233,9 @@
                             <!-- WLAN CLIENT SETTINGS -->
                             <div id="wlan0_client_mode" class="wlan0_entries" style="display: none;">
                                 <div id="wifi_list">
-                                    <div id="wifi_loader" style="float: left; width: 100%; text-align: center;display: none;"><img src="/assets/images/loader.gif" width="35px"></div>
+                                    <div id="wifi_loader"
+                                        style="float: left; width: 100%; text-align: center;display: none;"><img
+                                            src="/assets/images/loader.gif" width="35px"></div>
                                     <div id="wifi_scan_result"></div>
                                 </div>
                                 <button id="refresh_list_btn" class="form-control btn eth0_apply">Refresh list</button>
@@ -218,17 +251,24 @@
                                             <input id="ssid_input_client" type="text" class="form-control inputs">
                                         </div>
                                     </div>
-                                    <div id="ssid_check_len_c" style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1 or more characters</div>
+                                    <div id="ssid_check_len_c"
+                                        style="display: none; font-size: 10pt; color: #F00; text-align: right;">*Use 1
+                                        or more characters</div>
                                     <div id="eth0_inputs_labels" class="status_labels">
                                         <div style="font-size: 15pt;">Password:</div>
                                     </div>
                                     <div id="eth0_inputs_entry" class="status_entry">
                                         <div>
-                                            <input id="password_input_client" type="password" class="form-control inputs">
+                                            <input id="password_input_client" type="password"
+                                                class="form-control inputs">
                                         </div>
                                     </div>
-                                    <div id="pass_check_len_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Use 8 or more characters</div>
-                                    <div id="pass_check_sym_c" style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">*Contains incorrect symbols</div>
+                                    <div id="pass_check_len_c"
+                                        style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">
+                                        *Use 8 or more characters</div>
+                                    <div id="pass_check_sym_c"
+                                        style="display: none; font-size: 10pt; padding-top: 15px; color: #F00; text-align: right;">
+                                        *Contains incorrect symbols</div>
 
                                     <div>
                                         <button id="client_connect" class="form-control btn eth0_apply">Connect</button>
@@ -240,11 +280,13 @@
                             <div id="wlan0_client_mode_link" class="wlan0_entries" style="display: none;">
                                 <div style="display: block; padding-top: 25px">
                                     <div>
-                                        <button id="client_disconnect" class="form-control btn eth0_apply">Disconnect</button>
+                                        <button id="client_disconnect"
+                                            class="form-control btn eth0_apply">Disconnect</button>
                                     </div>
 
                                     <div style="padding-top: 50px">
-                                        <div>If you apply new settings, please reboot the device to update the configuration.</div>
+                                        <div>If you apply new settings, please reboot the device to update the
+                                            configuration.</div>
                                         <button id="client_reboot" class="form-control btn eth0_apply">Reboot</button>
                                     </div>
                                 </div>
@@ -253,7 +295,8 @@
                             <div id="wlan0_ap_mode_work" class="wlan0_entries" style="display: none;">
                                 <div style="display: block; padding-top: 25px">
                                     <div>
-                                        <button id="ap_mode_stop" class="form-control btn eth0_apply">Stop AP Mode</button>
+                                        <button id="ap_mode_stop" class="form-control btn eth0_apply">Stop AP
+                                            Mode</button>
                                     </div>
                                 </div>
                             </div>
@@ -265,26 +308,32 @@
     </div>
     </div>
     <div>
-        <div id="sys_info_view" style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
-            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span id="cpu_load">0</span>
-            <br/> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span id="usagemem_view">0</span>
+        <div id="sys_info_view"
+            style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white; ">
+            FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span
+                id="cpu_load">0</span>
+            <br /> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span
+                id="usagemem_view">0</span>
         </div>
     </div>
     <script type="text/javascript">
-        $(document).ready(function() {
+        $(document).ready(function () {
             $("#ip-addr").text(window.location.hostname);
         })
     </script>
     <!-- Dongle Not Enabled Dialog -->
-    <div class="modal fade" id="dongle_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="dongle_missing" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Wi-Fi dongle missing</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
-                    <p id="wtools_missing_msg">Wi-Fi USB dongle not connected to your RedPitaya. Please, connect it before working with network manager.</p>
+                    <p id="wtools_missing_msg">Wi-Fi USB dongle not connected to your RedPitaya. Please, connect it
+                        before working with network manager.</p>
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
@@ -295,15 +344,18 @@
         </div>
     </div>
     <!-- Offline Dialog -->
-    <div class="modal fade" id="offline_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="offline_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="bazaar_naLabel">Internet connection missing</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
-                    <p id="wtools_missing_msg">Your RedPitaya has no connection to the Internet. Installing is not possible.</p>
+                    <p id="wtools_missing_msg">Your RedPitaya has no connection to the Internet. Installing is not
+                        possible.</p>
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
@@ -313,11 +365,13 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel" aria-hidden="true">
+    <div class="modal fade" id="feedback_error" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
                     <h4 class="modal-title" id="oops_label">Oops, something went wrong</h4>
                 </div>
                 <div class="modal-body" style="text-align: center; font-size: 18px;">
@@ -326,10 +380,12 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal" class="list-group-item btn">Send report</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="send_report_btn" data-dismiss="modal"
+                            class="list-group-item btn">Send report</a>
                     </div>
                     <div class="bazaar-link" style="float: left; width: 50%;">
-                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal" class="list-group-item btn">Restart Application</a>
+                        <a href="#" style="border: 1px solid;  width: 100%" id="restart_app_btn" data-dismiss="modal"
+                            class="list-group-item btn">Restart Application</a>
                     </div>
                 </div>
             </div>

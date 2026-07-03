@@ -161,12 +161,21 @@
             return value + " (No Info)"
         }
 
+        SW.setEnableShowButton = function(item,value){
+            if (value >= 5 && value <= 6){
+                item.removeClass('disabled-show-button');
+            }else{
+                item.addClass('disabled-show-button');
+            }
+        }
+
         SM.param_callbacks["SW_F_VER"] = function(param_name){
             if (param_name.value != -1){
                 $("#SW_F_VER").text(SW.calibVerStr(param_name.value))
             }else{
                 $("#SW_F_VER").text("ERROR")
             }
+            SW.setEnableShowButton($("#B_SHOW_F"),param_name.value)
         };
         SM.param_callbacks["SW_F_COUNT"] = function(param_name){
             if (param_name.value != -1){
@@ -181,6 +190,7 @@
             }else{
                 $("#SW_U_VER").text("ERROR")
             }
+            SW.setEnableShowButton($("#B_SHOW_U"),param_name.value)
         };
         SM.param_callbacks["SW_U_COUNT"] = function(param_name){
             if (param_name.value != -1){
@@ -190,11 +200,11 @@
             }
         };
 
-        $('#B_F_BACKUP_A').on('click', function(ev) {
+        $('#B_F_BACKUP').on('click', function(ev) {
             $.ajax({
                 url: "/calib_app_create_backup?factory=1",
                 type: 'GET',
-                timeout: 5000
+                timeout: 10000
             }).done(function(res) {
                 console.log(res)
                 download("/calib_app/files/"+res.trim(),res.trim());
@@ -205,11 +215,11 @@
             });
         });
 
-        $('#B_U_BACKUP_A').on('click', function(ev) {
+        $('#B_U_BACKUP').on('click', function(ev) {
             $.ajax({
                 url: "/calib_app_create_backup?factory=0",
                 type: 'GET',
-                timeout: 5000
+                timeout: 10000
             }).done(function(res) {
                 console.log(res)
                 download("/calib_app/files/"+res.trim(),res.trim());
@@ -220,7 +230,23 @@
             });
         });
 
-        $('#B_U_RESTORE_A').on('click', function(ev) {
+        $('#B_SHOW_F').on('click', function(ev) {
+            CLIENT.parametersCache["calib_sig"] = { value: 9 };
+            CLIENT.sendParameters();
+            $('#EEPROM_CALIB_TABLE').text('')
+            $('#loader_id').show()
+            $('#dialog_uni_calib').modal('show');
+        });
+
+        $('#B_SHOW_U').on('click', function(ev) {
+            CLIENT.parametersCache["calib_sig"] = { value: 10 };
+            CLIENT.sendParameters();
+            $('#EEPROM_CALIB_TABLE').text('')
+            $('#loader_id').show()
+            $('#dialog_uni_calib').modal('show');
+        });
+
+        $('#B_U_RESTORE').on('click', function(ev) {
             SW.promptFile().then(function(file) {
                 if(file){
                     const fileReader = new FileReader(); // initialize the object
@@ -323,6 +349,98 @@
         if (SW.isResizing == false){
             SW.subWindowHandler.style.height = new_params.value + 'px';
         }
+    }
+
+    SW.setEppromValuesInDialog = function(new_params){
+
+        let  formatY2KTimestamp = function(y2kTimestamp) {
+            const SECONDS_1970_TO_2000 = 946684800;
+            const date = new Date((y2kTimestamp + SECONDS_1970_TO_2000) * 1000);
+
+            const pad = (n) => n.toString().padStart(2, '0');
+
+            const year = date.getUTCFullYear();
+            const month = pad(date.getUTCMonth() + 1);
+            const day = pad(date.getUTCDate());
+            const hours = pad(date.getUTCHours());
+            const minutes = pad(date.getUTCMinutes());
+            const seconds = pad(date.getUTCSeconds());
+
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        console.log(new_params.value)
+        const table = document.getElementById('EEPROM_CALIB_TABLE');
+        if (!table) return;
+
+        $('#loader_id').hide();
+
+        table.innerHTML = '';
+
+        const rows = new_params.value.trim().split('\n');
+
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const headers = ['Name', 'ID', 'Value'];
+
+        headers.forEach(headerText => {
+            const th = document.createElement('th');
+            th.textContent = headerText;
+            headerRow.appendChild(th);
+        });
+
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+
+        rows.forEach(row => {
+            if (!row.trim()) return;
+
+            const columns = row.split('\t');
+            if (columns.length !== 3) return;
+
+            const tr = document.createElement('tr');
+
+            columns.forEach((col, index) => {
+                const td = document.createElement('td');
+
+                if (index === 1 || index === 2) {
+                    td.classList.add('numeric-cell');
+                    const num = parseFloat(col);
+
+                    if (index === 2){
+                        let hexValue = '';
+                        try {
+                            if (!isNaN(num)) {
+                                if (columns[1] !== "102"){
+                                    const intValue = new Uint32Array([num])[0];
+                                    hexValue = '0x' + intValue.toString(16).toUpperCase().padStart(8, '0');
+                                }else{
+                                    const intValue = new Uint32Array([num])[0];
+                                    hexValue = formatY2KTimestamp(intValue)
+                                }
+                            } else {
+                                hexValue = 'Invalid number';
+                            }
+                        } catch (e) {
+                            hexValue = 'Conversion error';
+                        }
+                        td.textContent = isNaN(num) ? col : num.toString() + ' (' + hexValue + ')';
+                    }else{
+                        td.textContent = isNaN(num) ? col : num.toString();
+                    }
+                } else {
+                    td.textContent = col;
+                }
+
+                tr.appendChild(td);
+            });
+
+            tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
     }
 
     SW.checkSubWindowPosition = function(){

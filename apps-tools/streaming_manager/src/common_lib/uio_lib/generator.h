@@ -126,6 +126,7 @@ class CGenerator {
     uint32_t m_calib_gain_ch2;
     uint32_t m_maxDacSpeedHz;
     uint32_t m_dacSpeedHz;
+    bool m_is8Bit[2];
 };
 
 }  // namespace uio_lib

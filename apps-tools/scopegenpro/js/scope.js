@@ -80,8 +80,9 @@
     OSC.config.socket_url = 'ws://' + window.location.host + '/wss';
     OSC.rp_model = "";
     OSC.rp_model_id = undefined;
-    OSC.adc_channes = 2;
+    OSC.adc_channels = 2;
     OSC.adc_max_rate = 0;
+    OSC.dac_channels = 2;
     OSC.high_z_mode = false;
     OSC.gen_max_amp = 0;
     OSC.arb_list = undefined;
@@ -245,7 +246,7 @@
         $.ajax({
             url: OSC.config.start_app_url,
             type: 'GET',
-            timeout: 5000
+            timeout: 10000
         }).done(function(res) {
             if (res.status == 'OK') {
                 try {
@@ -420,7 +421,7 @@
 
             OSC.ws.onclose = function() {
                 OSC.state.socket_opened = false;
-                $('#graphs .plot').hide(); // Hide all graphs
+                $('#graphs').find('.plot').hide();
                 OSC.client_log('Socket closed');
                 setTimeout(RP_CLIENT.reloadPage, 2000);
             };
@@ -437,9 +438,9 @@
                     return;
                 }
                 OSC.state.processing = true;
-
+                let receive = undefined
                 try {
-                    let receive = binParser.convert(ev.data)
+                    receive = binParser.convert(ev.data)
                     OSC.compressed_data += receive["compressed_data"];
                     OSC.decompressed_data += receive["decompressed_data"];
 
@@ -577,9 +578,9 @@
 
     OSC.param_callbacks["REQUEST_NORMALIZE"] = OSC.exportNormalize;
     OSC.param_callbacks["REQUEST_VIEW"] = OSC.exportViewMode;
-
-
     OSC.param_callbacks["DOWNLOAD_FILE"] = OSC.downloadFile;
+
+    OSC.param_callbacks["16_BIT_MODE"] = OSC.set16BitMode;
 
     OSC.param_callbacks["OSC_RUN"] = OSC.processRun;
     OSC.param_callbacks["OSC_VIEV_PART"] = OSC.processViewPart;
@@ -680,6 +681,9 @@
 
     OSC.param_callbacks["SOUR1_B_LAST_VOLT"] = OSC.updateGenBurstLast;
     OSC.param_callbacks["SOUR2_B_LAST_VOLT"] = OSC.updateGenBurstLast;
+
+    OSC.param_callbacks["SOUR1_BURST_USE_LAST"] = OSC.updateGenUseLastSample;
+    OSC.param_callbacks["SOUR2_BURST_USE_LAST"] = OSC.updateGenUseLastSample;
 
     OSC.param_callbacks["SOUR1_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
     OSC.param_callbacks["SOUR2_TEMP_RUNTIME"] = OSC.updateOverheatBlockHandler;
@@ -852,7 +856,7 @@
         }
 
         if (new_params['ADC_COUNT']){
-            OSC.adc_channes = new_params['ADC_COUNT'].value;
+            OSC.adc_channels = new_params['ADC_COUNT'].value;
         }
 
         if (new_params['ADC_RATE']){
@@ -1098,16 +1102,16 @@
             OSC.graphs["ch1"].plot.setColors(colorsArr);
             OSC.graphs["ch1"].plot.resize();
             var canvas = OSC.graphs["ch1"].plot.getCanvas()
-            for(let i = 1; i <= OSC.adc_channes; i++){
+            for(let i = 1; i <= OSC.adc_channels; i++){
                 if (OSC.taMode["CH"+i])
-                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
             if (OSC.glMode && OSC.glMode.isInit)
-                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             OSC.graphs["ch1"].plot.setupGrid();
             OSC.graphs["ch1"].plot.setData(pointArr);
             OSC.graphs["ch1"].plot.draw();
-            for(let i = 1; i <= OSC.adc_channes; i++){
+            for(let i = 1; i <= OSC.adc_channels; i++){
                 if (OSC.taMode["CH"+i])
                     OSC.taMode["CH"+i].resetData()
             }
@@ -1160,12 +1164,12 @@
             }
 
             let isInit = true
-            for(let i = 1; i <= OSC.adc_channes; i++){
+            for(let i = 1; i <= OSC.adc_channels; i++){
                 OSC.taMode["CH"+i] = new TAMode()
                 OSC.taMode["CH"+i].init()
                 if (OSC.taMode["CH"+i].isInit){
                     var canvas = OSC.graphs["ch1"].plot.getCanvas()
-                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.width,canvas.height)
+                    OSC.taMode["CH"+i].setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
                 } else{
                     isInit = false
                 }
@@ -1182,7 +1186,7 @@
             OSC.glMode.init()
             if (OSC.glMode.isInit){
                 var canvas = OSC.graphs["ch1"].plot.getCanvas()
-                OSC.glMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
         }
 
@@ -1199,7 +1203,7 @@
         }
 
         // Hide plots without signal
-        $('#graphs .plot').not(visible_plots).hide();
+        $('#graphs').find('.plot').not(visible_plots).hide();
 
         OSC.drawSignalXY(xysignals)
         // Disable buttons related to inactive signals
@@ -1263,7 +1267,7 @@
             id = "OSC_MATH_SRC2"
         }
 
-        for(var i = 1 ; i <= OSC.adc_channes; i++){
+        for(var i = 1 ; i <= OSC.adc_channels; i++){
             if (id.startsWith("OSC_CH"+i+"_IN_GAIN")){
                 id = "OSC_CH"+i+"_IN_GAIN"
             }
@@ -1278,6 +1282,12 @@
 
             if (id.startsWith("OSC_CH"+i+"_IN_AC_DC")){
                 id = "OSC_CH"+i+"_IN_AC_DC"
+            }
+        }
+
+        for(var i = 1 ; i <= OSC.dac_channels; i++){
+            if (id.startsWith("SOUR"+i+"_BURST_USE_LAST")){
+                id = "SOUR"+i+"_BURST_USE_LAST"
             }
         }
 
@@ -1312,7 +1322,7 @@
                 value = OSC.modifyForSendInOffsetZeroPlot("2",value)
             }
 
-            if (OSC.adc_channes > 2){
+            if (OSC.adc_channels > 2){
                 if (key == "GPOS_OFFSET_CH3") {
                     value = OSC.modifyForSendInOffsetPlot("3",value)
                 }
@@ -1322,7 +1332,7 @@
                 }
             }
 
-            if (OSC.adc_channes > 3){
+            if (OSC.adc_channels > 3){
                 if (key == "GPOS_OFFSET_CH4") {
                     value = OSC.modifyForSendInOffsetPlot("4",value)
                 }
@@ -1344,7 +1354,7 @@
                 value = OSC.convertMathUnitToValue(value);
             }
 
-            for(var i = 1 ; i <= OSC.adc_channes; i++){
+            for(var i = 1 ; i <= OSC.adc_channels; i++){
                 if (id == "OSC_CH"+i+"_IN_GAIN"){
 
                 }
@@ -1884,10 +1894,10 @@
             OSC.drawGraphGridXY();
         });
 
-        OSC.moveTitileXAxisTicks()
-        OSC.moveTitileYAxisTicks()
-        OSC.moveTitileXAxisTicksXY()
-        OSC.moveTitileYAxisTicksXY()
+        OSC.moveTitleXAxisTicks()
+        OSC.moveTitleYAxisTicks()
+        OSC.moveTitleXAxisTicksXY()
+        OSC.moveTitleYAxisTicksXY()
 
         $(window).on('blur', function() {
         });
@@ -1900,6 +1910,7 @@
             $('.plot').css($('#graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
+            // $('#graphs').find('.plot').hide();
             $('#graphs .plot').hide();
         }
 
@@ -1911,11 +1922,12 @@
                 $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));
 
             // Hide all graphs, they will be shown next time signal data is received
+            // $('#xy_graphs').find('.xy_plot').hide();
             $('#xy_graphs .xy_plot').hide();
         }
 
         // Hide offset arrows, trigger level line and arrow
-        $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level').hide();
+        $('.y-offset-arrow, #time_offset_arrow, #buf_time_offset, #trig_level_arrow, #trigger_level, #trig_out_right, #trig_out_left').hide();
         if (requestAll){
             OSC.requestAllParam();
             OSC.requestAllSignals();

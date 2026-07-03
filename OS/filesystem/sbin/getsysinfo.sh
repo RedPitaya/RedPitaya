@@ -7,6 +7,7 @@ C=10
 FPGA_VER=$(profiles -f)
 S_VER=$(profiles -i)
 NAME=$(profiles -n)
+IS_MOLDE_VALID=$(profiles -c)
 IS_512_BOOT=$(cmp /opt/redpitaya/boot.bin /opt/redpitaya/uboot/boot_512Mb_ram.bin)
 SLAVE=$(cat /opt/redpitaya/bin/.streaming_mode 2> /dev/null)
 
@@ -40,6 +41,7 @@ echo { > /tmp/sysinfo.json
 echo \"model\": \"$READ_HWREV\", >> /tmp/sysinfo.json
 echo \"name\": \"$NAME\", >> /tmp/sysinfo.json
 echo \"is_slave\": \"$SLAVE\", >> /tmp/sysinfo.json
+echo \"is_model_valid\": \"$IS_MOLDE_VALID\", >> /tmp/sysinfo.json
 echo \"stem_ver\": \"$S_VER\", >> /tmp/sysinfo.json
 echo \"mac\": \"$READ_MAC\", >> /tmp/sysinfo.json
 echo \"dna\": \"$DNA_1$DNA_2\", >> /tmp/sysinfo.json
@@ -58,9 +60,6 @@ echo \"boot_512\":\"1\",  >> /tmp/sysinfo.json
 else
 echo \"boot_512\":\"0\",  >> /tmp/sysinfo.json
 fi
-
-
-echo \"linux\": \"$(cat /root/.version)\",  >> /tmp/sysinfo.json
 
 echo \"fpga\":{  >> /tmp/sysinfo.json
 

@@ -72,10 +72,10 @@ void createTestFiels() {
         func(size, "16bit_ch1.wav", str_ch1_16);
         func(size, "16bit_ch2.wav", str_ch2_16);
 
-        str_ch1_8 = buildTDMSStream(pack_ch1_8);
-        str_ch2_8 = buildTDMSStream(pack_ch2_8);
-        str_ch1_16 = buildTDMSStream(pack_ch1_16);
-        str_ch2_16 = buildTDMSStream(pack_ch2_16);
+        str_ch1_8 = buildTDMSStream(pack_ch1_8, nullptr);
+        str_ch2_8 = buildTDMSStream(pack_ch2_8, nullptr);
+        str_ch1_16 = buildTDMSStream(pack_ch1_16, nullptr);
+        str_ch2_16 = buildTDMSStream(pack_ch2_16, nullptr);
 
         func(size, "8bit_ch1.tdms", str_ch1_8);
         func(size, "8bit_ch2.tdms", str_ch2_8);

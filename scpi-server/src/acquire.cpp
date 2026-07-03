@@ -23,6 +23,7 @@
 rp_scpi_acq_unit_t unit = RP_SCPI_VOLTS;  // default value
 
 const scpi_choice_def_t scpi_RpAcqTrigRequest[] = {{"PRE_TRIG", 1}, {"POST_TRIG", 2}, {"PRE_POST_TRIG", 3}, SCPI_CHOICE_LIST_END};
+const scpi_choice_def_t scpi_RpAcqIntMode[] = {{"TRIG", RP_INT_TRIGGER}, {"FILL", RP_INT_FILL}, SCPI_CHOICE_LIST_END};
 
 scpi_result_t RP_AcqSplitTrigger(scpi_t* context) {
     bool state_c = false;
@@ -46,6 +47,37 @@ scpi_result_t RP_AcqSplitTriggerQ(scpi_t* context) {
     auto result = rp_AcqGetSplitTrigger(&enabled);
     if (result != RP_OK) {
         RP_LOG_CRIT("Failed to get split trigger: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultBool(context, enabled);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqKeepArm(scpi_t* context) {
+    bool state_c = false;
+    /* Parse first, STATE argument */
+    if (!SCPI_ParamBool(context, &state_c, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    // Now set the decimation
+    auto result = rp_AcqSetArmKeep(state_c);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set keep arm: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqKeepArmQ(scpi_t* context) {
+    bool enabled = false;
+    auto result = rp_AcqGetArmKeep(&enabled);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get keep arm: %s", rp_GetError(result));
         if (getRetOnError())
             requestSendNewLine(context);
         return SCPI_RES_ERR;
@@ -123,7 +155,7 @@ scpi_result_t RP_AcqDataEndianQ(scpi_t* context) {
 scpi_result_t RP_AcqStart(scpi_t* context) {
     auto result = rp_AcqStart();
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to start Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to start acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
@@ -137,7 +169,7 @@ scpi_result_t RP_AcqStartCh(scpi_t* context) {
     }
     auto result = rp_AcqStartCh(channel);
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to start Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to start acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
@@ -147,21 +179,45 @@ scpi_result_t RP_AcqStartCh(scpi_t* context) {
 scpi_result_t RP_AcqStop(scpi_t* context) {
     auto result = rp_AcqStop();
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to stop Red Pitaya acquisition: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to stop acquisition: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }
 
-scpi_result_t rp_AcqStopCh(scpi_t* context) {
+scpi_result_t RP_AcqStopCh(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
     if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
         return SCPI_RES_ERR;
     }
     auto result = rp_AcqStopCh(channel);
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to stop Red Pitaya acquisition: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to stop acquisition: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqUnlock(scpi_t* context) {
+    auto result = rp_AcqUnlockTrigger();
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to unlock trigger: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqUnlockCh(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqUnlockTriggerCh(channel);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to unlock trigger: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     RP_LOG_INFO("%s", rp_GetError(result))
@@ -171,7 +227,7 @@ scpi_result_t rp_AcqStopCh(scpi_t* context) {
 scpi_result_t RP_AcqReset(scpi_t* context) {
     auto result = rp_AcqReset();
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to reset Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to reset acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     unit = RP_SCPI_VOLTS;
@@ -188,12 +244,44 @@ scpi_result_t RP_AcqResetCh(scpi_t* context) {
     }
     auto result = rp_AcqResetCh(channel);
     if (RP_OK != result) {
-        RP_LOG_CRIT("Failed to reset Red Pitaya acquire: %s", rp_GetError(result));
+        RP_LOG_CRIT("Failed to reset acquire: %s", rp_GetError(result));
         return SCPI_RES_ERR;
     }
     unit = RP_SCPI_VOLTS;
     user_context_t* uc = (user_context_t*)context->user_context;
     uc->binary_format = false;
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTimeStamp(scpi_t* context) {
+    uint64_t value = 0;
+    if (!SCPI_ParamUInt64(context, &value, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetInitTimestamp(value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set timestamp: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTimeStampQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    uint64_t value = 0;
+    auto result = rp_AcqGetTimestamp(channel, &value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get timestamp: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultUInt64Base(context, value, 10);
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }
@@ -483,6 +571,37 @@ scpi_result_t RP_AcqAveragingChQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_Acq16BitMode(scpi_t* context) {
+    scpi_bool_t value = FALSE;
+    // read first parameter (OFF,ON)
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqSet16BitMode(value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set 16bit mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_Acq16BitModeQ(scpi_t* context) {
+    bool value = false;
+    auto result = rp_AcqGet16BitMode(&value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get 16bit mode: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqBypassFilterCh(scpi_t* context) {
     rp_channel_t channel = RP_CH_1;
     if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
@@ -518,6 +637,272 @@ scpi_result_t RP_AcqBypassFilterChQ(scpi_t* context) {
         return SCPI_RES_ERR;
     }
     SCPI_ResultMnemonic(context, value ? "ON" : "OFF");
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqInterrupTriggerQ(scpi_t* context) {
+    int32_t cmd[1] = {0};
+    if (!SCPI_CommandNumbers(context, cmd, 1, -2)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get parameters.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    if (cmd[0] < -1) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get timeout.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    auto timeout_ms = cmd[0];
+
+    const char* trig_name = nullptr;
+    auto result = rp_AcqIntTriggerRead(timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get trigger interrput: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqInterrupTriggerChQ(scpi_t* context) {
+
+    int32_t cmd[1] = {0};
+    if (!SCPI_CommandNumbers(context, cmd, 1, -2)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get parameters.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    if (cmd[0] < -1) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get timeout.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    auto timeout_ms = cmd[0];
+
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    const char* trig_name = nullptr;
+    // get trigger source
+    auto result = rp_AcqIntTriggerReadCh(channel, timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get trigger interrput: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnable(scpi_t* context) {
+
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    scpi_bool_t value = FALSE;
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing second parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetIntMask((rp_int_mode_t)trig_mode, value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnableQ(scpi_t* context) {
+    bool state = false;
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqGetIntMask((rp_int_mode_t)trig_mode, &state);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultBool(context, state);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnableCh(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    scpi_bool_t value = FALSE;
+    if (!SCPI_ParamBool(context, &value, false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing second parameter.");
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqSetIntMaskCh(channel, (rp_int_mode_t)trig_mode, value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to set int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqTriggerIntEnableChQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    bool state = false;
+    int32_t trig_mode = 0;
+    /* Parse MODE parameter */
+    if (!SCPI_ParamChoice(context, scpi_RpAcqIntMode, &trig_mode, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing int mode parameter.");
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqGetIntMaskCh(channel, (rp_int_mode_t)trig_mode, &state);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get int mode: %s", rp_GetError(result));
+        return SCPI_RES_ERR;
+    }
+    SCPI_ResultBool(context, state);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqInterrupFillQ(scpi_t* context) {
+
+    int32_t cmd[1] = {0};
+    if (!SCPI_CommandNumbers(context, cmd, 1, -2)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get parameters.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    if (cmd[0] < -1) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get timeout.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    auto timeout_ms = cmd[0];
+
+    const char* trig_name = nullptr;
+    // get trigger source
+    auto result = rp_AcqIntFillRead(timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get fill interrupt: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqInterrupFillChQ(scpi_t* context) {
+
+    int32_t cmd[1] = {0};
+    if (!SCPI_CommandNumbers(context, cmd, 1, -2)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get parameters.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    if (cmd[0] < -1) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Failed to get timeout.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    auto timeout_ms = cmd[0];
+
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    const char* trig_name = nullptr;
+    // get trigger source
+    auto result = rp_AcqIntFillReadCh(channel, timeout_ms);
+    if (RP_OK != result && RP_ETIM != result) {
+        RP_LOG_CRIT("Failed to get fill interrput: %s", rp_GetError(result));
+        result = RP_EOP;
+    }
+    if (!SCPI_ChoiceToName(scpi_RpIntStat, result, &trig_name)) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to parse interrupt error.")
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultMnemonic(context, trig_name);
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }
@@ -870,6 +1255,47 @@ scpi_result_t RP_AcqGainQ(scpi_t* context) {
     return SCPI_RES_OK;
 }
 
+scpi_result_t RP_AcqOffset(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float offset = 0;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    if (!SCPI_ParamFloat(context, &offset, true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqSetOffset(channel, offset);
+    if (result != RP_OK) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Failed to set offset %f", offset);
+        return SCPI_RES_ERR;
+    }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqOffsetQ(scpi_t* context) {
+    rp_channel_t channel = RP_CH_1;
+    float offset = 0;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    auto result = rp_AcqGetOffset(channel, &offset);
+    if (result != RP_OK) {
+        RP_LOG_CRIT("Failed to get offset: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+
+    SCPI_ResultFloat(context, offset);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
 scpi_result_t RP_AcqTriggerLevel(scpi_t* context) {
     scpi_number_t value;
     if (!SCPI_ParamNumber(context, scpi_special_numbers_def, &value, true)) {
@@ -907,6 +1333,40 @@ scpi_result_t RP_AcqTriggerLevel(scpi_t* context) {
             return SCPI_RES_ERR;
         }
     }
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqPreTriggerCounterQ(scpi_t* context) {
+    uint32_t value = 0;
+    auto result = rp_AcqGetPreTriggerCounter(&value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get pre trigger counter: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultUInt32(context, value);
+    RP_LOG_INFO("%s", rp_GetError(result))
+    return SCPI_RES_OK;
+}
+
+scpi_result_t RP_AcqPreTriggerCounterChQ(scpi_t* context) {
+    uint32_t value = 0;
+    rp_channel_t channel = RP_CH_1;
+    if (RP_ParseChArgvADC(context, &channel) != RP_OK) {
+        return SCPI_RES_ERR;
+    }
+    auto result = rp_AcqGetPreTriggerCounterCh(channel, &value);
+    if (RP_OK != result) {
+        RP_LOG_CRIT("Failed to get pre trigger counter: %s", rp_GetError(result));
+        if (getRetOnError())
+            requestSendNewLine(context);
+        return SCPI_RES_ERR;
+    }
+    // Return back result
+    SCPI_ResultUInt32(context, value);
     RP_LOG_INFO("%s", rp_GetError(result))
     return SCPI_RES_OK;
 }
@@ -1113,7 +1573,7 @@ scpi_result_t RP_AcqDataPosQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetDataPosRaw(channel, start, end, reinterpret_cast<int16_t*>(uc->buffer.data()), &size);
+        result = rp_AcqGetDataRawWithCalib(channel, start, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1179,7 +1639,7 @@ scpi_result_t RP_AcqDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetDataRaw(channel, start, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetDataRawWithCalib(channel, start, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1232,7 +1692,7 @@ scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetOldestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetOldestDataRawWithCalib(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1290,7 +1750,7 @@ scpi_result_t RP_AcqOldestDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetOldestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetOldestDataRawWithCalib(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1348,7 +1808,7 @@ scpi_result_t RP_AcqLatestDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetLatestDataRaw(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetLatestDataRawWithCalib(channel, &size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())
@@ -1449,7 +1909,7 @@ scpi_result_t RP_AcqTriggerDataQ(scpi_t* context) {
         if (uc->buffer.size() < sizeof(int16_t) * ADC_BUFFER_SIZE) {
             uc->buffer.resize(sizeof(int16_t) * ADC_BUFFER_SIZE);
         }
-        result = rp_AcqGetDataRaw(channel, data_start, &data_size, reinterpret_cast<int16_t*>(uc->buffer.data()));
+        result = rp_AcqGetDataRawWithCalib(channel, data_start, &data_size, reinterpret_cast<int16_t*>(uc->buffer.data()));
         if (result != RP_OK) {
             RP_LOG_CRIT("Failed to get raw data: %s", rp_GetError(result));
             if (getRetOnError())

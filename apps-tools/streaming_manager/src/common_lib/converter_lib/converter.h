@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <memory>
+#include "writer_lib/file_helper.h"
 
 namespace converter_lib {
 
@@ -15,8 +16,8 @@ class CConverter {
     CConverter();
     ~CConverter();
 
-    bool convertToCSV(std::string _file_name, std::string _prefix);
-    bool convertToCSV(std::string _file_name, int32_t start_seg, int32_t end_seg, std::string _prefix);
+    bool convertToCSV(std::string _file_name, std::string _prefix, FH_CSVMode mode);
+    bool convertToCSV(std::string _file_name, int32_t start_seg, int32_t end_seg, std::string _prefix, FH_CSVMode mode);
 
     bool convertToWAV(std::string _file_name, std::string _prefix);
     bool convertToWAV(std::string _file_name, int32_t start_seg, int32_t end_seg, std::string _prefix);

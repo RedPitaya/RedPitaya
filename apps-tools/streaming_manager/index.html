@@ -173,6 +173,16 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <div class="configcell">
+                                        <div>
+                                            <label style="width: 100%;">Save capture time</label>
+                                        </div>
+                                        <div class="flipswitch_div" style="width: 100%;height: 50%;">
+                                            <input id="SS_CAPTURE_TIME" type="checkbox" style="margin: 0;"
+                                                class="man_flipswitch flipswitch" data-on="ON" data-off="OFF"
+                                                value="true" />
+                                        </div>
+                                    </div>
                                     <div class="configcell file_use">
                                         <div>
                                             <label style="width: 100%;">Save mode</label>
@@ -320,8 +330,7 @@
                                             style="margin-right: 10px;">
                                     </a>
                                     <label
-                                        style="width:120px;height:30px;margin-right:10px;font-size: 20px;line-height: 30px;">PC
-                                        Clients</label>
+                                        style="width:65px;height:30px;margin-right:10px;font-size: 20px;line-height: 30px;">Clients</label>
                                     <a id="PC_DESK_WIN" target="_blank" rel="noopener noreferrer">
                                         <img class="image_button" src="./img/DeskWinGreen.png" loading="lazy"
                                             width="30px" height="30px" style="margin-right: 10px;">
@@ -349,11 +358,12 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="panels dac_mode" style="width: 400px;">
+                        <div class="panels" style="width: 400px;">
                             <div style="height: 100%;display: flex;flex-flow: column;">
+                                <label style="width: 100%;text-align: center;height: 30px"></label>
                                 <div
                                     style="height: 100%;display: flex;flex-wrap: wrap;align-content: flex-start; overflow-x: auto;">
-                                    <div class="configcell_long"
+                                    <div class="configcell_long dac_mode"
                                         style="display: flex; justify-content: space-evenly;height: 25px;">
                                         <div style="width: 100%" class="ch1">
                                             <div>
@@ -361,7 +371,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="configcell">
+                                    <div class="configcell dac_mode">
                                         <div>
                                             <label style="width: 100%;">Mode</label>
                                         </div>
@@ -371,7 +381,7 @@
                                                 value="true" />
                                         </div>
                                     </div>
-                                    <div class="configcell">
+                                    <div class="configcell dac_mode">
                                         <div>
                                             <label style="width: 100%;">Rate</label>
                                         </div>
@@ -380,7 +390,7 @@
                                                 step="1" min="1" max="65535">
                                         </div>
                                     </div>
-                                    <div class="configcell_long dac_file_use">
+                                    <div class="configcell_long dac_file_use dac_mode">
                                         <div>
                                             <label style="width: 100%;">File name</label>
                                         </div>
@@ -407,7 +417,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="configcell dac_file_use">
+                                    <div class="configcell dac_file_use dac_mode">
                                         <div>
                                             <label style="width: 100%;">File format</label>
                                         </div>
@@ -418,7 +428,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="configcell dac_file_use">
+                                    <div class="configcell dac_file_use dac_mode">
                                         <div>
                                             <label style="width: 100%;">Repeat count</label>
                                         </div>
@@ -427,7 +437,7 @@
                                                 value="20000" step="1" min="1" max="2000000000">
                                         </div>
                                     </div>
-                                    <div class="configcell dac_file_use">
+                                    <div class="configcell dac_file_use dac_mode">
                                         <div>
                                             <label style="width: 100%;">Repeat mode</label>
                                         </div>
@@ -439,7 +449,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="configcell_long dac_gain"
+                                    <div class="configcell_long dac_gain dac_mode"
                                         style="display: flex; justify-content: space-evenly;">
                                         <div style="width: 25%" class="ch1">
                                             <div>
@@ -505,7 +515,7 @@
                                                 class="slider">
                                         </div>
                                     </div>
-                                    <div class="configcell">
+                                    <div class="configcell dac_mode">
                                         <div>
                                             <label id="DAC_SIZE_TITLE" style="width: 100%;">DAC: 1MB</label>
                                         </div>

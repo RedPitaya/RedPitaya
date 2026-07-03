@@ -387,7 +387,7 @@ auto CDSP::windowFilter(data_t* data) -> int {
         // }
 
         if constexpr (std::is_same_v<cdsp_data_t, float>) {
-            multiply_arrays_neon(data->m_filtred[j].data(), data->m_in[j].data(), m_pimpl->m_window.data(), getSignalLength());
+            multiply_arrays_float_neon(data->m_filtred[j].data(), data->m_in[j].data(), m_pimpl->m_window.data(), getSignalLength());
             multiply_array_by_scalar_float_neon(data->m_filtred[j].data(), data->m_filtred[j].data(), m_pimpl->m_channelProbe[j], getSignalLength());
         } else if constexpr (std::is_same_v<cdsp_data_t, double>) {
             // Cast to the expected type if your data structures can handle it

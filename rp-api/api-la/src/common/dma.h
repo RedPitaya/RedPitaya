@@ -18,11 +18,12 @@
 
 #include "structs.h"
 
-int rp_dmaOpen(const std::string dev, rp_handle_uio_t* handle);
+int rp_dmaOpen(const std::string dev, rp_handle_uio_t* handle, size_t sgm_size, size_t sgm_count);
 int rp_dmaCtrl(rp_handle_uio_t* handle, RP_DMA_CTRL ctrl);
 int rp_setSgmntC(rp_handle_uio_t* handle, unsigned long no);
 int rp_setSgmntS(rp_handle_uio_t* handle, unsigned long no);
 int rp_dmaRead(rp_handle_uio_t* handle, int timeout_s, bool* timeOut);
 int rp_dmaClose(rp_handle_uio_t* handle);
+int rp_dmaReservedMemory(uint32_t* _startAddress, uint32_t* _size);
 
 #endif

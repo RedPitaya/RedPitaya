@@ -69,9 +69,12 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
             case STEM_125_14_Z7020_LN_v1_1:
 
             case STEM_125_14_v2_0:
+            case STEM_125_14_BO_v2_0:
             case STEM_125_14_Pro_v2_0:
+            case STEM_125_14_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Pro_v1_0:
             case STEM_125_14_Z7020_Pro_v2_0:
+            case STEM_125_14_Z7020_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Ind_v2_0:
             case STEM_125_14_Z7020_LL_v1_1:
             case STEM_125_14_Z7020_LL_v1_2:
@@ -83,12 +86,17 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
                 if (buffer && size == sizeof(rp_calib_params_v1_t)) {
                     rp_calib_params_v1_t calib_v1;
                     memcpy(&calib_v1, buffer, size);
-                    *calib = convertV1toCommon(&calib_v1, adjust);
+                    if (calib_v1.dataStructureId != RP_HW_PACK_ID_V1) {
+                        fprintf(stderr, "[WARNING] Incorrect calibration parameter identifier. The board requires recalibration. The default settings will be used.\n");
+                        *calib = getDefault(model, false);
+                    } else {
+                        *calib = convertV1toCommon(&calib_v1, adjust);
+                    }
                     free(buffer);
                 } else {
                     free(buffer);
                     *calib = getDefault(model, false);
-                    ERROR_LOG("Can't load calibration v1. Set by default.");
+                    ERROR_LOG("Can't load calibration. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
                 break;
@@ -101,12 +109,17 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
                 if (buffer && size == sizeof(rp_calib_params_v1_t)) {
                     rp_calib_params_v1_t calib_v1;
                     memcpy(&calib_v1, buffer, size);
-                    *calib = convertV4toCommon(&calib_v1, adjust);
+                    if (calib_v1.dataStructureId != RP_HW_PACK_ID_V4) {
+                        fprintf(stderr, "[WARNING] Incorrect calibration parameter identifier. The board requires recalibration. The default settings will be used.\n");
+                        *calib = getDefault(model, false);
+                    } else {
+                        *calib = convertV4toCommon(&calib_v1, adjust);
+                    }
                     free(buffer);
                 } else {
                     free(buffer);
                     *calib = getDefault(model, false);
-                    ERROR_LOG("Can't load calibration v1. Set by default.");
+                    ERROR_LOG("Can't load calibration. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
                 break;
@@ -121,10 +134,17 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
                 if (buffer && size == sizeof(rp_calib_params_v2_t)) {
                     rp_calib_params_v2_t calib_v2;
                     memcpy(&calib_v2, buffer, size);
-                    *calib = convertV2toCommon(&calib_v2, adjust);
+                    if (calib_v2.dataStructureId != RP_HW_PACK_ID_V3) {
+                        fprintf(stderr, "[WARNING] Incorrect calibration parameter identifier. The board requires recalibration. The default settings will be used.\n");
+                        *calib = getDefault(model, false);
+                    } else {
+                        *calib = convertV2toCommon(&calib_v2, adjust);
+                    }
+                    free(buffer);
                 } else {
+                    free(buffer);
                     *calib = getDefault(model, false);
-                    ERROR_LOG("Can't load calibration v2. Set by default.");
+                    ERROR_LOG("Can't load calibration. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
                 break;
@@ -141,12 +161,17 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
                 if (buffer && size == sizeof(rp_calib_params_v3_t)) {
                     rp_calib_params_v3_t calib_v3;
                     memcpy(&calib_v3, buffer, size);
-                    *calib = convertV3toCommon(&calib_v3, adjust);
+                    if (calib_v3.dataStructureId != RP_HW_PACK_ID_V2) {
+                        fprintf(stderr, "[WARNING] Incorrect calibration parameter identifier. The board requires recalibration. The default settings will be used.\n");
+                        *calib = getDefault(model, false);
+                    } else {
+                        *calib = convertV3toCommon(&calib_v3, adjust);
+                    }
                     free(buffer);
                 } else {
                     free(buffer);
                     *calib = getDefault(model, false);
-                    ERROR_LOG("Can't load calibration v3. Set by default.");
+                    ERROR_LOG("Can't load calibration. Set by default.");
                     return RP_HW_CALIB_ERE;
                 }
                 break;
@@ -188,7 +213,7 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t* calib_
     if (isUniversalCalib(calib_params->dataStructureId)) {
 
         rp_calib_params_universal_t calib;
-        if (!convertUniversal(model, calib_params, &calib)) {
+        if (!convertUniversal(model, calib_params, &calib, true)) {
             ERROR_LOG("Error converting universal calibration parameters.");
             return RP_HW_CALIB_EWE;
         }
@@ -220,9 +245,12 @@ rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t* calib_
             case STEM_125_14_Z7020_LN_v1_1:
 
             case STEM_125_14_v2_0:
+            case STEM_125_14_BO_v2_0:
             case STEM_125_14_Pro_v2_0:
+            case STEM_125_14_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Pro_v1_0:
             case STEM_125_14_Z7020_Pro_v2_0:
+            case STEM_125_14_Z7020_Pro_BO_v2_0:
             case STEM_125_14_Z7020_Ind_v2_0:
             case STEM_125_14_Z7020_LL_v1_1:
             case STEM_125_14_Z7020_LL_v1_2:
@@ -411,10 +439,13 @@ void calib_SetToZero(bool is_new_format, bool setFilterZero, uint8_t version) {
         g_calib = calib_GetDefaultCalib(setFilterZero);
 }
 
-rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, bool setFilterZero, uint8_t version) {
+rp_calib_error calib_Reset(bool use_factory_zone, bool is_new_format, rp_calib_filter_mode mode, uint8_t version) {
     if (g_model_loaded) {
         rp_calib_params_t calib = g_calib;
-        calib_SetToZero(is_new_format, setFilterZero, version);
+        calib_SetToZero(is_new_format, mode == rp_calib_filter_mode::RP_HW_CFM_ZERO, version);
+        if (mode == rp_calib_filter_mode::RP_HW_CFM_KEEP) {
+            calib.copyFilter(g_calib);
+        }
         auto res = calib_WriteParams(g_model, &g_calib, use_factory_zone, false);
         if (res != RP_HW_CALIB_OK) {
             g_calib = calib;
@@ -681,9 +712,12 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
         }
 
         case STEM_125_14_v2_0:
+        case STEM_125_14_BO_v2_0:
         case STEM_125_14_Pro_v2_0:
+        case STEM_125_14_Pro_BO_v2_0:
         case STEM_125_14_Z7020_Pro_v1_0:
         case STEM_125_14_Z7020_Pro_v2_0:
+        case STEM_125_14_Z7020_Pro_BO_v2_0:
         case STEM_125_14_Z7020_LL_v1_1:
         case STEM_125_14_Z7020_LL_v1_2:
         case STEM_125_14_Z7020_TI_v1_3:
@@ -769,7 +803,11 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
 
 rp_calib_error calib_PrintEx(FILE* __restrict out, rp_calib_params_t* calib) {
     fprintf(out, "dataStructureId: %d\n", calib->dataStructureId);
-    fprintf(out, "wpCheck: %d\n\n", calib->wpCheck);
+    fprintf(out, "wpCheck: %d\n", calib->wpCheck);
+    fprintf(out, "time stamp: %u (0x%X)\n", calib->timeStamp, calib->timeStamp);
+    fprintf(out, "time stamp: %s\n", formatY2KTimestamp(calib->timeStamp).c_str());
+    fprintf(out, "commit hash: %llx\n\n", calib->hash_commit);
+
     fprintf(out, "fast_adc_count_1_1: %d\n\n", calib->fast_adc_count_1_1);
     for (int i = 0; i < calib->fast_adc_count_1_1; ++i) {
         fprintf(out, "\tChannel %d:\n", i + 1);

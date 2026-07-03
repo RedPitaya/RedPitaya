@@ -19,8 +19,8 @@ int uart_InitDevice(char *_device);
 int uart_SetSettings();
 int uart_Release();
 
-int uart_Timeout(uint8_t deca_sec);
-uint8_t uart_GetTimeout();
+int uart_SetTimeout(uint8_t deca_sec);
+int uart_GetTimeout(uint8_t *value);
 
 int uart_SetSpeed(int _speed);
 int uart_GetSpeed();

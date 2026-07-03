@@ -36,7 +36,7 @@
             field.val(new_params[param_name].value);
         }
         OSC.setXYAxisScale()
-        OSC.updateTitileXAxisTicksXY()
+        OSC.updateTitleXAxisTicksXY()
     }
 
     OSC.updateXYSrcY = function(new_params,param_name) {
@@ -45,7 +45,7 @@
             field.val(new_params[param_name].value);
         }
         OSC.setXYAxisScale()
-        OSC.updateTitileYAxisTicksXY()
+        OSC.updateTitleYAxisTicksXY()
     }
 
     OSC.drawSignalXY = function(signals) {
@@ -105,7 +105,7 @@
             OSC.graphs["xy"].plot.resize();
             if (OSC.glXYMode && OSC.glXYMode.isInit){
                 var canvas = OSC.graphs["xy"].plot.getCanvas()
-                OSC.glXYMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glXYMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
             OSC.graphs["xy"].plot.setupGrid();
             OSC.graphs["xy"].plot.setData(pointArr);
@@ -150,7 +150,7 @@
             OSC.glXYMode.init()
             if (OSC.glXYMode.isInit){
                 var canvas = OSC.graphs["xy"].plot.getCanvas()
-                OSC.glXYMode.setNewSizeWGL(canvas.width,canvas.height)
+                OSC.glXYMode.setNewSizeWGL(canvas.clientWidth,canvas.clientHeight)
             }
 
             $('.xy_plot').css($('#xy_graph_grid').css(['height', 'width']));
@@ -229,10 +229,10 @@
             tick.innerText = i;
             graphs.appendChild(tick)
         }
-        OSC.moveTitileXAxisTicksXY()
+        OSC.moveTitleXAxisTicksXY()
     }
 
-    OSC.updateTitileXAxisTicksXY = function(){
+    OSC.updateTitleXAxisTicksXY = function(){
         var scale = 0
         var srcName = ""
         var color = "#333"
@@ -247,10 +247,10 @@
         for(var i = -5; i <= 5; i++){
             $("#xy_xaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : "")).css('color', color);
         }
-        OSC.moveTitileXAxisTicksXY()
+        OSC.moveTitleXAxisTicksXY()
     }
 
-    OSC.moveTitileXAxisTicksXY = function(){
+    OSC.moveTitleXAxisTicksXY = function(){
         var gh = $('#xy_main').height()
         var gw = $('#xy_main').width()
         for(var i = -5; i <= 5; i++){
@@ -270,10 +270,10 @@
             tick.innerText = i;
             graphs.appendChild(tick)
         }
-        OSC.moveTitileYAxisTicksXY()
+        OSC.moveTitleYAxisTicksXY()
     }
 
-    OSC.updateTitileYAxisTicksXY = function(){
+    OSC.updateTitleYAxisTicksXY = function(){
         var scale = 0
         var srcName = ""
         var color = "#333"
@@ -288,10 +288,10 @@
         for(var i = -5; i <= 5; i++){
             $("#xy_yaxis_tick" + (i + 5)).html(OSC.convertVoltageForAxis(-i * scale)+(srcName == "MATH" ? OSC.mathSuffix() : "")).css('color', color);
         }
-        OSC.moveTitileYAxisTicksXY()
+        OSC.moveTitleYAxisTicksXY()
     }
 
-    OSC.moveTitileYAxisTicksXY = function(){
+    OSC.moveTitleYAxisTicksXY = function(){
         var gh = $('#xy_main').height()
         for(var i = -5; i <= 5; i++){
             var ws = $("#xy_yaxis_tick" + (i + 5)).height() / 2

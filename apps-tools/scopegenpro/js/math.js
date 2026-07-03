@@ -3,6 +3,7 @@
     OSC.chMathOffset = function(new_params) {
         OSC.setGposOffset("MATH")
         OSC.setMathOffsetPlotCh()
+        OSC.updateTitleYAxisTicks()
         // var params = $.extend(true, {}, OSC.orig.old);
         // var ch_name = "MATH"
         // var param_name = "OSC_"+ ch_name+"_OFFSET";
@@ -122,8 +123,8 @@
             $('#GPOS_OFFSET_MATH_UNIT').html(units[value_op]);
         }
         OSC.setXYAxisScale()
-        OSC.updateTitileXAxisTicksXY()
-        OSC.updateTitileYAxisTicksXY()
+        OSC.updateTitleXAxisTicksXY()
+        OSC.updateTitleYAxisTicksXY()
         OSC.setMathOffsetPlotChLimits()
     }
 
@@ -132,7 +133,7 @@
         OSC.setMathScale()
         OSC.chMathOffset()
         OSC.setMathOffsetPlotCh()
-        OSC.updateTitileYAxisTicks()
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.updateMathOp = function(new_params,param_name) {

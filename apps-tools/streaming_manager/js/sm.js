@@ -238,6 +238,13 @@ function promptFile(contentType, multiple) {
                 CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
                 CLIENT.sendParameters();
             }
+
+            if (status == 8) {
+                $('#DAC_STATUS_LED').attr("src","./img/red_led.png")
+                $('#DAC_STATUS').html("Status: No active channels").css("color","#cdcccc")
+                CLIENT.parametersCache["SS_DAC_STATUS"] = { value: 0 };
+                CLIENT.sendParameters();
+            }
         }
         SM.ss_dac_status_last = status;
     }
@@ -580,6 +587,11 @@ function promptFile(contentType, multiple) {
         $("#SS_USE_CALIB").prop('checked', value);
     }
 
+    SM.setCaptureTime = function(param) {
+        var value = param["SS_CAPTURE_TIME"].value;
+        $("#SS_CAPTURE_TIME").prop('checked', value);
+    }
+
     SM.setMode = function(param) {
         var value = param["SS_USE_FILE"].value;
         $("#SS_MODE").prop('checked', value);
@@ -864,6 +876,7 @@ function promptFile(contentType, multiple) {
     SM.param_callbacks["SS_RATE"] = SM.setRate;
     SM.param_callbacks["SS_SAVE_MODE"] = SM.setSaveMode;
     SM.param_callbacks["SS_USE_CALIB"] = SM.setCalibration;
+    SM.param_callbacks["SS_CAPTURE_TIME"] = SM.setCaptureTime;
     SM.param_callbacks["SS_USE_FILE"] = SM.setMode;
     SM.param_callbacks["SS_SAMPLES"] = SM.setSamples;
     SM.param_callbacks["SS_FORMAT"] = SM.setFormat;

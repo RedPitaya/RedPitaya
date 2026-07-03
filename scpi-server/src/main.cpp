@@ -50,12 +50,27 @@
 #define CONFIG_FILE_ARDUINO "/root/.scpi_arduino"
 #define CONFIG_FILE_ARDUINO_TCP "/root/.scpi_arduino_tcp"
 
+#define XSTR(s) STR(s)
+#define STR(s) #s
+
+#ifndef BUILD_DATE
+#define BUILD_DATE_XSTR "2025-01-01"
+#else
+#define BUILD_DATE_XSTR XSTR(BUILD_DATE)
+#endif
+
+#ifndef VERSION
+#define BUILD_COMMIT_XSTR "DEBUG"
+#else
+#define BUILD_COMMIT_XSTR XSTR(VERSION) "-" XSTR(REVISION)
+#endif
+
 enum START_MODE { TCP, UART, ARDUINO, ARDUINO_TCP };
 
 constexpr char id0[] = "REDPITAYA";
-constexpr char id1[] = "INSTR2025";
-constexpr char id2[] = "";
-constexpr char id3[] = "01-21";
+constexpr char id1[] = "INSTR";
+constexpr char id2[] = BUILD_DATE_XSTR;
+constexpr char id3[] = BUILD_COMMIT_XSTR;
 
 constexpr char device[] = "/dev/ttyPS1";
 
@@ -551,6 +566,16 @@ auto startArduinoApi() -> int {
     return (EXIT_SUCCESS);
 }
 
+void showHelp() {
+    printf("Usage: scpi-server [OPTION]\n");
+    printf("Options:\n");
+    printf("  -u        Set mode to UART\n");
+    printf("  -a        Set mode to ARDUINO\n");
+    printf("  -at       Set mode to ARDUINO_TCP\n");
+    printf("  -d        Enable debug mode\n");
+    printf("  -h        Show this help message\n");
+}
+
 /**
  * Main daemon entrance point. Opens a socket and listens for any incoming connection.
  * When client connects, if forks the conversation into a new socket and the daemon (parent process)
@@ -562,7 +587,7 @@ auto startArduinoApi() -> int {
 int main(int argc, char* argv[]) {
 
     START_MODE mode = TCP;
-
+    bool enableDebug = false;
     if (argc > 1) {
         std::string param = argv[1];
         if (param == "-u") {
@@ -571,9 +596,15 @@ int main(int argc, char* argv[]) {
         if (param == "-a") {
             mode = ARDUINO;
         }
-
         if (param == "-at") {
             mode = ARDUINO_TCP;
+        }
+        if (param == "-d") {
+            enableDebug = true;
+        }
+        if (param == "-h") {
+            showHelp();
+            return 0;
         }
     }
 
@@ -607,7 +638,8 @@ int main(int argc, char* argv[]) {
 
     // Handle close child events
     handleCloseChildEvents();
-    // rp_EnableDebugReg();
+    if (enableDebug)
+        rp_EnableDebugReg();
     int result = rp_Init();
     if (result != RP_OK) {
         rp_Log(nullptr, LOG_ERR, result, "Failed to initialize RP APP library: %s", rp_GetError(result));

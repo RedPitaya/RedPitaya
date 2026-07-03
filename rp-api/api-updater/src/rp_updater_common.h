@@ -13,6 +13,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 /** Success */
 #define RP_UP_OK 0

@@ -47,6 +47,12 @@ list(APPEND r_paths
     /opt/redpitaya/lib/web
 )
 
+find_library(GPIOD_LIB gpiod)
+
+if(NOT GPIOD_LIB)
+    message(FATAL_ERROR "libgpiod not found! Install with: sudo apt install libgpiod-dev")
+endif()
+
 set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories("src/xml")
@@ -74,8 +80,8 @@ file(GLOB RP_HEADERS "include/*.h")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
-link_libraries(-L${INSTALL_DIR}/lib -lrp-hw -lrp-hw-profiles)
+add_compile_options(-Wall -Wpedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+link_libraries(-L${INSTALL_DIR}/lib -lrp-hw -lrp-hw-profiles ${GPIOD_LIB})
 
 add_library(${PROJECT_NAME}-xml OBJECT ${PR_XML_SOURCES})
 add_library(${PROJECT_NAME}-i2c OBJECT ${PR_I2C_SOURCES})
@@ -88,13 +94,15 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        include_directories(${Python3_INCLUDE_DIRS})
 
         set_property(SOURCE src/rp_api_250.i PROPERTY CPLUSPLUS ON)
 
+        set(CMAKE_SWIG_FLAGS -threads -O)
+
         SWIG_ADD_LIBRARY(rp_api_250_py LANGUAGE python SOURCES src/rp_api_250.i ${PR_XML_SOURCES} ${PR_I2C_SOURCES} ${PR_SPI_SOURCES} ${PR_GPIO_SOURCES})
-        SWIG_LINK_LIBRARIES(rp_api_250_py ${PYTHON_LIBRARIES} i2c)
+        SWIG_LINK_LIBRARIES(rp_api_250_py ${Python3_LIBRARIES} i2c)
     endif()
 
     add_library(${PROJECT_NAME}-i2c-shared SHARED)

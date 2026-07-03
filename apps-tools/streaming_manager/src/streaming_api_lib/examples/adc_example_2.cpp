@@ -1,10 +1,15 @@
 #include <algorithm>
+#include <csignal>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include "adc_streaming.h"
 #include "callbacks.h"
+#include "config_streaming.h"
+
+std::shared_ptr<ADCStreamClient> obj = nullptr;
 
 /**
  * Callback handler class for ADC streaming events
@@ -21,7 +26,7 @@ class Callback : public ADCCallback {
      * @param client Pointer to the ADCStreamClient instance
      * @param pack Reference to the received data packet
      */
-    void recievePack(ADCStreamClient* client, ADCPack& pack) override {
+    void receivePack(ADCStreamClient* client, ADCPack& pack) override {
         // Update sample counter for this host (sum of channel1 and channel2 samples)
         counter[pack.host] += pack.channel1.samples + pack.channel2.samples;
 
@@ -49,20 +54,34 @@ class Callback : public ADCCallback {
     // with proper documentation similar to the examples above
 };
 
+class ConfigCallbackImpl : public ConfigCallback {
+   public:
+    void sigInt() override {
+        if (obj)
+            obj->notifyStop();
+    }
+};
+
 /**
  * Main application entry point
  */
 int main() {
     // Configuration for master/slave hosts
-    std::vector<std::string> hosts = {"200.0.0.7", "200.0.0.8"};
+    std::vector<std::string> hosts = {"200.0.0.15", "200.0.0.17"};
 
-    // Create streaming client instance
-    ADCStreamClient obj;
-    Callback* callback = new Callback();
+    auto confClient = std::make_shared<ConfigStreamClient>();
+    obj = std::make_shared<ADCStreamClient>(confClient);
 
-    // Setup callback handler
-    obj.setReciveDataFunction(callback);
-    obj.setVerbose(false);
+    // Creating a callback handler.And also remove the owner, since the client itself will delete the handler.
+    auto confCallback = std::make_shared<ConfigCallbackImpl>();
+    confClient->addCallback(confCallback);
+
+    auto callback = std::make_shared<Callback>();
+    obj->setCallback(callback);
+
+    // Enable client logs
+    confClient->setVerbose(true);
+    obj->setVerbose(true);
 
     // Attempt connection to all hosts
     std::cout << "Attempting connection to hosts:";
@@ -71,7 +90,7 @@ int main() {
     }
     std::cout << std::endl;
 
-    if (!obj.connect(hosts)) {
+    if (!confClient->connect(hosts)) {
         std::cerr << "Connection failed to all specified hosts" << std::endl;
         return 1;
     }
@@ -80,19 +99,19 @@ int main() {
     const std::string& master_host = hosts[0];
 
     // Apply configuration to master host
-    obj.sendConfig(master_host, "adc_pass_mode", "NET");
-    obj.sendConfig(master_host, "adc_decimation", "64");
-    obj.sendConfig(master_host, "block_size", "16384");
-    obj.sendConfig(master_host, "adc_size", "1638400");
-    obj.sendConfig(master_host, "channel_state_1", "ON");
-    obj.sendConfig(master_host, "channel_state_2", "ON");
+    confClient->sendConfig(master_host, "adc_pass_mode", "NET");
+    confClient->sendConfig(master_host, "adc_decimation", "64");
+    confClient->sendConfig(master_host, "block_size", "16384");
+    confClient->sendConfig(master_host, "adc_size", "1638400");
+    confClient->sendConfig(master_host, "channel_state_1", "ON");
+    confClient->sendConfig(master_host, "channel_state_2", "ON");
 
     // Clone configuration from master to slave
-    std::string full_config = obj.getFileConfig(master_host);
-    obj.sendFileConfig(hosts[1], full_config);
+    std::string full_config = confClient->getFileConfig(master_host);
+    confClient->sendFileConfig(hosts[1], full_config);
 
     // Start streaming session
-    if (obj.startStreaming()) {
+    if (obj->startStreaming()) {
         std::cout << "Streaming session started successfully" << std::endl;
     } else {
         std::cerr << "Failed to start streaming session" << std::endl;
@@ -100,7 +119,7 @@ int main() {
     }
 
     // Wait for streaming to complete
-    obj.wait();
+    obj->wait();
 
     // Display collected statistics
     std::cout << "\nStreaming results:" << std::endl;
@@ -109,9 +128,9 @@ int main() {
         std::cout << "  " << host << ": " << count << " samples" << std::endl;
     }
 
-    std::cout << "Lost frames per host:" << std::endl;
+    std::cout << "Lost samples per host:" << std::endl;
     for (const auto& [host, lost] : callback->fpgaLost) {
-        std::cout << "  " << host << ": " << lost << " frames" << std::endl;
+        std::cout << "  " << host << ": " << lost << " samples" << std::endl;
     }
 
     return 0;

@@ -20,6 +20,8 @@ int RP_AcqSetDefaultValues();
 
 scpi_result_t RP_AcqSplitTrigger(scpi_t* context);
 scpi_result_t RP_AcqSplitTriggerQ(scpi_t* context);
+scpi_result_t RP_AcqKeepArm(scpi_t* context);
+scpi_result_t RP_AcqKeepArmQ(scpi_t* context);
 
 scpi_result_t RP_AcqDataFormat(scpi_t* context);
 scpi_result_t RP_AcqDataFormatQ(scpi_t* context);
@@ -28,7 +30,9 @@ scpi_result_t RP_AcqDataEndianQ(scpi_t* context);
 scpi_result_t RP_AcqStart(scpi_t* context);
 scpi_result_t RP_AcqStartCh(scpi_t* context);
 scpi_result_t RP_AcqStop(scpi_t* context);
-scpi_result_t rp_AcqStopCh(scpi_t* context);
+scpi_result_t RP_AcqStopCh(scpi_t* context);
+scpi_result_t RP_AcqUnlock(scpi_t* context);
+scpi_result_t RP_AcqUnlockCh(scpi_t* context);
 scpi_result_t RP_AcqReset(scpi_t* context);
 scpi_result_t RP_AcqResetCh(scpi_t* context);
 scpi_result_t RP_AcqDecimation(scpi_t* context);
@@ -45,6 +49,8 @@ scpi_result_t RP_AcqAveraging(scpi_t* context);
 scpi_result_t RP_AcqAveragingQ(scpi_t* context);
 scpi_result_t RP_AcqAveragingCh(scpi_t* context);
 scpi_result_t RP_AcqAveragingChQ(scpi_t* context);
+scpi_result_t RP_Acq16BitMode(scpi_t* context);
+scpi_result_t RP_Acq16BitModeQ(scpi_t* context);
 scpi_result_t RP_AcqBypassFilterCh(scpi_t* context);
 scpi_result_t RP_AcqBypassFilterChQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerSrc(scpi_t* context);
@@ -63,8 +69,28 @@ scpi_result_t RP_AcqTriggerHyst(scpi_t* context);
 scpi_result_t RP_AcqTriggerHystQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerFillQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerFillChQ(scpi_t* context);
+
+scpi_result_t RP_AcqTriggerIntEnable(scpi_t* context);
+scpi_result_t RP_AcqTriggerIntEnableQ(scpi_t* context);
+scpi_result_t RP_AcqTriggerIntEnableCh(scpi_t* context);
+scpi_result_t RP_AcqTriggerIntEnableChQ(scpi_t* context);
+
+scpi_result_t RP_AcqInterrupTriggerQ(scpi_t* context);
+scpi_result_t RP_AcqInterrupTriggerChQ(scpi_t* context);
+scpi_result_t RP_AcqInterrupFillQ(scpi_t* context);
+scpi_result_t RP_AcqInterrupFillChQ(scpi_t* context);
+
+scpi_result_t RP_AcqTimeStamp(scpi_t* context);
+scpi_result_t RP_AcqTimeStampQ(scpi_t* context);
+
 scpi_result_t RP_AcqGain(scpi_t* context);
 scpi_result_t RP_AcqGainQ(scpi_t* context);
+scpi_result_t RP_AcqOffset(scpi_t* context);
+scpi_result_t RP_AcqOffsetQ(scpi_t* context);
+
+scpi_result_t RP_AcqPreTriggerCounterQ(scpi_t* context);
+scpi_result_t RP_AcqPreTriggerCounterChQ(scpi_t* context);
+
 scpi_result_t RP_AcqTriggerLevel(scpi_t* context);
 scpi_result_t RP_AcqTriggerLevelQ(scpi_t* context);
 scpi_result_t RP_AcqTriggerLevelCh(scpi_t* context);
@@ -75,7 +101,6 @@ scpi_result_t RP_AcqWritePointerAtTrigQ(scpi_t* context);
 scpi_result_t RP_AcqWritePointerAtTrigChQ(scpi_t* context);
 scpi_result_t RP_AcqScpiDataUnits(scpi_t* context);
 scpi_result_t RP_AcqScpiDataUnitsQ(scpi_t* context);
-scpi_result_t RP_AcqScpiDataFormat(scpi_t* context);
 scpi_result_t RP_AcqDataPosQ(scpi_t* context);
 scpi_result_t RP_AcqDataQ(scpi_t* context);
 scpi_result_t RP_AcqDataOldestAllQ(scpi_t* context);
@@ -88,8 +113,5 @@ scpi_result_t RP_AcqBufferSizeQ(scpi_t* context);
 
 scpi_result_t RP_AcqAC_DC(scpi_t* context);
 scpi_result_t RP_AcqAC_DCQ(scpi_t* context);
-
-scpi_result_t RP_ExtTriggerLevel(scpi_t* context);
-scpi_result_t RP_ExtTriggerLevelQ(scpi_t* context);
 
 #endif /* ACQUIRE_H_ */

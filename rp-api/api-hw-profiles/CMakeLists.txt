@@ -13,6 +13,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(C_STANDARD 17)
 
 
@@ -65,7 +66,11 @@ file(GLOB PR_HW_SOURCES_CPP "src/*.cpp")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -Werror -pedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Werror -Wpedantic -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES} ${PR_HW_SOURCES_CPP})
 
@@ -75,14 +80,14 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        include_directories(${Python3_INCLUDE_DIRS})
 
-        set(CMAKE_SWIG_FLAGS "")
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp_hw_profiles.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_profiles_py LANGUAGE python SOURCES src/rp_hw_profiles.i ${PR_HW_SOURCES} ${PR_HW_SOURCES_CPP})
-        SWIG_LINK_LIBRARIES(rp_hw_profiles_py ${PYTHON_LIBRARIES} i2c)
+        SWIG_LINK_LIBRARIES(rp_hw_profiles_py ${Python3_LIBRARIES} i2c)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

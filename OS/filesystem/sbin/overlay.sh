@@ -1,27 +1,27 @@
 #!/bin/sh
 
 show_help() {
+    MODEL=$(/opt/redpitaya/bin/profiles -f 2>/dev/null)
     echo "Usage: $0 <fpga_name> [custom_fpga] [custom_devicetree] [overlay_name]"
     echo ""
     echo "Load FPGA bitstream and device tree overlay"
     echo ""
     echo "Parameters:"
-    echo "  <fpga_name>        - Name of FPGA configuration from /opt/redpitaya/fpga/\$MODEL/"
+    echo "  <fpga_name>        - Name of FPGA configuration from /opt/redpitaya/fpga/$MODEL/"
     echo "  [custom_fpga]      - Custom FPGA bitstream path (optional)"
     echo "  [custom_devicetree]- Custom device tree overlay path (optional)"
     echo "  [overlay_name]     - Custom overlay region name (optional, default: Full)"
     echo ""
     echo "Examples:"
-    echo "  $0 mercury           - Load default Mercury FPGA"
-    echo "  $0 oscillator /path/to/custom.bit.bin - Load custom FPGA bitstream"
-    echo "  $0 sdr /path/to/custom.bit.bin /path/to/custom.dtbo - Load custom FPGA and device tree"
-    echo "  $0 transmitter /path/to/fpga.bit.bin /path/to/fpga.dtbo CustomRegion - Load with custom overlay name"
+    echo "  $0 v0.94                          - Load default Mercury FPGA"
+    echo "  $0 oscillator /path/to/custom.bin - Load custom FPGA bitstream"
+    echo "  $0 sdr /path/to/custom.bin /path/to/custom.dtbo - Load custom FPGA and device tree"
+    echo "  $0 transmitter /path/to/fpga.bin /path/to/fpga.dtbo CustomRegion - Load with custom overlay name"
     echo ""
     echo "Available FPGA configurations:"
-    MODEL=$(/opt/redpitaya/bin/profiles -f 2>/dev/null)
     if [ "$?" = "0" ] && [ -d "/opt/redpitaya/fpga/$MODEL" ]; then
         for dir in /opt/redpitaya/fpga/$MODEL/*; do
-            if [ -d "$dir" ] && [ -f "$dir/fpga.bit.bin" ]; then
+            if [ -d "$dir" ] && [ -f "$dir/fpga.bin" ]; then
                 echo "  - $(basename "$dir")"
             fi
         done
@@ -36,7 +36,7 @@ if [ $# -eq 0 ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 fi
 
 CUSTOMDEVICETREE=/opt/$1/fpga.dtbo
-CUSTOMFPGA=/opt/$1/fpga.bit.bin
+CUSTOMFPGA=/opt/$1/fpga.bin
 
 FPGAS=/opt/redpitaya/fpga
 MODEL=$(/opt/redpitaya/bin/profiles -f)
@@ -70,7 +70,7 @@ rm -f /tmp/loaded_fpga.inf 2> /dev/null
 #sleep 0.5s
 FPGA_INF=$1
 DEVICETREETOINSTALL=$FPGAS/$MODEL/$1/fpga.dtbo
-FPGATOINSTALL=$FPGAS/$MODEL/$1/fpga.bit.bin
+FPGATOINSTALL=$FPGAS/$MODEL/$1/fpga.bin
 if [ "$#" -gt "1" ]
 then
     FPGA_INF=$1_$2

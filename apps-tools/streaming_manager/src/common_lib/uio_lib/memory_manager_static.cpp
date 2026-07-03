@@ -24,8 +24,8 @@ int getReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     *_startAddress = 0;
     *_size = 0;
     int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg", O_RDONLY)) == -1) {
-        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
+    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
+        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
         return -1;
     }
     char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -49,7 +49,7 @@ auto CMemoryManager::instance() -> Ptr {
 }
 
 CMemoryManager::CMemoryManager()
-    : m_lowReservedAddress(0), m_highReservedAddress(0), m_mem_fd(0), m_memory(MAP_FAILED), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()) {
+    : m_lowReservedAddress(0), m_highReservedAddress(0), m_mem_fd(0), m_memory(MAP_FAILED), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()), m_dacStreamMode(false) {
     if (getReservedMemory(&m_startRAMAddress, &m_ramSize)) {
         FATAL("Unable to get the reserved memory area.")
     }
@@ -63,8 +63,8 @@ CMemoryManager::CMemoryManager()
     }
 
     if (m_lowReservedAddress % sysconf(_SC_PAGESIZE) != 0) {
-        FATAL("Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\n", (m_lowReservedAddress % sysconf(_SC_PAGESIZE)),
-              sysconf(_SC_PAGESIZE))
+        FATAL(
+            "Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\n", (m_lowReservedAddress % sysconf(_SC_PAGESIZE)), sysconf(_SC_PAGESIZE))
     }
 
     m_memory = mmap(NULL, m_ramSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_mem_fd, m_lowReservedAddress);
@@ -195,6 +195,10 @@ auto CMemoryManager::getMemoryBlockSize() -> uint32_t {
 
 auto CMemoryManager::getMinRAMSize(MemoryTAG _tag) -> uint32_t {
     return getMinRAMSize(getMemoryBlockSize(), _tag);
+}
+
+auto CMemoryManager::setDACMemoryStreamMode(bool enable) -> void {
+    m_dacStreamMode = enable;
 }
 
 auto CMemoryManager::getMinRAMSize(uint32_t _blockSize, MemoryTAG _tag) -> uint32_t {

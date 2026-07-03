@@ -233,6 +233,11 @@ var setMode = function(_mode, _state) {
         CLIENT.sendParameters();
     }
 
+    if (_mode == "SS_CAPTURE_TIME"){
+        CLIENT.parametersCache["SS_CAPTURE_TIME"] = { value: _state ? 1 : 0};
+        CLIENT.sendParameters();
+    }
+
     if (_mode == "SS_RESOLUTION"){
         CLIENT.parametersCache["SS_RESOLUTION"] = { value: _state ? 1 : 0};
         CLIENT.sendParameters();

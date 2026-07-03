@@ -303,7 +303,12 @@ class BinarySignalParser {
             for(var i = 0; i < Math.ceil(bytes.length / 32768.0); i++) {
                 text += String.fromCharCode.apply(null, bytes.slice(i * 32768, Math.min((i+1) * 32768, bytes.length)))
             }
-            var receive = JSON.parse(text);
+            try{
+                receive = JSON.parse(text);
+            }catch(e){
+                console.log(e)
+                throw e
+            }
             receive["decompressed_data"] = text.length
         }else{
             data = this.parse(data.buffer)

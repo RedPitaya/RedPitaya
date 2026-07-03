@@ -86,10 +86,12 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void {
     //    WARNING("\t\ttinMathScale %f dvalue %f min %f max %f",inMathScale.Value(), dvalue ,inMathScale.GetMin() , inMathScale.GetMax())
 
     if (dvalue < inMathScale.GetMin() || dvalue > inMathScale.GetMax()) {
-        //        WARNING("inMathScale Rescale");
+        TRACE_SHORT("inMathScale Rescale");
         rpApp_OscScaleMath();
+        checkMathScale();
     } else {
         if (fabs(inMathScale.Value() - dvalue) > 0.0005) {
+            TRACE("Send dvalue %f", dvalue)
             inMathScale.SendValue(dvalue);
         }
     }
@@ -98,7 +100,7 @@ auto updateMathParametersToWEB(bool is_auto_scale) -> void {
     if (inMathOffset.Value() != dvalue) {
         inMathOffset.SendValue(dvalue);
     }
-    checkMathScale();
+    // checkMathScale();
 }
 
 auto resetMathParams() -> void {
@@ -109,8 +111,8 @@ auto resetMathParams() -> void {
     rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, 0);
 }
 
-auto setMathParams() -> void {
-    if (IS_NEW(inMathScale)) {
+auto setMathParams(bool force) -> void {
+    if (IS_NEW(inMathScale) || force) {
         auto val = inMathScale.CheckMinMax(inMathScale.NewValue());
         if (rpApp_OscSetAmplitudeScale(RPAPP_OSC_SOUR_MATH, val) == RP_OK) {
             inMathScale.Update();
@@ -118,7 +120,7 @@ auto setMathParams() -> void {
         }
     }
 
-    if (IS_NEW(inMathOffset)) {
+    if (IS_NEW(inMathOffset) || force) {
         if (rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.NewValue()) == RP_OK) {
             inMathOffset.Update();
         }
@@ -198,7 +200,7 @@ auto updateMathParams(bool force) -> void {
             cursorT[i].Update();
     }
 
-    setMathParams();
+    setMathParams(force);
 
     if (IS_NEW(mathOperation) || IS_NEW(mathSource[0]) || IS_NEW(mathSource[1]) || force) {
         if (rpApp_OscSetMathOperation((rpApp_osc_math_oper_t)mathOperation.NewValue()) == RP_OK)
@@ -207,12 +209,17 @@ auto updateMathParams(bool force) -> void {
             mathSource[0].Update();
             mathSource[1].Update();
         }
-        if (!force)
-            resetMathParams();
+
+        if (!force) {
+            checkMathScale();
+        }
+        // if (!force)
+        //     resetMathParams();
     }
 
     IF_VALUE_CHANGED_FORCE(inMathOffset, rpApp_OscSetAmplitudeOffset(RPAPP_OSC_SOUR_MATH, inMathOffset.NewValue()), force)
 
     IF_VALUE_CHANGED_FORCE(mathInvShow, rpApp_OscSetInverted(RPAPP_OSC_SOUR_MATH, mathInvShow.NewValue()), force)
-    checkMathScale();
+
+    // checkMathScale();
 }

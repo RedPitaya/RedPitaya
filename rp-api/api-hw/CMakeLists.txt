@@ -64,7 +64,11 @@ file(GLOB PR_HW_SOURCES "src/*.c")
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -Wextra -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wextra -Wpedantic -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections -Wl,--no-undefined)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${PR_HW_SOURCES})
 
@@ -73,14 +77,36 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE NUMPY_FOUND
+        )
 
-        set(CMAKE_SWIG_FLAGS "")
+        if(NOT NUMPY_FOUND EQUAL 0)
+            message(FATAL_ERROR "NumPy not found. Install with: pip3 install numpy")
+        endif()
+
+        message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
+
+        include_directories(
+            ${Python3_INCLUDE_DIRS}
+            ${NUMPY_INCLUDE_DIR}
+        )
+
+
+        # find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        # include_directories(${Python3_INCLUDE_DIRS})
+        #find_package(PythonLibs)
+        #include_directories(${PYTHON_INCLUDE_PATH})
+
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp_hw.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_hw_py LANGUAGE python SOURCES src/rp_hw.i ${PR_HW_SOURCES})
-        SWIG_LINK_LIBRARIES(rp_hw_py ${PYTHON_LIBRARIES} i2c)
+        SWIG_LINK_LIBRARIES(rp_hw_py ${Python3_LIBRARIES} i2c)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

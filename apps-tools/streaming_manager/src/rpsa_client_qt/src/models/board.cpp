@@ -20,13 +20,13 @@ auto convertBtoS(uint64_t value) -> std::string {
     std::string s = "";
     if (value >= 1024 * 1024) {
         d = round(((double)value * 1000.0) / (1024 * 1024)) / 1000;
-		s = to_string_with_precision(d, 3) + " MB";
-	} else if (value >= 1024) {
+        s = to_string_with_precision(d, 3) + " MB";
+    } else if (value >= 1024) {
         d = round(((double)value * 1000.0) / (1024)) / 1000;
-		s = to_string_with_precision(d, 3) + " kB";
-	} else {
-		s = std::to_string(value) + " B";
-	}
+        s = to_string_with_precision(d, 3) + " kB";
+    } else {
+        s = std::to_string(value) + " B";
+    }
     return s;
 }
 
@@ -131,8 +131,8 @@ CBoard::CBoard(QString ip)
     });
 
     m_configManager->getActiveChannelsNofiy.connect([=](auto host, auto channels) {
-        addLog(" Active channels " + QString::fromStdString(channels));
-        m_activeChannels = std::stoi(channels);
+        addLog(" Active channels " + QString::fromStdString(channels.format().c_str()));
+        m_activeChannels = channels;
         createStreaming();
         ChartDataHolder::instance()->regRP(ip);
         Q_EMIT updateSaveFileName();
@@ -161,7 +161,8 @@ CBoard::CBoard(QString ip)
 }
 
 auto CBoard::addLog(QString msg) -> void {
-    QMetaObject::invokeMethod(&m_consoleModel, "addNewLine",
+    QMetaObject::invokeMethod(&m_consoleModel,
+                              "addNewLine",
                               Qt::AutoConnection  // Can also use any other except DirectConnection
                               ,
                               Q_ARG(QString, msg));  // And some more args if needed
@@ -252,11 +253,11 @@ auto CBoard::createStreaming() -> void {
                 m_stat.flost += flost;
                 m_stat.broken_b = 0;
                 obj->passBuffers(pack);
-				Q_EMIT updateStatistic();
-				ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_chartEnable);
-				obj2->unlockBufferRead();
-			}
-		}
+                Q_EMIT updateStatistic();
+                ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_chartEnable);
+                obj2->unlockBufferRead();
+            }
+        }
     });
 
     m_asionet->clientConnectNotify.connect([=](std::string host) {
@@ -285,8 +286,8 @@ auto CBoard::startADCFPGAStreaming() -> void {
     memoryManager->setMemoryBlockSize(m_blockSize);
     memoryManager->reallocateBlocks();
     auto blocks = memoryManager->getFreeBlockCount();
-    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_ADC, blocks, m_activeChannels);
-    m_buffer->generateBuffersEmpty(m_activeChannels, memoryManager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
+    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_ADC, blocks, m_activeChannels.count());
+    m_buffer->generateBuffersEmptyADC(m_activeChannels, memoryManager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
     TRACE_SHORT("Reserved blocks %d", reserved)
     m_configManager->sendADCFPGAStart(m_ip.toStdString());
 }
@@ -317,28 +318,101 @@ auto CBoard::setMode(broadcast_lib::EMode mode) -> void {
     Q_EMIT isMasterChanged();
 }
 
-auto CBoard::setModel(broadcast_lib::EModel model) -> void {
+auto CBoard::setModel(uint8_t model) -> void {
+
+    // typedef enum {
+    //     STEM_125_10_v1_0 = 0,
+    //     STEM_125_14_v1_0 = 1,
+    //     STEM_125_14_v1_1 = 2,
+    //     STEM_122_16SDR_v1_0 = 3,
+    //     STEM_122_16SDR_v1_1 = 4,
+    //     STEM_125_14_LN_v1_1 = 5,
+    //     STEM_125_14_Z7020_v1_0 = 6,
+    //     STEM_125_14_Z7020_LN_v1_1 = 7,
+    //     STEM_125_14_Z7020_4IN_v1_0 = 8,
+    //     STEM_125_14_Z7020_4IN_v1_2 = 9,
+    //     STEM_125_14_Z7020_4IN_v1_3 = 10,
+    //     STEM_250_12_v1_0 = 11,
+    //     STEM_250_12_v1_1 = 12,
+    //     STEM_250_12_v1_2 = 13,
+    //     STEM_250_12_120 = 14,
+    //     STEM_250_12_v1_2a = 15,
+    //     STEM_250_12_v1_2b = 16,
+    //     STEM_125_14_LN_BO_v1_1 = 17,
+    //     STEM_125_14_LN_CE1_v1_1 = 18,
+    //     STEM_125_14_LN_CE2_v1_1 = 19,
+
+    //     STEM_125_14_v2_0 = 20,
+    //     STEM_125_14_Pro_v2_0 = 21,
+    //     STEM_125_14_Z7020_Pro_v2_0 = 22,
+    //     STEM_125_14_Z7020_Ind_v2_0 = 23,
+    //     STEM_125_14_Z7020_Pro_v1_0 = 24,  // Prototype
+
+    //     STEM_125_14_Z7020_LL_v1_1 = 25,
+    //     STEM_65_16_Z7020_LL_v1_1 = 26,
+    //     STEM_125_14_Z7020_LL_v1_2 = 27,
+    //     STEM_125_14_Z7020_TI_v1_3 = 28,
+    //     STEM_65_16_Z7020_TI_v1_3 = 29,
+
+    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    //     STEM_125_14_BO_v2_0 = 31,
+    //     STEM_125_14_Pro_BO_v2_0 = 32,
+    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
+    // } rp_HPeModels_t;
+
     switch (model) {
-        case broadcast_lib::EModel::RP_125_14_Z20:
-        case broadcast_lib::EModel::RP_125_14: {
+        case 0:
+        case 1:
+        case 2:
+        case 5:
+        case 6:
+        case 7:
+        case 17:
+        case 18:
+        case 19:
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        case 25:
+        case 26:
+        case 27:
+        case 28:
+        case 29:
+        case 31:
+        case 32:
+        case 33: {
             m_adcChannels = 2;
             m_IsACDC = false;
             m_IsAttenuator = true;
             break;
         }
-        case broadcast_lib::EModel::RP_122_16: {
+        case 3:
+        case 4: {
             m_adcChannels = 2;
             m_IsACDC = false;
             m_IsAttenuator = false;
             break;
         }
-        case broadcast_lib::EModel::RP_125_4CH: {
+
+        case 8:
+        case 9:
+        case 10:
+        case 30: {
             m_adcChannels = 4;
             m_IsACDC = false;
             m_IsAttenuator = true;
             break;
         }
-        case broadcast_lib::EModel::RP_250_12: {
+
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16: {
             m_adcChannels = 2;
             m_IsACDC = true;
             m_IsAttenuator = true;
@@ -359,20 +433,126 @@ auto CBoard::getIsMaster() -> bool {
 }
 
 auto CBoard::getModel() -> QString {
+
+    // typedef enum {
+    //     STEM_125_10_v1_0 = 0,
+    //     STEM_125_14_v1_0 = 1,
+    //     STEM_125_14_v1_1 = 2,
+    //     STEM_122_16SDR_v1_0 = 3,
+    //     STEM_122_16SDR_v1_1 = 4,
+    //     STEM_125_14_LN_v1_1 = 5,
+    //     STEM_125_14_Z7020_v1_0 = 6,
+    //     STEM_125_14_Z7020_LN_v1_1 = 7,
+    //     STEM_125_14_Z7020_4IN_v1_0 = 8,
+    //     STEM_125_14_Z7020_4IN_v1_2 = 9,
+    //     STEM_125_14_Z7020_4IN_v1_3 = 10,
+    //     STEM_250_12_v1_0 = 11,
+    //     STEM_250_12_v1_1 = 12,
+    //     STEM_250_12_v1_2 = 13,
+    //     STEM_250_12_120 = 14,
+    //     STEM_250_12_v1_2a = 15,
+    //     STEM_250_12_v1_2b = 16,
+    //     STEM_125_14_LN_BO_v1_1 = 17,
+    //     STEM_125_14_LN_CE1_v1_1 = 18,
+    //     STEM_125_14_LN_CE2_v1_1 = 19,
+
+    //     STEM_125_14_v2_0 = 20,
+    //     STEM_125_14_Pro_v2_0 = 21,
+    //     STEM_125_14_Z7020_Pro_v2_0 = 22,
+    //     STEM_125_14_Z7020_Ind_v2_0 = 23,
+    //     STEM_125_14_Z7020_Pro_v1_0 = 24,  // Prototype
+
+    //     STEM_125_14_Z7020_LL_v1_1 = 25,
+    //     STEM_65_16_Z7020_LL_v1_1 = 26,
+    //     STEM_125_14_Z7020_LL_v1_2 = 27,
+    //     STEM_125_14_Z7020_TI_v1_3 = 28,
+    //     STEM_65_16_Z7020_TI_v1_3 = 29,
+
+    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    //     STEM_125_14_BO_v2_0 = 31,
+    //     STEM_125_14_Pro_BO_v2_0 = 32,
+    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
+
+    // } rp_HPeModels_t;
+
     switch (m_model) {
-        case broadcast_lib::EModel::RP_125_14:
-            return "STEMLab 125-14";
-        case broadcast_lib::EModel::RP_122_16:
-            return "SDRLab 122-16";
-        case broadcast_lib::EModel::RP_125_14_Z20:
-            return "STEMLab 125-14 Z7020";
-        case broadcast_lib::EModel::RP_125_4CH:
-            return "STEMLab 125-14 4-channels";
-        case broadcast_lib::EModel::RP_250_12:
-            return "SIGNALab 250-12";
+        case 0:
+            return "STEMlab 125-10 v1.0";
+        case 1:
+            return "STEMlab 125-14 v1.0";
+        case 2:
+            return "STEMlab 125-14 v1.1";
+        case 3:
+            return "SDRlab 122-16 v1.0";
+        case 4:
+            return "SDRlab 122-16 v1.1";
+        case 5:
+            return "STEMlab 125-14 LN v1.1";
+        case 6:
+            return "STEMlab 125-14 Z7020 v1.0";
+        case 7:
+            return "STEMlab 125-14 LN-Z7020 v1.1";
+        case 8:
+            return "STEMlab 125-14 4-Input v1.0";
+        case 9:
+            return "STEMlab 125-14 4-Input v1.2";
+        case 10:
+            return "STEMlab 125-14 4-Input v1.3";
+
+        case 11:
+            return "SIGNALlab 250-12 v1.0";
+        case 12:
+            return "SIGNALlab 250-12 v1.1";
+        case 13:
+            return "SIGNALlab 250-12 v1.2";
+        case 14:
+            return "SIGNALlab 250-12/120";
+        case 15:
+            return "SIGNALlab 250-12 v1.2a";
+        case 16:
+            return "SIGNALlab 250-12 v1.2b";
+
+        case 17:
+            return "STEMlab 125-14 LN BO v1.1";
+        case 18:
+            return "STEMlab 125-14 LN CE1 v1.1";
+        case 19:
+            return "STEMlab 125-14 LN CE2 v1.1";
+
+        case 20:
+            return "STEMlab 125-14 v2.0";
+        case 21:
+            return "STEMlab 125-14 Pro v2.0";
+        case 22:
+            return "STEMlab 125-14-Z7020 Pro v2.0";
+        case 23:
+            return "STEMlab 125-14 Ind v2.0";
+        case 24:
+            return "STEMlab 125-14-Z7020 Pro v1.0";
+
+        case 25:
+            return "STEMlab 125-14 LL v1.1";
+        case 26:
+            return "STEMlab 65-16 LL v1.1";
+        case 27:
+            return "STEMlab 125-14 LL v1.2";
+        case 28:
+            return "STEMlab 125-14 TI v1.3";
+        case 29:
+            return "STEMlab 65-16 TI v1.3";
+        case 30:
+            return "STEMlab 125-14 4-Input BO v1.3";
+        case 31:
+            return "STEMlab 125-14 BO v2.0";
+        case 32:
+            return "STEMlab 125-14 Pro BO v2.0";
+        case 33:
+            return "STEMlab 125-14-Z7020 Pro BO v2.0";
         default:
-            return "Unknown";
+            break;
     }
+    return "Unknown";
 }
 
 auto CBoard::configManagerConnected(std::string host) -> void {
@@ -600,7 +780,60 @@ QString CBoard::getSaveFileName() {
 }
 
 bool CBoard::getCouplingVisible() {
-    return m_model == broadcast_lib::EModel::RP_250_12;
+
+    // typedef enum {
+    //     STEM_125_10_v1_0 = 0,
+    //     STEM_125_14_v1_0 = 1,
+    //     STEM_125_14_v1_1 = 2,
+    //     STEM_122_16SDR_v1_0 = 3,
+    //     STEM_122_16SDR_v1_1 = 4,
+    //     STEM_125_14_LN_v1_1 = 5,
+    //     STEM_125_14_Z7020_v1_0 = 6,
+    //     STEM_125_14_Z7020_LN_v1_1 = 7,
+    //     STEM_125_14_Z7020_4IN_v1_0 = 8,
+    //     STEM_125_14_Z7020_4IN_v1_2 = 9,
+    //     STEM_125_14_Z7020_4IN_v1_3 = 10,
+    //     STEM_250_12_v1_0 = 11,
+    //     STEM_250_12_v1_1 = 12,
+    //     STEM_250_12_v1_2 = 13,
+    //     STEM_250_12_120 = 14,
+    //     STEM_250_12_v1_2a = 15,
+    //     STEM_250_12_v1_2b = 16,
+    //     STEM_125_14_LN_BO_v1_1 = 17,
+    //     STEM_125_14_LN_CE1_v1_1 = 18,
+    //     STEM_125_14_LN_CE2_v1_1 = 19,
+
+    //     STEM_125_14_v2_0 = 20,
+    //     STEM_125_14_Pro_v2_0 = 21,
+    //     STEM_125_14_Z7020_Pro_v2_0 = 22,
+    //     STEM_125_14_Z7020_Ind_v2_0 = 23,
+    //     STEM_125_14_Z7020_Pro_v1_0 = 24,  // Prototype
+
+    //     STEM_125_14_Z7020_LL_v1_1 = 25,
+    //     STEM_65_16_Z7020_LL_v1_1 = 26,
+    //     STEM_125_14_Z7020_LL_v1_2 = 27,
+    //     STEM_125_14_Z7020_TI_v1_3 = 28,
+    //     STEM_65_16_Z7020_TI_v1_3 = 29,
+
+    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
+
+    //     STEM_125_14_BO_v2_0 = 31,
+    //     STEM_125_14_Pro_BO_v2_0 = 32,
+    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
+
+    // } rp_HPeModels_t;
+
+    switch (m_model) {
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+            return true;
+        default:
+            return false;
+    }
 }
 
 bool CBoard::getTestMode() {

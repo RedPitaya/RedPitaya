@@ -11,6 +11,7 @@
 #include "gen_handler.h"
 #include <float.h>
 #include <time.h>
+#include <vector>
 #include "axi_manager.h"
 #include "common.h"
 #include "convert.hpp"
@@ -56,6 +57,7 @@ typedef struct {
     int burstRepetition = 1;      // Number of burst repetitions
     uint32_t burstPeriod = 0;     // Period between bursts in microseconds
     float burstLastValue = 0;     // Last output value after burst
+    float axiLastValue = 0;       // Last output value in axi buffer
     float initValue = 0;          // Initial output value
     float useLastSample = false;  // Flag to use last sample value
 
@@ -79,6 +81,10 @@ typedef struct {
     // AXI memory management
     uint64_t axi_mem_reserved_index = 0;      // Reserved memory index in AXI space
     uint32_t axi_reserved_samples_count = 0;  // Number of reserved samples in AXI memory
+
+    uint32_t waveform_sample_size = DAC_BUFFER_SIZE;
+
+    std::vector<float> genData;  // The signal sent to the FPGA is saved in this variable.
 
 } channel_config_t;
 
@@ -121,7 +127,6 @@ int gen_SetDefaultValues() {
         gen_setSweepStartFrequency(ch, 1000);
         gen_setSweepEndFrequency(ch, 1000);
         gen_setBurstRepetitions(ch, 1);
-        gen_setBurstPeriod(ch, (uint32_t)(1 / 1000.0 * MICRO));  // period = 1/frequency in us
         gen_setWaveform(ch, RP_WAVEFORM_SINE);
         gen_setSweepMode(ch, RP_GEN_SWEEP_MODE_LINEAR);
         gen_setSweepDir(ch, RP_GEN_SWEEP_DIR_NORMAL);
@@ -137,7 +142,7 @@ int gen_SetDefaultValues() {
         gen_setAmplitude(ch, fs * 0.8);
         gen_setDutyCycle(ch, 0.5);
         gen_setBurstCount(ch, 1);
-        gen_setBurstPeriod(ch, 1);
+        gen_setBurstPeriod(ch, 1000);  // Set 1 uS
         gen_setBurstLastValue(ch, 0);
         gen_setTriggerSource(ch, RP_GEN_TRIG_SRC_INTERNAL);
         gen_setPhase(ch, 0.0);
@@ -207,7 +212,7 @@ int gen_setAmplitudeAndOffsetOrigin(rp_channel_t channel) {
     return generate_setAmplitudeAndOffsetOrigin(channel, g_channels[channel].gain);
 }
 
-int gen_setAmplitude(rp_channel_t channel, float amplitude) {
+int gen_setAmplitudeCheck(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
@@ -216,6 +221,19 @@ int gen_setAmplitude(rp_channel_t channel, float amplitude) {
     if (gen_checkAmplitudeAndOffset(channel, amplitude * koff, g_channels[channel].offset * koff) != RP_OK) {
         return RP_EOOR;
     }
+
+    return RP_OK;
+}
+
+int gen_setAmplitude(rp_channel_t channel, float amplitude) {
+
+    CHECK_CHANNEL
+
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    int ret = gen_setAmplitudeCheck(channel, amplitude);
+    if (ret != RP_OK)
+        return ret;
 
     g_channels[channel].amplitude = amplitude;
     return generate_setAmplitude(channel, g_channels[channel].gain, amplitude * koff);
@@ -230,7 +248,7 @@ int gen_getAmplitude(rp_channel_t channel, float* amplitude) {
     return RP_OK;
 }
 
-int gen_setOffset(rp_channel_t channel, float offset) {
+int gen_setOffsetCheck(rp_channel_t channel, float offset) {
 
     CHECK_CHANNEL
 
@@ -239,6 +257,19 @@ int gen_setOffset(rp_channel_t channel, float offset) {
     if (gen_checkAmplitudeAndOffset(channel, g_channels[channel].amplitude * koff, offset * koff) != RP_OK) {
         return RP_EOOR;
     }
+
+    return RP_OK;
+}
+
+int gen_setOffset(rp_channel_t channel, float offset) {
+
+    CHECK_CHANNEL
+
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    int ret = gen_setOffsetCheck(channel, offset);
+    if (ret != RP_OK)
+        return ret;
 
     g_channels[channel].offset = offset;
 
@@ -314,11 +345,11 @@ int gen_setFrequency(rp_channel_t channel, float frequency) {
     }
 
     g_channels[channel].frequency = frequency;
-    gen_setBurstPeriod(channel, g_channels[channel].burstPeriod);
+    gen_setBurstPeriodTicks(channel, g_channels[channel].burstPeriod);
     gen_setRiseFallMin(channel, 1000000.0 / frequency * RISE_FALL_MIN_RATIO);
     gen_setRiseFallMax(channel, 1000000.0 / frequency * RISE_FALL_MAX_RATIO);
 
-    generate_setFrequency(channel, frequency, base_freq);
+    generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
     return synthesize_signal(channel);
 }
 
@@ -341,22 +372,15 @@ int gen_setFrequencyDirect(rp_channel_t channel, float frequency) {
     gen_setRiseFallMin(channel, 1000000.0 / frequency * RISE_FALL_MIN_RATIO);
     gen_setRiseFallMax(channel, 1000000.0 / frequency * RISE_FALL_MAX_RATIO);
 
-    return generate_setFrequency(channel, frequency, base_freq);
+    return generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
 }
 
 int gen_getFrequency(rp_channel_t channel, float* frequency) {
 
     CHECK_CHANNEL
 
-    // uint32_t base_freq = 0;
-    // if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK){
-    //     ERROR_LOG("Can't get fast ADC base rate");
-    //     return RP_NOTS;
-    // }
-
     *frequency = g_channels[channel].frequency;
     return RP_OK;
-    // return generate_getFrequency(channel, frequency,base_freq);
 }
 
 int gen_setSweepStartFrequency(rp_channel_t channel, float frequency) {
@@ -494,11 +518,7 @@ int gen_setArbWaveform(rp_channel_t channel, float* data, uint32_t length) {
 
     CHECK_CHANNEL
 
-    float fs = 0;
-    if (rp_HPGetFastDACOutFullScale(channel, &fs) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast DAC out full scale");
-        return RP_NOTS;
-    }
+    float fs = 1;
 
     bool is_sign = false;
     if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK) {
@@ -506,28 +526,14 @@ int gen_setArbWaveform(rp_channel_t channel, float* data, uint32_t length) {
         return RP_NOTS;
     }
 
-    // Check if data is normalized
-    float min = FLT_MAX, max = -FLT_MAX;  // initial values
-    uint32_t i;
-    for (i = 0; i < length; i++) {
-        if (data[i] < min)
-            min = data[i];
-        if (data[i] > max)
-            max = data[i];
-    }
-    if (min < (is_sign ? -fs : 0) || max > fs) {
-        ERROR_LOG("The signal is greater than acceptable.");
-        return RP_ENN;
-    }
-
     // Save data
     float* pointer = g_channels[channel].arbitraryData;
 
-    for (i = 0; i < length; i++) {
-        pointer[i] = data[i];
+    for (uint32_t i = 0; i < length; i++) {
+        pointer[i] = data[i] < -fs ? -fs : (data[i] > fs ? fs : data[i]);
     }
 
-    for (i = length; i < DAC_BUFFER_SIZE; i++) {  // clear the rest of the buffer
+    for (uint32_t i = length; i < DAC_BUFFER_SIZE; i++) {  // clear the rest of the buffer
         pointer[i] = 0;
     }
 
@@ -634,7 +640,7 @@ int gen_setGenMode(rp_channel_t channel, rp_gen_mode_t mode) {
     } else if (mode == RP_GEN_MODE_BURST) {
         gen_setBurstCount(channel, g_channels[channel].burstCount);
         gen_setBurstRepetitions(channel, g_channels[channel].burstRepetition);
-        gen_setBurstPeriod(channel, g_channels[channel].burstPeriod);
+        gen_setBurstPeriodTicks(channel, g_channels[channel].burstPeriod);
         return RP_OK;
     } else if (mode == RP_GEN_MODE_STREAM) {
         return RP_EUF;
@@ -662,7 +668,7 @@ int gen_setBurstCount(rp_channel_t channel, int num) {
     }
 
     g_channels[channel].burstCount = num;
-    gen_setBurstPeriod(channel, g_channels[channel].burstPeriod);
+    gen_setBurstPeriodTicks(channel, g_channels[channel].burstPeriod);
     if (mode == RP_GEN_MODE_BURST) {
         int ret = generate_setBurstCount(channel, (uint32_t)num);
         return ret;
@@ -682,11 +688,11 @@ int gen_setUseLastSample(rp_channel_t channel, bool enable) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setUseLastSampleAfter(channel, enable);
-    if (ret == RP_OK) {
-        g_channels[channel].useLastSample = enable;
-    }
-    return ret;
+    g_channels[channel].useLastSample = enable;
+
+    gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+
+    return RP_OK;
 }
 
 int gen_getUseLastSample(rp_channel_t channel, bool* enable) {
@@ -694,6 +700,7 @@ int gen_getUseLastSample(rp_channel_t channel, bool* enable) {
     CHECK_CHANNEL
 
     *enable = g_channels[channel].useLastSample;
+
     return RP_OK;
 }
 
@@ -701,7 +708,23 @@ int gen_setBurstLastValue(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setBurstLastValue(channel, g_channels[channel].gain, amplitude);
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    float a = amplitude;
+
+    if (g_channels[channel].useLastSample) {
+        bool axiEnable = false;
+        gen_axi_GetEnable(channel, &axiEnable);
+        if (axiEnable) {
+            a = g_channels[channel].amplitude * g_channels[channel].axiLastValue;
+        } else {
+            const std::vector<float>* data = nullptr;
+            gen_getWaveformDataV(channel, &data);
+            a = g_channels[channel].amplitude * data->at(data->size() - 1);
+        }
+    }
+
+    int ret = generate_setBurstLastValue(channel, g_channels[channel].gain, a * koff);
     if (ret == RP_OK) {
         g_channels[channel].burstLastValue = amplitude;
     }
@@ -720,7 +743,9 @@ int gen_setInitGenValue(rp_channel_t channel, float amplitude) {
 
     CHECK_CHANNEL
 
-    int ret = generate_setInitGenValue(channel, g_channels[channel].gain, amplitude);
+    float koff = g_channels[channel].load_mode == RP_GEN_50Ohm ? 2.0 : 1.0;
+
+    int ret = generate_setInitGenValue(channel, g_channels[channel].gain, amplitude * koff);
     if (ret == RP_OK) {
         g_channels[channel].initValue = amplitude;
     }
@@ -761,62 +786,96 @@ int gen_getBurstRepetitions(rp_channel_t channel, int* repetitions) {
     return RP_OK;
 }
 
-int gen_setBurstPeriod(rp_channel_t channel, uint32_t period) {
+int gen_setBurstPeriod(rp_channel_t channel, float period) {
 
     CHECK_CHANNEL
 
-    bool axi_enable = false;
-    uint32_t axi_decimation = 0;
-    generate_axi_GetEnable(channel, &axi_enable);
-    generate_axi_GetDecimation(channel, &axi_decimation);
+    static float adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time_raw = 1000000000.0 / adc_rate;
+    static double tick_time = round(tick_time_raw * 1000.0) / 1000.0;
+
+    // Max 4 second
+    if (period == 0 || period * 1000.f > NANO * 4.0f) {
+        return RP_EOOR;
+    }
+
+    // TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
+
+    uint32_t periodi32 = period * 1000.0f / tick_time + 0.5;
+    return gen_setBurstPeriodTicks(channel, periodi32);
+}
+
+int gen_getBurstPeriod(rp_channel_t channel, float* period) {
+
+    CHECK_CHANNEL
+
+    static double adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time = 1.0e9 / adc_rate;
+
+    uint32_t ticks = 0;
+    auto ret = gen_getBurstPeriodTicks(channel, &ticks);
+
+    double period_ns = (double)ticks * tick_time;
+    double period_us = round(period_ns * 1000.0) / 1000000.0;
+    *period = (float)period_us;
+
+    return ret;
+}
+
+int gen_setBurstPeriodD(rp_channel_t channel, double period) {
+
+    CHECK_CHANNEL
+
+    static float adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time_raw = 1000000000.0 / adc_rate;
+    static double tick_time = round(tick_time_raw * 1000.0) / 1000.0;
+
+    // Max 4 second
+    if (period == 0 || period * 1000.0 > NANO * 4.0) {
+        return RP_EOOR;
+    }
+
+    // TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
+    uint32_t periodi32 = period * 1000.0 / tick_time + 0.5;
+    return gen_setBurstPeriodTicks(channel, periodi32);
+}
+
+int gen_getBurstPeriodD(rp_channel_t channel, double* period) {
+    CHECK_CHANNEL
+
+    static double adc_rate = rp_HPGetBaseFastDACSpeedHzOrDefault();
+    static double tick_time = 1.0e9 / adc_rate;
+
+    uint32_t ticks = 0;
+    auto ret = gen_getBurstPeriodTicks(channel, &ticks);
+
+    double period_ns = (double)ticks * tick_time;
+    double period_us = round(period_ns * 1000.0) / 1000000.0;
+    *period = period_us;
+
+    return ret;
+}
+
+int gen_setBurstPeriodTicks(rp_channel_t channel, uint32_t ticks) {
+
+    CHECK_CHANNEL
+
+    g_channels[channel].burstPeriod = ticks;
 
     rp_gen_mode_t mode = g_channels[channel].mode;
 
-    if (period < BURST_PERIOD_MIN || period > BURST_PERIOD_MAX) {
-        return RP_EOOR;
-    }
-
-    if (axi_decimation == 0 && axi_enable) {
-        ERROR_LOG("Decimation is not set for AXI mode")
-        return RP_EOOR;
-    }
-
-    if (g_channels[channel].axi_reserved_samples_count == 0 && axi_enable) {
-        ERROR_LOG("Memory size not set for AXI mode")
-        return RP_EOOR;
-    }
-
-    // For non-axi mode, the buffer length is taken as 1. Since the calculation is carried out through the frequency of the signal, which is generated in 1 time.
-    int samplesCount = axi_enable ? g_channels[channel].axi_reserved_samples_count : 1;
-    double freq = axi_enable ? rp_HPGetBaseFastDACSpeedHzOrDefault() / axi_decimation : g_channels[channel].frequency;
-
-    int burstCount = g_channels[channel].burstCount;
-    int delay = 0;
-
-    int sigLen = (((double)samplesCount) / freq) * burstCount * MICRO;
-    // period = signal_time * burst_count + delay_time
-    if ((int)period - sigLen <= 0) {
-        period = sigLen;
-    }
-
-    delay = period - sigLen;
-
-    TRACE("freq %f sigLen %d burstCount %d period %d delay %d", freq, sigLen, burstCount, period, delay)
-
-    g_channels[channel].burstPeriod = period;
-
     if (mode == RP_GEN_MODE_BURST) {
-        int ret = generate_setBurstDelay(channel, (uint32_t)delay);
+        uint32_t periodi32 = (uint32_t)round(ticks);
+        int ret = generate_setBurstDelay(channel, periodi32);
         return ret;
     }
     return RP_OK;
 }
 
-int gen_getBurstPeriod(rp_channel_t channel, uint32_t* period) {
-
+int gen_getBurstPeriodTicks(rp_channel_t channel, uint32_t* ticks) {
     CHECK_CHANNEL
 
-    *period = g_channels[channel].burstPeriod;
+    *ticks = g_channels[channel].burstPeriod;
     return RP_OK;
 }
 
@@ -892,11 +951,26 @@ int gen_SynchroniseSM() {
     return generate_ResetSM();
 }
 
+int gen_getWaveformDataV(rp_channel_t channel, const std::vector<float>** data) {
+
+    CHECK_CHANNEL
+
+    *data = &g_channels[channel].genData;
+    return RP_OK;
+}
+
 int synthesize_signal(rp_channel_t channel) {
 
     CHECK_CHANNEL
 
+    g_channels[channel].genData.resize(DAC_BUFFER_SIZE);
     float data[DAC_BUFFER_SIZE];
+
+    uint32_t base_freq = 0;
+    if (rp_HPGetBaseFastDACSpeedHz(&base_freq) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast ADC base rate");
+        return RP_NOTS;
+    }
 
     rp_waveform_t waveform = g_channels[channel].waveform;
     float dutyCycle = g_channels[channel].dutyCycle;
@@ -953,7 +1027,17 @@ int synthesize_signal(rp_channel_t channel) {
     }
     if (waveform != RP_WAVEFORM_ARBITRARY)
         size = buf_size;
-    return generate_writeData(channel, data, phase, size);
+    if (g_channels[channel].waveform_sample_size != size) {
+        g_channels[channel].waveform_sample_size = size;
+        TRACE_SHORT("Set new waveworm size %d", g_channels[channel].waveform_sample_size)
+        generate_setFrequency(channel, frequency, base_freq, g_channels[channel].waveform_sample_size);
+        gen_TriggerOnly(channel);
+    }
+    auto ret = generate_writeData(channel, data, phase, size, g_channels[channel].genData.data());
+    if (ret == RP_OK && g_channels[channel].useLastSample) {
+        gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+    }
+    return ret;
 }
 
 int synthesis_sin(float scale, float* data_out, uint16_t buffSize) {
@@ -979,7 +1063,8 @@ int synthesis_rampUp(float scale, float* data_out, uint16_t buffSize) {
 }
 
 int synthesis_rampDown(float scale, float* data_out, uint16_t buffSize) {
-    for (int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
+    data_out[DAC_BUFFER_SIZE - 1] = 0;
+    for (int unsigned i = 0; i < DAC_BUFFER_SIZE - 1; i++) {
         data_out[i] = (float)(-1.0 * (acos(cos(M_PI * (float)i / (float)buffSize)) / M_PI - 1)) * scale;
     }
     return RP_OK;
@@ -1037,7 +1122,7 @@ int synthesis_square(float scale, float frequency, float riseTime, float fallTim
     if (fallTimeSamples == 0)
         fallTimeSamples = 1;
 
-    for (int unsigned i = 0; i < DAC_BUFFER_SIZE; i++) {
+    for (int unsigned i = 0; i < DAC_BUFFER_SIZE - 1; i++) {
         int x = (i % buffSize);
         if (x < riseTimeSamples / 2) {
             data_out[i] = (float)x / ((float)riseTimeSamples / 2.0f);
@@ -1059,7 +1144,7 @@ int synthesis_square(float scale, float frequency, float riseTime, float fallTim
         }
         data_out[i] *= scale;
     }
-
+    data_out[DAC_BUFFER_SIZE - 1] = 0;
     return RP_OK;
 }
 
@@ -1185,11 +1270,37 @@ int gen_setGainOut(rp_channel_t channel, rp_gen_gain_t mode) {
     } else {
         return status;
     }
-    int ret = gen_setAmplitude(channel, g_channels[channel].amplitude);
+
+    // Checking values ​​before installation in FPGA
+    auto ret = gen_setAmplitudeCheck(channel, g_channels[channel].amplitude);
+    if (ret) {
+        return ret;
+    }
+
+    ret = gen_setOffsetCheck(channel, g_channels[channel].offset);
+    if (ret) {
+        return ret;
+    }
+
+    ret = gen_setAmplitude(channel, g_channels[channel].amplitude);
     if (ret != RP_OK) {
         return ret;
     }
-    return gen_setOffset(channel, g_channels[channel].offset);
+
+    ret = gen_setOffset(channel, g_channels[channel].offset);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    ret = gen_setInitGenValue(channel, g_channels[channel].initValue);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    ret = gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+    if (ret != RP_OK) {
+        return ret;
+    }
+
+    return RP_OK;
 }
 
 int gen_getGainOut(rp_channel_t channel, rp_gen_gain_t* status) {
@@ -1246,7 +1357,15 @@ int gen_axi_SetEnable(rp_channel_t channel, bool enable) {
         }
     }
 
-    return generate_axi_SetEnable(channel, enable);
+    auto ret = generate_axi_SetEnable(channel, enable);
+
+    if (ret == RP_OK) {
+        if (g_channels[channel].useLastSample) {
+            gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+        }
+    }
+
+    return ret;
 }
 
 int gen_axi_GetEnable(rp_channel_t channel, bool* enable) {
@@ -1353,8 +1472,13 @@ int gen_axi_WriteWaveform(rp_channel_t channel, float* data, uint32_t length) {
                 return RP_ENN;
             }
             buffer[i] = cmn_convertToCnt(data[i], bits, 1.0, is_sign, 1, 0);
+            if (i + 1 == length) {
+                g_channels[channel].axiLastValue = data[i];
+            }
         }
-
+        if (g_channels[channel].useLastSample) {
+            gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+        }
         return RP_OK;
     } else {
         ERROR_LOG("Error getting memory region.");
@@ -1402,8 +1526,13 @@ int gen_axi_WriteWaveform(rp_channel_t channel, uint32_t offset, float* data, ui
                 return RP_ENN;
             }
             buffer[x + offset] = cmn_convertToCnt(data[x], bits, 1.0, is_sign, 1, 0);
+            if (x + 1 == length) {
+                g_channels[channel].axiLastValue = data[x];
+            }
         }
-
+        if (g_channels[channel].useLastSample) {
+            gen_setBurstLastValue(channel, g_channels[channel].burstLastValue);
+        }
         return RP_OK;
     } else {
         ERROR_LOG("Error getting memory region.");

@@ -77,3 +77,63 @@
     flex-direction: column;
     height: 100%;
 }
+
+.disabled-show-button {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disabled-show-button {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.disabled-show-button:hover {
+    background: none !important;
+    color: inherit !important;
+    cursor: not-allowed;
+}
+
+.disabled-show-button a:hover {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.eeprom-calib-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.eeprom-calib-table th {
+    background-color: #f2f2f2;
+    border: 1px solid #ddd;
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.eeprom-calib-table td {
+    border: 1px solid rgba(153, 153, 153, 0.295);
+    padding: 8px 12px;
+}
+
+.eeprom-calib-table .numeric-cell {
+    text-align: right;
+    font-weight: normal;
+}
+
+.eeprom-calib-table thead {
+    background-color: #3d3d3d;
+    position: sticky;
+}
+
+.eeprom-calib-table thead th {
+    background-color: #292929;
+    border: 1px solid rgba(153, 153, 153, 0.295);
+}

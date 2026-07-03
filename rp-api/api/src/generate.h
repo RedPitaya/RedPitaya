@@ -22,13 +22,12 @@
 #define BURST_COUNT_MAX 0xFFFF
 #define BURST_REPETITIONS_MIN 0x1
 #define BURST_REPETITIONS_MAX 0x10000  // Used as value-1  0x10000 => 0xFFFF (inf mode)
-#define BURST_PERIOD_MIN 1             // us
-#define BURST_PERIOD_MAX 500000000     // us
 
 #define CHA_DATA_OFFSET 0x10000
 #define CHB_DATA_OFFSET 0x20000
 // #define DATA_BIT_LENGTH         14
 #define MICRO 1e6
+#define NANO 1e9
 
 // Base Generate address
 #define GENERATE_BASE_ADDR 0x00200000
@@ -84,7 +83,7 @@ typedef union {
 typedef struct {
     uint16_t triggerSelector : 4;
     uint16_t SM_WrapPointer : 1;
-    uint16_t lastSampleUse : 1;
+    uint16_t reserv : 1;
     uint16_t SM_reset : 1;
     uint16_t setOutputTo0 : 1;
     uint16_t gatedBursts : 1;
@@ -98,7 +97,6 @@ typedef struct {
         printRegBit(" - %-39s = 0x%08X (%d)\n", "triggerSelector", triggerSelector);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "SM_WrapPointer", SM_WrapPointer);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "SM_reset", SM_reset);
-        printRegBit(" - %-39s = 0x%08X (%d)\n", "lastSampleUse", lastSampleUse);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "setOutputTo0", setOutputTo0);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "gatedBursts", gatedBursts);
         printRegBit(" - %-39s = 0x%08X (%d)\n", "tempProtected", tempProtected);
@@ -220,13 +218,14 @@ int generate_Init();
 int generate_Release();
 
 int generate_printRegset();
+int generate_printChannelData(rp_channel_t channel);
 
 int generate_setOutputDisable(rp_channel_t channel, bool disable);
 int generate_getOutputEnabled(rp_channel_t channel, bool* disabled);
 int generate_setOutputEnableSync(bool enable);
 
-int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq);
-int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq);
+int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq, uint32_t buffer_size);
+int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq, uint32_t buffer_size);
 int generate_setWrapCounter(rp_channel_t channel, uint32_t size);
 int generate_setTriggerSource(rp_channel_t channel, unsigned short value);
 int generate_getTriggerSource(rp_channel_t channel, uint32_t* value);
@@ -244,7 +243,7 @@ int generate_simultaneousTrigger();
 int generate_ResetSM();
 int generate_ResetChannelSM(rp_channel_t channel);
 
-int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length);
+int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length, float* dataInFPGA);
 
 int generate_setAmplitude(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
 int generate_setDCOffset(rp_channel_t channel, rp_gen_gain_t gain, float offset);
@@ -255,7 +254,6 @@ int generate_getLatchTempAlarm(rp_channel_t channel, bool* state);
 int generate_setLatchTempAlarm(rp_channel_t channel, bool state);
 int generate_getRuntimeTempAlarm(rp_channel_t channel, bool* state);
 
-int generate_setUseLastSampleAfter(rp_channel_t channel, bool enable);
 int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
 int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude);
 

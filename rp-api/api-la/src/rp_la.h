@@ -96,8 +96,7 @@ class CLACallback {
     virtual ~CLACallback() {}
     // A callback function that is called after data is captured on the FPGA.
     // Called after the function: runAsync(uint32_t timeoutMs)
-    virtual void captureStatus(CLAController* controller, bool isTimeout, uint32_t numBytes, uint64_t numSamples, uint64_t preTriggerSamples,
-                               uint64_t postTriggerSamples) {}
+    virtual void captureStatus(CLAController* controller, bool isTimeout, uint32_t numBytes, uint64_t numSamples, uint64_t preTriggerSamples, uint64_t postTriggerSamples) {}
 
     // A callback function that is called after a block of data uploaded by the user has been decoded.
     // Called after the function: loadFromFileAndDecode(std::string file, bool isRLE, uint64_t triggerSamplePosition)
@@ -195,10 +194,12 @@ class CLAController {
     // Keys can be taken from the JSON settings, if the key is not found the function returns false
     auto setDecoderSettingsUInt(std::string name, std::string key, uint32_t value) -> bool;
     auto setDecoderSettingsFloat(std::string name, std::string key, float value) -> bool;
+    auto setDecoderSettingsString(std::string name, std::string key, std::string value) -> bool;
 
     // Returns the value for the specified key, if the key is not found the function returns false
     auto getDecoderSettingsUInt(std::string name, std::string key, uint32_t* value) -> bool;
     auto getDecoderSettingsFloat(std::string name, std::string key, float* value) -> bool;
+    auto getDecoderSettingsString(std::string name, std::string key, std::string* value) -> bool;
 
     // Sets decimation when capturing data via FPGA
     auto setDecimation(uint32_t decimation) -> void;

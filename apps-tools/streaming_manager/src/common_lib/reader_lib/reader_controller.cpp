@@ -4,8 +4,8 @@
 
 // constexpr size_t g_max_buff = 32 * 1024;
 
-CReaderController::Ptr CReaderController::Create(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat,
-                                                 uint32_t _rep_count, uint32_t blockSize) {
+CReaderController::Ptr CReaderController::Create(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count,
+                                                 uint32_t blockSize) {
     return std::make_shared<CReaderController>(_fileType, _filePath, _repeat, _rep_count, blockSize);
 }
 
@@ -13,8 +13,7 @@ CReaderController::Ptr CReaderController::Create(DataIn* dataIn, CStreamSettings
     return std::make_shared<CReaderController>(dataIn, _repeat, _rep_count, blockSize);
 }
 
-CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count,
-                                     uint32_t blockSize)
+CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize)
     : m_fileType(_fileType),
       m_filePath(_filePath),
       m_repeat(_repeat),
@@ -33,11 +32,13 @@ CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std:
       m_channel1Size(0),
       m_channel2Size(0),
       m_blockSize(blockSize),
-      m_genData(nullptr) {
-    m_dataBuffers[0] = new uint8_t[blockSize];
-    m_dataBuffers[1] = new uint8_t[blockSize];
-    m_tempBuffer[0].memoryMode = false;
-    m_tempBuffer[1].memoryMode = false;
+      m_genData(nullptr),
+      m_memSink(nullptr) {
+    for (auto idx = 0u; idx < MAX_DAC_CHANNELS; idx++) {
+        m_dataBuffers[idx] = new uint8_t[blockSize];
+        memset(m_dataBuffers[idx], 0, blockSize);
+        m_tempBuffer[idx].memoryMode = false;
+    }
 
     if (m_repeat.value == CStreamSettings::DACRepeat::DAC_REP_ON && m_rep_count == 0) {
         m_rep_count = 1;
@@ -73,11 +74,13 @@ CReaderController::CReaderController(DataIn* dataIn, CStreamSettings::DACRepeat 
       m_channel1Size(0),
       m_channel2Size(0),
       m_blockSize(blockSize),
-      m_genData(dataIn) {
-    m_dataBuffers[0] = new uint8_t[blockSize];
-    m_dataBuffers[1] = new uint8_t[blockSize];
-    m_tempBuffer[0].memoryMode = true;
-    m_tempBuffer[1].memoryMode = true;
+      m_genData(dataIn),
+      m_memSink(nullptr) {
+    for (auto idx = 0u; idx < MAX_DAC_CHANNELS; idx++) {
+        m_dataBuffers[idx] = new uint8_t[blockSize];
+        memset(m_dataBuffers[idx], 0, blockSize);
+        m_tempBuffer[idx].memoryMode = true;
+    }
 
     if (m_repeat.value == CStreamSettings::DACRepeat::DAC_REP_ON && m_rep_count == 0) {
         m_rep_count = 1;
@@ -89,6 +92,36 @@ CReaderController::CReaderController(DataIn* dataIn, CStreamSettings::DACRepeat 
             FATAL("Data buffers must be a multiple of 2")
     } else {
         FATAL("Memory not initialized")
+    }
+    m_result = checkFile();
+    resetReadFromBuffer();
+}
+
+CReaderController::CReaderController(MemoryStreamSink* sink, uint32_t blockSize)
+    : m_fileType(CStreamSettings::DataFormat::BIN),
+      m_filePath(""),
+      m_repeat(CStreamSettings::DACRepeat::DAC_REP_INF),
+      m_rep_count(0),
+      m_wavReader(nullptr),
+      m_tdmsFile(nullptr),
+      m_tdmsSegments(),
+      m_currentSegment(0),
+      m_currentMetadata(0),
+      m_currentVecMetadataPtr(),
+      m_currentMetadataPtr(),
+      m_result(OpenResult::OR_CLOSE),
+      m_channel1Present(false),
+      m_channel2Present(false),
+      m_checkEmptyFile(false),
+      m_channel1Size(0),
+      m_channel2Size(0),
+      m_blockSize(blockSize),
+      m_genData(nullptr),
+      m_memSink(sink) {
+    for (auto idx = 0u; idx < MAX_DAC_CHANNELS; idx++) {
+        m_dataBuffers[idx] = new uint8_t[blockSize];
+        memset(m_dataBuffers[idx], 0, blockSize);
+        m_tempBuffer[idx].memoryMode = true;
     }
     m_result = checkFile();
     resetReadFromBuffer();
@@ -110,11 +143,12 @@ CReaderController::~CReaderController() {
     delete[] m_dataBuffers[0];
     delete[] m_dataBuffers[1];
     delete m_genData;
+    delete m_memSink;
 }
 
-auto CReaderController::getChannels(bool* ch1Active, bool* ch2Active) -> void {
-    *ch1Active = m_channel1Present;
-    *ch2Active = m_channel2Present;
+auto CReaderController::getChannels(dac_channels_t& channels) -> void {
+    channels[DACChannels::DAC_CH1] = m_channel1Present;
+    channels[DACChannels::DAC_CH2] = m_channel2Present;
 }
 
 auto CReaderController::getChannelsSize(size_t* ch1Size, size_t* ch2Size) -> void {
@@ -176,6 +210,16 @@ auto CReaderController::openTDMS() -> bool {
 auto CReaderController::resetReadFromBuffer() -> bool {
     m_tempBuffer[0].deleteBuffer();
     m_tempBuffer[1].deleteBuffer();
+
+    if (m_memSink) {
+        if (m_memSink->callback == nullptr) {
+            WARNING("Missing callback in memory sink")
+            m_result = OpenResult::OR_CLOSE;
+            return false;
+        }
+        return true;
+    }
+
     if (m_genData) {
         m_genData->readPosition = 0;
         m_result = OpenResult::OR_OK;
@@ -199,8 +243,7 @@ auto CReaderController::resetReadFromBuffer() -> bool {
     }
 }
 
-auto CReaderController::writeFromTemp(uint8_t** buff, size_t max_size, size_t* write_pos, CReaderController::TemperaryBuffer* temp_buf,
-                                      size_t* realSize) -> void {
+auto CReaderController::writeFromTemp(uint8_t** buff, size_t max_size, size_t* write_pos, CReaderController::TemperaryBuffer* temp_buf, size_t* realSize) -> void {
     size_t sizeForWrite = temp_buf->size - temp_buf->current_pos;
     size_t aviableSize = max_size - *write_pos;
     size_t sizeWrite = (sizeForWrite > aviableSize ? aviableSize : sizeForWrite);
@@ -219,6 +262,7 @@ auto CReaderController::getBufferPrepared(Data& data) -> BufferResult {
             }
         }
     };
+
     data.size[0] = data.size[1] = 0;
     if (m_channel1Present) {
         data.ch[0] = m_dataBuffers[0];
@@ -229,6 +273,19 @@ auto CReaderController::getBufferPrepared(Data& data) -> BufferResult {
         data.ch[1] = m_dataBuffers[1];
     } else {
         data.ch[1] = nullptr;
+    }
+
+    if (m_memSink) {
+        for (auto ch : m_memSink->channels) {
+            if (data.ch[ch] != nullptr) {
+                data.size[ch] = m_blockSize;
+                data.real_size[ch] = m_blockSize;
+                data.bits = m_memSink->memoryStreamBits;
+            }
+        }
+        std::array<uint8_t*, MAX_DAC_CHANNELS> channels = {data.ch[0], data.ch[1]};
+        auto isLastBuffer = m_memSink->callback(m_memSink->memoryStreamBits, channels, m_blockSize);
+        return isLastBuffer == false ? BR_OK : BR_ENDED;
     }
 
     while (1) {
@@ -466,6 +523,15 @@ auto CReaderController::checkFile() -> OpenResult {
     m_channel2Present = false;
     m_channel1Size = 0;
     m_channel2Size = 0;
+
+    if (m_memSink) {
+        m_channel1Present = m_memSink->channels.isEnabled(DACChannels::DAC_CH1);
+        m_channel2Present = m_memSink->channels.isEnabled(DACChannels::DAC_CH2);
+        m_channel1Size = m_channel1Present ? m_blockSize : 0;
+        m_channel2Size = m_channel2Present ? m_blockSize : 0;
+        return OpenResult::OR_OK;
+    }
+
     if (m_genData) {
         return checkMemory();
     }
@@ -482,7 +548,7 @@ auto CReaderController::checkMemory() -> OpenResult {
     m_channel1Present = m_genData->ch[0] != nullptr;
     m_channel2Present = m_genData->ch[1] != nullptr;
     m_channel1Size = m_genData->size[0];
-    m_channel2Size = m_genData->size[0];
+    m_channel2Size = m_genData->size[1];
     if (m_channel1Present || m_channel2Present) {
         return OpenResult::OR_OK;
     }

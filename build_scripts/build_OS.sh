@@ -1,8 +1,6 @@
 #!/bin/bash
 
-PATH_XILINX_SDK=/opt/Xilinx/Xilinx/SDK/2019.1
-PATH_XILINX_VIVADO=/opt/Xilinx/Xilinx/Vivado/2020.1
-RP_UBUNTU=redpitaya_OS_17-31-47_20-Mar-2025.tar.gz
+RP_UBUNTU=redpitaya_OS_15-41-56_18-Feb-2026.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
 function print_ok(){
@@ -27,9 +25,7 @@ sudo apt-get install libssl-dev device-tree-compiler u-boot-tools -y
 # secure chroot
 sudo apt-get install schroot -y
 # QEMU
-sudo apt-get install qemu qemu-user qemu-user-static -y
-# 32 bit libraries
-sudo apt-get install lib32z1 lib32ncurses5 libbz2-1.0:i386 lib32stdc++6 -y
+sudo apt-get install qemu-user qemu-user-static -y
 
 sudo apt-get install device-tree-compiler -y
 
@@ -37,52 +33,6 @@ sleep 1
 echo
 echo -n "Complete development packages "
 print_ok
-
-sleep 1
-
-echo
-echo "Setup Meson python packages"
-
-sudo apt-get install python3 python3-pip -y
-sudo pip3 install --upgrade pip -y
-sudo pip3 install meson -y
-sudo apt-get install ninja-build -y
-
-sleep 1
-echo
-echo -n "Complete Meson python packages "
-print_ok
-
-sleep 1
-echo
-sudo ln -s /usr/bin/make /usr/bin/gmake
-echo
-
-sleep 1
-
-if [[ -d "$PATH_XILINX_SDK" ]]
-then
-    echo -n "$PATH_XILINX_SDK exists on your filesystem. "
-    print_ok
-else
-    echo -n "Can't find $PATH_XILINX_SDK on your PC. "
-    print_fail
-    echo "Check the correct path to Xilinx SDK"
-    exit 1
-fi
-sleep 1
-if [[ -d "$PATH_XILINX_VIVADO" ]]
-then
-    echo -n "$PATH_XILINX_VIVADO exists on your filesystem. "
-    print_ok
-else
-    echo -n "Can't find $PATH_XILINX_VIVADO on your PC. "
-    print_fail
-    echo "Check the correct path to Xilinx Vivado"
-    exit 1
-fi
-
-sleep 1
 
 cd ..
 
@@ -159,30 +109,25 @@ fi
 set -e
 pwd
 chmod +x ./settings.sh
-./settings.sh
+. settings.sh
 echo -n "Call settings.sh "
 print_ok
 
-export ENABLE_LICENSING=0
 export CROSS_COMPILE=arm-linux-gnueabihf-
 export ARCH=arm
-export PATH=$PATH:$PATH_XILINX_VIVADO/bin
-export PATH=$PATH:$PATH_XILINX_SDK/bin
-export PATH=$PATH:$PATH_XILINX_SDK/gnu/aarch32/lin/gcc-arm-linux-gnueabi/bin/
 
-ENABLE_PRODUCTION_TEST=0
 GIT_COMMIT_SHORT=`git rev-parse --short HEAD`
 
-make -f Makefile.x86 fpga MODEL=Z10 STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z20 STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z20_125 STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z20_125_4CH STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z20_250_12 STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z20_250_12a STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z10_V2 STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z10_PRO_V2 STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z20_125_V2 STREAMING=MASTER
-make -f Makefile.x86 fpga MODEL=Z20_LL STREAMING=MASTER
+make -f Makefile.x86 fpga MODEL=Z10
+make -f Makefile.x86 fpga MODEL=Z20
+make -f Makefile.x86 fpga MODEL=Z20_125
+make -f Makefile.x86 fpga MODEL=Z20_125_4CH
+make -f Makefile.x86 fpga MODEL=Z20_250_12
+make -f Makefile.x86 fpga MODEL=Z20_250_12a
+make -f Makefile.x86 fpga MODEL=Z10_V2
+make -f Makefile.x86 fpga MODEL=Z10_PRO_V2
+make -f Makefile.x86 fpga MODEL=Z20_125_V2
+make -f Makefile.x86 fpga MODEL=Z20_LL
 
 make -f Makefile.x86
 

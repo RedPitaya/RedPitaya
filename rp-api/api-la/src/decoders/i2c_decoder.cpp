@@ -105,8 +105,21 @@ auto I2CDecoder::setDecoderSettingsUInt(std::string& key, uint32_t value) -> boo
     return false;
 }
 
+auto I2CDecoder::setDecoderSettingsString(std::string& key, std::string& value) -> bool {
+    auto opt = m_impl->m_options;
+    if (opt.setDecoderSettingsString(key, value)) {
+        setParameters(opt);
+        return true;
+    }
+    return false;
+}
+
 auto I2CDecoder::getDecoderSettingsUInt(std::string& key, uint32_t* value) -> bool {
     return m_impl->m_options.getDecoderSettingsUInt(key, value);
+}
+
+auto I2CDecoder::getDecoderSettingsString(std::string& key, std::string* value) -> bool {
+    return m_impl->m_options.getDecoderSettingsString(key, value);
 }
 
 auto I2CDecoder::getParametersInJSON() -> std::string {

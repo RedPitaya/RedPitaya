@@ -22,11 +22,12 @@ CIntParameter redpitaya_adc_count("ADC_COUNT", CBaseParameter::RO, getADCChannel
 CBooleanParameter isFilter("SPEC_IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);
 CBooleanParameter isAC_DC("SPEC_IS_AC_DC", CBaseParameter::RO, rp_HPGetFastADCIsAC_DCOrDefault(), 0);
 CBooleanParameter isHV_LV("SPEC_IS_HV_LV", CBaseParameter::RO, rp_HPGetFastADCIsLV_HVOrDefault(), 0);
+CBooleanParameter isHIRes16BitMode("SPEC_IS_16_BIT_MODE", CBaseParameter::RO, rp_HPGetIsFastADC16BitModeOrDefault(), 0);
 
 CInt32BinarySignal data_settings("settings", 16, 0);
 CCustomBinarySignal<rp_dsp_api::cdsp_data_t> s_view[MAX_ADC_CHANNELS] = INIT("ch", "_view", 0, 0.0f);
-CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_freq("peak_freq", MAX_ADC_CHANNELS* COUNT_DSP_MODE, 0.0f);
-CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_power("peak_power", MAX_ADC_CHANNELS* COUNT_DSP_MODE, 0.0f);
+CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_freq("peak_freq", MAX_ADC_CHANNELS* rp_dsp_api::COUNT_DSP_MODE, 0.0f);
+CCustomBinarySignal<rp_dsp_api::cdsp_data_t> peak_power("peak_power", MAX_ADC_CHANNELS* rp_dsp_api::COUNT_DSP_MODE, 0.0f);
 CCustomBinarySignal<rp_dsp_api::cdsp_data_t> s_xaxis("ch_xaxis", 0, 0.0f);
 
 // Parameters for the graph display window
@@ -37,6 +38,8 @@ CIntParameter y_axis_mode("y_axis_mode", CBaseParameter::RW, rp_dsp_api::DBM, 0,
 CIntParameter adc_freq("ADC_FREQ", CBaseParameter::RO, 0, 0, 0, getADCRate());
 CIntParameter rbw("RBW", CBaseParameter::RO, 0, 0, 0, MAX_FREQ);
 CFloatParameter impedance("DBU_IMP_FUNC", CBaseParameter::RW, 50, 0, 0.1, 1000, CONFIG_VAR);
+
+CBooleanParameter hires_16bitmode("16_BIT_MODE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
 CIntParameter windowMode("SPEC_WINDOW_MODE", CBaseParameter::RW, rp_dsp_api::HAMMING, 0, 0, 6, CONFIG_VAR);
 CIntParameter bufferSize("SPEC_BUFFER_SIZE", CBaseParameter::RW, rpApp_SpecGetADCBufferSize(), 0, 256, 16384, CONFIG_VAR);
@@ -51,7 +54,7 @@ CBooleanParameter inShow[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW", CBaseParameter:
 CBooleanParameter inShowMin[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_MIN", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CBooleanParameter inShowMax[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_MAX", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("CH", "_IN_GAIN", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
-CIntParameter inProbe[MAX_ADC_CHANNELS] = INIT("CH", "_PROBE", CBaseParameter::RW, 1, 0, 1, 1000, CONFIG_VAR);
+CIntParameter inProbe[MAX_ADC_CHANNELS] = INIT("CH", "_PROBE", CBaseParameter::RW, 1, 0, 1, 2000, CONFIG_VAR);
 CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
 CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("CH", "_IN_AC_DC", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
 
@@ -141,9 +144,9 @@ void UpdateBinarySignals(void) {
     }
 
     for (auto ch = 0u; ch < g_adc_count; ch++) {
-        for (uint8_t mode = MIN_DSP_MODE; mode < COUNT_DSP_MODE; mode++) {
-            peak_freq[mode + ch * COUNT_DSP_MODE] = data->m_peak_freq[mode][ch];
-            peak_power[mode + ch * COUNT_DSP_MODE] = data->m_peak_power[mode][ch];
+        for (uint8_t mode = rp_dsp_api::MIN_DSP_MODE; mode < rp_dsp_api::COUNT_DSP_MODE; mode++) {
+            peak_freq[mode + ch * rp_dsp_api::COUNT_DSP_MODE] = data->m_peak_freq[mode][ch];
+            peak_power[mode + ch * rp_dsp_api::COUNT_DSP_MODE] = data->m_peak_power[mode][ch];
         }
     }
     peak_freq.NeedSend();
@@ -266,6 +269,11 @@ void OnNewParams(void) {
     if (impedance.IsNewValue()) {
         if (rpApp_SpecSetImpedance(impedance.NewValue()) == RP_OK)
             impedance.Update();
+    }
+
+    if (hires_16bitmode.IsNewValue()) {
+        if (rp_AcqSet16BitMode(hires_16bitmode.NewValue()) == RP_OK)
+            hires_16bitmode.Update();
     }
 
     if (y_axis_mode.IsNewValue()) {
@@ -441,12 +449,11 @@ void updateParametersByConfig() {
     if (rp_HPGetIsPLLControlEnableOrDefault()) {
         rp_SetPllControlEnable(pllControlEnable.Value());
     }
-
+    rp_AcqSet16BitMode(hires_16bitmode.Value());
     rpApp_SpecSetImpedance(impedance.Value());
     rpApp_SpecSetWindow((rp_dsp_api::window_mode_t)windowMode.Value());
     rpApp_SpecSetRemoveDC(cutDC.Value());
     rpApp_SpecSetADCBufferSize(bufferSize.Value());
     rpApp_SpecSetFreqMax(xmax.Value());
-
     CDataManager::GetInstance()->SendAllParams();
 }

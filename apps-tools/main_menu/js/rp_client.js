@@ -62,7 +62,7 @@
         $.ajax({
             method: "GET",
             url: "/get_client_id",
-            timeout: 5000
+            timeout: 10000
         }).done(function(msg) {
             if (msg.trim() === RP_CLIENT.client_id) {
                 RP_CLIENT.client_log("Need reload")
@@ -220,7 +220,7 @@ $(function() {
 
     $.ajax({
             url: '/set_client_id', //Server script to process data
-            timeout: 5000,
+            timeout: 10000,
             type: 'POST',
             success: function(e) { console.log(e); },
             error: function(e) { console.log(e); },

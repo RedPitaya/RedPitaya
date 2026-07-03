@@ -16,7 +16,7 @@ class CStreamingFPGA {
    public:
     using Ptr = std::shared_ptr<CStreamingFPGA>;
 
-    CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, uint8_t _adc_bits);
+    CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, bool _saveCaptureTime);
     ~CStreamingFPGA();
 
     typedef std::function<DataLib::CDataBuffersPackDMA::Ptr()> getFreeBufferFunc;
@@ -27,7 +27,7 @@ class CStreamingFPGA {
     auto stop() -> bool;
     auto isRun() -> bool;
     auto setTestMode(bool mode) -> void;
-    auto setVerbousMode(bool mode) -> void;
+    auto setVerboseMode(bool mode) -> void;
     auto setPrintDebugBuffer(bool mode) -> void;
 
     sigslot::signal<DataLib::CDataBuffersPackDMA::Ptr> oscNotify;
@@ -50,7 +50,7 @@ class CStreamingFPGA {
     std::atomic_bool m_isRun;
 
     uint64_t m_passRate;
-    uint8_t m_adc_bits;
+    bool m_saveCaptureTime;
 
     uintmax_t m_BytesCount;
     bool m_testMode;

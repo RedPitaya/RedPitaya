@@ -56,6 +56,7 @@
                                 style="background: #cdcccc; min-width: 0px;">
                                 <li><a id="sys_info" href="#">SYS INFO</a></li>
                                 <li><a id="slow_adc_info" href="#">IN/E2</a></li>
+                                <li class="hires_16bit"><a id="16bit_mode" href="#">ADC 16Bit</a></li>
                             </ul>
                         </li>
                         <li class="dropdown">
@@ -236,19 +237,20 @@
                                 <option>100</option>
                                 <option>500</option>
                                 <option>1000</option>
+                                <option>2000</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Vertical position / <span
+                        <div class="col-info" style="margin-top: -11px;">Center offset / <span
                                 id="GPOS_OFFSET_CH1_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_CH1" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
+                                step_direct="0.0010" min="-40.0000" max="40.0000">
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Vertical zero offset / <span
+                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
                                 id="GPOS_OFFSET_ZERO_CH1_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_ZERO_CH1" class="setfield input-number" type="text" value="0.0000"
@@ -278,11 +280,11 @@
                             <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
                                 <label class="btn">
                                     <input type="radio" value="0" id="OSC_CH1_IN_AC_DC" name="OSC_CH1_IN_AC_DC"
-                                        autocomplete="off">AC
+                                        autocomplete="off">DC
                                 </label>
                                 <label class="btn">
                                     <input type="radio" value="1" id="OSC_CH1_IN_AC_DC1" name="OSC_CH1_IN_AC_DC"
-                                        autocomplete="off">DC
+                                        autocomplete="off">AC
                                 </label>
                             </div>
                         </div>
@@ -380,18 +382,19 @@
                                 <option>100</option>
                                 <option>500</option>
                                 <option>1000</option>
+                                <option>2000</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info">Vertical position / <span id="GPOS_OFFSET_CH2_UNIT">V</span></div>
+                        <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH2_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_CH2" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
+                                step_direct="0.0010" min="-40.0000" max="40.0000">
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Vertical zero offset / <span
+                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
                                 id="GPOS_OFFSET_ZERO_CH2_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_ZERO_CH2" class="setfield input-number" type="text" value="0.0000"
@@ -421,11 +424,11 @@
                             <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
                                 <label class="btn">
                                     <input type="radio" value="0" id="OSC_CH2_IN_AC_DC" name="OSC_CH2_IN_AC_DC"
-                                        autocomplete="off">AC
+                                        autocomplete="off">DC
                                 </label>
                                 <label class="btn">
                                     <input type="radio" value="1" id="OSC_CH2_IN_AC_DC1" name="OSC_CH2_IN_AC_DC"
-                                        autocomplete="off">DC
+                                        autocomplete="off">AC
                                 </label>
                             </div>
                         </div>
@@ -523,18 +526,19 @@
                                 <option>100</option>
                                 <option>500</option>
                                 <option>1000</option>
+                                <option>2000</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info">Vertical position / <span id="GPOS_OFFSET_CH3_UNIT">V</span></div>
+                        <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH3_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_CH3" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
+                                step_direct="0.0010" min="-40.0000" max="40.0000">
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Vertical zero offset / <span
+                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
                                 id="GPOS_OFFSET_ZERO_CH3_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_ZERO_CH3" class="setfield input-number" type="text" value="0.0000"
@@ -564,11 +568,11 @@
                             <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
                                 <label class="btn">
                                     <input type="radio" value="0" id="OSC_CH3_IN_AC_DC" name="OSC_CH3_IN_AC_DC"
-                                        autocomplete="off">AC
+                                        autocomplete="off">DC
                                 </label>
                                 <label class="btn">
                                     <input type="radio" value="1" id="OSC_CH3_IN_AC_DC1" name="OSC_CH3_IN_AC_DC"
-                                        autocomplete="off">DC
+                                        autocomplete="off">AC
                                 </label>
                             </div>
                         </div>
@@ -666,18 +670,19 @@
                                 <option>100</option>
                                 <option>500</option>
                                 <option>1000</option>
+                                <option>2000</option>
                             </select>
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info">Vertical position / <span id="GPOS_OFFSET_CH4_UNIT">V</span></div>
+                        <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH4_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_CH4" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
+                                step_direct="0.0010" min="-40.0000" max="40.0000">
                         </div>
                     </div>
                     <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Vertical zero offset / <span
+                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
                                 id="GPOS_OFFSET_ZERO_CH4_UNIT">V</span></div>
                         <div class="right-menu-option" style="margin-top: 10px;">
                             <input id="GPOS_OFFSET_ZERO_CH4" class="setfield input-number" type="text" value="0.0000"
@@ -707,11 +712,11 @@
                             <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
                                 <label class="btn">
                                     <input type="radio" value="0" id="OSC_CH4_IN_AC_DC" name="OSC_CH4_IN_AC_DC"
-                                        autocomplete="off">AC
+                                        autocomplete="off">DC
                                 </label>
                                 <label class="btn">
                                     <input type="radio" value="1" id="OSC_CH4_IN_AC_DC1" name="OSC_CH4_IN_AC_DC"
-                                        autocomplete="off">DC
+                                        autocomplete="off">AC
                                 </label>
                             </div>
                         </div>
@@ -882,11 +887,11 @@
                     </div> -->
                     <div class="col-xs-12 option-content">
                         <div class="right-menu-option">
-                            <div class="col-info" style="margin-top: -21px;">Vertical position / <span
+                            <div class="col-info" style="margin-top: -21px;">Center offset / <span
                                     id="GPOS_OFFSET_MATH_UNIT">V</span></div>
                             <div style="margin-top: 10px;">
                                 <input class="setfield input-number" id="GPOS_OFFSET_MATH" type="text" value="0.000"
-                                    step="0.001">
+                                    step_direct="0.001">
                             </div>
                         </div>
                     </div>
@@ -1213,6 +1218,10 @@
                         <div id="cur_x_diff"></div>
                         <div id="cur_x_diff_info" class="cur_info"></div>
                         <img id="time_offset_arrow" src="img/time-offset-arrow.png">
+                        <div id="trig_out_left" style="top: 45px; position: absolute;left: 0px;z-index: 10;"><img
+                                src="img/trig_out_left.png" /></div>
+                        <div id="trig_out_right" style="top: 45px; position: absolute;right: 0px;z-index: 10"><img
+                                src="img/trig_out_right.png" /></div>
                         <div id="ch1_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
                             <div style="position: relative;">
                                 <img src="img/ch1-offset-arrow-empty.png">

@@ -10,6 +10,7 @@ CViewController::CViewController()
       m_updateViewFromADCRequest(false),
       m_updateViewRequest(false),
       m_autoScale(false),
+      m_autoScaleState(OASS_NONE),
       m_timeScale(1),
       m_timeOffet(0),
       m_oscIsRunning(false),
@@ -70,6 +71,8 @@ auto CViewController::prepareOscillogramBuffer(size_t _maxBuffers) -> void {
         m_origialData[i]->m_index = i + 1;
     }
     resetCurrentBuffer();
+
+    m_autoScaleState = OASS_NONE;
 }
 
 auto CViewController::resetCurrentBuffer() -> void {
@@ -196,6 +199,14 @@ auto CViewController::getAutoScale() -> bool {
     return m_autoScale;
 }
 
+auto CViewController::setAutoScaleState(AutoScaleState _state) -> void {
+    m_autoScaleState = _state;
+}
+
+auto CViewController::getAutoScaleState() -> AutoScaleState {
+    return m_autoScaleState;
+}
+
 auto CViewController::convertSamplesToTime(int32_t samples) -> double {
     static auto rate = getADCRate();
     /* Calculate time (including decimation) */
@@ -242,7 +253,7 @@ auto CViewController::calculateDecimation(float _scale, uint32_t* _decimation, b
     if (maxDeltaSample / 65536.0f > ratio) {
         return RP_EOOR;
     }
-    TRACE_SHORT("maxDeltaSample %f ratio %f _scale %f rate %f", maxDeltaSample, ratio, _scale, rate)
+    // TRACE_SHORT("maxDeltaSample %f ratio %f _scale %f rate %f", maxDeltaSample, ratio, _scale, rate)
     // contition: viewBuffer cannot be larger than adcBuffer
     //  ratio *= _continuesMode ? 1.0 : 0.9;
     ratio *= 0.5;
@@ -350,12 +361,25 @@ auto CViewController::getSampledAfterTriggerInView() -> uint32_t {
     int posInPoints = ((m_timeOffet / m_timeScale) * getSamplesPerDivision());
     auto x = m_viewSizeInPoints / 2.0 + posInPoints;
     auto extraPoints = calcExtraPoints();
-    return MIN(x * decFactor + extraPoints, ADC_BUFFER_SIZE);
+    return MAX(MIN(x * decFactor + extraPoints, ADC_BUFFER_SIZE), 1);
+}
+
+// Samples needed BEFORE the trigger point (from left edge of view to trigger position)
+auto CViewController::getSampledBeforeTriggerInView() -> uint32_t {
+    auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
+    // Invert sign: positive offset moves trigger right → more samples before trigger
+    int posInPoints = -((m_timeOffet / m_timeScale) * getSamplesPerDivision());
+    // Trigger position from left edge in points
+    auto triggerX = m_viewSizeInPoints / 2.0 + posInPoints;
+    auto extraPoints = calcExtraPoints();
+    // Samples from left edge to trigger position
+    return MIN(triggerX * decFactor + extraPoints, ADC_BUFFER_SIZE);
 }
 
 auto CViewController::calcExtraPoints() -> uint32_t {
-    auto decFactor = timeToIndexD(m_timeScale) / (double)getSamplesPerDivision();
-    return (floor((float)ADC_BUFFER_SIZE / (float)getViewSize())) * decFactor + 4.0;
+    auto decFactor = timeToIndexD(m_timeScale) / static_cast<double>(getSamplesPerDivision());
+    auto extra = floor(static_cast<double>(ADC_BUFFER_SIZE) / static_cast<double>(getViewSize())) * decFactor + 4.0;
+    return static_cast<uint32_t>(extra);
 }
 
 // auto CViewController::setCapturedDecimation(uint32_t _dec) -> void{

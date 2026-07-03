@@ -28,6 +28,7 @@
 %apply int { rp_acq_trig_state_t }
 %apply int { rp_gen_gain_t }
 %apply int { rp_gen_load_mode_t }
+%apply int { rp_int_mode_t }
 
 %apply int *OUTPUT { rp_pinState_t * state }
 %apply int *OUTPUT { rp_pinDirection_t * direction }
@@ -96,6 +97,7 @@
 %apply int *OUTPUT { int * repetitions };
 %apply int *OUTPUT { int * decimated_data_num };
 %apply unsigned int *OUTPUT { unsigned int * decimated_data_num };
+
 
 %array_class(float, arbBuffer);
 %array_class(int16_t, i16Buffer);

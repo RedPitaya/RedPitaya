@@ -36,7 +36,7 @@
         if (scale_val !== undefined){
             var value_holder = $('#GPOS_OFFSET_MATH');
             value_holder.val(value.toFixed(precision));
-            value_holder.attr("step",1.0 / Math.pow(10,precision))
+            value_holder.attr("step_direct",1.0 / Math.pow(10,precision))
         }
     };
 

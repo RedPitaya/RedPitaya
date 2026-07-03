@@ -2,100 +2,128 @@
 
     // Init drag listeners for off cursors (IN,OUT,MATH)
     OSC.initOSCCursors = function() {
-        // Voltage offset arrow dragging
         $('.y-offset-arrow').draggable({
             axis: 'y',
+            grid: [1, 20],
             containment: 'parent',
             start: function() {
                 OSC.state.cursor_dragging = true;
             },
             drag: function(ev, ui) {
-                var margin_top = parseInt(ui.helper.css('marginTop'));
-                var min_top = ((ui.helper.height() / 2) + margin_top) * -1;
-                var max_top = $('#graphs').height() - margin_top;
+                var $element = $(this);
+                var $parent = $element.parent();
+                var parentHeight = $parent.height();
+                var elementHeight = $element.height();
+                var maxTop = parentHeight - elementHeight;
 
-                if (ui.position.top < min_top) {
-                    ui.position.top = min_top;
-                } else if (ui.position.top > max_top) {
-                    ui.position.top = max_top;
+                var grid = $element.draggable('option', 'grid');
+                var step = grid[1];
+
+                var desiredTop = Math.round(ui.position.top / step) * step;
+
+                if (desiredTop < 8 || desiredTop > maxTop) {
+                    var currentTop = parseFloat($element.css('top'));
+                    ui.position.top = currentTop;
+                    $element.css({ top: currentTop });
+                    return;
                 }
+                var currentTop = ui.position.top;
+                var index = -Math.round(currentTop / step) + 50;
 
-                OSC.updateYOffset(ui);
+                OSC.updateYOffset(ui,index);
                 OSC.cursorY()
+                OSC.updateTitleYAxisTicks()
             },
             stop: function(ev, ui) {
-                if (!OSC.state.simulated_drag) {
-                    OSC.updateYOffset(ui);
-                    OSC.cursorY()
-                    $('#info_box').empty();
-                }
+                var $arrow = $(this);
+                var grid = $arrow.draggable('option', 'grid');
+                var step = grid[1];
+                var currentTop = ui.position.top;
+                var index = -Math.round(currentTop / step) + 50;
+
+                OSC.updateYOffset(ui,index);
+                OSC.cursorY()
+                OSC.updateTitleYAxisTicks()
+                $('#info_box').empty();
                 OSC.state.cursor_dragging = false;
             }
         });
     }
 
-    // OSC.chOffset = function(ch_name) {
-    //     // var params = $.extend(true, {}, OSC.orig.old);
-    //     var param_name = "OSC_"+ ch_name+"_OFFSET";
-    //     var scale = OSC.params.orig["OSC_"+ch_name+"_SCALE"] ? OSC.params.orig["OSC_"+ch_name+"_SCALE"].value : undefined;
-    //     var offset = OSC.params.orig['OSC_' + ch_name + '_OFFSET'].value;
-    //     var ch_name_l = ch_name.toLowerCase();
-    //     console.log("Set cursor",scale,offset)
-    //     if (scale !== undefined && offset !== undefined && OSC.state.cursor_dragging === false){
-    //         var graph_height = $('#graph_grid').outerHeight();
-    //         OSC.state.graph_grid_height = graph_height
-    //         var volt_per_px = (scale * 10) / graph_height
-    //         var px_offset = -(offset / volt_per_px - parseInt($('#' + ch_name_l + '_offset_arrow').css('margin-top')) / 2);
-    //         $('#' + ch_name_l + '_offset_arrow').css('top', (graph_height + 7) / 2 + px_offset);
-    //     }
+    OSC.calculateGridStep = function(scale, containerHeight,steps) {
 
-    //     var field = $('#' + param_name);
-    //     var units;
-    //     if (scale != undefined) {
-    //         if (Math.abs(scale) >= 1) {
-    //             units = 'V';
-    //         } else if (Math.abs(scale) >= 0.001) {
-    //             units = 'mV';
-    //         }
-    //     } else
-    //         units = $('#' + param_name+'_UNIT').html();
-    //     if (offset){
-    //         var multiplier = units == "mV" ? 1000 : 1;
+        var stepsPerDivision = steps || 10;
+        var totalDivisions = 10;
 
-    //         var probeAttenuation = OSC.params.orig['OSC_' + ch_name + '_PROBE'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_PROBE'].value : 1;
-    //         var gain_mode = OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'] !== undefined ? OSC.params.orig['OSC_' + ch_name + '_IN_GAIN'].value : 0;
+        var voltageStep = scale / stepsPerDivision;
 
-    //         field.val(OSC.formatInputValue(offset * multiplier, probeAttenuation, units == "mV", gain_mode !== 0));
-    //         field.attr("step",OSC.getStepValue(probeAttenuation, units == "mV", gain_mode !== 0));
+        var totalScale = scale * totalDivisions;
 
-    //     }
+        var pixelsPerVolt = containerHeight / totalScale;
 
+        var stepPx = voltageStep * pixelsPerVolt;
 
-    //     OSC.triggerParam("")
-    //     if (!OSC.state.trig_dragging)
-    //         OSC.updateTriggerDragHandle()
-    //     OSC.cursorY();
-    // }
+        return {
+            stepPx: stepPx,
+            voltageStep: voltageStep,
+            formattedStep: OSC.convertVoltageForAxisWithScale(voltageStep, 1),
+            totalSteps: totalDivisions * stepsPerDivision,
+            stepsPerDivision: stepsPerDivision,
+            divisionVoltage: scale
+        };
+    };
 
+    OSC.updateDraggableGrid = function() {
+        var itm = OSC.getSettingsActiveChannel()
+        var gridInfo = OSC.calculateGridStep(
+            itm.scale,
+            $('.plot').height(),
+        );
+
+        $('.y-offset-arrow').draggable('option', 'grid', [1, gridInfo.stepPx]);
+    };
+
+    OSC.isArrowVisibleInGraphs = function() {
+        const $arrow = $('#time_offset_arrow');
+        const $graphs = $('#graphs');
+
+        if ($arrow.length === 0 || $graphs.length === 0) return false;
+        if ($arrow.css('display') === 'none') return false;
+
+        const arrowLeft = $arrow.position().left;
+        const arrowWidth = $arrow.outerWidth() || parseFloat($arrow.css('width'));
+        const graphsWidth = $graphs.width();
+
+        if (!arrowWidth) return true;
+
+        return !(
+            arrowLeft + arrowWidth <= 0 ||
+            arrowLeft >= graphsWidth
+        );
+    }
 
     OSC.ch1Offset = function(new_params) {
         OSC.setGposOffset("CH1");
         OSC.setInOffsetPlotCh("1")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch2Offset = function(new_params) {
         OSC.setGposOffset("CH2");
         OSC.setInOffsetPlotCh("2")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch3Offset = function(new_params) {
         OSC.setGposOffset("CH3");
         OSC.setInOffsetPlotCh("3")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch4Offset = function(new_params) {
         OSC.setGposOffset("CH4");
         OSC.setInOffsetPlotCh("4")
+        OSC.updateTitleYAxisTicks()
     }
 
     OSC.ch1OffsetZero = function(new_params) {
@@ -134,15 +162,12 @@
 
         if (OSC.params.orig['OSC_TRIG_SOURCE'] !== undefined) {
 
-            if (OSC.params.orig['OSC_TRIG_SOURCE'].value < OSC.adc_channes) {
+            if (OSC.params.orig['OSC_TRIG_SOURCE'].value < OSC.adc_channels) {
                 var ots = OSC.params.orig['OSC_TRIG_SOURCE'].value + 1;
                 var ref_scale = "GPOS_SCALE_CH"+ots
                 var source_offset = OSC.params.orig['GPOS_OFFSET_CH'+ots].value;
                 var source_offset_zero = OSC.params.orig['GPOS_OFFSET_ZERO_CH'+ots].value;
                 var source_inverted = OSC.params.orig['GPOS_INVERTED_CH'+ots].value;
-
-                // var ref_scale = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? 'OSC_CH1_SCALE' : 'OSC_CH2_SCALE');
-                // var source_offset = (OSC.params.orig['OSC_TRIG_SOURCE'].value == 0 ? OSC.params.orig['OSC_CH1_OFFSET'].value : OSC.params.orig['OSC_CH2_OFFSET'].value);
 
                 if (OSC.params.orig[ref_scale] !== undefined && source_inverted !== undefined && source_offset !== undefined && source_offset_zero !== undefined) {
                     var graph_height = $('#graph_grid').height();
@@ -246,7 +271,7 @@
         if (!OSC.state.trig_dragging && trig_sour !== undefined) {
 
             var show_in_channel = OSC.params.orig['CH'+(trig_sour+1)+'_SHOW'] === undefined ? undefined : OSC.params.orig['CH'+(trig_sour+1)+'_SHOW'].value;
-            if (trig_sour >= OSC.adc_channes){
+            if (trig_sour >= OSC.adc_channels){
                 show_in_channel = undefined
             }
 
@@ -352,16 +377,31 @@
         var new_value = +(((zero_pos - new_left - elem_width / 2 - 1) * ms_per_px).toFixed(6));
         var buf_width = graph_width + 2;
         var ratio = buf_width / (buf_width * OSC.params.orig['OSC_VIEV_PART'].value);
+        var ts = OSC.params.orig['OSC_TIME_SCALE'] !== undefined ? OSC.params.orig['OSC_TIME_SCALE'].value : undefined
 
         OSC.params.local['OSC_TIME_OFFSET'] = { value: (zero_pos - new_left - elem_width / 2 - 1) * ms_per_px };
         OSC.sendParams();
 
         $('#info_box').html('Time offset ' + OSC.convertTime(new_value));
         $('#buf_time_offset').css('left', buf_width / 2 - buf_width * OSC.params.orig['OSC_VIEV_PART'].value / 2 + (new_left + 8) / ratio  - 5).show();
+
+        if (new_value > ts * 5.0) {
+            $('#trig_out_left').show();
+            $('#trig_out_right').hide();
+            $('#time_offset_arrow').hide();
+        } else if (new_value < ts * -5.0) {
+            $('#trig_out_left').hide();
+            $('#trig_out_right').show();
+            $('#time_offset_arrow').hide();
+        } else {
+            $('#time_offset_arrow').show();
+            $('#trig_out_left').hide();
+            $('#trig_out_right').hide();
+        }
     }
 
     OSC.endTimeMove = function(new_left) {
-        if (!OSC.state.simulated_drag && OSC.params.orig['OSC_TIME_SCALE'] !== undefined) {
+        if (OSC.params.orig['OSC_TIME_SCALE'] !== undefined) {
             var graph_width = $('#graph_grid').outerWidth();
             var elem_width = $('#time_offset_arrow').width();
             var zero_pos = (graph_width + 2) / 2;
@@ -393,6 +433,20 @@
         OSC.state.graph_grid_width = graph_width;
         $('#time_offset_arrow').css('left', arrow_left).show();
         $('#buf_time_offset').css('left', buf_width / 2 - buf_width * vp / 2 + (arrow_left + 8)/ ratio - 5).show();
+
+        if (toff > ts * 5.0) {
+            $('#trig_out_left').show();
+            $('#trig_out_right').hide();
+            $('#time_offset_arrow').hide();
+        } else if (toff < ts * -5.0) {
+            $('#trig_out_left').hide();
+            $('#trig_out_right').show();
+            $('#time_offset_arrow').hide();
+        } else {
+            $('#time_offset_arrow').show();
+            $('#trig_out_left').hide();
+            $('#trig_out_right').hide();
+        }
     }
 
 }(window.OSC = window.OSC || {}, jQuery));

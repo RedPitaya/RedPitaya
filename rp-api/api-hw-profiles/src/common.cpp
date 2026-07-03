@@ -10,32 +10,34 @@
 
 #include "common.h"
 #include <ctype.h>
-#include <dirent.h>
 #include <errno.h>
-#include <getopt.h>
-#include <mtd/mtd-user.h>
 #include <pwd.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/queue.h>
 #include <unistd.h>
 #include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "stem_122_16SDR_v1.0.h"
 #include "stem_122_16SDR_v1.1.h"
 #include "stem_125_10_v1.0.h"
+#include "stem_125_14_BO_v2.0.h"
 #include "stem_125_14_LN_BO_v1.1.h"
 #include "stem_125_14_LN_CE1_v1.1.h"
 #include "stem_125_14_LN_CE2_v1.1.h"
 #include "stem_125_14_LN_v1.1.h"
+#include "stem_125_14_Pro_BO_v2.0.h"
 #include "stem_125_14_Pro_v2.0.h"
 #include "stem_125_14_Z7020_4IN_BO_v1.3.h"
 #include "stem_125_14_Z7020_4IN_v1.0.h"
@@ -43,6 +45,7 @@
 #include "stem_125_14_Z7020_4IN_v1.3.h"
 #include "stem_125_14_Z7020_Ind_v2.0.h"
 #include "stem_125_14_Z7020_LN_v1.1.h"
+#include "stem_125_14_Z7020_Pro_BO_v2.0.h"
 #include "stem_125_14_Z7020_Pro_v1.0.h"
 #include "stem_125_14_Z7020_Pro_v2.0.h"
 #include "stem_125_14_Z7020_v1.0.h"
@@ -144,6 +147,10 @@ const char* table_keys_help[] = {"all",
 
                                  "spec_max_rate",
                                  "Maximum frequency value for spectrum analyzer",
+                                 "adc_low_pass",
+                                 "Value of the low-pass filter for the ADC.",
+                                 "dac_low_pass",
+                                 "Value of the low-pass filter for the DAC.",
 
                                  "is_daisy_clock_sync",
                                  "Synchronization via daisy chain",
@@ -172,12 +179,21 @@ const char* table_keys_help[] = {"all",
                                  "QSPI is present in E3",
                                  "is_fpga_calib",
                                  "Fast ADC Calibration on FPGA",
+                                 "is_fast_adc_16b_mode",
+                                 "Fast ADC 16-bit data mode on FPGA",
+
+                                 "is_xstreaming",
+                                 "X-Streaming mode",
+
+                                 "gen_min_speed",
+                                 "Minimum allowable frequency for the generator",
+                                 "gen_max_speed",
+                                 "Maximum allowable frequency for the generator",
+
                                  NULL};
 
-#define ADC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/adc_base_rate_"
-#define DAC_BASE_RATE_PATH hp_cmn_GetHomeDirectory() + "/.config/redpitaya/dac_base_rate_"
-
 profiles_t* g_profile = NULL;
+bool g_is_valid = false;
 
 // "STEM_125-10_v1.0"
 // "STEM_14_B_v1.0"
@@ -192,11 +208,11 @@ profiles_t* g_profile = NULL;
 // "STEM_125-14_Z7020_4IN_v1.2"
 // "STEM_125-14_Z7020_4IN_v1.3"
 // "STEM_125-14_Z7020_4IN_BO_v1.3"
+// "STEM_250-12_v1.0"
 // "STEM_250-12_v1.1"
 // "STEM_250-12_v1.2"
 // "STEM_250-12_v1.2a"
 // "STEM_250-12_v1.2b"
-// "STEM_250-12_v1.0"
 // "STEM_250-12_120"
 // "STEM_125-14_LN_BO_v1.1"
 // "STEM_125-14_LN_CE1_v1.1"
@@ -205,9 +221,12 @@ profiles_t* g_profile = NULL;
 // Gen2
 
 // "STEM_125-14_v2.0"
+// "STEM_125-14_BO_v2.0"
 // "STEM_125-14_Pro_v2.0"
+// "STEM_125-14_Pro_BO_v2.0"
 // "STEM_125-14_Z7020_Pro_v1.0"
 // "STEM_125-14_Z7020_Pro_v2.0"
+// "STEM_125-14_Z7020_Pro_BO_v2.0"
 // "STEM_125-14_Ind_v2.0"
 
 // Low latency
@@ -217,363 +236,168 @@ profiles_t* g_profile = NULL;
 // "STEM_125-14_TI_v1.3"
 // "STEM_65-16_TI_v1.3"
 
-std::string hp_cmn_GetHomeDirectory() {
-    struct passwd* pw = getpwuid(getuid());
-    if (pw && pw->pw_dir) {
-        return std::string(pw->pw_dir);
-    }
-    return "";
+const std::string& hp_cmn_GetHomeDirectory() {
+    static const std::string homeDir = []() -> std::string {
+        struct passwd* pw = getpwuid(getuid());
+        if (pw && pw->pw_dir) {
+            return std::string(pw->pw_dir);
+        }
+        return "";
+    }();
+    return homeDir;
 }
 
-void convertToLowerCase(char* buff) {
-    int size = strlen(buff);
-    while (size > 0) {
-        size--;
-        buff[size] = tolower(buff[size]);
-    }
-}
+void hp_checkModel(std::string& model, std::string& eth_mac, bool* is_valid) {
+    auto modelLower = model;
+    std::transform(modelLower.begin(), modelLower.end(), modelLower.begin(), [](unsigned char c) { return std::tolower(c); });
 
-void hp_checkModel(char* model, char* eth_mac) {
-    char modelOrig[255];
-    strcpy(modelOrig, model);
-    convertToLowerCase(model);
-    if (!model)
-        return;
+    *is_valid = true;
 
-    if (strcmp(model, "stem_125-10_v1.0") == 0) {
-        g_profile = getProfile_STEM_125_10_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
+    auto getProfileByModel = [](const std::string& key) -> decltype(g_profile) {
+        using ProfileGetter = decltype(g_profile) (*)();
+        static const std::unordered_map<std::string, ProfileGetter> profileMap = {
+            {"stem_125-10_v1.0", getProfile_STEM_125_10_v1_0},
+            {"stem_125-14_v1.0", getProfile_STEM_125_14_v1_0},
+            {"stem_14_b_v1.0", getProfile_STEM_125_14_v1_0},  // Legacy alias
+            {"stem_125-14_v1.1", getProfile_STEM_125_14_v1_1},
+            {"stem_122-16sdr_v1.0", getProfile_STEM_122_16SDR_v1_0},
+            {"stem_122-16sdr_v1.1", getProfile_STEM_122_16SDR_v1_1},
+            {"stem_125-14_ln_v1.1", getProfile_STEM_125_14_LN_v1_1},
+            {"stem_125-14_z7020_v1.0", getProfile_STEM_125_14_Z7020_v1_0},
+            {"stem_125-14_z7020_ln_v1.1", getProfile_STEM_125_14_Z7020_LN_v1_1},
+            {"stem_125-14_z7020_4in_v1.0", getProfile_STEM_125_14_Z7020_4IN_v1_0},
+            {"stem_125-14_z7020_4in_v1.2", getProfile_STEM_125_14_Z7020_4IN_v1_2},
+            {"stem_125-14_z7020_4in_v1.3", getProfile_STEM_125_14_Z7020_4IN_v1_3},
+            {"stem_125-14_z7020_4in_bo_v1.3", getProfile_STEM_125_14_Z7020_4IN_BO_v1_3},
+            {"stem_250-12_v1.0", getProfile_STEM_250_12_v1_0},
+            {"stem_250-12_v1.1", getProfile_STEM_250_12_v1_1},
+            {"stem_250-12_v1.2", getProfile_STEM_250_12_v1_2},
+            {"stem_250-12_v1.2a", getProfile_STEM_250_12_v1_2a},
+            {"stem_250-12_v1.2b", getProfile_STEM_250_12_v1_2b},
+            {"stem_250-12_120", getProfile_STEM_250_12_120},
+            {"stem_125-14_ln_bo_v1.1", getProfile_STEM_125_14_LN_BO_v1_1},
+            {"stem_125-14_ln_ce1_v1.1", getProfile_STEM_125_14_LN_CE1_v1_1},
+            {"stem_125-14_ln_ce2_v1.1", getProfile_STEM_125_14_LN_CE2_v1_1},
+            {"stem_125-14_v2.0", getProfile_STEM_125_14_v2_0},
+            {"stem_125-14_bo_v2.0", getProfile_STEM_125_14_BO_v2_0},
+            {"stem_125-14_pro_v2.0", getProfile_STEM_125_14_Pro_v2_0},
+            {"stem_125-14_pro_bo_v2.0", getProfile_STEM_125_14_Pro_BO_v2_0},
+            {"stem_125-14_z7020_pro_v1.0", getProfile_STEM_125_14_Z7020_Pro_v1_0},
+            {"stem_125-14_z7020_pro_v2.0", getProfile_STEM_125_14_Z7020_Pro_v2_0},
+            {"stem_125-14_z7020_pro_bo_v2.0", getProfile_STEM_125_14_Z7020_Pro_BO_v2_0},
+            {"stem_125-14_ind_v2.0", getProfile_STEM_125_14_Z7020_Ind_v2_0},
+            {"stem_125-14_z7020_ll_v1.1", getProfile_STEM_125_14_Z7020_LL_v1_1},
+            {"stem_125-14_z7020_ll_v1.2", getProfile_STEM_125_14_Z7020_LL_v1_2},
+            {"stem_65-16_ll_v1.1", getProfile_STEM_65_16_Z7020_LL_v1_1},
+            {"stem_65-16_ti_v1.3", getProfile_STEM_65_16_Z7020_TI_v1_3},
+            {"stem_125-14_ti_v1.3", getProfile_STEM_125_14_Z7020_TI_v1_3},
+        };
 
-    if (strcmp(model, "stem_125-14_v1.0") == 0) {
-        g_profile = getProfile_STEM_125_14_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
+        auto it = profileMap.find(key);
+        if (it != profileMap.end())
+            return it->second();
+        return nullptr;
+    };
 
-    if (strcmp(model, "stem_14_b_v1.0") == 0) {
-        g_profile = getProfile_STEM_125_14_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_v1.1") == 0) {
+    auto profile = getProfileByModel(modelLower);
+    if (profile) {
+        g_profile = profile;
+    } else {
+        *is_valid = false;
         g_profile = getProfile_STEM_125_14_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
     }
-
-    if (strcmp(model, "stem_122-16sdr_v1.0") == 0) {
-        g_profile = getProfile_STEM_122_16SDR_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
+    if (g_profile) {
+        strcpy(g_profile->boardModelEEPROM, model.c_str());
+        strcpy(g_profile->boardETH_MAC, eth_mac.c_str());
     }
-
-    if (strcmp(model, "stem_122-16sdr_v1.1") == 0) {
-        g_profile = getProfile_STEM_122_16SDR_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_ln_v1.1") == 0) {
-        g_profile = getProfile_STEM_125_14_LN_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_v1.0") == 0) {
-        g_profile = getProfile_STEM_125_14_Z7020_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_ln_v1.1") == 0) {
-        g_profile = getProfile_STEM_125_14_Z7020_LN_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_4in_v1.0") == 0) {
-        g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_4in_v1.2") == 0) {
-        g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_2();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_4in_v1.3") == 0) {
-        g_profile = getProfile_STEM_125_14_Z7020_4IN_v1_3();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_4in_bo_v1.3") == 0) {
-        g_profile = getProfile_STEM_125_14_Z7020_4IN_BO_v1_3();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_250-12_v1.0") == 0) {
-        g_profile = getProfile_STEM_250_12_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_250-12_v1.1") == 0) {
-        g_profile = getProfile_STEM_250_12_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_250-12_v1.2") == 0) {
-        g_profile = getProfile_STEM_250_12_v1_2();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_250-12_v1.2a") == 0) {
-        g_profile = getProfile_STEM_250_12_v1_2a();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_250-12_v1.2b") == 0) {
-        g_profile = getProfile_STEM_250_12_v1_2b();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_250-12_120") == 0) {
-        g_profile = getProfile_STEM_250_12_120();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_ln_bo_v1.1") == 0) {
-        g_profile = getProfile_STEM_125_14_LN_BO_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_ln_ce1_v1.1") == 0) {
-        g_profile = getProfile_STEM_125_14_LN_CE1_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_ln_ce2_v1.1") == 0) {
-        g_profile = getProfile_STEM_125_14_LN_CE2_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_v2.0") == 0) {  // STEM_125-14_v2.0
-        g_profile = getProfile_STEM_125_14_v2_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_pro_v2.0") == 0) {  // STEM_125-14_Pro_v2.0
-        g_profile = getProfile_STEM_125_14_Pro_v2_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_pro_v1.0") == 0) {  // STEM_125-14_Z7020_Pro_v1.0
-        g_profile = getProfile_STEM_125_14_Z7020_Pro_v1_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_pro_v2.0") == 0) {  // STEM_125-14_Z7020_Pro_v2.0
-        g_profile = getProfile_STEM_125_14_Z7020_Pro_v2_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_ind_v2.0") == 0) {  // STEM_125-14_Ind_v2.0
-        g_profile = getProfile_STEM_125_14_Z7020_Ind_v2_0();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_ll_v1.1") == 0) {  // STEM_125-14_Z7020_LL_v1.1
-        g_profile = getProfile_STEM_125_14_Z7020_LL_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_z7020_ll_v1.2") == 0) {  // STEM_125-14_Z7020_LL_v1.2
-        g_profile = getProfile_STEM_125_14_Z7020_LL_v1_2();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_65-16_ll_v1.1") == 0) {  // STEM_65-16_LL_v1.1
-        g_profile = getProfile_STEM_65_16_Z7020_LL_v1_1();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_65-16_ti_v1.3") == 0) {  // STEM_65-16_TI_v1.3
-        g_profile = getProfile_STEM_65_16_Z7020_TI_v1_3();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    if (strcmp(model, "stem_125-14_ti_v1.3") == 0) {  // STEM_125-14_TI_v1.3
-        g_profile = getProfile_STEM_125_14_Z7020_TI_v1_3();
-        strcpy(g_profile->boardModelEEPROM, modelOrig);
-        if (eth_mac)
-            strcpy(g_profile->boardETH_MAC, eth_mac);
-        return;
-    }
-
-    fprintf(stderr, "[Fatal error] Unknown model \"%s\"", model);
 }
 
 int hp_cmn_Init() {
-    char* buf;
-    char *name, *value;
-    char* model = NULL;
-    char* eth_mac = NULL;
+    static bool initialized = false;
+    static std::string static_model;
+    static std::string static_eth_mac;
+    static bool is_valid = false;
 
-    FILE* fp = fopen("/sys/bus/i2c/devices/0-0050/eeprom", "r");
-    if (!fp) {
+    if (initialized) {
+        hp_checkModel(static_model, static_eth_mac, &g_is_valid);
+        return is_valid ? RP_HP_OK : RP_HP_ERM;
+    }
+
+    std::ifstream eeprom("/sys/bus/i2c/devices/0-0050/eeprom", std::ios::binary);
+    if (!eeprom.is_open()) {
         fprintf(stderr, "[hp_cmn_Init] Error open eeprom: %d\n", errno);
         return RP_HP_ERE;
     }
 
-    if (fseek(fp, 0x1804, SEEK_SET) < 0) {
-        fclose(fp);
-        fprintf(stderr, "[hp_cmn_Init] Error open eeprom\n");
+    eeprom.seekg(0x1804);
+    if (eeprom.fail()) {
+        fprintf(stderr, "[hp_cmn_Init] Error seek eeprom\n");
         return RP_HP_ERE;
     }
 
-    buf = (char*)malloc(LINE_LENGTH);
-    if (!buf) {
-        fclose(fp);
-        return RP_HP_EAL;
-    }
+    std::vector<char> buffer(LINE_LENGTH);
+    eeprom.read(buffer.data(), LINE_LENGTH);
+    size_t bytes_read = eeprom.gcount();
 
-    int size = fread(buf, sizeof(char), LINE_LENGTH, fp);
-    int position = 0;
-    while (position < size) {
-        int slen = strlen(&buf[position]);
-        if (!slen)
-            break;
-        name = &buf[position];
-        value = strchr(name, '=');
-        if (!value) {
-            position += slen + 1;
-            continue;
-        }
-        *value++ = '\0';
-        if (!strlen(value))
-            value = NULL;
-
-        if (!strcmp(name, "hw_rev") && value != NULL) {
-            if (strlen(value) + 1 < 255) {
-                model = (char*)malloc(strlen(value) + 1);
-                if (model)
-                    strcpy(model, value);
-            }
-        }
-
-        if (!strcmp(name, "ethaddr") && value != NULL) {
-            if (strlen(value) + 1 < 20) {
-                eth_mac = (char*)malloc(strlen(value) + 1);
-                if (eth_mac)
-                    strcpy(eth_mac, value);
-            }
-        }
-        position += slen + 1;
-    }
-
-    fclose(fp);
-    free(buf);
-    if (!model) {
-        if (eth_mac)
-            free(eth_mac);
+    if (bytes_read == 0) {
         return RP_HP_ERM;
     }
-    hp_checkModel(model, eth_mac);
-    if (model)
-        free(model);
-    if (eth_mac)
-        free(eth_mac);
+
+    std::string model;
+    std::string eth_mac;
+
+    // Парсим данные
+    size_t position = 0;
+    while (position < bytes_read) {
+        std::string line(&buffer[position]);
+        if (line.empty()) {
+            break;
+        }
+
+        size_t equal_pos = line.find('=');
+        if (equal_pos == std::string::npos) {
+            position += line.length() + 1;
+            continue;
+        }
+
+        std::string name = line.substr(0, equal_pos);
+        std::string value = line.substr(equal_pos + 1);
+
+        if (value.empty()) {
+            position += line.length() + 1;
+            continue;
+        }
+
+        if (name == "hw_rev" && value.length() < 255) {
+            model = value;
+            static_model = value;
+        } else if (name == "ethaddr" && value.length() < 20) {
+            eth_mac = value;
+            static_eth_mac = value;
+        }
+
+        position += line.length() + 1;
+    }
+
+    eeprom.close();
+    initialized = true;
+    is_valid = !model.empty();
+
+    if (model.empty()) {
+        return RP_HP_ERM;
+    }
+
+    hp_checkModel(model, eth_mac, &g_is_valid);
+
     return RP_HP_OK;
 }
 
 profiles_t* hp_cmn_GetLoadedProfile() {
     return g_profile;
+}
+
+bool hp_cmn_isEppromValid() {
+    return g_is_valid;
 }
 
 const char* getGainName(rp_HPADCGainMode_t mode) {
@@ -584,8 +408,8 @@ const char* getGainName(rp_HPADCGainMode_t mode) {
             return "HIGH";
         default:
             return "ERROR GAIN MODE";
-            break;
     }
+    return "ERROR GAIN MODE";
 }
 
 int hp_cmn_Print(profiles_t* p) {
@@ -607,7 +431,6 @@ int hp_cmn_Print(profiles_t* p) {
     fprintf(stdout, "FAST ADC\n");
     fprintf(stdout, "\t* Rate: %u\n", p->fast_adc_rate);
     fprintf(stdout, "\t* Filter present: %u\n", p->is_fast_adc_filter_present);
-    fprintf(stdout, "\t* Spectrum resolution: %u\n", p->fast_adc_spectrum_resolution);
     fprintf(stdout, "\t* Count: %u\n", p->fast_adc_count_channels);
     fprintf(stdout, "\t* Is signed: %u\n", p->fast_adc_is_sign);
     fprintf(stdout, "\t* Bits: %u\n", p->fast_adc_bits);
@@ -670,9 +493,18 @@ int hp_cmn_Print(profiles_t* p) {
     fprintf(stdout, "\nE3 Is present: %u\n", p->is_E3_present);
     fprintf(stdout, "E3 High speed GPIO support: %d\n", p->is_E3_high_speed_gpio);
     fprintf(stdout, "E3 High speed GPIO rate: %u\n", p->E3_high_speed_gpio_rate);
-    fprintf(stdout, "E3 QSPI for eMMC support: %d\n", p->is_E3_high_speed_gpio);
+    fprintf(stdout, "E3 QSPI for eMMC support: %d\n", p->is_E3_mmc_qspi);
 
     fprintf(stdout, "Support for calibration on FPGA: %d\n", p->is_calib_in_fpga);
+    fprintf(stdout, "Fast ADC 16-bit data mode support (v0.94): %d\n", p->is_fast_adc_16b_mode);
+    fprintf(stdout, "X-Streaming mode (stream_app): %d\n", p->is_xstreaming);
+
+    fprintf(stdout, "Minimum allowable frequency for the generator: %d\n", p->gen_min_speed);
+    fprintf(stdout, "Maximum allowable frequency for the generator: %d\n", p->gen_max_speed);
+
+    fprintf(stdout, "\t* Spectrum resolution: %u\n", p->fast_adc_spectrum_resolution);
+    fprintf(stdout, "\t* ADC low-pass filter: %u\n", p->fast_adc_low_pass_filter);
+    fprintf(stdout, "\t* DAC low-pass filter: %u\n", p->fast_dac_low_pass_filter);
 
     fprintf(stdout, "***********************************************************************\n");
     return RP_HP_OK;
@@ -688,73 +520,48 @@ void hp_cmn_PrintKeyHelp() {
 }
 
 profiles_t* hp_cmn_getProfile(rp_HPeModels_t model) {
-    switch (model) {
-        case STEM_125_10_v1_0:
-            return getProfile_STEM_125_10_v1_0();
-        case STEM_125_14_v1_0:
-            return getProfile_STEM_125_14_v1_0();
-        case STEM_125_14_v1_1:
-            return getProfile_STEM_125_14_v1_1();
-        case STEM_122_16SDR_v1_0:
-            return getProfile_STEM_122_16SDR_v1_0();
-        case STEM_122_16SDR_v1_1:
-            return getProfile_STEM_122_16SDR_v1_1();
-        case STEM_125_14_LN_v1_1:
-            return getProfile_STEM_125_14_LN_v1_1();
-        case STEM_125_14_Z7020_v1_0:
-            return getProfile_STEM_125_14_Z7020_v1_0();
-        case STEM_125_14_Z7020_LN_v1_1:
-            return getProfile_STEM_125_14_Z7020_LN_v1_1();
-        case STEM_125_14_Z7020_4IN_v1_0:
-            return getProfile_STEM_125_14_Z7020_4IN_v1_0();
-        case STEM_125_14_Z7020_4IN_v1_2:
-            return getProfile_STEM_125_14_Z7020_4IN_v1_2();
-        case STEM_125_14_Z7020_4IN_v1_3:
-            return getProfile_STEM_125_14_Z7020_4IN_v1_3();
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            return getProfile_STEM_125_14_Z7020_4IN_BO_v1_3();
-        case STEM_250_12_v1_0:
-            return getProfile_STEM_250_12_v1_0();
-        case STEM_250_12_v1_1:
-            return getProfile_STEM_250_12_v1_1();
-        case STEM_250_12_v1_2:
-            return getProfile_STEM_250_12_v1_2();
-        case STEM_250_12_120:
-            return getProfile_STEM_250_12_v1_2a();
-        case STEM_250_12_v1_2a:
-            return getProfile_STEM_250_12_v1_2b();
-        case STEM_250_12_v1_2b:
-            return getProfile_STEM_250_12_120();
-        case STEM_125_14_LN_BO_v1_1:
-            return getProfile_STEM_125_14_LN_BO_v1_1();
-        case STEM_125_14_LN_CE1_v1_1:
-            return getProfile_STEM_125_14_LN_CE1_v1_1();
-        case STEM_125_14_LN_CE2_v1_1:
-            return getProfile_STEM_125_14_LN_CE2_v1_1();
-        case STEM_125_14_v2_0:
-            return getProfile_STEM_125_14_v2_0();
-        case STEM_125_14_Pro_v2_0:
-            return getProfile_STEM_125_14_Pro_v2_0();
-        case STEM_125_14_Z7020_Pro_v2_0:
-            return getProfile_STEM_125_14_Z7020_Pro_v1_0();
-        case STEM_125_14_Z7020_Ind_v2_0:
-            return getProfile_STEM_125_14_Z7020_Pro_v2_0();
-        case STEM_125_14_Z7020_Pro_v1_0:
-            return getProfile_STEM_125_14_Z7020_Ind_v2_0();
-        case STEM_125_14_Z7020_LL_v1_1:
-            return getProfile_STEM_125_14_Z7020_LL_v1_1();
-        case STEM_65_16_Z7020_LL_v1_1:
-            return getProfile_STEM_125_14_Z7020_LL_v1_2();
-        case STEM_125_14_Z7020_LL_v1_2:
-            return getProfile_STEM_65_16_Z7020_LL_v1_1();
-        case STEM_125_14_Z7020_TI_v1_3:
-            return getProfile_STEM_125_14_Z7020_TI_v1_3();
-        case STEM_65_16_Z7020_TI_v1_3:
-            return getProfile_STEM_65_16_Z7020_TI_v1_3();
-        default:
-            return NULL;
-    }
+    using Getter = profiles_t* (*)();
+    static const std::unordered_map<rp_HPeModels_t, Getter> map = {
+        {STEM_125_10_v1_0, getProfile_STEM_125_10_v1_0},
+        {STEM_125_14_v1_0, getProfile_STEM_125_14_v1_0},
+        {STEM_125_14_v1_1, getProfile_STEM_125_14_v1_1},
+        {STEM_122_16SDR_v1_0, getProfile_STEM_122_16SDR_v1_0},
+        {STEM_122_16SDR_v1_1, getProfile_STEM_122_16SDR_v1_1},
+        {STEM_125_14_LN_v1_1, getProfile_STEM_125_14_LN_v1_1},
+        {STEM_125_14_Z7020_v1_0, getProfile_STEM_125_14_Z7020_v1_0},
+        {STEM_125_14_Z7020_LN_v1_1, getProfile_STEM_125_14_Z7020_LN_v1_1},
+        {STEM_125_14_Z7020_4IN_v1_0, getProfile_STEM_125_14_Z7020_4IN_v1_0},
+        {STEM_125_14_Z7020_4IN_v1_2, getProfile_STEM_125_14_Z7020_4IN_v1_2},
+        {STEM_125_14_Z7020_4IN_v1_3, getProfile_STEM_125_14_Z7020_4IN_v1_3},
+        {STEM_250_12_v1_0, getProfile_STEM_250_12_v1_0},
+        {STEM_250_12_v1_1, getProfile_STEM_250_12_v1_1},
+        {STEM_250_12_v1_2, getProfile_STEM_250_12_v1_2},
+        {STEM_250_12_120, getProfile_STEM_250_12_120},
+        {STEM_250_12_v1_2a, getProfile_STEM_250_12_v1_2a},
+        {STEM_250_12_v1_2b, getProfile_STEM_250_12_v1_2b},
+        {STEM_125_14_LN_BO_v1_1, getProfile_STEM_125_14_LN_BO_v1_1},
+        {STEM_125_14_LN_CE1_v1_1, getProfile_STEM_125_14_LN_CE1_v1_1},
+        {STEM_125_14_LN_CE2_v1_1, getProfile_STEM_125_14_LN_CE2_v1_1},
+        {STEM_125_14_v2_0, getProfile_STEM_125_14_v2_0},
+        {STEM_125_14_Pro_v2_0, getProfile_STEM_125_14_Pro_v2_0},
+        {STEM_125_14_Z7020_Pro_v2_0, getProfile_STEM_125_14_Z7020_Pro_v2_0},
+        {STEM_125_14_Z7020_Ind_v2_0, getProfile_STEM_125_14_Z7020_Ind_v2_0},
+        {STEM_125_14_Z7020_Pro_v1_0, getProfile_STEM_125_14_Z7020_Pro_v1_0},
+        {STEM_125_14_Z7020_LL_v1_1, getProfile_STEM_125_14_Z7020_LL_v1_1},
+        {STEM_65_16_Z7020_LL_v1_1, getProfile_STEM_65_16_Z7020_LL_v1_1},
+        {STEM_125_14_Z7020_LL_v1_2, getProfile_STEM_125_14_Z7020_LL_v1_2},
+        {STEM_125_14_Z7020_TI_v1_3, getProfile_STEM_125_14_Z7020_TI_v1_3},
+        {STEM_65_16_Z7020_TI_v1_3, getProfile_STEM_65_16_Z7020_TI_v1_3},
+        {STEM_125_14_Z7020_4IN_BO_v1_3, getProfile_STEM_125_14_Z7020_4IN_BO_v1_3},
+        {STEM_125_14_BO_v2_0, getProfile_STEM_125_14_BO_v2_0},
+        {STEM_125_14_Pro_BO_v2_0, getProfile_STEM_125_14_Pro_BO_v2_0},
+        {STEM_125_14_Z7020_Pro_BO_v2_0, getProfile_STEM_125_14_Z7020_Pro_BO_v2_0},
+    };
+
+    auto it = map.find(model);
+    return (it != map.end()) ? it->second() : nullptr;
 }
+
 std::string float_to_string_trim(float num) {
     std::string s = std::to_string(num);
     s.erase(s.find_last_not_of('0') + 1, std::string::npos);
@@ -765,106 +572,97 @@ std::string float_to_string_trim(float num) {
 }
 
 int hp_cmn_GetFPGAVersion(rp_HPeModels_t model, const char** _no_free_value) {
-    switch (model) {
-        case STEM_125_10_v1_0:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_v1_0:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_BO_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_CE1_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_125_14_LN_CE2_v1_1:
-            *_no_free_value = "z10_125";
-            break;
-        case STEM_122_16SDR_v1_0:
-            *_no_free_value = "z20_122";
-            break;
-        case STEM_122_16SDR_v1_1:
-            *_no_free_value = "z20_122";
-            break;
-        case STEM_125_14_Z7020_v1_0:
-            *_no_free_value = "z20_125";
-            break;
-        case STEM_125_14_Z7020_LN_v1_1:
-            *_no_free_value = "z20_125";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_0:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_2:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_v1_3:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            *_no_free_value = "z20_125_4ch";
-            break;
-        case STEM_250_12_v1_0:
-            *_no_free_value = "z20_250_1_0";
-            break;
-        case STEM_250_12_v1_1:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2a:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_v1_2b:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_250_12_120:
-            *_no_free_value = "z20_250";
-            break;
-        case STEM_125_14_v2_0:
-            *_no_free_value = "z10_125_v2";
-            break;
-        case STEM_125_14_Pro_v2_0:
-            *_no_free_value = "z10_125_pro_v2";
-            break;
-        case STEM_125_14_Z7020_Pro_v1_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_Pro_v2_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_Ind_v2_0:
-            *_no_free_value = "z20_125_v2";
-            break;
-        case STEM_125_14_Z7020_LL_v1_1:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_65_16_Z7020_LL_v1_1:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_125_14_Z7020_LL_v1_2:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_65_16_Z7020_TI_v1_3:
-            *_no_free_value = "z20_125_ll";
-            break;
-        case STEM_125_14_Z7020_TI_v1_3:
-            *_no_free_value = "z20_125_ll";
-            break;
-        default:
-            *_no_free_value = "";
-            return RP_HP_EMU;
-            break;
+    static const std::unordered_map<rp_HPeModels_t, const char*> map = {
+        {STEM_125_10_v1_0, "z10_125"},
+        {STEM_125_14_v1_0, "z10_125"},
+        {STEM_125_14_v1_1, "z10_125"},
+        {STEM_125_14_LN_v1_1, "z10_125"},
+        {STEM_125_14_LN_BO_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE1_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE2_v1_1, "z10_125"},
+        {STEM_122_16SDR_v1_0, "z20_122"},
+        {STEM_122_16SDR_v1_1, "z20_122"},
+        {STEM_125_14_Z7020_v1_0, "z20_125"},
+        {STEM_125_14_Z7020_LN_v1_1, "z20_125"},
+        {STEM_125_14_Z7020_4IN_v1_0, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_2, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_3, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_BO_v1_3, "z20_125_4ch"},
+        {STEM_250_12_v1_0, "z20_250_1_0"},
+        {STEM_250_12_v1_1, "z20_250"},
+        {STEM_250_12_v1_2, "z20_250"},
+        {STEM_250_12_v1_2a, "z20_250"},
+        {STEM_250_12_v1_2b, "z20_250"},
+        {STEM_250_12_120, "z20_250"},
+        {STEM_125_14_v2_0, "z10_125_v2"},
+        {STEM_125_14_BO_v2_0, "z10_125_v2"},
+        {STEM_125_14_Pro_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Pro_BO_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Z7020_Pro_v1_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_BO_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Ind_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_65_16_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_125_14_Z7020_LL_v1_2, "z20_125_ll"},
+        {STEM_125_14_Z7020_TI_v1_3, "z20_125_ll"},
+        {STEM_65_16_Z7020_TI_v1_3, "z20_125_ll"},
+    };
+
+    auto it = map.find(model);
+    if (it != map.end()) {
+        *_no_free_value = it->second;
+        return RP_HP_OK;
     }
-    return RP_HP_OK;
+    *_no_free_value = "";
+    return RP_HP_EMU;
+}
+
+int hp_cmn_GetDTSVersion(rp_HPeModels_t model, const char** _no_free_value) {
+    static const std::unordered_map<rp_HPeModels_t, const char*> map = {
+        {STEM_125_10_v1_0, "z10_125"},
+        {STEM_125_14_v1_0, "z10_125"},
+        {STEM_125_14_v1_1, "z10_125"},
+        {STEM_125_14_LN_v1_1, "z10_125"},
+        {STEM_125_14_LN_BO_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE1_v1_1, "z10_125"},
+        {STEM_125_14_LN_CE2_v1_1, "z10_125"},
+        {STEM_122_16SDR_v1_0, "z20_122"},
+        {STEM_122_16SDR_v1_1, "z20_122"},
+        {STEM_125_14_Z7020_v1_0, "z20_125"},
+        {STEM_125_14_Z7020_LN_v1_1, "z20_125"},
+        {STEM_125_14_Z7020_4IN_v1_0, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_2, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_v1_3, "z20_125_4ch"},
+        {STEM_125_14_Z7020_4IN_BO_v1_3, "z20_125_4ch"},
+        {STEM_250_12_v1_0, "z20_250_1_0"},
+        {STEM_250_12_v1_1, "z20_250"},
+        {STEM_250_12_v1_2, "z20_250"},
+        {STEM_250_12_v1_2a, "z20_250a"},
+        {STEM_250_12_v1_2b, "z20_250"},
+        {STEM_250_12_120, "z20_250"},
+        {STEM_125_14_v2_0, "z10_125_v2"},
+        {STEM_125_14_BO_v2_0, "z10_125_v2"},
+        {STEM_125_14_Pro_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Pro_BO_v2_0, "z10_125_pro_v2"},
+        {STEM_125_14_Z7020_Pro_v1_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Pro_BO_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_Ind_v2_0, "z20_125_v2"},
+        {STEM_125_14_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_65_16_Z7020_LL_v1_1, "z20_125_ll"},
+        {STEM_125_14_Z7020_LL_v1_2, "z20_125_ll"},
+        {STEM_125_14_Z7020_TI_v1_3, "z20_125_ll"},
+        {STEM_65_16_Z7020_TI_v1_3, "z20_125_ll"},
+    };
+
+    auto it = map.find(model);
+    if (it != map.end()) {
+        *_no_free_value = it->second;
+        return RP_HP_OK;
+    }
+    *_no_free_value = "";
+    return RP_HP_EMU;
 }
 
 std::string getValueForKey(rp_HPeModels_t model, std::string key) {
@@ -1069,6 +867,14 @@ std::string getValueForKey(rp_HPeModels_t model, std::string key) {
         return std::to_string(p->fast_adc_spectrum_resolution);
     }
 
+    if (key == "adc_low_pass") {
+        return std::to_string(p->fast_adc_low_pass_filter);
+    }
+
+    if (key == "dac_low_pass") {
+        return std::to_string(p->fast_dac_low_pass_filter);
+    }
+
     if (key == "is_daisy_clock_sync") {
         return std::to_string(p->is_daisy_chain_clock_sync);
     }
@@ -1111,6 +917,22 @@ std::string getValueForKey(rp_HPeModels_t model, std::string key) {
 
     if (key == "is_fpga_calib") {
         return std::to_string(p->is_calib_in_fpga);
+    }
+
+    if (key == "is_fast_adc_16b_mode") {
+        return std::to_string(p->is_fast_adc_16b_mode);
+    }
+
+    if (key == "is_xstreaming") {
+        return std::to_string(p->is_xstreaming);
+    }
+
+    if (key == "gen_min_speed") {
+        return std::to_string(p->gen_min_speed);
+    }
+
+    if (key == "gen_max_speed") {
+        return std::to_string(p->gen_max_speed);
     }
 
     return "";
@@ -1161,8 +983,8 @@ void hp_cmn_PrintPivotTable(char* _keys) {
         keys.clear();
         uint32_t index = 2;
         while (table_keys_help[index] != NULL) {
-            const char* key = table_keys_help[index++];
-            index++;
+            const char* key = table_keys_help[index];
+            index += 2;
             keys.push_back(key);
         }
     }
@@ -1190,7 +1012,7 @@ void hp_cmn_PrintPivotTable(char* _keys) {
         cols.push_back("name");
     }
 
-    for (int i = 0; i <= STEM_65_16_Z7020_TI_v1_3; i++) {
+    for (int i = 0; i < STEM_MODEL_COUNT; i++) {
         auto s = getValueForKey((rp_HPeModels_t)i, "name");
         values["name"][(rp_HPeModels_t)i] = s;
         if (values_max_len["name"] < s.length())
@@ -1203,7 +1025,7 @@ void hp_cmn_PrintPivotTable(char* _keys) {
             cols.push_back(key);
         }
 
-        for (int i = 0; i <= STEM_65_16_Z7020_TI_v1_3; i++) {
+        for (int i = 0; i < STEM_MODEL_COUNT; i++) {
             auto s = getValueForKey((rp_HPeModels_t)i, key);
             values[key][(rp_HPeModels_t)i] = s;
             if (values_max_len[key] < s.length())
@@ -1231,7 +1053,7 @@ void hp_cmn_PrintPivotTable(char* _keys) {
     printf("\n");
     printf("%s\n", tab_split.c_str());
 
-    for (int i = 0; i <= STEM_65_16_Z7020_TI_v1_3; i++) {
+    for (int i = 0; i < STEM_MODEL_COUNT; i++) {
         skip_first = false;
         for (const auto& col : cols) {
             if (skip_first) {
@@ -1246,22 +1068,93 @@ void hp_cmn_PrintPivotTable(char* _keys) {
     }
 }
 
-int hp_cmn_GetADCBaseRateFromConfig(rp_HPeModels_t model) {
-    std::ifstream file(ADC_BASE_RATE_PATH + std::to_string((int)model) + ".conf");
+int hp_cmn_GetFromConfig(rp_HPeModels_t model, const std::string& path, bool& noerror) {
+    static auto home_path = hp_cmn_GetHomeDirectory();
+    std::ifstream file(home_path + path + std::to_string((int)model) + ".conf");
     int value = 0;
     if (file.is_open()) {
         file >> value;
         file.close();
+        noerror = true;
+    } else {
+        noerror = false;
     }
     return value;
 }
 
-int hp_cmn_GetDACBaseRateFromConfig(rp_HPeModels_t model) {
-    std::ifstream file(DAC_BASE_RATE_PATH + std::to_string((int)model) + ".conf");
-    int value = 0;
-    if (file.is_open()) {
-        file >> value;
-        file.close();
+int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value) {
+    std::string path;
+
+    if (strcmp(key, "fast_adc_rate") == 0)
+        path = ADC_BASE_RATE_PATH;
+    if (strcmp(key, "fast_dac_rate") == 0)
+        path = DAC_BASE_RATE_PATH;
+    if (strcmp(key, "gen_min_speed") == 0)
+        path = GEN_MIN_RATE_PATH;
+    if (strcmp(key, "gen_max_speed") == 0)
+        path = GEN_MAX_RATE_PATH;
+    if (strcmp(key, "spec_max_rate") == 0)
+        path = SPEC_ADC_PATH;
+    if (strcmp(key, "adc_low_pass") == 0)
+        path = ADC_LP_FILTER_PATH;
+    if (strcmp(key, "dac_low_pass") == 0)
+        path = DAC_LP_FILTER_PATH;
+
+    if (path == "")
+        return RP_HP_EU;
+
+    static auto home_path = hp_cmn_GetHomeDirectory();
+    if (!createDirectory(home_path + SETTINGS_PATH)) {
+        return RP_HP_EU;
     }
-    return value;
+    std::ofstream file(home_path + path + std::to_string((int)model) + ".conf");
+    if (file.is_open()) {
+        file << value;
+        file.close();
+        return RP_HP_OK;
+    }
+    return RP_HP_EU;
+}
+
+int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key) {
+    std::string path;
+
+    if (strcmp(key, "fast_adc_rate") == 0)
+        path = ADC_BASE_RATE_PATH;
+    if (strcmp(key, "fast_dac_rate") == 0)
+        path = DAC_BASE_RATE_PATH;
+    if (strcmp(key, "gen_min_speed") == 0)
+        path = GEN_MIN_RATE_PATH;
+    if (strcmp(key, "gen_max_speed") == 0)
+        path = GEN_MAX_RATE_PATH;
+    if (strcmp(key, "spec_max_rate") == 0)
+        path = SPEC_ADC_PATH;
+    if (strcmp(key, "adc_low_pass") == 0)
+        path = ADC_LP_FILTER_PATH;
+    if (strcmp(key, "dac_low_pass") == 0)
+        path = DAC_LP_FILTER_PATH;
+
+    if (path == "")
+        return RP_HP_EU;
+
+    static auto home_path = hp_cmn_GetHomeDirectory();
+    std::string full_path = home_path + path + std::to_string((int)model) + ".conf";
+
+    if (std::remove(full_path.c_str()) == 0) {
+        return RP_HP_OK;
+    }
+
+    return RP_HP_EU;
+}
+
+void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_HPeModels_t boardModel) {
+    bool noerror = true;
+    int rate = hp_cmn_GetFromConfig(boardModel, path, noerror);
+    target = (noerror) ? rate : original;
+}
+
+auto createDirectory(const std::string& _path) -> bool {
+    std::error_code ec;
+    std::filesystem::create_directories(_path, ec);
+    return !ec;
 }

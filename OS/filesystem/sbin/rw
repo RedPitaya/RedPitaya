@@ -5,4 +5,5 @@
 # Mount SD card read-write.
 #
 
-mount -o rw,remount $PATH_REDPITAYA
+mount -o rw,remount $PATH_REDPITAYA 2> /dev/null
+systemctl daemon-reload

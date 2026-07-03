@@ -26,7 +26,8 @@ CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::st
       m_isRun(false),
       m_verbose(verbose),
       m_blockSize(blockSize),
-      m_remoteClientMode(false) {
+      m_remoteClientMode(false),
+      m_memoryStream(false) {
     auto type = CStreamSettings::DataFormat::TDMS;
     switch (m_fileType) {
         case DACStream_FileType::TDMS_TYPE:
@@ -57,7 +58,8 @@ CDACStreamingManager::CDACStreamingManager(std::string _host, bool verbose)
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
       m_verbose(verbose),
-      m_remoteClientMode(false) {}
+      m_remoteClientMode(false),
+      m_memoryStream(false) {}
 
 CDACStreamingManager::Ptr CDACStreamingManager::Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count,
                                                        uint32_t blockSize, bool verbose) {
@@ -78,7 +80,8 @@ CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uin
       m_isRun(false),
       m_verbose(verbose),
       m_blockSize(blockSize),
-      m_remoteClientMode(false) {
+      m_remoteClientMode(false),
+      m_memoryStream(false) {
     CReaderController::DataIn* data = new CReaderController::DataIn();
     data->ch[0] = ch[0];
     data->ch[1] = ch[1];
@@ -87,6 +90,36 @@ CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uin
     data->bits = bytesPerSamp * 8;
     data->readPosition = 0;
     m_readerController = new CReaderController(data, m_repeat, m_rep_count, blockSize);
+}
+
+CDACStreamingManager::Ptr CDACStreamingManager::Create(
+	dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose, CReaderController::MemoryStreamDataCallback_t callback)
+{
+	return std::make_shared<CDACStreamingManager>(channels, bytesPerSamp, blockSize, verbose, callback);
+}
+
+CDACStreamingManager::CDACStreamingManager(
+	dac_channels_t channels, uint8_t bytesPerSamp, uint32_t blockSize, bool verbose, CReaderController::MemoryStreamDataCallback_t callback)
+	: m_use_local_file(true)
+	, m_fileType()
+	, m_host("")
+	, m_filePath("")
+	, m_asionet(nullptr)
+	, m_repeat(CStreamSettings::DACRepeat::DAC_REP_INF)
+	, m_rep_count(0)
+	, m_readerController(nullptr)
+	, m_buffer(DataLib::CBuffersCached::create())
+	, m_isRun(false)
+	, m_verbose(verbose)
+	, m_blockSize(blockSize)
+	, m_remoteClientMode(false)
+	, m_memoryStream(true)
+{
+	CReaderController::MemoryStreamSink *sink = new CReaderController::MemoryStreamSink();
+	sink->channels = channels;
+	sink->memoryStreamBits = bytesPerSamp * 8;
+	sink->callback = callback;
+	m_readerController = new CReaderController(sink, blockSize);
 }
 
 CDACStreamingManager::~CDACStreamingManager() {
@@ -143,21 +176,21 @@ auto CDACStreamingManager::stop() -> void {
     }
 }
 
-auto CDACStreamingManager::getChannels(bool* ch1Active, bool* ch2Active) -> bool {
-    if (m_use_local_file) {
-        m_readerController->getChannels(ch1Active, ch2Active);
-        return true;
-    }
-    *ch1Active = 0;
-    *ch2Active = 0;
-    return false;
+auto CDACStreamingManager::getChannels(dac_channels_t &dac) -> bool
+{
+	if (m_use_local_file) {
+		m_readerController->getChannels(dac);
+		return true;
+	}
+	dac.reset();
+	return false;
 }
 
 auto CDACStreamingManager::getBuffer() -> const DataLib::CDataBuffersPackDMA::Ptr {
-    auto buffer = m_buffer->readBuffer();
-    if (buffer)
-        buffer->getInfoFromHeaderDAC();
-    return buffer;
+	auto buffer = m_buffer->readBuffer();
+	if (buffer)
+		buffer->getInfoFromHeaderDAC();
+	return buffer;
 }
 
 auto CDACStreamingManager::unlockBuffer() -> void {
@@ -193,7 +226,7 @@ auto CDACStreamingManager::threadFunc() -> void {
         if (m_readerController) {
             size_t chSizes[2] = {0, 0};
             m_readerController->getChannelsSize(&chSizes[0], &chSizes[1]);
-            if (m_blockSize >= (chSizes[0] + chSizes[1])) {
+            if (m_blockSize >= (chSizes[0] + chSizes[1]) && !m_memoryStream) {
                 onePackMode = true;
                 m_readerController->disableRepeatMode();  // Disable for one pack mode
             }
@@ -218,20 +251,26 @@ auto CDACStreamingManager::threadFunc() -> void {
                     if (data.size[0] != 0 || data.size[1] != 0) {
                         if (data.size[0] != 0) {
                             auto ch1 = pack->getBuffer(DataLib::CH1);
-                            if (ch1->getDataLenght() != data.size[0]) {
-                                FATAL("DMA CH1 buffer has diffrent size src: %zu dst: %zu", data.size[0], ch1->getDataLenght())
-                            }
-                            memcpy_neon(ch1->getMappedDataMemory(), data.ch[0], data.size[0]);
-                            DataLib::setHeaderDAC(ch1, 1, data.real_size[0], onePackMode, repeatCount == -1, repeatCount, data.bits);
+							if (ch1 == nullptr) {
+								FATAL("DMA CH1 is null")
+							}
+							if (ch1->getDataLenght() != data.size[0]) {
+								FATAL("DMA CH1 buffer has diffrent size src: %zu dst: %zu", data.size[0], ch1->getDataLenght())
+							}
+							memcpy(ch1->getMappedDataMemory(), data.ch[0], data.size[0]);
+							DataLib::setHeaderDAC(ch1, 1, data.real_size[0], onePackMode, repeatCount == -1, repeatCount, data.bits);
                         }
                         if (data.size[1] != 0) {
                             auto ch2 = pack->getBuffer(DataLib::CH2);
-                            if (ch2->getDataLenght() != data.size[1]) {
-                                FATAL("DMA CH2 buffer has diffrent size src: %zu dst: %zu", data.size[1], ch2->getDataLenght())
-                            }
-                            memcpy_neon(ch2->getMappedDataMemory(), data.ch[1], data.size[1]);
-                            DataLib::setHeaderDAC(ch2, 2, data.real_size[1], onePackMode, repeatCount == -1, repeatCount, data.bits);
-                        }
+							if (ch2 == nullptr) {
+								FATAL("DMA CH2 is null")
+							}
+							if (ch2->getDataLenght() != data.size[1]) {
+								FATAL("DMA CH2 buffer has diffrent size src: %zu dst: %zu", data.size[1], ch2->getDataLenght())
+							}
+							memcpy(ch2->getMappedDataMemory(), data.ch[1], data.size[1]);
+							DataLib::setHeaderDAC(ch2, 2, data.real_size[1], onePackMode, repeatCount == -1, repeatCount, data.bits);
+						}
                         m_buffer->unlockBufferWrite();
                     }
                     if (res != CReaderController::BR_OK) {

@@ -28,26 +28,24 @@ std::vector<std::thread> dac_clients;
 auto stopDACStreaming() -> void;
 auto stopDACStreaming(std::string host) -> void;
 
-auto getActiveChannels(DACSettingsClient conf) -> int {
-    auto file_type = CDACStreamingManager::WAV_TYPE;
+auto getActiveChannels(DACSettingsClient conf) -> dac_channels_t
+{
+	auto file_type = CDACStreamingManager::WAV_TYPE;
 
-    switch (conf.file_type) {
-        case CStreamSettings::DataFormat::TDMS:
-            file_type = CDACStreamingManager::TDMS_TYPE;
-            break;
-        case CStreamSettings::DataFormat::WAV:
-            file_type = CDACStreamingManager::WAV_TYPE;
-            break;
-        default:
-            return 0;
-    }
-
-    auto x = CDACStreamingManager::Create(file_type, conf.dac_file, CStreamSettings::DACRepeat::DAC_REP_OFF, 0, 0, false);
-    bool chActive[2] = {false, false};
-    if (!x->getChannels(&chActive[0], &chActive[1])) {
-        return 0;
-    }
-    return (int)chActive[0] + (int)chActive[1];
+	switch (conf.file_type) {
+		case CStreamSettings::DataFormat::TDMS:
+			file_type = CDACStreamingManager::TDMS_TYPE;
+			break;
+		case CStreamSettings::DataFormat::WAV:
+			file_type = CDACStreamingManager::WAV_TYPE;
+			break;
+		default:
+			return {};
+	}
+	dac_channels_t ac;
+	auto x = CDACStreamingManager::Create(file_type, conf.dac_file, CStreamSettings::DACRepeat::DAC_REP_OFF, 0, 0, false);
+	x->getChannels(ac);
+	return ac;
 }
 
 auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
@@ -93,18 +91,19 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
     g_dac_manger[conf.host] = CDACStreamingManager::Create(file_type, conf.dac_file, rep_mode, dac_rep, blockSize, conf.verbous);
     g_dac_manger[conf.host]->setRemoteClientMode(true);
 
-    bool chActive[2] = {false, false};
-    if (!g_dac_manger[conf.host]->getChannels(&chActive[0], &chActive[1])) {
-        FATAL("Incorrect mode")
-    }
-    auto activeChannels = (int)chActive[0] + (int)chActive[1];
+	dac_channels_t chActive;
+	if (!g_dac_manger[conf.host]->getChannels(chActive)) {
+		FATAL("Incorrect mode")
+	}
 
-    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_DAC, blocks, activeChannels);
-    g_dac_manger[conf.host]->getBufferManager()->generateBuffersEmpty(activeChannels, memoryManager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
-    g_dac_manger[conf.host]->getBufferManager()->initHeadersDAC(activeChannels);
-    TRACE_SHORT("Reserved blocks %d", reserved)
+	auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_DAC, blocks, chActive.count());
+	g_dac_manger[conf.host]->getBufferManager()->generateBuffersEmptyDAC(chActive,
+																		 memoryManager->getRegions(uio_lib::MM_DAC),
+																		 DataLib::sizeHeader());
+	g_dac_manger[conf.host]->getBufferManager()->initHeadersDAC(chActive);
+	TRACE_SHORT("Reserved blocks %d", reserved)
 
-    g_dac_manger[conf.host]->notifyStop.connect([=](CDACStreamingManager::NotifyResult res) {
+	g_dac_manger[conf.host]->notifyStop.connect([=](CDACStreamingManager::NotifyResult res) {
         const std::lock_guard lock(g_dac_smutex);
         switch (res) {
             case CDACStreamingManager::NotifyResult::NR_BROKEN: {
@@ -242,39 +241,39 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
         return;
     }
 
-    std::map<std::string, uint8_t> acMap;
-    for (auto& item : cl->getHosts()) {
-        DACSettingsClient conf;
-        conf.host = item;
-        switch (g_dac_soption.streamign_type) {
-            case ClientOpt::StreamingType::TDMS:
-                conf.file_type = CStreamSettings::DataFormat::TDMS;
-                break;
-            case ClientOpt::StreamingType::WAV:
-                conf.file_type = CStreamSettings::DataFormat::WAV;
-                break;
-            default:
-                conf.file_type = CStreamSettings::DataFormat::BIN;
+	std::map<std::string, dac_channels_t> acMap;
+	for (auto &item : cl->getHosts()) {
+		DACSettingsClient conf;
+		conf.host = item;
+		switch (g_dac_soption.streamign_type) {
+			case ClientOpt::StreamingType::TDMS:
+				conf.file_type = CStreamSettings::DataFormat::TDMS;
+				break;
+			case ClientOpt::StreamingType::WAV:
+				conf.file_type = CStreamSettings::DataFormat::WAV;
+				break;
+			default:
+				conf.file_type = CStreamSettings::DataFormat::BIN;
                 return;
-        }
-        conf.dac_file = g_dac_soption.dac_file;
-        conf.dac_repeat = 0;
-        conf.verbous = false;
-        auto ac = getActiveChannels(conf);
-        acMap[item] = ac;
-    }
+		}
+		conf.dac_file = g_dac_soption.dac_file;
+		conf.dac_repeat = 0;
+		conf.verbous = false;
+		auto ac = getActiveChannels(conf);
+		acMap[item] = ac;
+	}
 
-    ClientOpt::Options remote_opt = g_dac_soption;
-    remote_opt.mode = ClientOpt::Mode::REMOTE;
-    remote_opt.remote_mode = ClientOpt::RemoteMode::START_DAC;
-    remote_opt.verbous = g_dac_soption.verbous;
-    std::map<string, StateRunnedHosts> runned_hosts;
-    if (startRemote(cl, remote_opt, &acMap, &runned_hosts)) {
-        for (auto& kv : runned_hosts) {
-            if (kv.second == StateRunnedHosts::TCP) {
-                DACSettingsClient conf;
-                conf.host = kv.first;
-                switch (g_dac_soption.streamign_type) {
+	ClientOpt::Options remote_opt = g_dac_soption;
+	remote_opt.mode = ClientOpt::Mode::REMOTE;
+	remote_opt.remote_mode = ClientOpt::RemoteMode::START_DAC;
+	remote_opt.verbous = g_dac_soption.verbous;
+	std::map<string, StateRunnedHosts> runned_hosts;
+	if (startRemote(cl, remote_opt, &acMap, &runned_hosts)) {
+		for (auto &kv : runned_hosts) {
+			if (kv.second == StateRunnedHosts::TCP) {
+				DACSettingsClient conf;
+				conf.host = kv.first;
+				switch (g_dac_soption.streamign_type) {
                     case ClientOpt::StreamingType::TDMS:
                         conf.file_type = CStreamSettings::DataFormat::TDMS;
                         break;
@@ -289,15 +288,15 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
                 conf.dac_repeat = g_dac_soption.dac_repeat;
                 conf.verbous = g_dac_soption.verbous;
                 dac_clients.push_back(std::thread(dac_runClient, conf, blockSizes[kv.first]));
-            }
-        }
+			}
+		}
 
-        for (std::thread& t : dac_clients) {
-            if (t.joinable()) {
-                t.join();
-            }
-        }
-    }
+		for (std::thread &t : dac_clients) {
+			if (t.joinable()) {
+				t.join();
+			}
+		}
+	}
 }
 
 auto dac_streamingSIGHandler() -> void {

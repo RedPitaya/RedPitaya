@@ -83,7 +83,11 @@ list(APPEND header
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -Wno-unused-result -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wpedantic -Wextra -Wno-unused-parameter -Wno-unused-result -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
@@ -94,14 +98,30 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
-        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+                execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE NUMPY_FOUND
+        )
 
+        if(NOT NUMPY_FOUND EQUAL 0)
+            message(FATAL_ERROR "NumPy not found. Install with: pip3 install numpy")
+        endif()
+
+        message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
+
+        include_directories(
+            ${Python3_INCLUDE_DIRS}
+            ${NUMPY_INCLUDE_DIR}
+        )
+       # include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp_updater.i PROPERTY CPLUSPLUS ON)
- 
+
         SWIG_ADD_LIBRARY(rp_updater_py LANGUAGE python SOURCES src/rp_updater.i ${src})
-        SWIG_LINK_LIBRARIES(rp_updater_py ${PYTHON_LIBRARIES} -lzip -lssl -lcrypto -lcurl -lm -lpthread)
+        SWIG_LINK_LIBRARIES(rp_updater_py ${Python3_LIBRARIES} -lzip -lssl -lcrypto -lcurl -lm -lpthread)
      endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

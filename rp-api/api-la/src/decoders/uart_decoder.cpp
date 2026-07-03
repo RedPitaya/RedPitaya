@@ -100,10 +100,18 @@ void UARTDecoder::setParameters(const UARTParameters& _new_params) {
 }
 
 auto UARTDecoder::setDecoderSettingsUInt(std::string& key, uint32_t value) -> bool {
-    auto opt_tx = m_impl_tx->m_options;
-    auto opt_rx = m_impl_rx->m_options;
-    if (opt_tx.setDecoderSettingsUInt(key, value) && opt_rx.setDecoderSettingsUInt(key, value)) {
-        setParameters(opt_tx);
+    auto opt = m_impl_tx->m_options;
+    if (opt.setDecoderSettingsUInt(key, value)) {
+        setParameters(opt);  // set tx and rx
+        return true;
+    }
+    return false;
+}
+
+auto UARTDecoder::setDecoderSettingsString(std::string& key, std::string& value) -> bool {
+    auto opt = m_impl_tx->m_options;
+    if (opt.setDecoderSettingsString(key, value)) {
+        setParameters(opt);  // set tx and rx
         return true;
     }
     return false;
@@ -113,8 +121,12 @@ auto UARTDecoder::getDecoderSettingsUInt(std::string& key, uint32_t* value) -> b
     return m_impl_tx->m_options.getDecoderSettingsUInt(key, value);
 }
 
+auto UARTDecoder::getDecoderSettingsString(std::string& key, std::string* value) -> bool {
+    return m_impl_tx->m_options.getDecoderSettingsString(key, value);
+}
+
 auto UARTDecoder::getParametersInJSON() -> std::string {
-    return m_impl_rx->m_options.toJson();
+    return m_impl_tx->m_options.toJson();
 }
 
 auto UARTDecoder::setParametersInJSON(const std::string& parameter) -> void {

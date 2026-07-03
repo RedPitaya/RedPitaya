@@ -144,6 +144,50 @@ int generate_printRegset() {
     return cmn_ReleaseClose(fd1, GENERATE_BASE_SIZE, (void**)&generate);
 }
 
+int generate_printChannelData(rp_channel_t channel) {
+    if (!rp_HPIsFastDAC_PresentOrDefault()) {
+        return RP_NOTS;
+    }
+
+    auto channels = rp_HPGetFastADCChannelsCountOrDefault();
+
+    if (channel >= channels) {
+        return RP_NOTS;
+    }
+
+    uint8_t bits = 0;
+    if (rp_HPGetFastDACBits(&bits) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC bits\n");
+        return RP_NOTS;
+    }
+
+    bool is_sign = false;
+    if (rp_HPGetFastDACIsSigned(&is_sign) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC sign value\n");
+        return RP_NOTS;
+    }
+
+    volatile generate_control_t* generate = NULL;
+
+    int fd1 = -1;
+    int ret = cmn_InitMap(GENERATE_BASE_SIZE, GENERATE_BASE_ADDR, (void**)&generate, &fd1);
+    if (ret != RP_OK) {
+        return ret;
+    }
+    int32_t* data_ch[2] = {NULL, NULL};
+    data_ch[0] = (int32_t*)((char*)generate + (CHA_DATA_OFFSET));
+    data_ch[1] = (int32_t*)((char*)generate + (CHB_DATA_OFFSET));
+    volatile int32_t* dataOut = data_ch[channel];
+    for (int i = 0; i < DAC_BUFFER_SIZE; i++) {
+        auto raw = dataOut[i];
+        auto cnt = cmn_CalibCntsSigned(raw, bits, 1, 1, 0);
+        printf("%d\t0x%X\t%d\n", i, raw, cnt);
+    }
+
+    return cmn_ReleaseClose(fd1, GENERATE_BASE_SIZE, (void**)&generate);
+    return RP_OK;
+}
+
 int generate_setOutputDisable(rp_channel_t channel, bool disable) {
     cmn_Debug("generate->config[%d]->setOutputTo0 <- 0x%X", channel, disable ? 1 : 0);
     asg_config_control_u_t conf;
@@ -160,8 +204,8 @@ int generate_getOutputEnabled(rp_channel_t channel, bool* enabled) {
     return RP_OK;
 }
 
-int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq) {
-    double valuef = 65536.0 * (double)frequency / (double)baseFreq * (double)DAC_BUFFER_SIZE;
+int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq, uint32_t buffer_size) {
+    double valuef = 65536.0 * (double)frequency / (double)baseFreq * (double)buffer_size;
     uint32_t value = floor(valuef);
 
     if (channel == RP_CH_1) {
@@ -189,7 +233,7 @@ int generate_setFrequency(rp_channel_t channel, float frequency, float baseFreq)
     return RP_OK;
 }
 
-int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq) {
+int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq, uint32_t buffer_size) {
     uint32_t value = 0;
     if (channel == RP_CH_1) {
         value = generate->counterStep_ch1;
@@ -199,7 +243,7 @@ int generate_getFrequency(rp_channel_t channel, float* frequency, float baseFreq
         value = generate->counterStep_ch2;
     }
 
-    *frequency = (float)round((value * baseFreq) / (65536 * DAC_BUFFER_SIZE));
+    *frequency = (float)round((value * baseFreq) / (65536 * buffer_size));
     return RP_OK;
 }
 
@@ -405,7 +449,7 @@ int generate_ResetChannelSM(rp_channel_t channel) {
     return RP_OK;
 }
 
-int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length) {
+int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_t length, float* dataInFPGA) {
 
     uint8_t bits = 0;
     if (rp_HPGetFastDACBits(&bits) != RP_HP_OK) {
@@ -427,6 +471,7 @@ int generate_writeData(rp_channel_t channel, float* data, int32_t start, uint32_
         start += DAC_BUFFER_SIZE;
     for (int i = start; i < start + DAC_BUFFER_SIZE; i++) {
         dataOut[i % DAC_BUFFER_SIZE] = cmn_convertToCnt(data[i - start], bits, 1.0, is_sign, 1, 0);
+        dataInFPGA[i % DAC_BUFFER_SIZE] = data[i - start];
     }
     return RP_OK;
 }
@@ -691,15 +736,6 @@ int generate_getRuntimeTempAlarm(rp_channel_t channel, bool* state) {
     return RP_OK;
 }
 
-int generate_setUseLastSampleAfter(rp_channel_t channel, bool enable) {
-    cmn_Debug("generate->config[%d]->lastSampleUse <- 0x%X", channel, enable ? 1 : 0);
-    asg_config_control_u_t conf;
-    conf.reg_full = generate->config;
-    conf.reg[channel].lastSampleUse = enable ? 1 : 0;
-    generate->config = conf.reg_full;
-    return RP_OK;
-}
-
 int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float amplitude) {
 
     float fullScaleAmp = 0;
@@ -738,8 +774,40 @@ int generate_setBurstLastValue(rp_channel_t channel, rp_gen_gain_t gain, float a
         return RP_NOTS;
     }
 
+    bool x5_gain = false;
+    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC x5 gain");
+        return RP_NOTS;
+    }
+
+    if (!x5_gain && gain == RP_GAIN_5X) {
+        ERROR_LOG("Can't set gain on unsupported board");
+        return RP_NOTS;
+    }
+
+    double gain_calib;
+    int32_t offset;
+    int ret = 0;
+    switch (gain) {
+        case RP_GAIN_1X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, &gain_calib, &offset);
+            break;
+        case RP_GAIN_5X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, &gain_calib, &offset);
+            break;
+        default:
+            ERROR_LOG("Unknown gain: %d", gain);
+            return RP_EOOR;
+            break;
+    }
+
+    if (ret != RP_HW_CALIB_OK) {
+        ERROR_LOG("Get calibaration: %d", ret);
+        return RP_EOOR;
+    }
+
     /// !!! No calibration required, calibration occurs at the FPGA level
-    uint32_t cnt = cmn_convertToCnt(amplitude, bits, fsBase, is_sign, 1.0, 0);
+    uint32_t cnt = cmn_convertToCnt(amplitude * gain_calib, bits, fsBase, is_sign, 1.0, 0);
     cmn_Debug("[Ch%d] generate->BurstFinalValue_ch <- 0x%X", channel, cnt);
     CHANNEL_ACTION(channel, generate->BurstFinalValue_ch1 = cnt, generate->BurstFinalValue_ch2 = cnt)
     return RP_OK;
@@ -783,8 +851,40 @@ int generate_setInitGenValue(rp_channel_t channel, rp_gen_gain_t gain, float amp
         return RP_NOTS;
     }
 
+    bool x5_gain = false;
+    if (rp_HPGetIsGainDACx5(&x5_gain) != RP_HP_OK) {
+        ERROR_LOG("Can't get fast DAC x5 gain");
+        return RP_NOTS;
+    }
+
+    if (!x5_gain && gain == RP_GAIN_5X) {
+        ERROR_LOG("Can't set gain on unsupported board");
+        return RP_NOTS;
+    }
+
+    double gain_calib;
+    int32_t offset;
+    int ret = 0;
+    switch (gain) {
+        case RP_GAIN_1X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_1X, &gain_calib, &offset);
+            break;
+        case RP_GAIN_5X:
+            ret = rp_CalibGetFastDACCalibValue(convertCh(channel), RP_GAIN_CALIB_5X, &gain_calib, &offset);
+            break;
+        default:
+            ERROR_LOG("Unknown gain: %d", gain);
+            return RP_EOOR;
+            break;
+    }
+
+    if (ret != RP_HW_CALIB_OK) {
+        ERROR_LOG("Get calibaration: %d", ret);
+        return RP_EOOR;
+    }
+
     /// !!! No calibration required, calibration occurs at the FPGA level
-    uint32_t cnt = cmn_convertToCnt(amplitude, bits, fsBase, is_sign, 1.0, 0);
+    uint32_t cnt = cmn_convertToCnt(amplitude * gain_calib, bits, fsBase, is_sign, 1.0, 0);
     cmn_Debug("[Ch%d] generate->initGenValue_ch <- 0x%X", channel, cnt);
     CHANNEL_ACTION(channel, generate->initGenValue_ch1 = cnt, generate->initGenValue_ch2 = cnt)
     return RP_OK;

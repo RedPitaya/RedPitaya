@@ -46,7 +46,7 @@ find_package(SWIG REQUIRED)
 INCLUDE(${SWIG_USE_FILE})
 
 if(NOT JENKINS_BUILD)
-find_package(PythonLibs)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 endif()
 
 set(CMAKE_SWIG_FLAGS -threads -builtin -O)
@@ -59,6 +59,7 @@ include_directories(
 list(APPEND src
         ${PROJECT_SOURCE_DIR}/src/adc_streaming.cpp
         ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
+        ${PROJECT_SOURCE_DIR}/src/config_streaming.cpp
         ${PROJECT_SOURCE_DIR}/src/config.cpp
         ${PROJECT_SOURCE_DIR}/src/common.cpp
 )
@@ -83,7 +84,7 @@ SWIG_ADD_LIBRARY(${PY_PROJ}${PyVerName} LANGUAGE python SOURCES src/streaming.i 
 if(JENKINS_BUILD)
     target_include_directories(${PY_PROJ}${PyVerName} PRIVATE /opt/python/${OS_PATH}/include/python${PyVer})
 else()
-    target_include_directories(${PY_PROJ}${PyVerName} PRIVATE ${PYTHON_INCLUDE_PATH})
+    target_include_directories(${PY_PROJ}${PyVerName} PRIVATE ${Python3_INCLUDE_DIRS})
 endif()
 
 target_compile_options(${PY_PROJ}${PyVerName} PRIVATE -Wno-unused-parameter -Wno-unused-variable -Wno-missing-field-initializers)
@@ -97,7 +98,7 @@ if(JENKINS_BUILD)
     target_link_directories(${PY_PROJ}${PyVerName} PRIVATE /opt/python/${OS_PATH}/lib)
     SWIG_LINK_LIBRARIES(${PY_PROJ}${PyVerName} python${PyVer})
 else()
-    SWIG_LINK_LIBRARIES(${PY_PROJ}${PyVerName} ${PYTHON_LIBRARIES})
+    SWIG_LINK_LIBRARIES(${PY_PROJ}${PyVerName} ${Python3_LIBRARIES})
 endif()
 
 if(NOT WIN32)
@@ -122,7 +123,17 @@ if(IS_INSTALL)
         #     DESTINATION ${INSTALL_DIR}/streaming/${PY_PROJ}/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
         #     GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 
-        install(FILES examples/adc_example_1.py examples/adc_example_2.py examples/dac_example_1.py examples/dac_example_2.py examples/dac_example_3.py
+        install(FILES examples/adc_example_1.py
+                      examples/adc_example_2.py
+                      examples/dac_example_1.py
+                      examples/dac_example_2.py
+                      examples/dac_example_3.py
+                      examples/dac_example_4.py
+                      examples/dac_example_5.py
+		      examples/dac_example_6_16bit_pulse.py
+		      examples/dac_example_6_8bit_pulse.py
+                      examples/adc_dac_example_1.py
+                      examples/config_example_1.py
             DESTINATION ${INSTALL_DIR}/streaming/${PY_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 
@@ -142,9 +153,7 @@ if(JENKINS_BUILD)
     BuildLibrary(3_10 3.10)
     BuildLibrary(3_11 3.11)
     BuildLibrary(3_12 3.12)
-    if(WIN32)
-        BuildLibrary(3_13 3.13)
-    endif()
+    BuildLibrary(3_13 3.13)
 else()
     BuildLibrary("" "")
 endif()
@@ -166,10 +175,18 @@ if(IS_INSTALL)
     install(TARGETS ${CPP_PROJ}
         RUNTIME DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ}
         LIBRARY DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ})
-    install(FILES src/adc_streaming.h src/dac_streaming.h src/callbacks.h
+    install(FILES src/adc_streaming.h src/dac_streaming.h src/config_streaming.h src/callbacks.h
             DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
-    install(FILES examples/adc_example_1.cpp examples/adc_example_2.cpp examples/dac_example_1.cpp examples/dac_example_2.cpp examples/dac_example_3.cpp
+    install(FILES examples/adc_example_1.cpp
+                  examples/adc_example_2.cpp
+                  examples/dac_example_1.cpp
+                  examples/dac_example_2.cpp
+                  examples/dac_example_3.cpp
+                  examples/dac_example_4.cpp
+                  examples/dac_example_5.cpp
+                  examples/adc_dac_example_1.cpp
+                  examples/config_example_1.cpp
             DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 

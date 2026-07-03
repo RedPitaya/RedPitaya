@@ -9,15 +9,18 @@
 #include "data_lib/buffers_cached.h"
 #include "data_lib/signal.hpp"
 #include "net_lib/asio_net.h"
-#include "reader_lib/reader_controller.h"
+#include "reader_controller.h"
+#include "settings_lib/channels.hpp"
 
 namespace dac_streaming_lib {
 
 class CDACStreamingManager {
    public:
-    enum NotifyResult { NR_ENDED, NR_BROKEN, NR_EMPTY, NR_MISSING_FILE, NR_STOP, NR_MEM_ERROR, NR_MEM_MODIFY, NR_SETTINGS_ERROR };
+    enum NotifyResult { NR_ENDED, NR_BROKEN, NR_EMPTY, NR_MISSING_FILE, NR_STOP, NR_MEM_ERROR, NR_MEM_MODIFY, NR_SETTINGS_ERROR, NR_NO_ACTIVE_CNAHHELS };
 
     enum DACStream_FileType { TDMS_TYPE, WAV_TYPE };
+
+    enum DACStreamingChannels { DS_CH1 = 0x1, DS_CH2 = 0x2 };
 
     using Ptr = std::shared_ptr<CDACStreamingManager>;
 
@@ -30,11 +33,22 @@ class CDACStreamingManager {
     static Ptr Create(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
     CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uint8_t bytesPerSamp, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
 
-    ~CDACStreamingManager();
-    CDACStreamingManager(const CDACStreamingManager&) = delete;
-    CDACStreamingManager(CDACStreamingManager&&) = delete;
+	static Ptr Create(dac_channels_t channels,
+					  uint8_t bytesPerSamp,
+					  uint32_t blockSize,
+					  bool verbose,
+					  CReaderController::MemoryStreamDataCallback_t callback);
+	CDACStreamingManager(dac_channels_t channels,
+						 uint8_t bytesPerSamp,
+						 uint32_t blockSize,
+						 bool verbose,
+						 CReaderController::MemoryStreamDataCallback_t callback);
 
-    auto run() -> void;
+	~CDACStreamingManager();
+	CDACStreamingManager(const CDACStreamingManager &) = delete;
+	CDACStreamingManager(CDACStreamingManager &&) = delete;
+
+	auto run() -> void;
     auto stop() -> void;
     auto isLocalMode() -> bool;
 
@@ -46,9 +60,9 @@ class CDACStreamingManager {
     auto isEmptyBuffer() -> bool;
     auto isRunned() -> bool;
 
-    auto getChannels(bool* ch1Active, bool* ch2Active) -> bool;
+	auto getChannels(dac_channels_t &dac) -> bool;
 
-    sigslot::signal<NotifyResult> notifyStop;
+	sigslot::signal<NotifyResult> notifyStop;
 
    private:
     auto startServer() -> void;
@@ -73,6 +87,7 @@ class CDACStreamingManager {
     bool m_verbose;
     uint32_t m_blockSize;
     bool m_remoteClientMode;
+    bool m_memoryStream;
 };
 
 }  // namespace dac_streaming_lib

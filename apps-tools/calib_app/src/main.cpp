@@ -85,6 +85,8 @@ CIntParameter ch_calib_pass[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_calib_pass
 CFloatParameter ch_calib_pass_float[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_calib_pass_f", CBaseParameter::RW, 1, 0, 0.001, 20);
 
 CFloatParameter ref_volt("ref_volt", CBaseParameter::RW, 1, 0, 0.001, 20);
+CBooleanParameter am_f_bypass("am_f_bypass", CBaseParameter::RW, false, 0);
+CStringParameter am_f_mode("am_f_mode", CBaseParameter::RW, "keep", 0);
 
 CStringParameter ss_state("SS_STATE", CBaseParameter::RW, "", 0);  // Current completed step
 CStringParameter ss_next_step("SS_NEXTSTEP", CBaseParameter::RW, "", 0);
@@ -161,6 +163,9 @@ CFloatParameter fauto_value_ch_after[RP_CALIB_MAX_ADC_CHANNELS] = INIT("fauto_va
 CIntParameter fauto_calib_progress("fauto_calib_progress", CBaseParameter::RW, 0, 0, 0, 140);
 
 CBooleanParameter isFilter("IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);
+
+CStringParameter reset_filter_mode("ADC_RESET_FILTER_MODE_INPUT", CBaseParameter::RW, "", 0);
+CBooleanParameter reset_filter_channel("ADC_RESET_FILTER_ALL_CHANNELS_SW", CBaseParameter::RW, false, 0);
 
 void sendFilterCalibValues(rp_channel_t _ch);
 
@@ -925,11 +930,37 @@ void UpdateParams(void) {
     try {
 
         // AUTO MODE
+        if (am_f_bypass.IsNewValue()) {
+            am_f_bypass.Update();
+        }
+
+        if (am_f_mode.IsNewValue()) {
+            am_f_mode.Update();
+        }
+
+        if (reset_filter_mode.IsNewValue()) {
+            reset_filter_mode.Update();
+        }
+
+        if (reset_filter_channel.IsNewValue()) {
+            reset_filter_channel.Update();
+        }
+
         if (ss_next_step.IsNewValue() || ref_volt.IsNewValue()) {
             ss_next_step.Update();
             ref_volt.Update();
             if (ss_next_step.Value() != "") {
-                if (g_calib->calib(ss_next_step.Value(), ref_volt.Value()) == RP_OK) {
+                rp_calib_filter_mode fmode = rp_calib_filter_mode::RP_HW_CFM_ZERO;
+                if (am_f_mode.Value() == "keep") {
+                    fmode = rp_calib_filter_mode::RP_HW_CFM_KEEP;
+                } else if (am_f_mode.Value() == "default") {
+                    fmode = rp_calib_filter_mode::RP_HW_CFM_DEFAULT;
+                } else if (am_f_mode.Value() == "zero") {
+                    fmode = rp_calib_filter_mode::RP_HW_CFM_ZERO;
+                } else {
+                    ERROR_LOG("Undefine value %s", am_f_mode.Value().c_str())
+                }
+                if (g_calib->calib(ss_next_step.Value(), ref_volt.Value(), am_f_bypass.Value(), fmode) == RP_OK) {
                     auto x = g_calib->getCalibData();
                     for (int i = 0; i < getADCChannels(); i++) {
                         ch_calib_pass[i].SendValue(x.ch[i]);
@@ -999,7 +1030,17 @@ void UpdateParams(void) {
             }
 
             if (sig == 3) {
-                g_calib->resetCalibToZero();
+                rp_calib_filter_mode fmode = rp_calib_filter_mode::RP_HW_CFM_KEEP;
+                if (reset_filter_mode.Value() == "keep") {
+                    fmode = rp_calib_filter_mode::RP_HW_CFM_KEEP;
+                } else if (reset_filter_mode.Value() == "default") {
+                    fmode = rp_calib_filter_mode::RP_HW_CFM_DEFAULT;
+                } else if (reset_filter_mode.Value() == "zero") {
+                    fmode = rp_calib_filter_mode::RP_HW_CFM_ZERO;
+                } else {
+                    ERROR_LOG("Undefine value %s", reset_filter_mode.Value().c_str())
+                }
+                g_calib->resetCalibToZero(fmode);
                 g_calib_man->readCalibEpprom();
                 sendCalibInManualMode(true);
             }
@@ -1018,17 +1059,25 @@ void UpdateParams(void) {
             if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
 
                 if (sig == 6) {
-                    g_calib_man->setDefualtFilter((rp_channel_t)adc_channel.Value());
-                    g_calib_man->updateCalib((rp_channel_t)adc_channel.Value());
-                    g_calib_man->updateAcqFilter((rp_channel_t)adc_channel.Value());
-                    sendFilterCalibValues((rp_channel_t)adc_channel.Value());
+                    for (uint8_t i = 0; i < getADCChannels(); i++) {
+                        if (adc_channel.Value() == i || reset_filter_channel.Value()) {
+                            g_calib_man->setDefualtFilter((rp_channel_t)i);
+                            g_calib_man->updateCalib((rp_channel_t)i);
+                            g_calib_man->updateAcqFilter((rp_channel_t)i);
+                            sendFilterCalibValues((rp_channel_t)i);
+                        }
+                    }
                 }
 
                 if (sig == 7) {
-                    g_calib_man->setDisableFilter((rp_channel_t)adc_channel.Value(), 0x00FFFFFF);
-                    g_calib_man->updateCalib((rp_channel_t)adc_channel.Value());
-                    g_calib_man->updateAcqFilter((rp_channel_t)adc_channel.Value());
-                    sendFilterCalibValues((rp_channel_t)adc_channel.Value());
+                    for (uint8_t i = 0; i < getADCChannels(); i++) {
+                        if (adc_channel.Value() == i || reset_filter_channel.Value()) {
+                            g_calib_man->setDisableFilter((rp_channel_t)i, 0x00FFFFFF);
+                            g_calib_man->updateCalib((rp_channel_t)i);
+                            g_calib_man->updateAcqFilter((rp_channel_t)i);
+                            sendFilterCalibValues((rp_channel_t)i);
+                        }
+                    }
                 }
 
                 if (sig == 100) {  // Init after start filter manual mode
@@ -1069,6 +1118,14 @@ void UpdateParams(void) {
 
             if (sig == 8) {
                 updateEepromWindow();
+            }
+
+            if (sig == 9) {
+                sendEepromFactoryZone();
+            }
+
+            if (sig == 10) {
+                sendEepromUserZone();
             }
         }
 

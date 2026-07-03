@@ -8,7 +8,6 @@
 auto createDirectory(const std::string& _path) -> bool;
 auto setHomeSettingsPath(std::string _path) -> void;
 auto getHomeDirectory() -> std::string;
-auto isDirectory(const std::string& _path) -> bool;
 auto configSet() -> bool;
 auto configGet() -> void;
 auto configSetWithList(const std::vector<std::string>& _parameters) -> bool;

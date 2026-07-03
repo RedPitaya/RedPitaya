@@ -2,6 +2,7 @@
 #include <memory>
 #include <thread>
 
+#include "callbacks.h"
 #include "common.h"
 #include "config_net_lib/client_net_config_manager.h"
 #include "logger_lib/file_logger.h"
@@ -11,28 +12,25 @@ std::mutex g_rmutex;
 auto getTS(std::string suffix) -> std::string {
     using namespace std;
     using namespace std::chrono;
-    system_clock::time_point timeNow = system_clock::now();
+
+    auto timeNow = system_clock::now();
     auto ttime_t = system_clock::to_time_t(timeNow);
-    auto tp_sec = system_clock::from_time_t(ttime_t);
-    milliseconds ms = duration_cast<milliseconds>(timeNow - tp_sec);
 
-    std::tm* ttm = localtime(&ttime_t);
+    auto ms = duration_cast<milliseconds>(timeNow.time_since_epoch()) % 1000;
 
-    char date_time_format[] = "%Y.%m.%d-%H.%M.%S";
+    std::tm* ttm = std::localtime(&ttime_t);
 
-    char time_str[] = "yyyy.mm.dd.HH-MM.SS.fff";
+    char time_buffer[32];
+    strftime(time_buffer, sizeof(time_buffer), "%Y.%m.%d-%H.%M.%S", ttm);
 
-    strftime(time_str, strlen(time_str), date_time_format, ttm);
+    char final_buffer[64];
+    snprintf(final_buffer, sizeof(final_buffer), "%s.%03lld%s", time_buffer, (long long)ms.count(), suffix.c_str());
 
-    string result(time_str);
-    result.append(".");
-    result.append(to_string(ms.count()));
-    result.append(suffix);
-    return result;
+    return std::string(final_buffer);
 }
 
 auto sleepMs(int ms) -> void {
-    std::this_thread::sleep_for(std::chrono::microseconds(1000 * ms));
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 }
 
 auto search() -> std::string {
@@ -54,25 +52,31 @@ auto search() -> std::string {
     return "";
 }
 
-auto requestMemoryBlockSize(ClientNetConfigManager::Ptr cl, const std::list<std::string>& hosts, std::map<std::string, uint32_t>* sizes, bool verbose) -> bool {
+auto requestMemoryBlockSizeCommon(std::shared_ptr<ConfigStreamClient> cl, const std::list<std::string>& hosts, std::map<std::string, uint32_t>* sizes, bool verbose) -> bool {
     std::atomic<int> rstart_counter;
 
-    cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-            rstart_counter--;
-        }
-    });
+    class LocalCb : public ConfigCallback {
 
-    cl->getMemBlockSizeNofiy.connect([&](std::string host, std::string size) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (verbose)
-            aprintf(stdout, "%s Memory block size of %s is %s\n", getTS(": ").c_str(), host.c_str(), size.c_str());
-        rstart_counter--;
-        if (sizes)
-            (*sizes)[host] = atoi(size.c_str());
-    });
+        void configError(ConfigStreamClient* cl, std::string host, int error) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*rstart_counter)--;
+        }
+
+        void configMemoryBlockSize(ConfigStreamClient* cl, std::string host, size_t size) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*rstart_counter)--;
+            if (sizes)
+                (*sizes)[host] = size;
+        }
+
+        std::atomic<int>* rstart_counter = nullptr;
+        std::map<std::string, uint32_t>* sizes = nullptr;
+
+       public:
+        explicit LocalCb(std::atomic<int>* counter, std::map<std::string, uint32_t>* sizes_ref) : rstart_counter(counter), sizes(sizes_ref){};
+    };
+    auto cb = std::make_shared<LocalCb>(&rstart_counter, sizes);
+    cl->addCallback(cb);
 
     rstart_counter = hosts.size();
     for (auto& host : hosts) {
@@ -89,32 +93,49 @@ auto requestMemoryBlockSize(ClientNetConfigManager::Ptr cl, const std::list<std:
         timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
     }
 
-    cl->removeHadlers();
+    cl->removeCallback(cb);
     return !timeout;
 }
 
-auto requestActiveChannels(ClientNetConfigManager::Ptr cl, const std::list<std::string>& hosts, std::map<std::string, uint32_t>* channels,
-                           bool verbose) -> bool {
-    std::atomic<int> rstart_counter;
+auto requestActiveChannelsCommon(std::shared_ptr<ConfigStreamClient> cl,
+								 const std::list<std::string> &hosts,
+								 std::map<std::string, adc_channels_t> *channels,
+								 bool verbose) -> bool
+{
+	std::atomic<int> rstart_counter;
 
-    cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-            rstart_counter--;
-        }
-    });
+	class LocalCb : public ConfigCallback
+	{
+		void configError(ConfigStreamClient *cl, std::string host, int error) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
+			(*rstart_counter)--;
+		}
 
-    cl->getActiveChannelsNofiy.connect([&](std::string host, std::string size) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (verbose)
-            aprintf(stdout, "%s Active channels %s for %s\n", getTS(": ").c_str(), size.c_str(), host.c_str());
-        rstart_counter--;
-        if (channels)
-            (*channels)[host] = atoi(size.c_str());
-    });
+		void configActiveChannels(ConfigStreamClient *cl, std::string host, std::array<bool, 4> ch) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
+			(*rstart_counter)--;
+			if (channels) {
+				(*channels)[host][ADCChannels::ADC_CH1] = ch[0];
+				(*channels)[host][ADCChannels::ADC_CH2] = ch[1];
+				(*channels)[host][ADCChannels::ADC_CH3] = ch[2];
+				(*channels)[host][ADCChannels::ADC_CH4] = ch[3];
+			}
+		}
 
-    rstart_counter = hosts.size();
+		std::atomic<int> *rstart_counter = nullptr;
+		std::map<std::string, adc_channels_t> *channels = nullptr;
+
+	public:
+		explicit LocalCb(std::atomic<int> *counter, std::map<std::string, adc_channels_t> *channels_ref)
+			: rstart_counter(counter)
+			, channels(channels_ref){};
+	};
+	auto cb = std::make_shared<LocalCb>(&rstart_counter, channels);
+	cl->addCallback(cb);
+
+	rstart_counter = hosts.size();
     for (auto& host : hosts) {
         if (verbose)
             aprintf(stdout, "%s Request for active channels sent : %s\n", getTS(": ").c_str(), host.c_str());
@@ -129,83 +150,82 @@ auto requestActiveChannels(ClientNetConfigManager::Ptr cl, const std::list<std::
         timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
     }
 
-    cl->removeHadlers();
+    cl->removeCallback(cb);
     return !timeout;
 }
 
-auto requestStartStreaming(ClientNetConfigManager::Ptr cl, std::list<std::string> masterHosts, std::list<std::string> slaveHosts,
-                           std::map<std::string, StateRunnedHosts>* runned_hosts, bool verbous) -> bool {
+auto requestStartStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::list<std::string> masterHosts, std::list<std::string> slaveHosts,
+                                 std::map<std::string, StateRunningHosts>* runned_hosts, bool verbose) -> bool {
     std::atomic<int> rstart_counter;
 
-    cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-        const std::lock_guard lock(g_rmutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-            rstart_counter--;
-            masterHosts.remove(host);
-            slaveHosts.remove(host);
+    class LocalCb : public ConfigCallback {
+
+        void configError(ConfigStreamClient* cl, std::string host, int error) override {
+            const std::lock_guard lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
         }
-    });
 
-    cl->configFileMissedNotify.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-    });
+        void configErrorFileMissed(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->serverStoppedMemErrorNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-    });
+        void adcServerStoppedMemError(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s No active channels [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-    });
+        void adcServerStoppedNoActiveChannels(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->serverStoppedMemModifyNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-    });
+        void adcServerStoppedMemModify(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->serverStartedTCPNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s TCP mode [OK]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        if (runned_hosts)
-            (*runned_hosts)[host] = StateRunnedHosts::TCP;
-    });
+        void adcServerStartedTCP(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            if (m_runned_hosts)
+                (*m_runned_hosts)[host] = StateRunningHosts::TCP;
+        }
 
-    cl->serverStartedSDNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s Local mode [OK]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        if (runned_hosts)
-            (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
-    });
+        void adcServerStartedSD(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            if (m_runned_hosts)
+                (*m_runned_hosts)[host] = StateRunningHosts::LOCAL;
+        }
+
+        std::atomic<int>* m_rstart_counter = nullptr;
+        std::list<std::string>* m_masterHosts = nullptr;
+        std::list<std::string>* m_slaveHosts = nullptr;
+        std::map<std::string, StateRunningHosts>* m_runned_hosts = nullptr;
+
+       public:
+        explicit LocalCb(std::atomic<int>* counter, std::list<std::string>* masterHosts, std::list<std::string>* slaveHosts, std::map<std::string, StateRunningHosts>* runned_hosts)
+            : m_rstart_counter(counter), m_masterHosts(masterHosts), m_slaveHosts(slaveHosts), m_runned_hosts(runned_hosts){};
+    };
+    auto cb = std::make_shared<LocalCb>(&rstart_counter, &masterHosts, &slaveHosts, runned_hosts);
+    cl->addCallback(cb);
 
     rstart_counter = slaveHosts.size();
     for (auto& host : slaveHosts) {
-        if (verbous)
+        if (verbose)
             aprintf(stdout, "%s Send start command to slave board: %s\n", getTS(": ").c_str(), host.c_str());
-        if (!cl->sendADCServerStart(host)) {
+        if (!cl->requestADCServerStart(host)) {
             rstart_counter--;
         }
     }
@@ -218,15 +238,15 @@ auto requestStartStreaming(ClientNetConfigManager::Ptr cl, std::list<std::string
     }
 
     if (timeout) {
-        cl->removeHadlers();
+        cl->removeCallback(cb);
         return false;
     }
 
     rstart_counter = masterHosts.size();
     for (auto& host : masterHosts) {
-        if (verbous)
+        if (verbose)
             aprintf(stdout, "%s Send start command to master board: %s\n", getTS(": ").c_str(), host.c_str());
-        if (!cl->sendADCServerStart(host)) {
+        if (!cl->requestADCServerStart(host)) {
             rstart_counter--;
         }
     }
@@ -238,55 +258,59 @@ auto requestStartStreaming(ClientNetConfigManager::Ptr cl, std::list<std::string
         timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
     }
 
-    cl->removeHadlers();
+    cl->removeCallback(cb);
     return !timeout;
 }
 
-auto requestStopStreaming(ClientNetConfigManager::Ptr cl, std::list<std::string> masterHosts, std::list<std::string> slaveHosts, bool verbous) -> bool {
+auto requestStopStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::list<std::string> masterHosts, std::list<std::string> slaveHosts, bool verbose) -> bool {
     std::atomic<int> rstop_counter;
 
-    cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-            rstop_counter--;
-            masterHosts.remove(host);
-            slaveHosts.remove(host);
+    class LocalCb : public ConfigCallback {
+
+        void configError(ConfigStreamClient* cl, std::string host, int error) override {
+            const std::lock_guard lock(g_rmutex);
+            (*m_rstop_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
         }
-    });
 
-    cl->serverStoppedNofiy.connect([&](std::string host) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming stopped: %s [OK]\n", getTS(": ").c_str(), host.c_str());
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        rstop_counter--;
-    });
+        void adcServerStopped(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstop_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->serverStoppedSDFullNofiy.connect([&](std::string host) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming stopped: %s SD card is full [OK]\n", getTS(": ").c_str(), host.c_str());
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        rstop_counter--;
-    });
+        void adcServerStoppedSDFull(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstop_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->serverStoppedSDDoneNofiy.connect([&](std::string host) {
-        const std::lock_guard<std::mutex> lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming stopped: %s All samples are recorded on the SD card [OK]\n", getTS(": ").c_str(), host.c_str());
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-        rstop_counter--;
-    });
+        void adcServerStoppedSDDone(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstop_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
+
+        std::atomic<int>* m_rstop_counter = nullptr;
+        std::list<std::string>* m_masterHosts = nullptr;
+        std::list<std::string>* m_slaveHosts = nullptr;
+
+       public:
+        explicit LocalCb(std::atomic<int>* counter, std::list<std::string>* masterHosts, std::list<std::string>* slaveHosts)
+            : m_rstop_counter(counter), m_masterHosts(masterHosts), m_slaveHosts(slaveHosts){};
+    };
+    auto cb = std::make_shared<LocalCb>(&rstop_counter, &masterHosts, &slaveHosts);
+    cl->addCallback(cb);
 
     rstop_counter = masterHosts.size();
     for (auto& host : masterHosts) {
-        if (verbous)
+        if (verbose)
             aprintf(stdout, "%s Send stop command to master board %s\n", getTS(": ").c_str(), host.c_str());
-        if (!cl->sendADCServerStop(host)) {
+        if (!cl->requestADCServerStop(host)) {
             rstop_counter--;
         }
     }
@@ -299,15 +323,15 @@ auto requestStopStreaming(ClientNetConfigManager::Ptr cl, std::list<std::string>
     }
 
     if (timeout) {
-        cl->removeHadlers();
+        cl->removeCallback(cb);
         return false;
     }
 
     rstop_counter = slaveHosts.size();
     for (auto& host : slaveHosts) {
-        if (verbous)
+        if (verbose)
             aprintf(stdout, "%s Send stop command to slave board %s\n", getTS(": ").c_str(), host.c_str());
-        if (!cl->sendADCServerStop(host)) {
+        if (!cl->requestADCServerStop(host)) {
             rstop_counter--;
         }
     }
@@ -319,57 +343,62 @@ auto requestStopStreaming(ClientNetConfigManager::Ptr cl, std::list<std::string>
         timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
     }
 
-    cl->removeHadlers();
+    cl->removeCallback(cb);
     return !timeout;
 }
 
-auto requestStartADC(ClientNetConfigManager::Ptr cl, std::list<std::string> masterHosts, std::list<std::string> slaveHosts,
-                     std::map<std::string, StateRunnedHosts>* runned_hosts, bool verbous) -> bool {
+auto requestStartADCCommon(std::shared_ptr<ConfigStreamClient> cl, std::list<std::string> masterHosts, std::list<std::string> slaveHosts,
+                           std::map<std::string, StateRunningHosts>* runned_hosts, bool verbose) -> bool {
     std::atomic<int> rstart_counter;
 
-    cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-        const std::lock_guard lock(g_rmutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-            rstart_counter--;
-            masterHosts.remove(host);
-            slaveHosts.remove(host);
+    class LocalCb : public ConfigCallback {
+
+        void configError(ConfigStreamClient* cl, std::string host, int error) override {
+            const std::lock_guard lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
         }
-    });
 
-    cl->serverStoppedMemErrorNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-    });
+        void adcServerStoppedMemError(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->serverStoppedMemModifyNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        masterHosts.remove(host);
-        slaveHosts.remove(host);
-    });
+        void adcServerStoppedMemModify(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
 
-    cl->startADCDoneNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s ADC is run: %s\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        if (runned_hosts)
-            (*runned_hosts)[host] = StateRunnedHosts::NONE;
-    });
+        void adcServerStartedFPGA(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            if (m_runned_hosts)
+                (*m_runned_hosts)[host] = StateRunningHosts::NONE;
+        }
+
+        std::atomic<int>* m_rstart_counter = nullptr;
+        std::list<std::string>* m_masterHosts = nullptr;
+        std::list<std::string>* m_slaveHosts = nullptr;
+        std::map<std::string, StateRunningHosts>* m_runned_hosts = nullptr;
+
+       public:
+        explicit LocalCb(std::atomic<int>* counter, std::list<std::string>* masterHosts, std::list<std::string>* slaveHosts, std::map<std::string, StateRunningHosts>* runned_hosts)
+            : m_rstart_counter(counter), m_masterHosts(masterHosts), m_slaveHosts(slaveHosts), m_runned_hosts(runned_hosts){};
+    };
+    auto cb = std::make_shared<LocalCb>(&rstart_counter, &masterHosts, &slaveHosts, runned_hosts);
+    cl->addCallback(cb);
 
     rstart_counter = slaveHosts.size();
 
     for (auto& host : slaveHosts) {
-        if (verbous)
+        if (verbose)
             aprintf(stdout, "%s Send start ADC command to slave board: %s\n", getTS(": ").c_str(), host.c_str());
-        if (!cl->sendADCFPGAStart(host)) {
+        if (!cl->requestADCServerFPGAStart(host)) {
             rstart_counter--;
         }
     }
@@ -382,15 +411,15 @@ auto requestStartADC(ClientNetConfigManager::Ptr cl, std::list<std::string> mast
     }
 
     if (timeout) {
-        cl->removeHadlers();
+        cl->removeCallback(cb);
         return false;
     }
 
     rstart_counter = masterHosts.size();
     for (auto& host : masterHosts) {
-        if (verbous)
+        if (verbose)
             aprintf(stdout, "%s Send start ADC command to master board: %s\n", getTS(": ").c_str(), host.c_str());
-        if (!cl->sendADCFPGAStart(host)) {
+        if (!cl->requestADCServerFPGAStart(host)) {
             rstart_counter--;
         }
     }
@@ -401,79 +430,82 @@ auto requestStartADC(ClientNetConfigManager::Ptr cl, std::list<std::string> mast
         sleepMs(100);
         timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
     }
-
-    cl->removeHadlers();
+    cl->removeCallback(cb);
     return !timeout;
 }
 
-auto requestStartDACStreaming(ClientNetConfigManager::Ptr cl, std::string host, uint8_t ac, StateRunnedHosts* runned_host, bool verbous) -> bool {
-    std::atomic<int> rstart_counter;
+auto requestStartDACStreamingCommon(
+	std::shared_ptr<ConfigStreamClient> cl, std::string host, dac_channels_t ac, StateRunningHosts *runned_host, bool verbose) -> bool
+{
+	std::atomic<int> rstart_counter;
 
-    cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, error_code err) {
-        const std::lock_guard lock(g_rmutex);
-        if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-            aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
-            rstart_counter--;
+	class LocalCb : public ConfigCallback
+	{
+		void configError(ConfigStreamClient *cl, std::string host, int error) override
+		{
+			const std::lock_guard lock(g_rmutex);
+			(*m_rstart_counter)--;
+		}
+
+		void dacServerStoppedMemError(ConfigStreamClient *cl, std::string host) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
+			(*m_rstart_counter)--;
+		}
+
+		void dacServerStoppedMemModify(ConfigStreamClient *cl, std::string host) override
+		{
+			const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+		}
+
+		void dacServerStoppedConfigError(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
         }
-    });
 
-    cl->serverDacStoppedMemErrorNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-    });
+        void configErrorFileMissed(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+        }
 
-    cl->serverDacStoppedMemModifyNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-    });
+        void dacServerStartedTCP(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            if (m_runned_hosts)
+                (*m_runned_hosts) = StateRunningHosts::TCP;
+        }
 
-    cl->serverDacStoppedConfigErrorNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-    });
+        void dacServerStartedSD(ConfigStreamClient* cl, std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            if (m_runned_hosts)
+                (*m_runned_hosts) = StateRunningHosts::LOCAL;
+        }
 
-    cl->configFileMissedNotify.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-    });
+        std::atomic<int>* m_rstart_counter = nullptr;
+        StateRunningHosts* m_runned_hosts = nullptr;
 
-    cl->serverDacStartedNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s DAC streaming started: %s TCP mode [OK]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        *runned_host = StateRunnedHosts::TCP;
-    });
+       public:
+        explicit LocalCb(std::atomic<int>* counter, StateRunningHosts* runned_hosts) : m_rstart_counter(counter), m_runned_hosts(runned_hosts){};
+	};
+	auto cb = std::make_shared<LocalCb>(&rstart_counter, runned_host);
+	cl->addCallback(cb);
 
-    cl->serverDacStartedSDNofiy.connect([&](std::string host) {
-        const std::lock_guard lock(g_rmutex);
-        if (verbous)
-            aprintf(stdout, "%s DAC streaming started: %s Local mode [OK]\n", getTS(": ").c_str(), host.c_str());
-        rstart_counter--;
-        *runned_host = StateRunnedHosts::LOCAL;
-    });
+	rstart_counter = 1;
+	if (verbose) {
+		aprintf(stdout, "%s Send start command to master board: %s\n", getTS(": ").c_str(), host.c_str());
+	}
+	if (!cl->requestDACServerStart(host, ac.isEnabled(DACChannels::DAC_CH1), ac.isEnabled(DACChannels::DAC_CH2))) {
+		rstart_counter--;
+	}
+	auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+	auto timeout = false;
+	while (!timeout && rstart_counter > 0) {
+		sleepMs(100);
+		timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
+	}
 
-    rstart_counter = 1;
-    if (verbous)
-        aprintf(stdout, "%s Send start command to master board: %s\n", getTS(": ").c_str(), host.c_str());
-    if (!cl->sendDACServerStart(host, std::to_string(ac))) {
-        rstart_counter--;
-    }
-    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
-    auto timeout = false;
-    while (!timeout && rstart_counter > 0) {
-        sleepMs(100);
-        timeout = (std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count() - beginTime > 5000);
-    }
-
-    cl->removeHadlers();
+	cl->removeCallback(cb);
     return !timeout;
 }

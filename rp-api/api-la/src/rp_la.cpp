@@ -414,6 +414,14 @@ auto CLAController::setDecoderSettingsFloat(std::string name, std::string key, f
     return false;
 }
 
+auto CLAController::setDecoderSettingsString(std::string name, std::string key, std::string value) -> bool {
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
+        return m_pimpl->m_decoders[name]->setDecoderSettingsString(key, value);
+    }
+    return false;
+}
+
 auto CLAController::getDecoderSettingsUInt(std::string name, std::string key, uint32_t* value) -> bool {
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
     if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
@@ -426,6 +434,14 @@ auto CLAController::getDecoderSettingsFloat(std::string name, std::string key, f
     std::lock_guard lock(m_pimpl->m_decoder_mutex);
     if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
         return m_pimpl->m_decoders[name]->getDecoderSettingsFloat(key, value);
+    }
+    return false;
+}
+
+auto CLAController::getDecoderSettingsString(std::string name, std::string key, std::string* value) -> bool {
+    std::lock_guard lock(m_pimpl->m_decoder_mutex);
+    if (m_pimpl->m_decoders.find(name) != m_pimpl->m_decoders.end()) {
+        return m_pimpl->m_decoders[name]->getDecoderSettingsString(key, value);
     }
     return false;
 }
@@ -654,8 +670,8 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void {
     m_isRun = false;
     std::lock_guard lock_delegate(m_delegate_mutex);
     if (m_delegate) {
-        m_delegate->captureStatus(m_parent, isTimeout, m_data.m_capturedBytes, m_data.m_capturedSamples, m_data.m_samplesBeforeTrigger,
-                                  m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
+        m_delegate->captureStatus(
+            m_parent, isTimeout, m_data.m_capturedBytes, m_data.m_capturedSamples, m_data.m_samplesBeforeTrigger, m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
     }
     TRACE_SHORT("Done")
 }
@@ -689,8 +705,8 @@ auto CLAController::Impl::loadFromBytes(std::vector<uint8_t> data, bool isRLE, u
     m_isRun = false;
     std::lock_guard lock_delegate(m_delegate_mutex);
     if (m_delegate) {
-        m_delegate->decodeStatus(m_parent, m_data.m_capturedBytes, m_data.m_capturedSamples, m_data.m_samplesBeforeTrigger,
-                                 m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
+        m_delegate->decodeStatus(
+            m_parent, m_data.m_capturedBytes, m_data.m_capturedSamples, m_data.m_samplesBeforeTrigger, m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
     }
     TRACE_SHORT("Done")
 }

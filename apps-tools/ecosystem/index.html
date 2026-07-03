@@ -11,6 +11,7 @@
     <link href="../assets/style.css?6" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link href="../assets/lpulse.css?1" rel="stylesheet" type="text/css">
     <link href="../assets/usermis.css?1" rel="stylesheet" type="text/css">
+    <link href="../assets/tooltip.css?1" rel="stylesheet" type="text/css">
     <link href="../assets/loader.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link href="./style.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <script src="../assets/bootstrap-3.0.0/js/jquery.js?1" onerror="location.reload()"></script>
@@ -32,6 +33,7 @@
     <script src="../main_menu/js/rp_client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/client.js?1" onerror="location.reload()"></script>
     <script src="../main_menu/js/main.js?1" onerror="location.reload()"></script>
+    <script src="../main_menu/js/websocket.js?1" onerror="location.reload()"></script>
     <link href="./assets/popupstack.css?1" rel="stylesheet" type="text/css" onerror="location.reload()" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
@@ -53,8 +55,10 @@
     </div>
     <div id="main_content">
         <div id="header">
-            <div id="info" style="width: 40px;"><img src="../assets/images/info.png"
-                    style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
+            <div class="info-icon">
+                <div id="info" style="width: 40px;"><img src="../assets/images/info.png"
+                        style="padding-top: 0px;width: 20px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
+                </div>
             </div>
             <div id="ext_con_but"><img src="../assets/images/ext_conections_w.png"
                     style="padding-top: 0px;width: 36px;height: 20px;padding-left: 0px;margin-left: 2px;margin-top: 2px;">
@@ -124,7 +128,7 @@
                         <a href="#" data-dismiss="modal" id="poweroff_confirm" class="list-group-item btn">Poweroff</a>
                     </div>
                     <div class="bazaar-link" style="float: left;width: 30%;margin-left: 5%;">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>
             </div>
@@ -151,7 +155,7 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Cancel</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>
             </div>
@@ -176,13 +180,21 @@
                     </div>
                 </div>
                 <div id="sysInfoTab" class="modal-body tabcontent" style="display: flex;">
-                    <div style="text-align: left;margin-left: 5%;">
+                    <div style="text-align: left;margin-left: 3%;">
                         <table>
                             <col width="180px">
-                            <col width="700px">
+                            <col width="900px">
                             <tr style="height:40px;">
                                 <td>Board model:</td>
-                                <td><a id="SI_B_MODEL">-</a></td>
+                                <td>
+                                    <a id="SI_B_MODEL">-</a>
+                                    <div id="IS_VALID_MODEL" class="adaptive-tooltip" style="display: none;">
+                                        <img src="../assets/images/warning.png" style="padding-bottom:5px">
+                                        </img>
+                                        <span class="tooltiptext top">The model stored in the EEPROM is not recognized.
+                                            The default profile is currently being used.</span>
+                                    </div>
+                                </td>
                             </tr>
                             <tr style="height:40px;">
                                 <td>MAC:</td>
@@ -219,6 +231,10 @@
                             <tr style="height:40px;">
                                 <td>SD:</td>
                                 <td><a id="SD_SIZE_ID">-</a></td>
+                            </tr>
+                            <tr style="height:40px;">
+                                <td>Clock Rate:</td>
+                                <td><a id="CLOCK_RATE_ID">-</a></td>
                             </tr>
                         </table>
                     </div>
@@ -258,7 +274,7 @@
                             </tr>
                         </table>
                     </div>
-                    <div style="text-align: left;margin-left: 5%;">
+                    <div style="text-align: left;margin-left: 7%;">
                         <table>
                             <col width="880px">
                             <tr style="height:40px;">
@@ -352,7 +368,7 @@
                 </div>
                 <div class="modal-footer" style="margin: 0;">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
                     </div>
                 </div>
                 <script>
@@ -389,7 +405,30 @@
                 </div>
                 <div class="modal-footer">
                     <div class="bazaar-link">
-                        <a href="#" data-dismiss="modal" id="disable_analytics" class="list-group-item btn">Close</a>
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Close</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="build_log_dialog" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+        aria-hidden="true" style="overflow: hidden;" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" id="pinoutDialogId" style="width:380px;">
+            <div class="modal-content">
+                <!-- Updated Body: Label + Progress Bar -->
+                <div class="modal-body" style="padding: 30px;padding-bottom: 10px;">
+                    <div class="progress-label" style="margin-bottom: 10px;">
+                        <strong id="progress_status">Building diagnostic report</strong>
+                    </div>
+                    <div class="progress" style="margin-bottom: 0;background-color: #5b5b5b;">
+                        <div id="build_progress_bar" class="progress-bar progress-bar-striped active" role="progressbar"
+                            aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="bazaar-link">
+                        <a id="cancel_build_log_id" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>
             </div>

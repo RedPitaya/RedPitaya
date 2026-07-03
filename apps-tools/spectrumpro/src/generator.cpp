@@ -15,7 +15,8 @@ const bool isX5Gain = rp_HPGetIsGainDACx5OrDefault();
 CBooleanParameter outState[MAX_DAC_CHANNELS] = INIT2("OUTPUT", "_STATE", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CFloatParameter outAmplitude[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT", CBaseParameter::RW, LEVEL_AMPS_DEF, 0, 0, LEVEL_AMPS_MAX, CONFIG_VAR);
 CFloatParameter outOffset[MAX_DAC_CHANNELS] = INIT2("SOUR", "_VOLT_OFFS", CBaseParameter::RW, 0, 0, -LEVEL_AMPS_MAX, LEVEL_AMPS_MAX, CONFIG_VAR);
-CFloatParameter outFrequancy[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, 1000, 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
+CFloatParameter outFrequency[MAX_DAC_CHANNELS] =
+    INIT2("SOUR", "_FREQ_FIX", CBaseParameter::RW, std::max<float>(1000, outFreqMin()), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
 CFloatParameter outPhase[MAX_DAC_CHANNELS] = INIT2("SOUR", "_PHAS", CBaseParameter::RW, 0, 0, -360, 360, CONFIG_VAR);
 CFloatParameter outDCYC[MAX_DAC_CHANNELS] = INIT2("SOUR", "_DCYC", CBaseParameter::RW, 50, 0, 0, 100, CONFIG_VAR);
 CFloatParameter outRiseTime[MAX_DAC_CHANNELS] = INIT2("SOUR", "_RISE", CBaseParameter::RW, 1, 0, 0.1, 1000, CONFIG_VAR);
@@ -33,8 +34,9 @@ CBooleanParameter outImpZmode("SOUR_IMPEDANCE_Z_MODE", CBaseParameter::RO, is_z_
 CFloatParameter outAmplitudeMax("SOUR_VOLT_MAX", CBaseParameter::RO, LEVEL_AMPS_MAX, 0, LEVEL_AMPS_MAX, LEVEL_AMPS_MAX);
 
 /// SWEEP VARIABLES /////////
-CFloatParameter outSweepStartFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, 1000, 0, 1, MAX_DAC_FREQ, CONFIG_VAR);
-CFloatParameter outSweepEndFrequancy[2] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, 10000, 0, 1, MAX_DAC_FREQ, CONFIG_VAR);
+CFloatParameter outSweepStartFrequency[2] =
+    INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, std::max<float>(1000, outFreqMin()), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
+CFloatParameter outSweepEndFrequency[2] = INIT2("SOUR", "_SWEEP_FREQ_END", CBaseParameter::RW, (float)outFreqMax(), 0, (float)outFreqMin(), (float)outFreqMax(), CONFIG_VAR);
 CIntParameter outSweepMode[2] = INIT2("SOUR", "_SWEEP_MODE", CBaseParameter::RW, RP_GEN_SWEEP_MODE_LINEAR, 0, RP_GEN_SWEEP_MODE_LINEAR, RP_GEN_SWEEP_MODE_LOG, CONFIG_VAR);
 CIntParameter outSweepRepetitions[2] = INIT2("SOUR", "_SWEEP_REP", CBaseParameter::RW, 1, 0, 1, 2147483647, CONFIG_VAR);
 CBooleanParameter outSweepRepInf[2] = INIT2("SOUR", "_SWEEP_INF", CBaseParameter::RW, false, 0, CONFIG_VAR);
@@ -220,10 +222,10 @@ void UpdateGeneratorParameters(bool force) {
             RESEND(outAmplitude[ch])
         }
 
-        if (IS_NEW(outFrequancy[ch]) || force) {
-            rp_GenFreq((rp_channel_t)ch, outFrequancy[ch].NewValue());
-            outFrequancy[ch].Update();
-            float period = 1000000.0 / outFrequancy[ch].Value();
+        if (IS_NEW(outFrequency[ch]) || force) {
+            rp_GenFreq((rp_channel_t)ch, outFrequency[ch].NewValue());
+            outFrequency[ch].Update();
+            float period = 1000000.0 / outFrequency[ch].Value();
             outRiseTime[ch].SetMin(period * RISE_FALL_MIN_RATIO);
             outRiseTime[ch].SetMax(period * RISE_FALL_MAX_RATIO);
             outRiseTime[ch].Update();
@@ -231,7 +233,7 @@ void UpdateGeneratorParameters(bool force) {
             outFallTime[ch].SetMax(period * RISE_FALL_MAX_RATIO);
             outFallTime[ch].Update();
             rp_GenTriggerOnly((rp_channel_t)ch);
-            RESEND(outFrequancy[ch])
+            RESEND(outFrequency[ch])
             RESEND(outRiseTime[ch])
             RESEND(outFallTime[ch])
         }
@@ -308,14 +310,14 @@ void UpdateGeneratorParameters(bool force) {
 
     bool needUpdate = force | outSweepReset.IsNewValue();
     for (auto ch = 0u; ch < g_dac_count; ch++) {
-        needUpdate |= outSweepStartFrequancy[ch].IsNewValue() | outSweepEndFrequancy[ch].IsNewValue() | outSweepMode[ch].IsNewValue() | outSweepRepetitions[ch].IsNewValue() |
+        needUpdate |= outSweepStartFrequency[ch].IsNewValue() | outSweepEndFrequency[ch].IsNewValue() | outSweepMode[ch].IsNewValue() | outSweepRepetitions[ch].IsNewValue() |
                       outSweepRepInf[ch].IsNewValue() | outSweepDir[ch].IsNewValue() | outSweepTime[ch].IsNewValue() | outSweepState[ch].IsNewValue();
     }
 
     if (needUpdate) {
         for (auto ch = 0u; ch < g_dac_count; ch++) {
-            outSweepStartFrequancy[ch].Update();
-            outSweepEndFrequancy[ch].Update();
+            outSweepStartFrequency[ch].Update();
+            outSweepEndFrequency[ch].Update();
             outSweepMode[ch].Update();
             outSweepDir[ch].Update();
             outSweepTime[ch].Update();
@@ -323,8 +325,8 @@ void UpdateGeneratorParameters(bool force) {
             outSweepRepInf[ch].Update();
             outSweepRepetitions[ch].Update();
 
-            g_sweepController->setStartFreq((rp_channel_t)ch, outSweepStartFrequancy[ch].Value());
-            g_sweepController->setStopFreq((rp_channel_t)ch, outSweepEndFrequancy[ch].Value());
+            g_sweepController->setStartFreq((rp_channel_t)ch, outSweepStartFrequency[ch].Value());
+            g_sweepController->setStopFreq((rp_channel_t)ch, outSweepEndFrequency[ch].Value());
             g_sweepController->setMode((rp_channel_t)ch, (rp_gen_sweep_mode_t)outSweepMode[ch].Value());
             g_sweepController->setDir((rp_channel_t)ch, (rp_gen_sweep_dir_t)outSweepDir[ch].Value());
             g_sweepController->setTime((rp_channel_t)ch, outSweepTime[ch].Value());
@@ -355,8 +357,8 @@ void updateGen(void) {
     for (auto ch = 0u; ch < g_dac_count; ch++) {
         float freq = 0;
         rp_GenGetFreq((rp_channel_t)ch, &freq);
-        if ((int)freq != outFrequancy[ch].Value()) {
-            outFrequancy[ch].SendValue((int)freq);
+        if ((int)freq != outFrequency[ch].Value()) {
+            outFrequency[ch].SendValue((int)freq);
         }
     }
 }

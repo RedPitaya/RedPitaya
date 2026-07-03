@@ -9,17 +9,18 @@
  * (c) Red Pitaya  http://www.redpitaya.com
  */
 
+#include "rp_bazaar_cmd.h"
+#include "rp_bazaar_app.h"
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <time.h>
 #include <string.h>
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <errno.h>
-
-#include "rp_bazaar_cmd.h"
-#include "rp_bazaar_app.h"
 
 #include <ws_server.h>
 
@@ -76,7 +77,7 @@ int rp_bazaar_get_dna(unsigned long long *dna)
     const long c_dna_fpga_base_size = 0x20;
     int fd = -1;
 
-    fd = open("/dev/uio/api", O_RDONLY | O_SYNC);
+    fd = open("/dev/uio/api@40000000", O_RDONLY | O_SYNC);
     if(fd < 0) {
         fprintf(stderr, "ERROR: failed open of UIO device: %s\n", strerror(errno));
         return -1;
@@ -204,10 +205,11 @@ int get_info(cJSON **info, const char *dir, const char *app_id, ngx_pool_t *pool
 }
 
 
-inline int is_controller_ok(const char *dir,
+int is_controller_ok(const char *dir,
                             const char *app_id,
                             const char *fname)
 {
+    struct timespec start_profile, end_profile;
     int status;
     char file [strlen(dir) + strlen(app_id) + strlen(fname) + 3];
     struct stat stat_buf;
@@ -233,11 +235,17 @@ inline int is_controller_ok(const char *dir,
      * controller is OK.
      */
 
+    timespec_get(&start_profile, TIME_UTC);
     status = rp_bazaar_app_load_module(file, &app);
+    timespec_get(&end_profile, TIME_UTC);
+    float microseconds = (float)(end_profile.tv_sec - start_profile.tv_sec) * 1000000.0f +
+                         (float)(end_profile.tv_nsec - start_profile.tv_nsec) / 1000.0f;
     if(status < 0) {
-        fprintf(stderr, "Problem loading app (return %d): %s\n", status, dlerror());
+        fprintf(stderr, "[ET: %.3f uS] Problem loading app (return %d): %s\n",microseconds, status, dlerror());
         rp_bazaar_app_unload_module(&app);
         return 0;
+    }else{
+        fprintf(stderr, "[ET: %.3f uS] App is OK\n",microseconds);
     }
 
     rp_bazaar_app_unload_module(&app);

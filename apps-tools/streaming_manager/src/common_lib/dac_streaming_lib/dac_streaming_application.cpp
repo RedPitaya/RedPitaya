@@ -4,7 +4,7 @@
 using namespace dac_streaming_lib;
 
 CDACStreamingApplication::CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CGenerator::Ptr _gen)
-    : m_gen(_gen), m_streamingManager(_streamingManager), m_Thread(), mtx(), m_ReadyToPass(0), m_isRun(false), m_isRunNonBloking(false) {}
+    : m_gen(_gen), m_streamingManager(_streamingManager), m_Thread(), mtx(), m_ReadyToPass(0), m_isRun(false), m_isRunNonBloking(false), m_verbMode(false) {}
 
 CDACStreamingApplication::~CDACStreamingApplication() {
     stop();
@@ -51,6 +51,11 @@ auto CDACStreamingApplication::stop() -> bool {
 }
 
 void CDACStreamingApplication::genWorker() {
+    auto timeNow = std::chrono::system_clock::now();
+    auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow);
+    auto value = curTime.time_since_epoch();
+    long long int timeBegin = value.count();
+
     int indexForWrite = 0;
     DataLib::CDataBuffersPackDMA::Ptr buffer = nullptr;
     bool onePackMode = false;
@@ -81,6 +86,7 @@ void CDACStreamingApplication::genWorker() {
                         ch18Bit = ch1->getDACBits() == 8;
                         onePackMode = true;
                     } else {
+                        ch18Bit = ch1->getDACBits() == 8;
                         chSize = std::max((uint32_t)ch1->getDACChannelSize(), chSize);
                     }
                 }
@@ -95,6 +101,7 @@ void CDACStreamingApplication::genWorker() {
                         ch28Bit = ch2->getDACBits() == 8;
                         onePackMode = true;
                     } else {
+                        ch28Bit = ch2->getDACBits() == 8;
                         chSize = std::max((uint32_t)ch2->getDACChannelSize(), chSize);
                     }
                 }
@@ -120,6 +127,19 @@ void CDACStreamingApplication::genWorker() {
                 if (!onePackMode) {
                     m_streamingManager->unlockBuffer();
                 }
+                if (m_verbMode) {
+                    timeNow = std::chrono::system_clock::now();
+                    curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow);
+                    value = curTime.time_since_epoch();
+
+                    if ((value.count() - timeBegin) >= 5000) {
+                        auto bufferManager = m_streamingManager->getBufferManager();
+                        if (bufferManager) {
+                            aprintf(stdout, "[DAC] Buffer status : %.2f%%\n", bufferManager->fullPercent() * 100.f);
+                        }
+                        timeBegin = value.count();
+                    }
+                }
             }
         }
         if (onePackMode) {
@@ -136,4 +156,8 @@ void CDACStreamingApplication::genWorker() {
 
 void CDACStreamingApplication::signalHandler(const std::error_code&, int) {
     stop();
+}
+
+auto CDACStreamingApplication::setVerboseMode(bool mode) -> void {
+    m_verbMode = mode;
 }

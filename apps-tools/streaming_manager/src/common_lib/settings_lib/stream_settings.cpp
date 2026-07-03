@@ -132,6 +132,8 @@ auto CStreamSettings::toJson() const -> std::string {
     adc_config["adc_decimation"] = getADCDecimation();
     adc_config["use_calib"] = getADCCalibration().name();
 
+    adc_config["adc_capture_time"] = getADCCaptureTime().name();
+
     for (auto i = 1u; i <= 4; i++) {
         adc_config["channel_state_" + to_string(i)] = getADCChannels(i).name();
         adc_config["channel_attenuator_" + to_string(i)] = getADCAttenuator(i).name();
@@ -213,6 +215,8 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setADCResolution(Resolution::from_string(adc_config["resolution"].asString()));
         if (adc_config.isMember("adc_decimation"))
             setADCDecimation(adc_config["adc_decimation"].asUInt());
+        if (adc_config.isMember("adc_capture_time"))
+            setADCCaptureTime(ADCCaptureTime::from_string(adc_config["adc_capture_time"].asString()));
         if (adc_config.isMember("use_calib"))
             setADCCalibration(State::from_string(adc_config["use_calib"].asString()));
         for (auto i = 1u; i <= 4; i++) {
@@ -274,6 +278,7 @@ auto CStreamSettings::toString() const -> std::string {
     str += "Samples:\t\t" + (getADCSamples() == 0 ? "Unlimited" : std::to_string(getADCSamples())) + " (In file mode)\n";
     str += "Data format:\t\t" + std::string(getADCFormat().to_string()) + " (In file mode)\n";
     str += "Data type:\t\t" + std::string(getADCType().to_string()) + " (In file mode)\n";
+    str += "Save capture time:\t\t" + std::string(getADCCaptureTime().to_string()) + "\n";
 
     str += "\n******************** DAC streaming ********************\n";
     channels = "";
@@ -331,6 +336,14 @@ auto CStreamSettings::setADCType(DataType _type) -> void {
 
 auto CStreamSettings::getADCType() const -> CStreamSettings::DataType {
     return m_adcsettings.m_dataType;
+}
+
+auto CStreamSettings::setADCCaptureTime(ADCCaptureTime _time) -> void {
+    m_adcsettings.m_captureTime = _time;
+}
+
+auto CStreamSettings::getADCCaptureTime() const -> ADCCaptureTime {
+    return m_adcsettings.m_captureTime;
 }
 
 auto CStreamSettings::setADCPassMode(CStreamSettings::PassMode _type) -> void {
@@ -525,6 +538,11 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return true;
         }
 
+        if (key == "adc_capture_time") {
+            setADCCaptureTime(ADCCaptureTime::from_string(value));
+            return true;
+        }
+
         if (key == "samples_limit_sd") {
             setADCSamples(to_uint64(value.c_str()));
             return true;
@@ -632,6 +650,10 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
 
         if (key == "data_type_sd") {
             return getADCType().name();
+        }
+
+        if (key == "adc_capture_time") {
+            return getADCCaptureTime().name();
         }
 
         if (key == "samples_limit_sd") {
@@ -744,6 +766,7 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "resolution\t\t: " + concat(CStreamSettings::Resolution::names(), CStreamSettings::Resolution::count) + "\n";
     s += "adc_decimation\t\t: An unsigned integer value: 1-65535.\n";
     s += "use_calib\t\t: " + concat(CStreamSettings::State::names(), CStreamSettings::State::count) + "\n";
+    s += "adc_capture_time\t\t: " + concat(CStreamSettings::ADCCaptureTime::names(), CStreamSettings::ADCCaptureTime::count) + "\n";
     for (auto i = 1u; i <= 4; i++) {
         s += "channel_state_" + to_string(i) + "\t\t: " + concat(CStreamSettings::State::names(), CStreamSettings::State::count) + "\n";
         s += "channel_attenuator_" + to_string(i) + "\t: " + concat(CStreamSettings::Attenuator::names(), CStreamSettings::Attenuator::count) + "\n";

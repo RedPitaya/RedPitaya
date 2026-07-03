@@ -79,7 +79,11 @@ list(APPEND header
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
 add_compile_options($<$<CONFIG:Debug>:-DTRACE_ENABLE>)
-add_compile_options(-Wall -pedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall -Wpedantic -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
 
 add_library(${PROJECT_NAME}-obj OBJECT ${src})
 
@@ -90,14 +94,15 @@ if(BUILD_SHARED)
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        include_directories(${Python3_INCLUDE_DIRS})
 
         set_property(SOURCE src/rp_sweep.i PROPERTY CPLUSPLUS ON)
         # SET_SOURCE_FILES_PROPERTIES(src/rp_sweep.i PROPERTIES SWIG_FLAGS "-includeall")
+        set(CMAKE_SWIG_FLAGS -threads -O)
 
         SWIG_ADD_LIBRARY(rp_sweep_py LANGUAGE python SOURCES src/rp_sweep.i ${src})
-        SWIG_LINK_LIBRARIES(rp_sweep_py ${PYTHON_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
+        SWIG_LINK_LIBRARIES(rp_sweep_py ${Python3_LIBRARIES} rp rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm -lpthread)
      endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)

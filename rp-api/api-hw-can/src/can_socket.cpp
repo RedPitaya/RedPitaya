@@ -6,6 +6,7 @@
 #include <linux/can/error.h>
 #include <net/if.h>
 #include <unistd.h>
+#include <algorithm>
 
 #include <sys/ioctl.h>
 #include <sys/socket.h>
@@ -35,7 +36,7 @@ auto socket_Open(rp_can_interface_t _interface) -> int{
 	struct ifreq ifr;
 
     auto ifname = getInterfaceName(_interface);
-    if (!strcmp(ifname,"")) 
+    if (!strcmp(ifname,""))
         return RP_HW_CAN_EUI;
 
     if (auto search = g_sockets.find(_interface); search != g_sockets.end()){
@@ -76,7 +77,7 @@ auto socket_Close(rp_can_interface_t _interface) -> int {
 
 auto socket_Send(rp_can_interface_t _interface, uint32_t _canId, unsigned char *_data, uint8_t _dataSize, bool _isExtended, bool _rtr, uint32_t _timeout) -> int {
     struct can_frame frame;
-    
+
     if (!_data){
         return RP_HW_CAN_ESD;
     }
@@ -121,7 +122,7 @@ auto socket_Send(rp_can_interface_t _interface, uint32_t _canId, unsigned char *
 
                     if (_timeout == 0) {
                         return RP_HW_CAN_ESBO;
-                    }                   
+                    }
 
                     auto ret = poll(&fds, 1, _timeout);
                     if (ret == -1 && errno != -EINTR) {
@@ -138,7 +139,7 @@ auto socket_Send(rp_can_interface_t _interface, uint32_t _canId, unsigned char *
                     return RP_HW_CAN_ESE;
 			}
 		}else{
-            break;         
+            break;
         }
 	}
     return RP_HW_CAN_OK;
@@ -160,7 +161,7 @@ auto socket_Read(rp_can_interface_t _interface, uint32_t _timeout,rp_can_frame_t
                             .events = POLLIN,
                             .revents = 0
                         };
-        
+
         auto ret = poll(&fds, 1, _timeout);
         switch (ret) {
             case -1:
@@ -170,7 +171,7 @@ auto socket_Read(rp_can_interface_t _interface, uint32_t _timeout,rp_can_frame_t
                 break;
             case 0:
                 return RP_HW_CAN_ESTE;
-            default:                
+            default:
                 break;
         }
         nbytes = read(s, &frame, sizeof(struct can_frame));
@@ -202,7 +203,7 @@ auto socket_AddFilter(rp_can_interface_t _interface, uint32_t _filter, uint32_t 
     std::pair<uint32_t,uint32_t> newFilter = {_filter,_mask};
     if (auto search = g_filters.find(_interface); search != g_filters.end()){
         auto& filter = g_filters[_interface];
-        auto it = find_if(filter.begin(), filter.end(), [newFilter] (auto s) { return s == newFilter; });
+        auto it = std::find_if(filter.begin(), filter.end(), [newFilter] (auto s) { return s == newFilter; });
         if (it != filter.end()){
             return RP_HW_CAN_ESFA;
         }
@@ -262,7 +263,7 @@ auto socket_SetFilter(rp_can_interface_t _interface, bool _isJoinFilter) -> int{
 auto socket_ShowErrorFrames(rp_can_interface_t _interface, bool _enable) -> int{
     if (auto search = g_sockets.find(_interface); search != g_sockets.end()){
         auto s = g_sockets[_interface];
-	    
+
         can_err_mask_t err_mask = _enable ? (CAN_ERR_TX_TIMEOUT | CAN_ERR_LOSTARB |
 					CAN_ERR_CRTL | CAN_ERR_PROT |
 					CAN_ERR_TRX | CAN_ERR_ACK | CAN_ERR_BUSOFF |

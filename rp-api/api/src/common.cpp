@@ -17,6 +17,14 @@
 #include <unistd.h>
 #include "rp.h"
 
+#ifdef TRACE_ENABLE
+#include <cxxabi.h>
+#include <dlfcn.h>
+#include <execinfo.h>
+#include <iomanip>
+#include <sstream>
+#endif
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wvolatile"
 
@@ -26,7 +34,7 @@ bool g_DebugReg = false;
 
 int cmn_Init() {
     if (fd == -1) {
-        if ((fd = open("/dev/uio/api", O_RDWR | O_SYNC)) == -1) {
+        if ((fd = open("/dev/uio/api@40000000", O_RDWR | O_SYNC)) == -1) {
             return RP_EOMD;
         }
     }
@@ -80,7 +88,7 @@ int cmn_Unmap(size_t size, void** mapped) {
 }
 
 int cmn_InitMap(size_t size, size_t offset, void** mapped, int* fd) {
-    if ((*fd = open("/dev/uio/api", O_RDWR | O_SYNC)) == -1) {
+    if ((*fd = open("/dev/uio/api@40000000", O_RDWR | O_SYNC)) == -1) {
         return RP_EOMD;
     }
 
@@ -257,8 +265,8 @@ int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     *_startAddress = 0;
     *_size = 0;
     int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg", O_RDONLY)) == -1) {
-        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
+    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
+        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
         return RP_EOMD;
     }
     char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -275,5 +283,147 @@ int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     }
     return RP_OK;
 }
+
+int cmn_CalculateBitShiftFor16BitMode() {
+    uint8_t bits = 0;
+    if (rp_HPGetFastADCBits(&bits) != RP_HP_OK) {
+        ERROR_LOG("I can't get the Fast ADC bit depth.")
+        return 0;
+    }
+    bool is16Bit = false;
+
+    if (rp_HPGetIsFastADC16BitMode(&is16Bit) != RP_HP_OK) {
+        ERROR_LOG("I can't get the Fast ADC bit depth.")
+        return 0;
+    }
+
+    if (is16Bit) {
+        return 16 - bits;
+    }
+
+    return 0;
+}
+
+double cmn_GetSampleTimeNS() {
+    static double adc_rate = rp_HPGetBaseFastADCSpeedHzOrDefault();
+    static double sample_time_ns = 1000000000.0 / adc_rate;
+    return sample_time_ns;
+}
+
+#ifdef TRACE_ENABLE
+
+std::string demangle(const char* symbol) {
+    int status = 0;
+    char* demangled = abi::__cxa_demangle(symbol, nullptr, nullptr, &status);
+    if (status == 0 && demangled) {
+        std::string result(demangled);
+        free(demangled);
+        return result;
+    }
+    return symbol;
+}
+
+struct FunctionInfo {
+    std::string fullName;    // namespace::Class::function(int, char*)
+    std::string shortName;   // function
+    std::string withParams;  // function(int, char*)
+    void* address;
+};
+
+FunctionInfo resolveFunction(void* addr) {
+    FunctionInfo info;
+    info.address = addr;
+
+    Dl_info dlinfo;
+    if (dladdr(addr, &dlinfo) && dlinfo.dli_sname) {
+        info.fullName = demangle(dlinfo.dli_sname);
+
+        if (dlinfo.dli_saddr) {
+            uintptr_t offset = (uintptr_t)addr - (uintptr_t)dlinfo.dli_saddr;
+            if (offset > 0) {
+                info.fullName += "+0x" + std::to_string(offset);
+            }
+        }
+
+        info.withParams = demangle(dlinfo.dli_sname);
+
+        size_t paren = info.withParams.find('(');
+        if (paren != std::string::npos) {
+            info.shortName = info.withParams.substr(0, paren);
+        } else {
+            info.shortName = info.withParams;
+        }
+
+        size_t lastColon = info.shortName.rfind("::");
+        if (lastColon != std::string::npos) {
+            info.shortName = info.shortName.substr(lastColon + 2);
+        } else {
+            size_t lastSpace = info.shortName.rfind(' ');
+            if (lastSpace != std::string::npos) {
+                info.shortName = info.shortName.substr(lastSpace + 1);
+            }
+        }
+    } else {
+        std::ostringstream oss;
+        oss << "[" << addr << "]";
+        info.fullName = oss.str();
+        info.shortName = info.fullName;
+        info.withParams = info.fullName;
+    }
+
+    return info;
+}
+
+std::string getStackTrace(int skipFrames, int maxFrames, StackTraceFormat format) {
+    std::vector<void*> array(maxFrames + skipFrames);
+    int size = backtrace(array.data(), maxFrames + skipFrames);
+
+    std::vector<FunctionInfo> functions;
+    functions.reserve(size);
+    for (int i = 0; i < size; i++) {
+        functions.push_back(resolveFunction(array[i]));
+    }
+
+    std::ostringstream oss;
+
+    switch (format) {
+        case StackTraceFormat::SHORT: {
+            int count = 0;
+            for (int i = skipFrames; i < size && count < maxFrames; i++) {
+                if (count > 0) {
+                    oss << " <- ";
+                }
+                oss << functions[i].shortName;
+                count++;
+            }
+            break;
+        }
+
+        case StackTraceFormat::WITH_PARAMS: {
+            int count = 0;
+            for (int i = skipFrames; i < size && count < maxFrames; i++) {
+                if (count > 0) {
+                    oss << " <- ";
+                }
+                oss << functions[i].withParams;
+                count++;
+            }
+            break;
+        }
+
+        case StackTraceFormat::FULL: {
+            for (int i = 0; i < size; i++) {
+                oss << "  #" << std::setw(2) << std::setfill('0') << i << " ";
+                oss << functions[i].fullName;
+                oss << " [" << functions[i].address << "]\n";
+            }
+            break;
+        }
+    }
+
+    return oss.str();
+}
+
+#endif
 
 #pragma GCC diagnostic pop

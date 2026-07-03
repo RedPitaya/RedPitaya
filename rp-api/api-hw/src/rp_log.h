@@ -10,26 +10,32 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __cplusplus
+#define __SHORT_FUNCTION__ __PRETTY_FUNCTION__
+#else
+#define __SHORT_FUNCTION__ __func__
+#endif
+
 #define __SHORT_FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 #define FATAL(...) \
 	{ \
 		char error_msg[1024]; \
 		snprintf(error_msg, 1024, __VA_ARGS__); \
-		fprintf(stderr, "Fatal error at line %d, file %s:%s %s\n", __LINE__, __SHORT_FILENAME__, __PRETTY_FUNCTION__, error_msg); \
+		fprintf(stderr, "Fatal error at line %d, file %s:%s %s\n", __LINE__, __SHORT_FILENAME__, __SHORT_FUNCTION__, error_msg); \
 		exit(1); \
 	}
 #define ERROR_LOG(...) \
 	{ \
 		char error_msg[1024]; \
 		snprintf(error_msg, 1024, __VA_ARGS__); \
-		fprintf(stderr,"[E] {%s:%s}(%d) %s\n", __SHORT_FILENAME__, __PRETTY_FUNCTION__, __LINE__, error_msg); \
+		fprintf(stderr,"[E] {%s:%s}(%d) %s\n", __SHORT_FILENAME__, __SHORT_FUNCTION__, __LINE__, error_msg); \
 	}
 #define WARNING(...) \
 	{ \
 		char error_msg[1024]; \
 		snprintf(error_msg, 1024, __VA_ARGS__); \
-		fprintf(stderr, "[W] {%s:%s}(%d) %s\n", __SHORT_FILENAME__, __PRETTY_FUNCTION__, __LINE__, error_msg); \
+		fprintf(stderr, "[W] {%s:%s}(%d) %s\n", __SHORT_FILENAME__, __SHORT_FUNCTION__, __LINE__, error_msg); \
 	}
 
 #ifdef TRACE_ENABLE
@@ -37,7 +43,7 @@
 	{ \
 		char error_msg[1024]; \
 		snprintf(error_msg, 1024, __VA_ARGS__); \
-		fprintf(stderr, "[T] {%s:%s}(%d) %s\n", __SHORT_FILENAME__, __PRETTY_FUNCTION__, __LINE__, error_msg); \
+		fprintf(stderr, "[T] {%s:%s}(%d) %s\n", __SHORT_FILENAME__, __SHORT_FUNCTION__, __LINE__, error_msg); \
 	}
 #define TRACE_SHORT(...) \
 	{ \

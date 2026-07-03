@@ -11,8 +11,8 @@ auto COscilloscope::create(const UioT&, uint32_t _dec_factor, bool _isMaster, ui
     return std::make_shared<COscilloscope>(0, nullptr, 0, _dec_factor, _isMaster, _adcMaxSpeed, _isADCFilterPresent, _fpgaBits, _maxChannels);
 }
 
-COscilloscope::COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent,
-                             uint8_t _fpgaBits, uint8_t _maxChannels)
+COscilloscope::COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent, uint8_t _fpgaBits,
+                             uint8_t _maxChannels)
     : m_Fd(_fd),
       m_Regset(_regset),
       m_RegsetSize(_regsetSize),
@@ -41,9 +41,10 @@ void COscilloscope::setFilterBypass(bool) {}
 
 auto COscilloscope::prepare() -> void {}
 
-auto COscilloscope::setCalibration(uint8_t, int32_t, float) -> void {}
+auto COscilloscope::setCalibration(uint8_t, int32_t, float, bool) -> void {}
 
-auto COscilloscope::getFPGALost(uint8_t, uint32_t& _overFlow) -> bool {
+auto COscilloscope::getFPGAInfo(uint8_t, uint32_t& _overFlow, int64_t& _time) -> bool {
+    _time = 0;
     _overFlow = 0;
     return true;
 }

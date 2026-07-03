@@ -15,12 +15,12 @@
 #include "dma.h"
 #include "rp.h"
 
-int dma_getReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
+int rp_dmaReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     *_startAddress = 0;
     *_size = 0;
     int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg", O_RDONLY)) == -1) {
-        FATAL("Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@1000000/reg\n");
+    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
+        FATAL("Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
         return RP_EOMD;
     }
     char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -38,16 +38,16 @@ int dma_getReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     return RP_OK;
 }
 
-int rp_dmaOpen(const std::string dev, rp_handle_uio_t* handle) {
+int rp_dmaOpen(const std::string dev, rp_handle_uio_t* handle, size_t sgm_size, size_t sgm_count) {
 
     uint32_t start = 0, size = 0;
-    if (dma_getReservedMemory(&start, &size) != RP_OK) {
+    if (rp_dmaReservedMemory(&start, &size) != RP_OK) {
         ERROR_LOG("Error getting reserved memory size.")
         return -1;
     }
 
-    if (size <= RP_SGMNT_CNT * RP_SGMNT_SIZE) {
-        ERROR_LOG("Reserved memory size %d is less than required %d", size, RP_SGMNT_CNT * RP_SGMNT_SIZE)
+    if (size < sgm_size * sgm_count) {
+        ERROR_LOG("Reserved memory size %d is less than required %d", size, sgm_count * sgm_size)
         return -1;
     }
 
@@ -59,9 +59,11 @@ int rp_dmaOpen(const std::string dev, rp_handle_uio_t* handle) {
         return -1;
     }
 
-    handle->dma_size = RP_SGMNT_CNT * RP_SGMNT_SIZE;
-    rp_setSgmntC(handle, RP_SGMNT_CNT);
-    rp_setSgmntS(handle, RP_SGMNT_SIZE);
+    handle->dma_size = sgm_count * sgm_size;
+    rp_setSgmntC(handle, sgm_count);
+    rp_setSgmntS(handle, sgm_size);
+    // ioctl(handle->dma_fd, SET_DELAY_INT);
+
     return RP_OK;
 }
 

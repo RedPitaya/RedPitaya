@@ -767,4 +767,5 @@ $(function() {
     SM.param_callbacks["ch2_gain_dac"] = OBJ.amSetCh2GainDAC;
     SM.param_callbacks["ch1_off_dac"] = OBJ.amSetCh1OffDAC;
     SM.param_callbacks["ch2_off_dac"] = OBJ.amSetCh2OffDAC;
+    SM.param_callbacks["EEPROM_CALIB_VALUE"] = SW.setEppromValuesInDialog;
 });

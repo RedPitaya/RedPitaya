@@ -13,10 +13,11 @@ var startFreqChange = function(event){
 
 //Stop frequency changed
 var endFreqChange = function(event){
+	let max = parseInt($("#BA_END_FREQ").attr('max'));
     if (parseInt($("#BA_END_FREQ").val()) <= parseInt($("#BA_START_FREQ").val()))
         $("#BA_END_FREQ").val(parseInt($("#BA_START_FREQ").val()) + 1);
-    else if (parseInt($("#BA_END_FREQ").val()) > 125e6)
-        $("#BA_END_FREQ").val(125e6);
+    else if (parseInt($("#BA_END_FREQ").val()) > max)
+        $("#BA_END_FREQ").val(max);
 
 	CLIENT.parametersCache["BA_END_FREQ"] = { value: $("#BA_END_FREQ").val() };
 	CLIENT.sendParameters();

@@ -53,6 +53,38 @@ void acprintf(FILE* stream, PColor color, const char* format, ...);
 #define TRACE_SHORT(...)
 #endif
 
+#ifdef ENABLE_DEBUG_TRACE
+#include <string>
+
+enum class StackTraceFormat {
+	SHORT,		 // func1 <- func2 <- func3
+	WITH_PARAMS, // func1(int, char*) <- func2() <- main
+	FULL		 // namespace::Class::func(...) +0x123 [0x555...]
+};
+
+std::string getStackTrace(int skipFrames = 2, int maxFrames = 32, StackTraceFormat format = StackTraceFormat::SHORT);
+
+#define TRACE_FUNC() \
+	{ \
+		TRACE("Stack: %s", getStackTrace(2, 5, StackTraceFormat::SHORT).c_str()); \
+	}
+
+#define TRACE_FUNC_PARAMS() \
+	{ \
+		TRACE("Stack: %s", getStackTrace(2, 5, StackTraceFormat::WITH_PARAMS).c_str()); \
+	}
+
+#define TRACE_FUNC_FULL() \
+	{ \
+		TRACE("Stack trace:\n%s", getStackTrace(0, 32, StackTraceFormat::FULL).c_str()); \
+	}
+
+#else
+#define TRACE_FUNC()
+#define TRACE_FUNC_PARAMS()
+#define TRACE_FUNC_FULL()
+#endif
+
 class CFileLogger {
    public:
     enum EMetric { OSC_RATE, FILESYSTEM_RATE, OUT_OF_MEMORY, RECIVE_DATE };

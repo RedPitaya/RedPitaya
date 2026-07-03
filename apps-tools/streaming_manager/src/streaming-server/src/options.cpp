@@ -89,6 +89,18 @@ auto ClientOpt::getADCChannels() -> uint8_t {
     return c;
 }
 
+auto ClientOpt::getMACAddress() -> std::string {
+#ifdef RP_PLATFORM
+    char* address = nullptr;
+    if (rp_HPGetModelETH_MAC_Address(&address) != RP_HP_OK) {
+        FATAL("Can't get MAC address")
+    }
+    return std::string(address);
+#else
+    return "NONE";
+#endif
+}
+
 auto ClientOpt::getADCBits() -> uint8_t {
     uint8_t c = 0;
 #ifdef RP_PLATFORM
@@ -143,6 +155,18 @@ auto ClientOpt::getADCRate() -> uint32_t {
     return c;
 }
 
+auto ClientOpt::getIsXStreaming() -> bool {
+    bool c = false;
+#ifdef RP_PLATFORM
+    if (rp_HPGetIsXStreamingAvailable(&c) != RP_HP_OK) {
+        ERROR_LOG("Can't get xstreaming mode");
+    }
+#else
+    c = false;
+#endif
+    return c;
+}
+
 auto ClientOpt::getModel() -> ClientOpt::models_t {
 #ifdef RP_PLATFORM
     rp_HPeModels_t c = STEM_125_14_v1_0;
@@ -187,50 +211,15 @@ auto ClientOpt::getModel() -> ClientOpt::models_t {
     return RP_125_14;
 }
 
-auto ClientOpt::getBroadcastModel() -> broadcast_lib::EModel {
+auto ClientOpt::getBroadcastModel() -> uint8_t {
 #ifdef RP_PLATFORM
     rp_HPeModels_t c = STEM_125_14_v1_0;
     if (rp_HPGetModel(&c) != RP_HP_OK) {
         FATAL("Can't get board model")
     }
-
-    switch (c) {
-        case STEM_125_10_v1_0:
-        case STEM_125_14_v1_0:
-        case STEM_125_14_v1_1:
-        case STEM_125_14_LN_v1_1:
-        case STEM_125_14_LN_BO_v1_1:
-        case STEM_125_14_LN_CE1_v1_1:
-        case STEM_125_14_LN_CE2_v1_1:
-            return broadcast_lib::EModel::RP_125_14;
-        case STEM_125_14_Z7020_v1_0:
-        case STEM_125_14_Z7020_LN_v1_1:
-            return broadcast_lib::EModel::RP_125_14_Z20;
-
-        case STEM_122_16SDR_v1_0:
-        case STEM_122_16SDR_v1_1:
-            return broadcast_lib::EModel::RP_122_16;
-
-        case STEM_125_14_Z7020_4IN_v1_0:
-        case STEM_125_14_Z7020_4IN_v1_2:
-        case STEM_125_14_Z7020_4IN_v1_3:
-        case STEM_125_14_Z7020_4IN_BO_v1_3:
-            return broadcast_lib::EModel::RP_125_4CH;
-
-        case STEM_250_12_v1_0:
-        case STEM_250_12_v1_1:
-        case STEM_250_12_v1_2:
-        case STEM_250_12_v1_2a:
-        case STEM_250_12_v1_2b:
-            return broadcast_lib::EModel::RP_250_12;
-        case STEM_250_12_120:
-            return broadcast_lib::EModel::RP_250_12;
-
-        default:
-            FATAL("Can't get board model")
-    }
+    return (uint8_t)c;
 #endif
-    return broadcast_lib::EModel::RP_125_14;
+    return 0;
 }
 
 /** Print usage information */

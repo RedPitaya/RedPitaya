@@ -11,7 +11,7 @@ CPU_CORES = $(shell ./get_cpu_ram.sh)
 ################################################################################
 
 # Required OS version
-LINUX_VER = 2.07
+LINUX_VER = 3.00
 BUILD_NUMBER ?= dev
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(LINUX_VER)-$(BUILD_NUMBER)
@@ -28,7 +28,7 @@ CMAKEVAR=-DINSTALL_DIR=$(abspath $(INSTALL_DIR)) -DCMAKE_BUILD_TYPE=$(BUILD_MODE
 
 CUR_DIR = $(PWD)
 
-all: api nginx examples  apps-tools apps-pro startupsh scpi sdr
+all: api nginx examples  apps-tools apps-pro startupsh scpi
 
 
 $(DL):
@@ -47,7 +47,6 @@ LIBRP_HW_CAN_DIR  		= rp-api/api-hw-can
 LIBRP_HW_PROFILES_DIR	= rp-api/api-hw-profiles
 LIBRP_HW_CALIB_DIR		= rp-api/api-hw-calib
 LIBRP_CALIB_DIR		    = rp-api/api-calib
-# LIBRP2_DIR      		= rp-api/api2
 LIBRP250_12_DIR 		= rp-api/api-250-12
 LIBRP_DSP_DIR   		= rp-api/api-dsp
 LIBRP_SWEEP_DIR  		= rp-api/api-sweep
@@ -61,7 +60,6 @@ ECOSYSTEM_DIR   		= Applications/ecosystem
 .PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
 
 api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater librp_calibration
-# api2: librp2
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) $(CMAKEVAR)
@@ -160,10 +158,10 @@ IDGEN           = $(INSTALL_DIR)/sbin/idgen
 SOCKPROC        = $(INSTALL_DIR)/sbin/sockproc
 
 WEBSOCKETPP_TAG = 0.8.2
-LUANGINX_TAG    = v0.10.21
-LUARESTY_TAG    = v0.1.23
-LUARESTY_L_TAG  = v0.13
-NGINX_TAG       = 1.19.10
+LUANGINX_TAG    = v0.10.32rc1
+LUARESTY_TAG    = v0.1.35rc1
+LUARESTY_L_TAG  = v0.15
+NGINX_TAG       = 1.31.2
 SOCKPROC_TAG    = master
 
 WEBSOCKETPP_URL = https://github.com/RedPitaya/websocketpp/archive/$(WEBSOCKETPP_TAG).tar.gz
@@ -306,45 +304,33 @@ scpi_clean:
 	rm -rf $(abspath $(SCPI_SERVER_DIR)/build)
 	rm -rf $(abspath $(SCPI_PARSER_DIR))
 
-################################################################################
-# SDR
-################################################################################
-
-
-SDR_ZIP = SDR-bundle-62-67ae44e2.zip
-SDR_URL = https://downloads.redpitaya.com/hamlab/sdr-bundle/$(SDR_ZIP)
-
-sdr: | $(DL)
-	wget $(SDR_URL) -O $(DL)/$(SDR_ZIP) --show-progress
-	mkdir -p $(INSTALL_DIR)/www/apps
-	unzip -o $(DL)/$(SDR_ZIP) -d $(INSTALL_DIR)/www/apps
 
 ################################################################################
 # Red Pitaya tools
 ################################################################################
 
-LA_DIR             = Test/la
-LCR_DIR            = Test/lcr
-BODE_DIR           = Test/bode
-MONITOR_DIR        = Test/monitor
-PROFILES_DIR       = Test/profiles
-ACQUIRE_DIR        = Test/acquire
-ACQUIRE_P_DIR      = Test/acquire_p
-CALIB_DIR          = Test/calib
-FILTER_CALIB_DIR   = Test/filter_calib
-GENERATOR_DIR	   = Test/generate
-SPECTRUM_DIR       = Test/spectrum
-LED_CONTROL_DIR    = Test/led_control
-XADC_DIR           = Test/xadc
-UPDATER_DIR        = Test/updater
-DAISY_TOOL_DIR     = Test/daisy_tool
+LA_DIR             = tools/la
+LCR_DIR            = tools/lcr
+BODE_DIR           = tools/bode
+MONITOR_DIR        = tools/monitor
+PROFILES_DIR       = tools/profiles
+ACQUIRE_DIR        = tools/acquire
+ACQUIRE_P_DIR      = tools/acquire_p
+CALIB_DIR          = tools/calib
+FILTER_CALIB_DIR   = tools/filter_calib
+GENERATOR_DIR	   = tools/generate
+SPECTRUM_DIR       = tools/spectrum
+LED_CONTROL_DIR    = tools/led_control
+XADC_DIR           = tools/xadc
+UPDATER_DIR        = tools/updater
+DAISY_TOOL_DIR     = tools/daisy_tool
 E3_LED_CON_DIR     = tools/e3_led_controller
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib
+.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib phytool
 
-examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib
+examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib phytool
 
 
 lcr: api
@@ -402,6 +388,10 @@ led_control: api
 fpgautils:
 	mkdir -p $(abspath $(INSTALL_DIR))/bin
 	$(CC) tools/fpgautils/fpgautil.c -o $(abspath $(INSTALL_DIR))/bin/fpgautil
+
+phytool:
+	mkdir -p $(abspath $(INSTALL_DIR))/bin
+	cp -f tools/phytool/phytool $(abspath $(INSTALL_DIR))/bin/phytool
 
 e3_led_controller: api
 	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)

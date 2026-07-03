@@ -91,6 +91,22 @@ int rp_AcqSetArmKeepCh(rp_channel_t channel, bool enable);
 int rp_AcqGetArmKeepCh(rp_channel_t channel, bool* state);
 
 /**
+ * Enables a mode where all captured data is saved in 16-bit format. This increases the bit depth during decimation..
+ * @param enable True for enabling and false disabling
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqSet16BitMode(bool enable);
+
+/**
+ * Gets the mode status when all captured data is saved in 16-bit format..
+ * @param state Returns status
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGet16BitMode(bool* state);
+
+/**
  * Indicates whether the ADC buffer was full of data. The length of the buffer is determined by the delay. By default, the delay is half the buffer.
  * @param state Returns status
  * @return If the function is successful, the return value is RP_OK.
@@ -734,6 +750,78 @@ int rp_AcqGetUnlockTrigger(bool* state);
 int rp_AcqGetUnlockTriggerCh(rp_channel_t channel, bool* state);
 
 /**
+ * @brief Sets the common interrupt mask for the acquisition module.
+ * @param mode   Interrupt mode (Trigger or Fill).
+ * @param enable True to enable, false to mask.
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqSetIntMask(rp_int_mode_t mode, bool enable);
+
+/**
+ * @brief Gets the common interrupt mask status.
+ * @param mode     Interrupt mode to check.
+ * @param[out] enable Current status (true if enabled).
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqGetIntMask(rp_int_mode_t mode, bool* enable);
+
+/**
+ * @brief Sets the interrupt mask for a specific channel.
+ * @param channel Target channel (e.g., RP_CH_1, RP_CH_2).
+ * @param mode    Interrupt mode (Trigger or Fill).
+ * @param enable  True to enable, false to mask.
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqSetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool enable);
+
+/**
+ * @brief Gets the interrupt mask status for a specific channel.
+ * @param channel Target channel.
+ * @param mode    Interrupt mode to check.
+ * @param[out] enable Current status (true if enabled).
+ * @return RP_OK if successful, error code otherwise.
+ */
+int rp_AcqGetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool* enable);
+
+/**
+ * Waits for a trigger interrupt event on any channel of the acquisition module.
+ * This function blocks until a trigger condition is met on any channel or the specified timeout expires.
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (trigger detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntTriggerRead(int timeout_ms);
+
+/**
+ * Waits for a buffer fill interrupt event on any channel of the acquisition module.
+ * This function blocks until the acquisition buffer is fill on any channel or the specified timeout expires.
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (buffer full detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntFillRead(int timeout_ms);
+
+/**
+ * Waits for a trigger interrupt event on a specific channel of the acquisition module.
+ * This function blocks until a trigger condition is met on the specified channel or the timeout expires.
+ * @param channel The channel to monitor for trigger events (e.g., RP_CH_1, RP_CH_2).
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (trigger detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntTriggerReadCh(rp_channel_t channel, int timeout_ms);
+
+/**
+ * Waits for a buffer fill interrupt event on a specific channel of the acquisition module.
+ * This function blocks until the acquisition buffer is fill on the specified channel or the timeout expires.
+ * @param channel The channel to monitor for buffer fill events (e.g., RP_CH_1, RP_CH_2).
+ * @param timeout_ms Timeout value in milliseconds (mS). For disable timeout use: -1
+ * @return If the function is successful (buffer full detected), the return value is RP_OK.
+ * If timeout expires, returns RP_ETIMEOUT. If unsuccessful, returns any of RP_E* values that indicate an error.
+ */
+int rp_AcqIntFillReadCh(rp_channel_t channel, int timeout_ms);
+
+/**
  * Normalizes the ADC buffer position. Returns the modulo operation of ADC buffer size...
  * @param pos position to be normalized
  * @return Normalized position (pos % ADC_BUFFER_SIZE)
@@ -865,6 +953,30 @@ int rp_AcqGetOldestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
 int rp_AcqGetOldestDataRawNP(rp_channel_t channel, int16_t* np_buffer, int size);
 
 /**
+ * Returns the ADC buffer in calibrated raw units from the oldest sample to the newest one.
+ * Output buffer must be at least 'size' long.
+ * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetOldestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer);
+
+/**
+ * Returns the ADC buffer in calibrated raw units from the oldest sample to the newest one.
+ * Output buffer must be at least 'size' long.
+ * CAUTION: Use this method only when write pointer has stopped (Trigger happened and writing stopped).
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetOldestDataRawWithCalibNP(rp_channel_t channel, int16_t* np_buffer, int size);
+
+/**
  * Returns the latest ADC buffer samples in raw units.
  * Output buffer must be at least 'size' long.
  * @param channel Channel A or B for which we want to retrieve the ADC buffer.
@@ -885,6 +997,28 @@ int rp_AcqGetLatestDataRaw(rp_channel_t channel, uint32_t* size, int16_t* buffer
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_AcqGetLatestDataRawNP(rp_channel_t channel, int16_t* np_buffer, int size);
+
+/**
+ * Returns the latest ADC buffer samples in raw units.
+ * Output buffer must be at least 'size' long.
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @param buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetLatestDataRawWithCalib(rp_channel_t channel, uint32_t* size, int16_t* buffer);
+
+/**
+ * Returns the latest ADC buffer samples in raw units.
+ * Output buffer must be at least 'size' long.
+ * @param channel Channel A or B for which we want to retrieve the ADC buffer.
+ * @param np_buffer The output buffer gets filled with the selected part of the ADC buffer.
+ * @param size Length of the ADC buffer to retrieve. Returns length of filled buffer. In case of too small buffer, required size is returned.
+ * @return If the function is successful, the return value is RP_OK.
+ * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
+ */
+int rp_AcqGetLatestDataRawWithCalibNP(rp_channel_t channel, int16_t* np_buffer, int size);
 
 /**
  * Returns the ADC buffer in Volt units from specified position and desired size.
@@ -1074,6 +1208,26 @@ int rp_AcqSetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t mode);
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
 int rp_AcqGetAC_DC(rp_channel_t channel, rp_acq_ac_dc_mode_t* status);
+
+/**
+ * Set initial timestamp value for acquisition.
+ * This timestamp is used as base reference for subsequent acquisitions.
+ *
+ * @param value Initial timestamp value in clock cycles.
+ * @return RP_OK on success, RP_E* error code on failure.
+ */
+int rp_AcqSetInitTimestamp(uint64_t value);
+
+/**
+ * Get acquisition timestamp for specified channel.
+ * Retrieves timestamp of the last acquired sample or current acquisition position.
+ * Timestamp value is measured in nS.
+ *
+ * @param channel Channel A or B (RP_CH_1 or RP_CH_2).
+ * @param value Pointer to variable where timestamp value (in clock cycles) will be stored.
+ * @return RP_OK on success, RP_E* error code on failure.
+ */
+int rp_AcqGetTimestamp(rp_channel_t channel, uint64_t* time_ns);
 
 /**
 * Initializes buffers to the specified length.

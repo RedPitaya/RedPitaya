@@ -13,6 +13,7 @@
 #define __RP_APP_H
 
 #include <functional>
+#include <vector>
 #include "math/rp_dsp.h"
 #include "rp.h"
 
@@ -44,11 +45,11 @@ typedef enum {
 * Type representing trigger source.
 */
 typedef enum {
-    RPAPP_OSC_TRIG_SRC_CH1,      //!< Trigger source channel 1
-    RPAPP_OSC_TRIG_SRC_CH2,      //!< Trigger source channel 2
-    RPAPP_OSC_TRIG_SRC_CH3,      //!< Trigger source channel 3
-    RPAPP_OSC_TRIG_SRC_CH4,      //!< Trigger source channel 4
-    RPAPP_OSC_TRIG_SRC_EXTERNAL  //!< Trigger source external
+    RPAPP_OSC_TRIG_SRC_CH1 = 0,      //!< Trigger source channel 1
+    RPAPP_OSC_TRIG_SRC_CH2 = 1,      //!< Trigger source channel 2
+    RPAPP_OSC_TRIG_SRC_CH3 = 2,      //!< Trigger source channel 3
+    RPAPP_OSC_TRIG_SRC_CH4 = 3,      //!< Trigger source channel 4
+    RPAPP_OSC_TRIG_SRC_EXTERNAL = 4  //!< Trigger source external
 } rpApp_osc_trig_source_t;
 
 /**
@@ -603,11 +604,12 @@ int rpApp_OscGetViewData(rpApp_osc_source source, float* data, uint32_t size);
 * @param mode Export mode.
 * @param normalize Normalize data to 2V p-p.
 * @param data Buffer for values.
-* @param size Number of values to be returned.
+* @param time Time indices relative to samples relative to the trigger position.
+* @param decimation Decimation for returned data.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
 */
-int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, float* data, uint32_t* size);
+int rpApp_OscGetExportedData(rpApp_osc_source source, rpApp_osc_exportMode mode, bool normalize, std::vector<float>& data, std::vector<float>& time, uint32_t* decimation);
 
 // /**
 // * Gets raw data.

@@ -21,7 +21,8 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
       m_Buffer2(nullptr),
       m_waitLock(),
       m_maxDacSpeedHz(maxDacHz),
-      m_dacSpeedHz(dacHz) {}
+      m_dacSpeedHz(dacHz),
+      m_is8Bit{false, false} {}
 
 CGenerator::~CGenerator() {}
 

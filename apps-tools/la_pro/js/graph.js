@@ -539,22 +539,22 @@
     }
 
 
-    LA.drawSeries = function(idx, plot, canvascontext) {
+    LA.drawSeries = function(idx_decoder, plot, canvascontext) {
 
-        var data = LA.decodedData[idx]
+        var data = LA.decodedData[idx_decoder]
 
         if (data.values !== undefined && data.name !== undefined){
             for (var line in data.values) {
                 let sel_idx = -1
-                for(let ixd = 1; idx <= 8; idx++){
-                    if (CLIENT.getValue('LA_DIN_NAME_'+idx) == line){
+                for(let idx = 0; idx < 8; idx++){
+                    if ('DIN'+idx == line){
                         sel_idx = idx
                         break
                     }
                 }
                 if (sel_idx == -1) continue;
-                var enable_din = CLIENT.getValue('LA_DIN_' + sel_idx)
-                var offset = LA.calculateOffset(sel_idx)
+                var enable_din = CLIENT.getValue('LA_DIN_' + (sel_idx + 1))
+                var offset = LA.calculateOffset(sel_idx + 1)
                 if (offset == -1) continue;
                 if (enable_din != true) continue;
                 if (data.name == 'CAN'){

@@ -2,6 +2,8 @@
 
 #include "rp.h"
 
+#include <cmath>
+
 auto initGenBeforeLoadConfig() -> void;
 auto generateOutSignalForWeb(float tscale) -> void;
 auto generate(rp_channel_t channel, float tscale) -> void;

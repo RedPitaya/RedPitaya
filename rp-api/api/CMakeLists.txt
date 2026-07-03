@@ -100,7 +100,7 @@ list(APPEND header_rp_common
 
 add_compile_options(-mcpu=cortex-a9 -mfpu=neon-fp16 -fPIC)
 add_compile_definitions(ARCH_ARM)
-add_compile_options(-Wall -Wno-psabi -Wextra -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
+add_compile_options(-Wall  -Wno-psabi -Wextra -Wpedantic -Wno-unused-parameter -DVERSION=${VERSION} -DREVISION=${REVISION} $<$<CONFIG:Debug>:-g3> $<$<CONFIG:Debug>:-DTRACE_ENABLE> $<$<CONFIG:Release>:-Os> -ffunction-sections -fdata-sections)
 
 if(DEBUG_REG)
 add_compile_options(-DDEBUG_REG)
@@ -113,6 +113,11 @@ if(NOT DEFINED INSTALL_DIR)
 endif()
 include_directories(${INSTALL_DIR}/include/api250-12)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}  -rdynamic -fno-omit-frame-pointer")
+endif()
+
+
 link_directories(${INSTALL_DIR}/lib)
 link_directories(${INSTALL_DIR}/lib/python)
 
@@ -121,17 +126,34 @@ target_link_libraries(${PROJECT_NAME}-obj rp-i2c)
 if(BUILD_SHARED)
 
     if (BUILD_PYTHON_MODULE)
+
         find_package(SWIG REQUIRED)
         INCLUDE(${SWIG_USE_FILE})
 
-        find_package(PythonLibs)
-        include_directories(${PYTHON_INCLUDE_PATH})
-        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
-        set(CMAKE_SWIG_FLAGS "")
+        find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
+        execute_process(
+            COMMAND ${Python3_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
+            OUTPUT_VARIABLE NUMPY_INCLUDE_DIR
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE NUMPY_FOUND
+        )
+
+        if(NOT NUMPY_FOUND EQUAL 0)
+            message(FATAL_ERROR "NumPy not found. Install with: pip3 install numpy")
+        endif()
+
+        message(STATUS "NumPy include directory: ${NUMPY_INCLUDE_DIR}")
+
+        include_directories(
+            ${Python3_INCLUDE_DIRS}
+            ${NUMPY_INCLUDE_DIR}
+        )
+#        include_directories(/usr/local/lib/python3.10/dist-packages/numpy/_core/include)
+        set(CMAKE_SWIG_FLAGS -threads -O)
         set_property(SOURCE src/rp.i PROPERTY CPLUSPLUS ON)
 
         SWIG_ADD_LIBRARY(rp_py LANGUAGE python SOURCES src/rp.i ${src})
-        SWIG_LINK_LIBRARIES(rp_py ${PYTHON_LIBRARIES} -lpthread rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm)
+        SWIG_LINK_LIBRARIES(rp_py ${Python3_LIBRARIES} -lpthread rp-hw-calib rp-hw-profiles rp-i2c rp-spi rp-gpio rp-hw i2c -lm)
     endif()
 
     add_library(${PROJECT_NAME}-shared SHARED)
@@ -154,7 +176,7 @@ if(BUILD_SHARED)
             install(TARGETS rp_py
                 LIBRARY DESTINATION ${INSTALL_DIR}/lib/python
                 ARCHIVE DESTINATION ${INSTALL_DIR}/lib/python)
-            install(FILES tests/rp_test.py
+            install(FILES tests/rp_test_acq_axi.py tests/rp_test_acq.py tests/rp_test_acq_split.py tests/rp_test_analog.py tests/rp_test_gen_axi.py tests/rp_test_gen.py tests/rp_test_hk.py
                 DESTINATION ${INSTALL_DIR}/lib/python PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                 GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
             install(FILES python/rp_overlay.py

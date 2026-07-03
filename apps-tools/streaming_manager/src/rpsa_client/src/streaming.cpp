@@ -26,19 +26,20 @@ auto stopCSV() -> void;
 auto stopStreaming() -> void;
 auto stopStreaming(std::string host) -> void;
 
-auto runClient(std::string host, StateRunnedHosts, uint32_t size, uint32_t activeChannels) -> void {
-    auto memoryManager = new uio_lib::CMemoryManager();
-    auto buffers = DataLib::CBuffersCached::create();
-    memoryManager->setMemoryBlockSize(size);
+auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t activeChannels) -> void
+{
+	auto memoryManager = new uio_lib::CMemoryManager();
+	auto buffers = DataLib::CBuffersCached::create();
+	memoryManager->setMemoryBlockSize(size);
     memoryManager->reallocateBlocks();
     auto blocks = memoryManager->getFreeBlockCount();
-    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_ADC, blocks, activeChannels);
-    buffers->generateBuffersEmpty(activeChannels, memoryManager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
-    TRACE_SHORT("Reserved blocks %d", reserved)
+	auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_ADC, blocks, activeChannels.count());
+	buffers->generateBuffersEmptyADC(activeChannels, memoryManager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
+	TRACE_SHORT("Reserved blocks %d", reserved)
 
-    g_terminate[host] = false;
+	g_terminate[host] = false;
 
-    if (g_soption.save_dir == "")
+	if (g_soption.save_dir == "")
         g_soption.save_dir = ".";
 
     CStreamSettings::DataFormat file_type = CStreamSettings::DataFormat::BIN;
@@ -144,16 +145,8 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, uint32_t activ
                     }
 
                     auto flost = obj->getFileLost();
-                    // int  brokenBuffer = -1;
-                    // if (g_soption.testStreamingMode == ClientOpt::TestSteamingMode::WITH_TEST_DATA){
-                    //     brokenBuffer = testBuffer(ch1 ? static_cast<uint8_t*>(ch1->getMappedDataMemory()) : nullptr,
-                    //                               ch2 ? static_cast<uint8_t*>(ch2->getMappedDataMemory()) : nullptr,
-                    //                               ch3 ? static_cast<uint8_t*>(ch3->getMappedDataMemory()) : nullptr,
-                    //                               ch4 ? static_cast<uint8_t*>(ch4->getMappedDataMemory()) : nullptr,
-                    //                               sizeCh1,sizeCh2,sizeCh3,sizeCh4) ? 0 : 1;
-                    // }
                     auto h = host;
-                    addStatisticSteaming(h, sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4, sempCh1, sempCh2, sempCh3, sempCh4, lostRate, flost, -1);
+                    addStatisticStreaming(h, sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4, sempCh1, sempCh2, sempCh3, sempCh4, lostRate, flost, -1);
                 }
                 obj->passBuffers(pack);
                 obj2->unlockBufferRead();
@@ -182,7 +175,7 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, uint32_t activ
         const std::lock_guard lock(g_s_csv_mutex);
         auto fileName = g_file_manager->getCSVFileName();
         g_converter[host] = converter_lib::CConverter::create();
-        g_converter[host]->convertToCSV(fileName, host);
+        g_converter[host]->convertToCSV(fileName, host, FH_CSV_ADD_INDEX);
     }
     delete memoryManager;
 }
@@ -220,19 +213,19 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         return;
     }
 
-    std::map<std::string, uint32_t> activeChannels;
-    if (!requestActiveChannels(cl, hosts, &activeChannels, remote_opt.verbous)) {
-        aprintf(stdout, "%s Can't get active channels\n", getTS(": ").c_str());
+	std::map<std::string, adc_channels_t> activeChannels;
+	if (!requestActiveChannels(cl, hosts, &activeChannels, remote_opt.verbous)) {
+		aprintf(stdout, "%s Can't get active channels\n", getTS(": ").c_str());
         return;
-    }
+	}
 
-    runned_hosts.clear();
+	runned_hosts.clear();
     remote_opt.remote_mode = ClientOpt::RemoteMode::START;
     if (startRemote(cl, remote_opt, nullptr, &runned_hosts)) {
         g_runClientCounter = runned_hosts.size();
         for (auto kv : runned_hosts) {
-            if (kv.second == StateRunnedHosts::TCP && activeChannels[kv.first] > 0)
-                clients.push_back(std::thread(runClient, kv.first, kv.second, blockSizes[kv.first], activeChannels[kv.first]));
+			if (kv.second == StateRunnedHosts::TCP && activeChannels[kv.first].count() > 0)
+				clients.push_back(std::thread(runClient, kv.first, kv.second, blockSizes[kv.first], activeChannels[kv.first]));
         }
         while (g_runClientCounter > 0) {
             sleepMs(100);

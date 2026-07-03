@@ -4,6 +4,7 @@
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
 #include "net_config_manager.h"
+#include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
 
 class ServerNetConfigManager {
@@ -22,11 +23,11 @@ class ServerNetConfigManager {
 
     using Ptr = std::shared_ptr<ServerNetConfigManager>;
 
-    ServerNetConfigManager(std::string defualt_file_settings_path, broadcast_lib::EMode mode, std::string host, uint16_t port);
+    ServerNetConfigManager(std::string defualt_file_settings_path, broadcast_lib::EMode mode, std::string host, uint16_t port, uint8_t maxAdcChannels);
     ~ServerNetConfigManager();
 
     auto startServer(std::string host, uint16_t port) -> void;
-    auto startBroadcast(broadcast_lib::EModel model, std::string host, uint16_t port) -> void;
+    auto startBroadcast(uint8_t model, std::string mac, std::string host, uint16_t port) -> void;
     auto setBroadcastAddress(std::string host) -> void;
     auto setMode(broadcast_lib::EMode mode) -> void;
     auto stop() -> void;
@@ -72,8 +73,8 @@ class ServerNetConfigManager {
     sigslot::signal<> clientConnectedNofiy;
     sigslot::signal<> clientDisconnectedNofiy;
 
-    sigslot::signal<const std::string&> startDacStreamingNofiy;
-    sigslot::signal<> stopDacStreamingNofiy;
+	sigslot::signal<dac_channels_t> startDacStreamingNofiy;
+	sigslot::signal<> stopDacStreamingNofiy;
 
     sigslot::signal<> getServerModeNofiy;
 
@@ -101,6 +102,7 @@ class ServerNetConfigManager {
     std::string m_file_settings;
     broadcast_lib::EMode m_mode;
     CStreamSettings m_settings;
+    uint8_t m_maxADCChannels = 0;
 };
 
 #endif

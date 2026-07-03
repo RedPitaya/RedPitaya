@@ -81,9 +81,9 @@ int rp_app_init(void) {
         max_gain.Value() = gain;
     }
 #ifdef ZIP_DISABLED
-    CDataManager::GetInstance()->SetEnableParamsGZip(false);
-    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
-    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
+//    CDataManager::GetInstance()->SetEnableParamsGZip(false);
+//    CDataManager::GetInstance()->SetEnableSignalsGZip(false);
+//    CDataManager::GetInstance()->SetEnableBinarySignalsGZip(false);
 #endif
     CDataManager::GetInstance()->SetParamInterval(50);
     CDataManager::GetInstance()->SetSignalInterval(50);
@@ -147,7 +147,7 @@ void sendFilesInfo() {
             continue;
 
         decimateSignal(data, dataSize, dataOut, &dataSizeOut);
-        std::string sig = std::to_string(dataSizeOut) + "\t";
+        std::string sig = std::to_string(dataSize) + "\t" + std::to_string(dataSizeOut) + "\t";
         for (uint32_t j = 0; j < dataSizeOut; j++) {
             if (j != 0) {
                 sig += ";";

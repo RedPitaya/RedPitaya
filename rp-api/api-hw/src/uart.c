@@ -74,15 +74,16 @@ int uart_InitDevice(char *_device)
     return uart_SetSettings();
 }
 
-int uart_Timeout(uint8_t deca_sec)
+int uart_SetTimeout(uint8_t deca_sec)
 {
     g_timeout = deca_sec;
     return RP_HW_OK;
 }
 
-uint8_t uart_GetTimeout()
+int uart_GetTimeout(uint8_t *value)
 {
-    return g_timeout;
+    *value = g_timeout;
+    return RP_HW_OK;
 }
 
 int uart_SetSettings()
@@ -191,7 +192,7 @@ int uart_SetSettings()
 int uart_read(unsigned char *_buffer, int *size)
 {
 
-    if (_buffer == NULL || *size <= 0)
+    if (_buffer == NULL  || !size || *size <= 0)
     {
         ERROR_LOG("Failed read from UART. Buffer is null");
         return RP_HW_EIPV;
@@ -291,6 +292,7 @@ int uart_Release()
     if (uart_fd != -1)
     {
         tcflush(uart_fd, TCIFLUSH);
+        tcdrain(uart_fd);
         close(uart_fd);
         uart_fd = -1;
     }

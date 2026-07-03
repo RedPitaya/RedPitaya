@@ -67,7 +67,7 @@
                     <ul class="nav navbar-nav">
                         <ul class="nav navbar-nav">
                             <li id="B_APPLY_CONT" style="display: none">
-                                <a id="B_APPLY" href="#" style="color:#12ff12">APPLY</a>
+                                <a id="B_APPLY" href="#" style="color:#12ff12">SAVE</a>
                             </li>
                         </ul>
                     </ul>
@@ -1122,6 +1122,26 @@
                         <img id="SS_REF_VLOT_STATE" src="img/green_led.png" style="width: 25px;">
                     </div>
                 </div>
+                <div id="am_dialog_filter" class="container_inline" style="text-align: left;">
+                    <div style="width: 200px;text-align: right;">Bypass:</div>
+                    <div style="width: 100px;height: 30px;margin-left: 10px;">
+                        <input id="AM_FILTER_BYPASS" type="checkbox" class="filter_flipswitch flipswitch" data-on="ON"
+                            data-off="OFF" style="position: relative;top: -10px;" />
+                    </div>
+                    <p style="margin-top: 10px;text-align: left;">The Bypass mode ignores the Mode setting. The filter
+                        calibration
+                        retains the
+                        current values.</p>
+                    <div style="width: 200px;text-align: right">Mode:</div>
+                    <div>
+                        <select id="AM_FILTER_MODE" class="protocol" name="resolution"
+                            style="width:220px;height: 30px;font-size: 15px;">
+                            <option value="keep">Keep current values</option>
+                            <option value="default">Restore default settings</option>
+                            <option value="zero">Disable (set to zero)</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <div class="bazaar-link" style="float: left; width: 45%;">
@@ -1256,7 +1276,24 @@
                 <h4 class="modal-title" id="oops_label">Calibration</h4>
             </div>
             <div class="modal-body" style="text-align: center; font-size: 18px;">
-                <p id="dialog_reset_text">TEXT</p>
+                <p id="dialog_reset_text" style="margin: 0;">TEXT</p>
+            </div>
+            <div id="ADC_RESET_FILTER_MODE" class="container_inline" style="margin-bottom: 15px;">
+                <div style="width: 200px;text-align: right">Filter parameters:</div>
+                <select id="ADC_RESET_FILTER_MODE_INPUT" class="protocol" name="resolution"
+                    style="width:220px;height: 30px;font-size: 15px;">
+                    <option value="keep">Keep current values</option>
+                    <option value="default" selected>Restore default settings</option>
+                    <option value="zero">Disable (set to zero)</option>
+                </select>
+            </div>
+            <div id="ADC_RESET_FILTER_ALL_CHANNELS" class="container_inline"
+                style="margin-bottom: 15px;text-align: center; ">
+                <div style="width: 200px;text-align: right;">Channels:</div>
+                <div style="width: 160px;height: 30px;margin-left: 10px;margin-right: 100px;">
+                    <input id="ADC_RESET_FILTER_ALL_CHANNELS_SW" type="checkbox" class="filter_flipswitch flipswitch"
+                        data-on="ALL" data-off="CURRENT" style="position: relative;top: -10px;" />
+                </div>
             </div>
             <div class="modal-footer">
                 <div class="bazaar-link" style="float: left; width: 45%;">
@@ -1266,6 +1303,31 @@
                 <div class="bazaar-link" style="float: right; width: 45%;">
                     <a style="border: 1px solid; width: 100%" id="reset_cancel_btn" data-dismiss="modal"
                         class="btn">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="dialog_uni_calib" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="oops_label">EEPROM values</h4>
+            </div>
+            <div class="modal-body" style="text-align: center; font-size: 18px;">
+                <div id="loader_id"><img src="img/loader.gif" width="35px;" height="35px"></div>
+                <div style="max-height: 80vh; overflow-y: auto;">
+                    <table id="EEPROM_CALIB_TABLE" class="eeprom-calib-table">
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link" style="float: center;">
+                    <a style="border: 1px solid; width: 100%" id="reset_cancel_btn" data-dismiss="modal"
+                        class="btn">Ok</a>
                 </div>
             </div>
         </div>
@@ -1290,13 +1352,18 @@
                                 -
                             </div>
                         </div>
-                        <div class="container_inline" style="margin-top:0">
+                        <div class="container_inline" style="margin-top:0;text-align: center;">
                             <div class="label-text-size"
                                 style="width: 100px;text-align: right;margin-top: 0px;font-weight: 500">
                                 Write counter:</div>
                             <div id="SW_F_COUNT" style="margin-top: 0px;">
                                 -
                             </div>
+                        </div>
+                        <div class="container_inline" style="margin-top:0;width: 25%;">
+                            <li class="run_buttons" id="B_SHOW_F" style="width: 100%;font-size: 12px;padding: 2px;">
+                                <a>SHOW</a>
+                            </li>
                         </div>
                     </div>
                 </div>
@@ -1311,13 +1378,18 @@
                                 -
                             </div>
                         </div>
-                        <div class="container_inline" style="margin-top:0">
+                        <div class="container_inline" style="margin-top:0;text-align: center;">
                             <div class="label-text-size"
                                 style="width: 100px;text-align: right;margin-top: 0px;font-weight: 500">
                                 Write counter:</div>
                             <div id="SW_U_COUNT" style="margin-top: 0px;">
                                 -
                             </div>
+                        </div>
+                        <div class="container_inline" style="margin-top:0;width: 25%;">
+                            <li class="run_buttons" id="B_SHOW_U" style="width: 100%;font-size: 12px;padding: 2px;">
+                                <a>SHOW</a>
+                            </li>
                         </div>
                     </div>
                 </div>

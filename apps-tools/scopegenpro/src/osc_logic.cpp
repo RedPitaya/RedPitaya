@@ -2,6 +2,7 @@
 #include <DataManager.h>
 #include <math.h>
 #include <unistd.h>
+#include <list>
 #include <mutex>
 
 #include "common.h"
@@ -27,6 +28,7 @@ std::mutex g_need_update_sig_gen_mtx;
 CBooleanParameter isFilter("OSC_IS_FILTER", CBaseParameter::RO, rp_HPGetFastADCIsFilterPresentOrDefault(), 0);
 CBooleanParameter isAC_DC("OSC_IS_AC_DC", CBaseParameter::RO, rp_HPGetFastADCIsAC_DCOrDefault(), 0);
 CBooleanParameter isHV_LV("OSC_IS_HV_LV", CBaseParameter::RO, rp_HPGetFastADCIsLV_HVOrDefault(), 0);
+CBooleanParameter isHIRes16BitMode("OSC_IS_16_BIT_MODE", CBaseParameter::RO, rp_HPGetIsFastADC16BitModeOrDefault(), 0);
 
 CFloatParameter inTimeOffset("OSC_TIME_OFFSET", CBaseParameter::RW, 0, 0, -100000, 100000, CONFIG_VAR);
 CDoubleParameter inTimeScale("OSC_TIME_SCALE", CBaseParameter::RW, 1, 0, 0, 100000000, CONFIG_VAR);
@@ -67,11 +69,11 @@ CFloatParameter inScale[MAX_ADC_CHANNELS] = INIT("GPOS_SCALE_CH", "", CBaseParam
 CFloatParameter inOffsetZero[MAX_ADC_CHANNELS] = INIT("GPOS_OFFSET_ZERO_CH", "", CBaseParameter::RW, 0, 0, -250000, 250000, CONFIG_VAR);
 CBooleanParameter inInvShow[MAX_ADC_CHANNELS] = INIT("GPOS_INVERTED_CH", "", CBaseParameter::RW, false, 0, CONFIG_VAR);
 
-CFloatParameter inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_PROBE", CBaseParameter::RW, 1, 0, 0, 1000, CONFIG_VAR);
+CFloatParameter inProbe[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_PROBE", CBaseParameter::RW, 1, 0, 0, 2000, CONFIG_VAR);
 
 CIntParameter inGain[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_GAIN", CBaseParameter::RW, RP_LOW, 0, 0, 1, CONFIG_VAR);
-CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, 1, 0, 0, 1, CONFIG_VAR);
-CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, 0, 1, CONFIG_VAR);
+CIntParameter inFilter[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_FILTER", CBaseParameter::RW, inFilterDef(), 0, 0, 1, CONFIG_VAR);
+CIntParameter inAC_DC[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_IN_AC_DC", CBaseParameter::RW, RP_DC, 0, RP_DC, RP_AC, CONFIG_VAR);
 
 CIntParameter inSmoothMode[MAX_ADC_CHANNELS] = INIT("OSC_CH", "_SMOOTH", CBaseParameter::RW, rpApp_osc_interpolationMode::DISABLED, 0, 0, 4, CONFIG_VAR);
 
@@ -100,6 +102,8 @@ CFloatParameter ext_trigger_level("OSC_EXT_TRIG_LEVEL", CBaseParameter::RW, 0, 0
 CIntParameter bufferRequest("OSC_BUFFER_REQUEST", CBaseParameter::RW, 0, 0, -1, 1);
 CIntParameter bufferSelected("OSC_BUFFER_CURRENT", CBaseParameter::RW, 0, 0, (MAX_BUFFERS - 1) * -1, 0);
 
+CBooleanParameter hires_16bitmode("16_BIT_MODE", CBaseParameter::RW, false, 0, CONFIG_VAR);
+
 /* ----------------------------------- TRACE MODE ---------------------------------------*/
 CIntParameter inShowTrace[MAX_ADC_CHANNELS] = INIT("CH", "_SHOW_TRACE", CBaseParameter::RW, 0, 0, 0, 1, CONFIG_VAR);
 CBooleanParameter trace_mode_fast_enable("OSC_SW_TM_FAST_MODE", CBaseParameter::RW, false, 0, CONFIG_VAR);
@@ -120,7 +124,7 @@ rp_websocket::CWEBServer data_server;
 
 auto initExtTriggerLimits() -> void {
     if (rp_HPGetIsExternalTriggerLevelPresentOrDefault()) {
-        auto level = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+        auto level = rp_HPGetIsExternalTriggerFullScaleOrDefault();
         auto is_sign = rp_HPGetIsExternalTriggerIsSignedOrDefault();
         ext_trigger_level.SetMin(is_sign ? -level : 0);
         ext_trigger_level.SetMax(level);
@@ -130,7 +134,7 @@ auto initExtTriggerLimits() -> void {
 auto initOscAfterLoad() -> void {
     if (rp_HPGetFastADCIsAC_DCOrDefault()) {
         for (auto ch = 0u; ch < g_adc_channels; ch++) {
-            rp_AcqSetAC_DC((rp_channel_t)ch, inAC_DC[ch].Value() == 0 ? RP_AC : RP_DC);
+            rp_AcqSetAC_DC((rp_channel_t)ch, (rp_acq_ac_dc_mode_t)inAC_DC[ch].Value());
         }
     }
 
@@ -168,9 +172,28 @@ auto releaseOsc() -> void {
 
 auto updateTriggerLimit(bool force) -> void {
     // Checking trigger limitation
+    rpApp_osc_trig_source_t trSrc;
+    rpApp_OscGetTriggerSource(&trSrc);
+    if (trSrc != inTrigSource.Value()) {
+        inTrigSource.SendValue(trSrc);
+    }
+
+    rpApp_osc_trig_slope_t trSlope;
+    rpApp_OscGetTriggerSlope(&trSlope);
+    if (trSlope != inTrigSlope.Value()) {
+        inTrigSlope.SendValue(trSlope);
+    }
+
+    rpApp_osc_trig_sweep_t trSweep;
+    rpApp_OscGetTriggerSweep(&trSweep);
+    if (trSweep != inTrigSweep.Value()) {
+        inTrigSweep.SendValue(trSweep);
+    }
+
+    float trigg_level = 0;
     float trigg_limit = 0;
     bool is_signed = true;
-    auto t_channel = (rpApp_osc_trig_source_t)inTrigSource.Value();
+    auto t_channel = trSrc;
     switch (t_channel) {
         case RPAPP_OSC_TRIG_SRC_CH1:
             rp_AcqGetGainV(RP_CH_1, &trigg_limit);
@@ -193,7 +216,7 @@ auto updateTriggerLimit(bool force) -> void {
             }
             break;
         case RPAPP_OSC_TRIG_SRC_EXTERNAL:
-            trigg_limit = rp_HPGetIsExternalTriggerFullScalePresentOrDefault();
+            trigg_limit = rp_HPGetIsExternalTriggerFullScaleOrDefault();
             is_signed = rp_HPGetIsExternalTriggerIsSignedOrDefault();
             break;
         default:
@@ -202,20 +225,24 @@ auto updateTriggerLimit(bool force) -> void {
             trigg_limit = trigg_limit;
     }
 
+    auto trig_invert = false;
+    if (t_channel != RPAPP_OSC_TRIG_SRC_EXTERNAL) {
+        trig_invert = inInvShow[t_channel].Value();
+    }
+
+    rpApp_OscGetTriggerLevel(&trigg_level);
+    auto tl = trig_invert ? -trigg_level : trigg_level;
+    if (tl != inTriggLevel.Value()) {
+        force = true;
+    }
+
     if (trigg_limit != inTriggLimit.Value() || force) {
         inTriggLimit.SetMin(is_signed ? -trigg_limit : 0);
         inTriggLimit.SetMax(trigg_limit);
         inTriggLimit.SendValue(trigg_limit);
-        // Need update trigger value
-        float trigg_level;
-        auto trig_invert = false;
-        if (t_channel != RPAPP_OSC_TRIG_SRC_EXTERNAL) {
-            trig_invert = inInvShow[t_channel].Value();
-        }
-        rpApp_OscGetTriggerLevel(&trigg_level);
         inTriggLevel.SetMin(is_signed ? -trigg_limit : 0);
         inTriggLevel.SetMax(trigg_limit);
-        inTriggLevel.SendValue(trig_invert ? -trigg_level : trigg_level);
+        inTriggLevel.SendValue(tl);
     }
 }
 
@@ -407,6 +434,8 @@ auto requestFile() -> void {
         request_data.Value() = false;
 
         request_mode mode = (request_mode)request_format.Value();
+        float timeScale = 0;
+        rpApp_OscGetTimeScale(&timeScale);
         rp_acq_decimation_t sampling_rate;
         rp_AcqGetDecimation(&sampling_rate);
         auto rate = getADCRate() / (uint32_t)sampling_rate;
@@ -433,33 +462,55 @@ auto requestFile() -> void {
 
         rp_formatter_api::CFormatter formatter(f_mode, rate);
 
-        float* buff[g_adc_channels + 1];
-
-        for (int i = 0; i <= g_adc_channels; i++) {
-            buff[i] = NULL;
-        }
-
+        std::list<std::vector<float>> buffs;
+        std::vector<uint32_t> index;
+        std::vector<float> time;
+        // uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT : ADC_BUFFER_SIZE;
         uint8_t allChannels = 0;
+
+        uint32_t trigPos = 0;
+        uint32_t decimation = 0;
 
         for (int i = 0; i < g_adc_channels; i++) {
             if (inShow[i].Value()) {
-                uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT : ADC_BUFFER_SIZE;
-                buff[i] = new float[size];
-                if (rpApp_OscGetExportedData((rpApp_osc_source)i, is_view, is_normal, buff[i], &size) == RP_OK) {
-                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff[i], size, std::string("Channel_") + std::to_string(i + 1));
+                buffs.push_back({});
+                auto& buff = buffs.back();
+                if (rpApp_OscGetExportedData((rpApp_osc_source)i, is_view, is_normal, buff, time, &decimation) == RP_OK) {
+                    formatter.setChannel((rp_formatter_api::rp_channel_t)i, buff.data(), buff.size(), std::string("Channel_") + std::to_string(i + 1));
                     allChannels++;
                 }
             }
         }
 
         if (isMathShow()) {
-            uint32_t size = is_view ? CH_SIGNAL_SIZE_DEFAULT : ADC_BUFFER_SIZE;
-            buff[g_adc_channels] = new float[size];
-            if (rpApp_OscGetExportedData(RPAPP_OSC_SOUR_MATH, is_view, is_normal, buff[g_adc_channels], &size) == RP_OK) {
-                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, buff[g_adc_channels], size, std::string("Math"));
+            [[maybe_unused]] uint32_t t, d;
+            buffs.push_back({});
+            std::vector<float> timeMath;
+            auto& buff = buffs.back();
+            if (rpApp_OscGetExportedData(RPAPP_OSC_SOUR_MATH, is_view, is_normal, buff, timeMath, &d) == RP_OK) {
+                float* b_ptr = buff.data();
+                formatter.setChannel((rp_formatter_api::rp_channel_t)allChannels, b_ptr, buff.size(), std::string("Math"));
                 allChannels++;
             }
         }
+        auto ch_size = formatter.getMaxSamples();
+        index.resize(ch_size);
+        for (auto idx = 0u; idx < ch_size; idx++) {
+            index[idx] = idx + 1;
+        }
+        formatter.setChannel(rp_formatter_api::rp_channel_t::RP_F_INDEX, index.data(), ch_size);
+
+        if (is_view) {
+            for (size_t idx = 0; idx < ch_size; idx++) {
+                time[idx] = time[idx] * timeScale * 10.0;
+            }
+        } else {
+            for (size_t idx = 0; idx < ch_size; idx++) {
+                time[idx] = time[idx] * 1000.f / (float)rate;
+            }
+        }
+
+        formatter.setChannel(rp_formatter_api::rp_channel_t::RP_F_TIME, time.data(), ch_size, "Time(uS)");
 
         std::string filename = std::string("scopegen_data") + suffix;
         formatter.openFile("/tmp/scopegenpro/" + filename);
@@ -470,10 +521,7 @@ auto requestFile() -> void {
         } else {
             download_file.Value() = std::string("error");
         }
-
-        for (int i = 0; i <= g_adc_channels; i++) {
-            delete[] buff[i];
-        }
+        buffs.clear();
     }
 }
 
@@ -528,6 +576,12 @@ auto updateOscParams(bool force) -> void {
         bufferRequest.Value() = 0;
     }
 
+    if (IS_NEW(hires_16bitmode) || force) {
+        if (rp_AcqSet16BitMode(hires_16bitmode.NewValue()) == RP_OK) {
+            hires_16bitmode.Update();
+        }
+    }
+
     inAutoscale.Update();
 
     if (inAutoscale.Value()) {
@@ -579,7 +633,7 @@ auto updateOscParams(bool force) -> void {
                 inScale[i].Update();
                 if (rp_HPGetIsAttenuatorControllerPresentOrDefault()) {
                     // AUTO select gain on autoscale
-                    int val = inScale[i].Value() > 0.1 ? RPAPP_OSC_IN_GAIN_HV : RPAPP_OSC_IN_GAIN_LV;
+                    int val = inScale[i].Value() > 1.0 ? RPAPP_OSC_IN_GAIN_HV : RPAPP_OSC_IN_GAIN_LV;
                     rpApp_osc_in_gain_t cur_val;
                     if (rpApp_OscGetInputGain((rp_channel_t)i, &cur_val) == RP_OK) {
                         if (val != cur_val && !force) {
@@ -601,7 +655,7 @@ auto updateOscParams(bool force) -> void {
         IF_VALUE_CHANGED_FORCE(inSmoothMode[i], rpApp_OscSetSmoothMode((rp_channel_t)i, (rpApp_osc_interpolationMode)inSmoothMode[i].NewValue()), force)
 
         if (rp_HPGetFastADCIsAC_DCOrDefault()) {
-            IF_VALUE_CHANGED_FORCE(inAC_DC[i], rp_AcqSetAC_DC((rp_channel_t)i, inAC_DC[i].NewValue() == 0 ? RP_AC : RP_DC), force)
+            IF_VALUE_CHANGED_FORCE(inAC_DC[i], rp_AcqSetAC_DC((rp_channel_t)i, (rp_acq_ac_dc_mode_t)inAC_DC[i].NewValue()), force)
         }
 
         if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
@@ -674,12 +728,7 @@ auto updateOscParams(bool force) -> void {
     }
 
     if (trig_inversion_changed || IS_NEW(inTrigSlope) || force) {
-        rpApp_osc_trig_slope_t slope = static_cast<rpApp_osc_trig_slope_t>(inTrigSlope.NewValue());
-
-        if (trig_invert) {
-            slope = (slope == RPAPP_OSC_TRIG_SLOPE_PE) ? RPAPP_OSC_TRIG_SLOPE_NE : RPAPP_OSC_TRIG_SLOPE_PE;
-        }
-        if (rpApp_OscSetTriggerSlope(slope) == RP_OK) {
+        if (rpApp_OscSetTriggerSlope(static_cast<rpApp_osc_trig_slope_t>(inTrigSlope.NewValue())) == RP_OK) {
             inTrigSlope.Update();
         }
     }
@@ -701,11 +750,6 @@ auto updateOscParams(bool force) -> void {
         // Update the slope
         rpApp_osc_trig_slope_t slope = RPAPP_OSC_TRIG_SLOPE_PE;
         rpApp_OscGetTriggerSlope(&slope);
-
-        if (trig_invert) {
-            slope = (slope == RPAPP_OSC_TRIG_SLOPE_PE) ? RPAPP_OSC_TRIG_SLOPE_NE : RPAPP_OSC_TRIG_SLOPE_PE;
-        }
-
         inTrigSlope.Value() = slope;
         inTrigSlope.Update();
         requestSendTriggerLevel = true;

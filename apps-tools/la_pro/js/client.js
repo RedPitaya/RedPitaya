@@ -40,7 +40,7 @@
         $.ajax({
             url: CLIENT.config.start_app_url,
             type: 'GET',
-            timeout: 5000
+            timeout: 10000
         }).done(function(res) {
             if (res.status == 'OK') {
                 try {

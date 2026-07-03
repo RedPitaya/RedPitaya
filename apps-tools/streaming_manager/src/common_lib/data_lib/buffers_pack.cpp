@@ -41,6 +41,14 @@ auto CDataBuffersPackDMA::setOSCRate(uint64_t rate) -> void {
     }
 }
 
+auto CDataBuffersPackDMA::getOSCRate() -> uint64_t {
+    uint64_t rate = 0;
+    for (const auto& kv : m_buffers) {
+        rate = std::max(rate, kv.second->getADCBaseRate());
+    }
+    return rate;
+}
+
 auto CDataBuffersPackDMA::setADCBits(uint8_t bits) -> void {
     for (const auto& kv : m_buffers) {
         kv.second->setADCBaseBits(bits);
@@ -126,6 +134,18 @@ auto CDataBuffersPackDMA::getBuffersSamples() -> size_t {
     return size;
 }
 
+auto CDataBuffersPackDMA::getTimeCapture() -> int64_t {
+    int64_t time = 0;
+    for (const auto& kv : m_buffers) {
+        if (kv.second->getTimeCapture()) {
+            if (time < kv.second->getTimeCapture()) {
+                time = kv.second->getTimeCapture();
+            }
+        }
+    }
+    return time;
+}
+
 auto CDataBuffersPackDMA::debugPackADC() -> void {
     printf("Channels %d\n", (uint32_t)m_buffers.size());
 
@@ -187,6 +207,7 @@ auto CDataBuffersPackDMA::getInfoFromHeaderADC() -> void {
         item.second->setLostSamples(EDataLost::FPGA, header->adc.lostFPGA);
         item.second->setBitBySample(header->adc.bitBySample);
         item.second->setADCPackId(header->packId);
+        item.second->setTimeCapture(header->adc.timeCapture);
     }
 }
 
