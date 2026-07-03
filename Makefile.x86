@@ -49,7 +49,7 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG      = redpitaya-v2026.1
-LINUX_TAG      = branch-redpitaya-v2026.1
+LINUX_TAG      = Release_2026.1
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
@@ -92,7 +92,7 @@ export GREET_MSG
 
 # HWID=v1r0 - this value for 250-12 rev 1.0. In all other cases, this parameter is empty.
 
-FPGA_COMMIT ?= unify/dev
+FPGA_COMMIT ?= Release-2026.1
 
 
 HWID ?=
