@@ -1,0 +1,22 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV CROSS_COMPILE=arm-linux-gnueabihf-
+ENV ARCH=arm
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    make \
+    curl \
+    xz-utils \
+    libssl-dev \
+    device-tree-compiler \
+    u-boot-tools \
+    gcc-arm-linux-gnueabihf \
+    g++-arm-linux-gnueabihf \
+    git \
+    zip \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+CMD ["/bin/bash"]

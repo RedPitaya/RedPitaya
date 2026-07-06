@@ -1,0 +1,15 @@
+FROM ubuntu:22.04 AS extractor
+
+RUN apt-get update && apt-get install -y wget tar && \
+    mkdir -p /rootfs && \
+    wget -qO- https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS_3.00.36.tar.gz | tar -xz -C /rootfs
+
+FROM scratch
+COPY --from=extractor /rootfs /
+
+ENV ARCH=arm
+ENV LANG=C.UTF-8
+
+WORKDIR /workspace
+
+CMD ["/bin/bash"]
