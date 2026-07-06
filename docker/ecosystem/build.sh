@@ -32,7 +32,7 @@ docker run --rm \
     -w /workspace \
     ${RP_ARM_IMG} \
     bash -c "
-        make -f Makefile CROSS_COMPILE=\"\" REVISION=${GIT_COMMIT_SHORT} ENABLE_PRODUCTION_TEST=0 BUILD_NUMBER=1
+        make -f Makefile REVISION=${GIT_COMMIT_SHORT} ENABLE_PRODUCTION_TEST=0 BUILD_NUMBER=1
     "
 
 if [[ $? -eq 0 ]]; then
