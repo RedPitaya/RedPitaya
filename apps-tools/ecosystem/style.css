@@ -344,3 +344,34 @@ a.list-group-item:hover:visited {
     /* Non-prefixed version, currently
                                   not supported by any browser */
 }
+
+
+.info-icon img {
+    display: block;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+}
+
+.info-icon img.blinking {
+    animation: redTint 1.5s ease-in-out infinite;
+}
+
+#CLOCK_RATE_ID.blinking {
+    animation: redTint 1.5s ease-in-out infinite;
+    display: inline-block;
+}
+
+@keyframes redTint {
+    0% {
+        filter: none;
+    }
+
+    50% {
+        filter: sepia(100%) saturate(300%) hue-rotate(-35deg) brightness(.3);
+    }
+
+    100% {
+        filter: none;
+    }
+}
