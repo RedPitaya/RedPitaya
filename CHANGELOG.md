@@ -1,3 +1,115 @@
+# Stable version (3.00-57)
+
+### Linux and ecosystem
+
+- Updated Ubuntu to 24.04.4 LTS.
+- Updated Linux kernel to 6.12.
+- Updated Python to 3.12.3.
+- Updated nginx to 1.31.2 (latest).
+- New kernel modules: WiFi AC RTL8822CU and auto_fs.
+- Added `tree` tool.
+- Added Vivado auto-detection launcher updates.
+- Added automated build log analyzer with error/warning detection, build info, and MD5 hash to release package.
+- Fixed U-Boot memory size setup via FDT.
+- Fixed compatibility issues between settings and the new kernel.
+- Removed obsolete WiFi N drivers (only RTL8xxxU remains enabled).
+
+### WEB apps
+
+- **General**: Improved web rendering, canvas sizing, and WebGL capture reliability.
+
+- **Streaming**:
+  - Added streaming support for Gen 2 boards.
+  - Switched streaming calibration to v6 FPGA calibration.
+  - Added DAC pulse generation examples for 8-bit and 16-bit modes.
+  - Added timestamps to streaming data files and app exports.
+  - Added DAC streaming for SIGNALlab boards.
+  - Added Python 3.13 build support for the streaming library.
+  - Fixed 8-bit DAC streaming behavior, channel indexing, and memory-stream handling.
+
+- **Calibration**:
+  - Added Gen 2 support with dynamic 50 Ohm guidance and backup/restore with metadata display.
+  - Added save/load options in both calibration tool and calibration app.
+  - Added auto-calibration guidance for 50 Ohm use on Gen 1 STEMlab 125-14 with impedance mismatch.
+  - Fixed 4-input manual calibration bug where CH3 offset could be copied to CH2 in HV mode.
+
+- **Oscilloscope**:
+  - Added 1:2000 scaling.
+  - Added setting recall.
+  - Improved autoscaling.
+  - Improved scaling/offset behavior so labels move consistently with signals.
+  - Reset trace mode when Y-axis scaling changes.
+  - Fixed external trigger handling.
+  - Fixed invert option behavior.
+  - Fixed waveform scaling and RMS measurement issues.
+  - Fixed subtraction behavior in MATH mode.
+  - Fixed load issues when waveform is enabled.
+  - Improved Y-axis controls, grid snapping, trigger visibility, and drag boundaries.
+  - Improved stability: pre-trigger sampling, timeout handling, and decimation behavior.
+  - Set frequency equalization filter default to disabled on Gen 2 boards.
+
+- **Signal generator**:
+  - Improved burst waveform generation and fixed low-period edge cases.
+  - Improved burst initial/last value handling, including option to reuse last burst value as next burst start.
+  - Fixed issues when burst and continuous generation are used simultaneously.
+
+- **Impedance analyzer**:
+  - Fixed Z/Y curve reversal.
+  - Fixed shunt selection behavior on SIGNALlab 250-12.
+
+### APIs and SCPI
+
+- **Acquisition**:
+  - Added interrupt-based acquisition as a lower-CPU alternative to polling.
+  - Split trigger mode is not fully multithreaded.
+  - Improved API concurrency with shared/per-channel locking and safer thread handling.
+  - Added any-edge trigger support (rising/falling).
+  - RAW data is now calibrated by default; previous behavior can be reproduced by applying default v6 calibration values.
+  - Added SCPI acquisition commands for keep-arm, pre-trigger counter query, unlock, offset control, and interrupt management.
+  - Fixed split trigger mode issues when trigger source changes inside loops.
+
+- **Generation**:
+  - Added support for arbitrary-length ARB signals with correct frequency handling. Arbitrary buffers shorter than 16384 samples will retain the set frequency.
+  - Added double-precision and tick-based burst period APIs for better timing accuracy.
+  - Improved arbitrary waveform generator behavior.
+  - Fixed AWG trigger behavior on SDRlab and SIGNALlab.
+  - Fixed SCPI generation behavior on SIGNALlab.
+
+- **Digital communication**:
+  - Updated UART, SPI, I2C, and CAN Python APIs to use NumPy arrays.
+  - Improved I2C/API error handling.
+  - Fixed SPI memory leak caused by typo in destroy message path.
+  - Fixed SCPI UART commands for reading UART settings.
+
+### Command line tools
+
+- **Monitoring**: Added real-time AMS monitoring with graphical gauges.
+- **Hardware profiles**: Added new Board Only (BO) v2.0 profiles, DTS version access, and the ability to tune filter software-defined parameters and frequency limits per board profile (low-pass filter, generation and acquisition frequency limits).
+
+### Other fixes and improvements
+
+- Warning for missing clock added to the System Info section of the web interface.
+- Added timestamp registers to the v0.94 FPGA project. Timestamps are now added to all streaming data files and application exports.
+- Added support for RTL8188EU WiFi dongles (replacing older RTL8188CUS as primary supported dongles).
+- Improved WiFi dongle detection.
+- Added note about debug file download location in the web interface.
+- Fixed DMA RAM reserved-space update issues on SIGNALlab.
+- Fixed SDRlab incorrect software input and output scaling.
+
+### To be fixed in future releases
+
+- SIGNALlab 250-12 DMG output waveform inversion.
+- STEMlab 65-16 TI board oscilloscope IN2 waveform glitching.
+- JupyterLab examples update.
+- Desktop streaming application.
+
+### Notes
+
+- This file is intentionally short and user-focused.
+- It excludes purely internal refactors, style-only changes, and duplicate maintenance commits unless they affect user-visible behavior.
+
+
+
 # Stable version (2.07-51)
 
 ### **Ecosystem (Applications & API)**
