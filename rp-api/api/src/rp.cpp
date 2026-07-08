@@ -48,7 +48,7 @@ std::mutex g_adioMutex;
  * Global methods
  */
 
-int rp_InitAdressess() {
+int rp_InitAddresses() {
     std::unique_lock lock(g_initMutex);
     if (g_api_state)
         return RP_EOOR;
@@ -101,7 +101,7 @@ int rp_InitAdressess() {
 
 int rp_Init() {
     if (!rp_IsApiInit()) {
-        ECHECK(rp_InitAdressess())
+        ECHECK(rp_InitAddresses())
     }
     int ret = rp_CalibInit();
     if (ret != RP_HP_OK) {
@@ -121,7 +121,7 @@ int rp_Init() {
 
 int rp_InitReset(bool reset) {
     if (!rp_IsApiInit()) {
-        ECHECK(rp_InitAdressess())
+        ECHECK(rp_InitAddresses())
     }
     if (reset) {
         int ret = rp_Reset();

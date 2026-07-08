@@ -4,8 +4,8 @@ import rp
 import time
 
 def init_rp():
-    print("rp.rp_InitAdressess()")
-    res = rp.rp_InitAdressess()
+    print("rp.rp_InitAddresses()")
+    res = rp.rp_InitAddresses()
     print(res)
 
     print("rp.rp_Init()")

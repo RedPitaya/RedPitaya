@@ -109,7 +109,7 @@
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 
-int rp_InitAdressess();
+int rp_InitAddresses();
 
 /**
  * Initializes the library. It must be called first, before any other library method.
