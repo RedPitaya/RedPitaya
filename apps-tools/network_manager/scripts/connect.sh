@@ -12,8 +12,8 @@ RES=$?
 if [ $RES == 2 ]; then
 	$RP_PATH/disconnect.sh
 	rw
-	wpa_passphrase $SSID $PASS > /opt/redpitaya/wpa_supplicant.conf
-	iwconfig wlan0 mode Managed essid $SSID
+	wpa_passphrase "$SSID" "$PASS" > /opt/redpitaya/wpa_supplicant.conf
+	iwconfig wlan0 mode Managed essid "$SSID"
 	wpa_supplicant -B -i wlan0 -c /opt/redpitaya/wpa_supplicant.conf -D wext
 	sleep 1
 	systemctl restart wireless-mode-client.service
@@ -27,7 +27,7 @@ fi
 if [ $RES == 1 ]; then
 	$RP_PATH/disconnect.sh
 	rw
-	wpa_passphrase $SSID $PASS > /opt/redpitaya/wpa_supplicant.conf
+	wpa_passphrase "$SSID" "$PASS" > /opt/redpitaya/wpa_supplicant.conf
 	wpa_supplicant -B -c/opt/redpitaya/wpa_supplicant.conf -iwlan0
 	sleep 1
 	systemctl restart wireless-mode-client.service

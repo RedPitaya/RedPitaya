@@ -5,7 +5,7 @@
 SHELL := /bin/bash
 BUILD_NUMBER ?= dev
 # Required OS version
-LINUX_VER ?= 3.02
+LINUX_VER ?= 3.03
 
 # GITLAB,GITHUB,LOCAL
 GIT_MODE ?= GITHUB
