@@ -88,3 +88,111 @@
     min-width: 420px;
     margin: auto;
 }
+
+/* ------------------------------------------------------------------ */
+/* Help badge on top of the shared adaptive-tooltip (css/tooltip.css,  */
+/* copied verbatim from calib_app).                                    */
+/*                                                                     */
+/* Three overrides are needed, all kept here so the shared component   */
+/* stays byte-identical between the two apps. Each selector carries an */
+/* extra class, so it wins regardless of stylesheet order.             */
+/* ------------------------------------------------------------------ */
+
+/* .adaptive-tooltip sets margin: 20px, which suits a standalone
+   indicator but not a badge sitting against a control. */
+.adaptive-tooltip.nm-help {
+    /* 6px gap, then -23px so the badge contributes 0 to the inline row: the
+       selector then centres on exactly the same axis as #wlan0_mode above it,
+       and the badge overhangs to its right. A wrapper element would centre the
+       pair instead, shifting the selector 11px off that axis - and would push
+       177 <option> lines one level deeper in the diff for nothing. */
+    margin: 0 -23px 0 6px;
+    width: 17px;
+    height: 17px;
+    line-height: 16px;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 50%;
+    border: 1px solid #777777;
+    background-color: #555555;
+    color: #dddddd;
+    cursor: help;
+    vertical-align: middle;
+}
+
+/* .tooltiptext is width: max-content, which lays a paragraph out as one
+   very long line. Cap it and let it wrap. */
+.adaptive-tooltip.nm-help .tooltiptext {
+    width: 290px;
+    white-space: normal;
+    text-align: left;
+    font-size: 11px;
+    font-weight: normal;
+    line-height: 1.4;
+}
+
+/* .tooltiptext.top centres the bubble on its trigger. The trigger here is
+   a 17px badge at the right edge of the row, so a centred 290px bubble
+   hangs off to the right. Anchor its right edge to the badge and move the
+   arrow to match. */
+.adaptive-tooltip.nm-help .tooltiptext.top {
+    left: auto;
+    right: 0;
+    transform: none;
+}
+
+.adaptive-tooltip.nm-help .tooltiptext.top::after {
+    left: auto;
+    right: 6px;
+    margin-left: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Inline loader for the wireless block.                               */
+/*                                                                     */
+/* Mirrors the three-ring look of the full-page loader and reuses the   */
+/* @keyframes spin that ../assets/loader.css already defines, so there  */
+/* is one animation in the page rather than two that drift apart.       */
+/* ------------------------------------------------------------------ */
+
+.nm-inline-loader {
+    display: block;
+    position: relative;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: #f00;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+}
+
+.nm-inline-loader:before,
+.nm-inline-loader:after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+}
+
+.nm-inline-loader:before {
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    border-top-color: #e74c3c;
+    -webkit-animation: spin 3s linear infinite;
+    animation: spin 3s linear infinite;
+}
+
+.nm-inline-loader:after {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border-top-color: #cccccc;
+    -webkit-animation: spin 1.5s linear infinite;
+    animation: spin 1.5s linear infinite;
+}

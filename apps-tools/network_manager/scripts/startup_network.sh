@@ -1,4 +1,8 @@
 #!/bin/bash
+#
+# Manual bring-up from a stored configuration. NOT on the boot path any more:
+# netstart.service is gone and wpa_supplicant@wlan0.service owns connecting at
+# boot (see RedPitaya/ubuntu, debian/wireless_tool.sh). Kept as a hand tool.
 
 RP_PATH=/opt/redpitaya/www/apps/network_manager/scripts
 WPA_SUP=/opt/redpitaya/wpa_supplicant.conf
@@ -14,14 +18,10 @@ RES=$?
 
 if [ -f "$WPA_SUP" ]; then
 
-    if [ $RES == 2 ]; then
-        SSID=$(cat /opt/redpitaya/wpa_supplicant.conf | gawk -F\" '/ssid/{print $2}')
-    	/sbin/iwconfig wlan0 mode Managed essid $SSID
-	/sbin/wpa_supplicant -B -i wlan0 -c /opt/redpitaya/wpa_supplicant.conf -D wext
-    fi
+    ip link set dev wlan0 up 2>/dev/null
 
     if [ $RES == 1 ]; then
-	    /sbin/wpa_supplicant -B -c/etc/wpa_supplicant/wpa_supplicant.conf -iwlan0
+        /sbin/wpa_supplicant -B -i wlan0 -c "$WPA_SUP" -D nl80211
     fi
 
 fi

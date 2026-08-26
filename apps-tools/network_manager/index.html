@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="../assets/help-system/help-system.css?1" type="text/css" onerror="location.reload()" />
     <link rel="stylesheet" href="css/style.css?2" onerror="location.reload()">
     <link rel="stylesheet" href="css/blocks.css?2" onerror="location.reload()">
+    <link rel="stylesheet" href="css/tooltip.css?1" onerror="location.reload()">
     <script src="../assets/jquery/jquery-2.1.3.min.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery/jquery-ui.min.js?1" onerror="location.reload()"></script>
     <script src="../assets/jquery/jquery.ui.touch-punch.min.js?1" onerror="location.reload()"></script>
@@ -167,7 +168,11 @@
                             <img src="img/net-icons/nodongle.png">
                             <div style="margin-top: 15px;">WIFI DONGLE IS NOT CONNECTED</div>
                         </div>
-                        <div id="wlan0_block_entry" style="display: block;">
+                        <div id="wlan0_block_loading" style="display: block; padding: 26px 0 22px 0;">
+                            <div class="nm-inline-loader"></div>
+                            <div style="margin-top: 15px;">CHECKING WIFI DONGLE</div>
+                        </div>
+                        <div id="wlan0_block_entry" style="display: none;">
                             <div>
                                 <div style="position: absolute;"><img src="img/net-icons/wlan.png"></div>
                                 <div>Wireless connection status</div>
@@ -194,6 +199,198 @@
                                     </div>
                                 </div>
                             </dev>
+                            <!-- REGULATORY DOMAIN -->
+                            <div id="wlan0_country_block" style="clear: both; padding-top: 20px; padding-bottom: 16px;">
+                                <div style="font-size: 15pt; padding-bottom: 4px;">Regulatory country:</div>
+                                <select id="wlan0_country" class="form-control type_select"
+                                    style="display: inline-block; vertical-align: middle;">
+                                    <option value="00">00 &mdash; Global / not set</option>
+                                    <option value="AF">AF &mdash; Afghanistan</option>
+                                    <option value="AL">AL &mdash; Albania</option>
+                                    <option value="DZ">DZ &mdash; Algeria</option>
+                                    <option value="AS">AS &mdash; American Samoa</option>
+                                    <option value="AD">AD &mdash; Andorra</option>
+                                    <option value="AI">AI &mdash; Anguilla</option>
+                                    <option value="AR">AR &mdash; Argentina</option>
+                                    <option value="AM">AM &mdash; Armenia</option>
+                                    <option value="AW">AW &mdash; Aruba</option>
+                                    <option value="AU">AU &mdash; Australia</option>
+                                    <option value="AT">AT &mdash; Austria</option>
+                                    <option value="AZ">AZ &mdash; Azerbaijan</option>
+                                    <option value="BS">BS &mdash; Bahamas</option>
+                                    <option value="BH">BH &mdash; Bahrain</option>
+                                    <option value="BD">BD &mdash; Bangladesh</option>
+                                    <option value="BB">BB &mdash; Barbados</option>
+                                    <option value="BY">BY &mdash; Belarus</option>
+                                    <option value="BE">BE &mdash; Belgium</option>
+                                    <option value="BZ">BZ &mdash; Belize</option>
+                                    <option value="BM">BM &mdash; Bermuda</option>
+                                    <option value="BT">BT &mdash; Bhutan</option>
+                                    <option value="BO">BO &mdash; Bolivia</option>
+                                    <option value="BA">BA &mdash; Bosnia &amp; Herz.</option>
+                                    <option value="BW">BW &mdash; Botswana</option>
+                                    <option value="BR">BR &mdash; Brazil</option>
+                                    <option value="BN">BN &mdash; Brunei</option>
+                                    <option value="BG">BG &mdash; Bulgaria</option>
+                                    <option value="BF">BF &mdash; Burkina Faso</option>
+                                    <option value="KH">KH &mdash; Cambodia</option>
+                                    <option value="CA">CA &mdash; Canada</option>
+                                    <option value="KY">KY &mdash; Cayman Islands</option>
+                                    <option value="CF">CF &mdash; C. African Rep.</option>
+                                    <option value="TD">TD &mdash; Chad</option>
+                                    <option value="CL">CL &mdash; Chile</option>
+                                    <option value="CN">CN &mdash; China</option>
+                                    <option value="CX">CX &mdash; Christmas Island</option>
+                                    <option value="CO">CO &mdash; Colombia</option>
+                                    <option value="CR">CR &mdash; Costa Rica</option>
+                                    <option value="HR">HR &mdash; Croatia</option>
+                                    <option value="CU">CU &mdash; Cuba</option>
+                                    <option value="CY">CY &mdash; Cyprus</option>
+                                    <option value="CZ">CZ &mdash; Czechia</option>
+                                    <option value="CI">CI &mdash; Côte d'Ivoire</option>
+                                    <option value="DK">DK &mdash; Denmark</option>
+                                    <option value="DM">DM &mdash; Dominica</option>
+                                    <option value="DO">DO &mdash; Dominican Rep.</option>
+                                    <option value="EC">EC &mdash; Ecuador</option>
+                                    <option value="EG">EG &mdash; Egypt</option>
+                                    <option value="SV">SV &mdash; El Salvador</option>
+                                    <option value="EE">EE &mdash; Estonia</option>
+                                    <option value="ET">ET &mdash; Ethiopia</option>
+                                    <option value="FI">FI &mdash; Finland</option>
+                                    <option value="FR">FR &mdash; France</option>
+                                    <option value="GF">GF &mdash; French Guiana</option>
+                                    <option value="PF">PF &mdash; French Polynesia</option>
+                                    <option value="GE">GE &mdash; Georgia</option>
+                                    <option value="DE">DE &mdash; Germany</option>
+                                    <option value="GH">GH &mdash; Ghana</option>
+                                    <option value="GR">GR &mdash; Greece</option>
+                                    <option value="GL">GL &mdash; Greenland</option>
+                                    <option value="GD">GD &mdash; Grenada</option>
+                                    <option value="GP">GP &mdash; Guadeloupe</option>
+                                    <option value="GU">GU &mdash; Guam</option>
+                                    <option value="GT">GT &mdash; Guatemala</option>
+                                    <option value="GY">GY &mdash; Guyana</option>
+                                    <option value="HT">HT &mdash; Haiti</option>
+                                    <option value="HN">HN &mdash; Honduras</option>
+                                    <option value="HK">HK &mdash; Hong Kong</option>
+                                    <option value="HU">HU &mdash; Hungary</option>
+                                    <option value="IS">IS &mdash; Iceland</option>
+                                    <option value="IN">IN &mdash; India</option>
+                                    <option value="ID">ID &mdash; Indonesia</option>
+                                    <option value="IR">IR &mdash; Iran</option>
+                                    <option value="IE">IE &mdash; Ireland</option>
+                                    <option value="IL">IL &mdash; Israel</option>
+                                    <option value="IT">IT &mdash; Italy</option>
+                                    <option value="JM">JM &mdash; Jamaica</option>
+                                    <option value="JP">JP &mdash; Japan</option>
+                                    <option value="JO">JO &mdash; Jordan</option>
+                                    <option value="KZ">KZ &mdash; Kazakhstan</option>
+                                    <option value="KE">KE &mdash; Kenya</option>
+                                    <option value="KW">KW &mdash; Kuwait</option>
+                                    <option value="LV">LV &mdash; Latvia</option>
+                                    <option value="LB">LB &mdash; Lebanon</option>
+                                    <option value="LS">LS &mdash; Lesotho</option>
+                                    <option value="LI">LI &mdash; Liechtenstein</option>
+                                    <option value="LT">LT &mdash; Lithuania</option>
+                                    <option value="LU">LU &mdash; Luxembourg</option>
+                                    <option value="MO">MO &mdash; Macao</option>
+                                    <option value="MW">MW &mdash; Malawi</option>
+                                    <option value="MY">MY &mdash; Malaysia</option>
+                                    <option value="MV">MV &mdash; Maldives</option>
+                                    <option value="MT">MT &mdash; Malta</option>
+                                    <option value="MH">MH &mdash; Marshall Islands</option>
+                                    <option value="MQ">MQ &mdash; Martinique</option>
+                                    <option value="MR">MR &mdash; Mauritania</option>
+                                    <option value="MU">MU &mdash; Mauritius</option>
+                                    <option value="YT">YT &mdash; Mayotte</option>
+                                    <option value="MX">MX &mdash; Mexico</option>
+                                    <option value="FM">FM &mdash; Micronesia</option>
+                                    <option value="MD">MD &mdash; Moldova</option>
+                                    <option value="MC">MC &mdash; Monaco</option>
+                                    <option value="MN">MN &mdash; Mongolia</option>
+                                    <option value="ME">ME &mdash; Montenegro</option>
+                                    <option value="MA">MA &mdash; Morocco</option>
+                                    <option value="NA">NA &mdash; Namibia</option>
+                                    <option value="NP">NP &mdash; Nepal</option>
+                                    <option value="NL">NL &mdash; Netherlands</option>
+                                    <option value="AN">AN &mdash; Neth. Antilles</option>
+                                    <option value="NZ">NZ &mdash; New Zealand</option>
+                                    <option value="NI">NI &mdash; Nicaragua</option>
+                                    <option value="NG">NG &mdash; Nigeria</option>
+                                    <option value="KP">KP &mdash; North Korea</option>
+                                    <option value="MK">MK &mdash; North Macedonia</option>
+                                    <option value="MP">MP &mdash; N. Mariana Is.</option>
+                                    <option value="NO">NO &mdash; Norway</option>
+                                    <option value="OM">OM &mdash; Oman</option>
+                                    <option value="PK">PK &mdash; Pakistan</option>
+                                    <option value="PW">PW &mdash; Palau</option>
+                                    <option value="PA">PA &mdash; Panama</option>
+                                    <option value="PG">PG &mdash; Papua N. Guinea</option>
+                                    <option value="PY">PY &mdash; Paraguay</option>
+                                    <option value="PE">PE &mdash; Peru</option>
+                                    <option value="PH">PH &mdash; Philippines</option>
+                                    <option value="PL">PL &mdash; Poland</option>
+                                    <option value="PT">PT &mdash; Portugal</option>
+                                    <option value="PR">PR &mdash; Puerto Rico</option>
+                                    <option value="QA">QA &mdash; Qatar</option>
+                                    <option value="RO">RO &mdash; Romania</option>
+                                    <option value="RU">RU &mdash; Russia</option>
+                                    <option value="RW">RW &mdash; Rwanda</option>
+                                    <option value="RE">RE &mdash; Réunion</option>
+                                    <option value="BL">BL &mdash; Saint Barthélemy</option>
+                                    <option value="KN">KN &mdash; St Kitts &amp; Nevis</option>
+                                    <option value="LC">LC &mdash; Saint Lucia</option>
+                                    <option value="MF">MF &mdash; St Martin (FR)</option>
+                                    <option value="PM">PM &mdash; St Pierre &amp; Miq.</option>
+                                    <option value="VC">VC &mdash; St Vincent &amp; G.</option>
+                                    <option value="WS">WS &mdash; Samoa</option>
+                                    <option value="SA">SA &mdash; Saudi Arabia</option>
+                                    <option value="SN">SN &mdash; Senegal</option>
+                                    <option value="RS">RS &mdash; Serbia</option>
+                                    <option value="SG">SG &mdash; Singapore</option>
+                                    <option value="SX">SX &mdash; Sint Maarten</option>
+                                    <option value="SK">SK &mdash; Slovakia</option>
+                                    <option value="SI">SI &mdash; Slovenia</option>
+                                    <option value="ZA">ZA &mdash; South Africa</option>
+                                    <option value="KR">KR &mdash; South Korea</option>
+                                    <option value="ES">ES &mdash; Spain</option>
+                                    <option value="LK">LK &mdash; Sri Lanka</option>
+                                    <option value="SR">SR &mdash; Suriname</option>
+                                    <option value="SE">SE &mdash; Sweden</option>
+                                    <option value="CH">CH &mdash; Switzerland</option>
+                                    <option value="SY">SY &mdash; Syria</option>
+                                    <option value="TW">TW &mdash; Taiwan</option>
+                                    <option value="TZ">TZ &mdash; Tanzania</option>
+                                    <option value="TH">TH &mdash; Thailand</option>
+                                    <option value="TG">TG &mdash; Togo</option>
+                                    <option value="TT">TT &mdash; Trinidad &amp; Tobago</option>
+                                    <option value="TN">TN &mdash; Tunisia</option>
+                                    <option value="TC">TC &mdash; Turks &amp; Caicos Is.</option>
+                                    <option value="TR">TR &mdash; Türkiye</option>
+                                    <option value="UG">UG &mdash; Uganda</option>
+                                    <option value="UA">UA &mdash; Ukraine</option>
+                                    <option value="AE">AE &mdash; UAE</option>
+                                    <option value="GB">GB &mdash; United Kingdom</option>
+                                    <option value="US">US &mdash; United States</option>
+                                    <option value="UY">UY &mdash; Uruguay</option>
+                                    <option value="UZ">UZ &mdash; Uzbekistan</option>
+                                    <option value="VU">VU &mdash; Vanuatu</option>
+                                    <option value="VE">VE &mdash; Venezuela</option>
+                                    <option value="VN">VN &mdash; Vietnam</option>
+                                    <option value="VI">VI &mdash; Virgin Islands, U.S.</option>
+                                    <option value="WF">WF &mdash; Wallis &amp; Futuna</option>
+                                    <option value="YE">YE &mdash; Yemen</option>
+                                    <option value="ZW">ZW &mdash; Zimbabwe</option>
+                                </select><div class="adaptive-tooltip nm-help">?
+                                    <span class="tooltiptext top">Which channels and transmit powers the adapter may
+                                        use. Left unset, every 5 GHz channel is passive-scan only &mdash; 5 GHz
+                                        networks show up in a scan but cannot be joined. Changing this reconnects the
+                                        interface.</span>
+                                </div>
+                                <div id="wlan0_country_status"
+                                    style="font-size: 10pt; padding-top: 4px; min-height: 15px;"></div>
+                            </div>
+
                             <select id="wlan0_mode" class="form-control type_select" style="display: none;">
                                 <option selected value="#wlan0_client_mode">Client Mode</option>
                                 <option value="#wlan0_ap_mode">Access Point Mode</option>

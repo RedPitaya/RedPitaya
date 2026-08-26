@@ -9,8 +9,16 @@
     WIZARD.state = "";
     WIZARD.connectedSSID = "";
     WIZARD.apSSID = '';
-    WIZARD.r8188eu = false;
     WIZARD.ap_mode = false;
+
+    // Requests that hold the nginx worker for seconds - a scan, a connect, a
+    // service restart. While one is in flight the 2 s status poll cannot be
+    // answered in time, and its timeout says nothing about the service.
+    WIZARD.busy = 0;
+    WIZARD.stateFailures = 0;
+
+    WIZARD.beginBusy = function() { WIZARD.busy++; };
+    WIZARD.endBusy   = function() { if (WIZARD.busy > 0) WIZARD.busy--; };
 
     WIZARD.checkState = function() {
         $.ajax({
@@ -19,12 +27,15 @@
                 timeout: 2000
             })
             .success(function(msg) {
+                // First answer has arrived: the block can show real content.
+                $('#wlan0_block_loading').hide();
+                WIZARD.stateFailures = 0;
+
                 msg = msg.trim()
                 dongle = msg[0];
                 ap_mode = msg[1];
                 code = msg[2];
                 WIZARD.ap_mode = ap_mode === '1';
-                WIZARD.r8188eu = dongle === '2';
 
                 if (dongle === '0') {
                     $('#wlan0_block_entry').hide();
@@ -89,32 +100,40 @@
 
                 }
             })
+            .error(function() {
+                // A scan, a connect or a service restart occupies the nginx
+                // worker for several seconds, so this 2 s poll times out through
+                // no fault of the service. Treating the first timeout as failure
+                // made "WIFI SERVICE IS FAILED" flash on every Refresh list,
+                // right before the network list appeared.
+                if (WIZARD.busy > 0) return;
+                if (++WIZARD.stateFailures < 3) return;
+
+                // #wlan0_block_fail has been in the markup all along with
+                // nothing to show it. Without this, a genuine nginx or script
+                // failure left the block on its placeholder indefinitely.
+                $('#wlan0_block_loading').hide();
+                $('#wlan0_block_entry').hide();
+                $('#wlan0_block_nodongle').hide();
+                $('#wlan0_block_fail').show();
+                WIZARD.stopWaiting();
+            })
     };
 
 
-    WIZARD.getScanResult = function(iwlistResult) {
+    WIZARD.getScanResult = function(scanResult) {
 
         $('body').addClass('loaded');
         var htmlList = "";
-        if (iwlistResult.scan.length > 0){
-            for (i in iwlistResult.scan) {
-                var ssid       =  iwlistResult.scan[i].SSID;
-                var encryption =  iwlistResult.scan[i].enc !== "Open"
-                var level      =  iwlistResult.scan[i].sig
-                var rtl8188    =  iwlistResult.scan[i].rtl8188 == "Yes"
+        if (scanResult.scan.length > 0){
+            for (i in scanResult.scan) {
+                var ssid       =  scanResult.scan[i].SSID;
+                var encryption =  scanResult.scan[i].enc !== "Open"
+                var level      =  scanResult.scan[i].sig
                 if ( ssid !== ""){
                     htmlList += "<div>";
                     var node = "<div style='width: 50px; float: left;height:32px'>"
                     var lock = (encryption) ? "<img src='img/wifi-icons/lock.png' style='width:16px;margin-top:8px;margin-bottom:8px;margin-left:4px;margin-right:5px;vertical-align: top;'>" : "";
-
-                    if (rtl8188){
-                        if (level.includes("/")){
-                            var x = level.split("/")
-                            level = parseFloat(x[0]) - 100
-                        }else{
-                            level = undefined
-                        }
-                    }
 
                     if (level !== undefined){
                         var style = "width: 20px; margin-left: 2px; margin-right: 3px;margin-top: 6px;"
@@ -127,7 +146,8 @@
                     }
 
                     node += lock + "</div>"
-                    htmlList += node + "<div key='" + ssid + "' class='btn-wifi-item btn'>" + ssid + "&nbsp;</div>";
+                    var ssidEsc = $('<div>').text(ssid).html();
+                    htmlList += node + "<div key=\"" + ssidEsc + "\" class='btn-wifi-item btn'>" + ssidEsc + "&nbsp;</div>";
                     htmlList += "</div>";
                 }
             }
@@ -154,6 +174,7 @@
         $('#wifi_scan_result').html("");
         $('#wifi_loader').show();
 
+        WIZARD.beginBusy();
         $.ajax({
                 url: '/get_wnet_list',
                 type: 'GET'
@@ -163,6 +184,9 @@
             })
             .fail(function (jqXHR, textStatus, errorThrown) {
                 console.log(textStatus,errorThrown)
+            })
+            .always(function() {
+                WIZARD.endBusy();
             });
     };
 
@@ -453,11 +477,13 @@
 
     WIZARD.dropAP = function() {
         WIZARD.startWaiting();
+        WIZARD.beginBusy();
         $.ajax({
             url: '/remove_ap',
             type: 'GET'
         })
         .always(function() {
+            WIZARD.endBusy();
             WIZARD.apSSID = '';
             WIZARD.stopWaiting();
         });
@@ -467,6 +493,59 @@
      * @name getAccessPointSSID
      * @description Restore AP SSID from iw output
      */
+
+    /**
+     * @name loadCountry
+     * @description Read the stored regulatory country and select it in the list
+     */
+
+    WIZARD.loadCountry = function() {
+        $.ajax({
+                url: '/get_wifi_country',
+                type: 'GET',
+                timeout: 2000
+            })
+            .success(function(msg) {
+                var cc = (msg || '').trim().toUpperCase();
+                if (/^[A-Z0-9]{2}$/.test(cc)) {
+                    $('#wlan0_country').val(cc);
+                }
+            });
+    };
+
+    /**
+     * @name applyCountry
+     * @description Send the selected country and report what the kernel took
+     */
+
+    WIZARD.applyCountry = function(cc) {
+        var status = $('#wlan0_country_status');
+        status.css('color', '#999999').text('Applying ' + cc + '...');
+        WIZARD.beginBusy();
+        $.ajax({
+                url: '/set_wifi_country?country=' + encodeURIComponent(cc),
+                type: 'GET',
+                timeout: 20000
+            })
+            .success(function(msg) {
+                var text = (msg || '').trim();
+                // set_country.sh answers "ok: XX" or "warning: ..."; the kernel
+                // can refuse a code that is absent from regulatory.db, so show
+                // what came back rather than assuming success.
+                if (text.indexOf('ok:') === 0) {
+                    status.css('color', '#7ab648').text('Country set to ' + cc);
+                } else {
+                    status.css('color', '#d9a13b').text(text);
+                }
+            })
+            .error(function(jqXHR) {
+                status.css('color', '#c0504d')
+                      .text((jqXHR.responseText || 'request failed').trim());
+            })
+            .always(function() {
+                WIZARD.endBusy();
+            });
+    };
 
     WIZARD.restoreAPSSIDIfPossible = function() {
         $.ajax({
@@ -538,12 +617,18 @@ $(document).ready(function() {
     Help.setState("idle");
 
 
+    WIZARD.loadCountry();
+
     setInterval(WIZARD.checkState, 2000);
     setInterval(WIZARD.GetEth0Status, 2000);
 
     $('body').addClass('loaded');
     $('#network_apply').click(WIZARD.ManualSetEth0);
     $('#refresh_list_btn').click(WIZARD.startScan);
+
+    $('#wlan0_country').change(function() {
+        WIZARD.applyCountry($(this).val());
+    });
 
 
     /**
@@ -563,11 +648,13 @@ $(document).ready(function() {
         if ( $('#client_connect').text() === "Connect") {
                 WIZARD.state = "to_client";
                 WIZARD.startWaiting();
+                WIZARD.beginBusy();
                 $.ajax({
-                    url: '/connect_wifi?ssid="' + ssid + '"&password="' + password + '"',
+                    url: '/connect_wifi?ssid=' + encodeURIComponent(ssid) + '&password=' + encodeURIComponent(password),
                     type: 'GET'
                 })
                 .always(function() {
+                   WIZARD.endBusy();
                    WIZARD.stopWaiting();
                 });
             }
@@ -580,11 +667,13 @@ $(document).ready(function() {
         var lastSSID = WIZARD.connectedSSID;
         WIZARD.state = "to_normal";
         WIZARD.startWaiting();
+        WIZARD.beginBusy();
         $.ajax({
             url: '/disconnect_wifi',
             type: 'GET'
         })
         .always(function() {
+            WIZARD.endBusy();
             WIZARD.connectedSSID = '';
             WIZARD.stopWaiting();
         });
@@ -633,11 +722,13 @@ $(document).ready(function() {
         	if (ssid_check && pass_check){
                 WIZARD.state = "to_ap";
                 WIZARD.startWaiting();
+                WIZARD.beginBusy();
                 $.ajax({
-                    url: '/wifi_create_point?ssid=' + ssid_input.val() + '&password=' + pass_input.val() + '',
+                    url: '/wifi_create_point?ssid=' + encodeURIComponent(ssid_input.val()) + '&password=' + encodeURIComponent(pass_input.val()),
                     type: 'GET'
                 })
                     .always(function() {
+                        WIZARD.endBusy();
                         WIZARD.stopWaiting();
                     })
                     .success(function() {

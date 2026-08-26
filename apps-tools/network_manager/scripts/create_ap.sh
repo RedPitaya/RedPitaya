@@ -9,10 +9,6 @@ $RP_PATH/get_connected_wifi.sh
 
 RES=$?
 
-if [ $RES == 2 ]; then
-	echo "NOT SUPPORTED"
-fi
-
 if [ $RES == 1 ]; then
     $RP_PATH/disconnect.sh
 	rw
@@ -30,6 +26,14 @@ if [ $RES == 1 ]; then
     echo "wpa_key_mgmt=WPA-PSK" >> $CONF_F
 	echo "wpa_pairwise=CCMP" >> $CONF_F
 	echo "rsn_pairwise=CCMP" >> $CONF_F
+    # Advertise the regulatory domain, so clients know which channels and powers
+    # this AP is allowed to use. Skipped for the world domain, where there is
+    # nothing meaningful to advertise.
+    COUNTRY=$($RP_PATH/get_country.sh)
+    if [ "$COUNTRY" != "00" ]; then
+        echo "country_code=$COUNTRY" >> $CONF_F
+        echo "ieee80211d=1" >> $CONF_F
+    fi
   	systemctl restart hostapd@wlan0.service
     sleep 1
     systemctl restart wireless-mode-ap.service

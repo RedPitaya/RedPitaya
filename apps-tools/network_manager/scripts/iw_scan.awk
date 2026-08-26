@@ -1,64 +1,81 @@
-# Based off this answer http://stackoverflow.com/a/17880517/1172409 
-# Ideally one wouldn't parse the output of iw scan (it may be subject to change), 
-# but dealing with learning libnl which iw uses seems overly complicated - more so than updating this in case iw does change.
+# Parse `iw dev wlan0 scan` into the JSON the Network Manager UI expects.
+#
+# Rewritten because the original:
+#   * used FS=":" and took only $2 for the SSID, so any SSID containing a colon
+#     ("Home: 5G") was truncated at the colon
+#   * emitted SSIDs into JSON without escaping " or \, producing invalid JSON
+#     that made the whole network list disappear in the browser
+#   * reported every RSN network as "WPA2", so a WPA3-SAE / WPA2+WPA3-mixed AP
+#     was indistinguishable from plain WPA2
+#   * built the BSS key as $2$3$4$5$6 under FS=":", dropping the first MAC octet
+#     and appending "(on wlan0)", so two APs differing only in the first octet
+#     collided and one of them vanished from the list
 
-# A few things that could be improved:
-# Better padding solution for prettier pretty printing.
-# Sort APs based off signal strength from best to worst.
-
-# Usage - iw must be run as root (suggestion: add as an alias in bashrc):
-# iw wlp8s0 scan | awk -f scan.awk
+function jesc(s) {
+    gsub(/\\/, "\\\\", s)
+    gsub(/"/,  "\\\"", s)
+    gsub(/\t/, " ", s)
+    return s
+}
 
 function strip(s) {
-  gsub(/^[ \t]+/,"",s)
-  gsub(/[ \t]+$/,"",s)
-  return s
+    sub(/^[ \t]+/, "", s)
+    sub(/[ \t]+$/, "", s)
+    return s
 }
 
-# Parse input and collect info
-
-BEGIN {
-  FS=":" # Everything except BSS is : separated.
+/^BSS[ \t]/ {
+    line = $0
+    sub(/^BSS[ \t]+/, "", line)
+    sub(/[ \t]*\(.*$/, "", line)
+    MAC = line
+    order[++n] = MAC
+    enc[MAC]  = "Open"
+    ssid[MAC] = ""
+    sig[MAC]  = ""
+    sae[MAC]  = "No"
+    next
 }
 
-substr($1, 0, 3) == "BSS" {
-    MAC = $2$3$4$5$6
-    # Default assumptions:
-    wifi[MAC]["enc"] = "Open"
-    wifi[MAC]["SSID"] = "Hidden" # Assume hidden
+# Take everything after "SSID: " verbatim - colons included.
+/^[ \t]*SSID: / {
+    l = $0
+    sub(/^[ \t]*SSID: ?/, "", l)
+    ssid[MAC] = l
+    next
 }
 
-$1 == "\tSSID" {
-    wifi[MAC]["SSID"] = strip($2)
-}
-$1 == "\t\t * primary channel" {
-    wifi[MAC]["channel"] = strip($2)
-}
-$1 == "\tsignal" {
-    # Strip dBm from the output
-    input = strip($2)
-    split(input,res , " ")
-    wifi[MAC]["sig"] = res[1]
-}
-$1 == "\tWPA" {
-    wifi[MAC]["enc"] = "WPA"
-}
-$1 == "\tRSN" {
-    wifi[MAC]["enc"] = "WPA2"
-}
-$1 == "\tWPS" {
-    wifi[MAC]["wps"] = "Yes"
+/^[ \t]*signal: / {
+    l = $0
+    sub(/^[ \t]*signal: ?/, "", l)
+    split(strip(l), a, " ")
+    sig[MAC] = a[1]
+    next
 }
 
-# Print collected info
+/^[ \t]*WPA:/ { if (enc[MAC] == "Open") enc[MAC] = "WPA"; next }
+/^[ \t]*RSN:/ { enc[MAC] = "WPA2"; next }
+
+/Authentication suites:/ {
+    if ($0 ~ /SAE/) {
+        sae[MAC] = "Yes"
+        enc[MAC] = ($0 ~ /PSK/) ? "WPA2/WPA3" : "WPA3"
+    }
+    next
+}
+
 END {
-    t=""
     printf "{\"scan\": [\n"
-    fmt = "  {\"SSID\": \"%s\", \"sig\": \"%s\", \"enc\": \"%s\", \"rtl8188\": \"No\"}"
-    for (w in wifi) {
+    t = ""
+    for (i = 1; i <= n; i++) {
+        m = order[i]
+        if (ssid[m] == "") continue          # hidden network, nothing to show
+        if (seen[ssid[m]]) continue          # collapse mesh/roaming duplicates
+        seen[ssid[m]] = 1
         printf t
-        printf fmt, wifi[w]["SSID"], wifi[w]["sig"], wifi[w]["enc"]
-        t=",\n"
+        printf "  {\"SSID\": \"%s\", \"sig\": \"%s\", \"enc\": \"%s\", \"sae\": \"%s\"}",
+               jesc(ssid[m]), sig[m], enc[m], sae[m]
+        t = ",\n"
     }
     printf "\n]}"
 }
