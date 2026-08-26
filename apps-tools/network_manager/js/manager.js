@@ -1,768 +1,1042 @@
 /*
  * Red Pitaya Network Manager
  *
- *
  * (c) Red Pitaya  http://www.redpitaya.com
+ *
+ * Sections are driven by the .tab / .tablinks / .tabcontent contract from
+ * apps-tools/ecosystem (the main_menu page).
+ *
+ * Two rules shape most of what follows:
+ *
+ *   Never claim success the backend has not reported. Every script here answers
+ *   "ok: ..." or "error: ...", and the UI shows that answer rather than
+ *   assuming the request worked because it returned 200.
+ *
+ *   A slow request is not a failed one. Scanning, connecting and restarting a
+ *   service hold the single nginx worker for seconds, during which the status
+ *   poll cannot be answered. Those timeouts say nothing about the service, so
+ *   they are counted separately from real failures.
  */
 
-(function(WIZARD, $, undefined) {
-    WIZARD.state = "";
-    WIZARD.connectedSSID = "";
-    WIZARD.apSSID = '';
-    WIZARD.ap_mode = false;
+(function (WIZARD, $, undefined) {
 
-    // Requests that hold the nginx worker for seconds - a scan, a connect, a
-    // service restart. While one is in flight the 2 s status poll cannot be
-    // answered in time, and its timeout says nothing about the service.
+    WIZARD.present = false;      // wlan0 exists
+    WIZARD.apCapable = false;    // adapter can do AP mode
+    WIZARD.mode = 'none';        // none | client | ap
+    WIZARD.scan = [];
+    WIZARD.sortKey = 'sig';
+    WIZARD.sortAsc = false;
+    WIZARD.firstAnswer = false;
+
+    /* Requests that occupy the nginx worker for seconds. While one is in
+       flight the status poll cannot be answered in time, and its timeout is
+       meaningless. */
     WIZARD.busy = 0;
-    WIZARD.stateFailures = 0;
+    WIZARD.pollFailures = 0;
+    WIZARD.ethFailures = 0;
 
-    WIZARD.beginBusy = function() { WIZARD.busy++; };
-    WIZARD.endBusy   = function() { if (WIZARD.busy > 0) WIZARD.busy--; };
+    WIZARD.beginBusy = function () { WIZARD.busy++; };
 
-    WIZARD.checkState = function() {
-        $.ajax({
-                url: '/get_wlan0_state',
-                type: 'GET',
-                timeout: 2000
-            })
-            .success(function(msg) {
-                // First answer has arrived: the block can show real content.
-                $('#wlan0_block_loading').hide();
-                WIZARD.stateFailures = 0;
-
-                msg = msg.trim()
-                dongle = msg[0];
-                ap_mode = msg[1];
-                code = msg[2];
-                WIZARD.ap_mode = ap_mode === '1';
-
-                if (dongle === '0') {
-                    $('#wlan0_block_entry').hide();
-                    $('#wlan0_block_fail').hide();
-                    $('#wlan0_block_nodongle').show();
-                    WIZARD.stopWaiting();
-                    $('#wifi_scan_result').html("");
-                }
-                else{
-
-                    $('#wlan0_block_nodongle').hide();
-                    $('#wlan0_block_fail').hide();
-                    $('#wlan0_block_entry').show();
-
-                    if (code == "1") {
-                        $('#wlan0_client_mode').hide();
-                        $('#wlan0_ap_mode').hide();
-                        $('#wlan0_mode').hide();
-                        $('#wlan0_ap_mode_work').hide();
-                        $('#wlan0_client_mode_link').show();
-                        $('#wlan0_mode_label').text("Client");
-                        WIZARD.getConnectedWlan();
-                        WIZARD.GetWlan0Status();
-                    }
-
-                    if (code == "2") {
-                        $('#wlan0_client_mode').hide();
-                        $('#wlan0_client_mode_link').hide();
-                        $('#wlan0_mode').hide();
-                        $('#wlan0_ap_mode').hide();
-                        $('#wlan0_ap_mode_work').show();
-                        $('#wlan0_mode_label').text("Access Point");
-                        WIZARD.restoreAPSSIDIfPossible();
-                        WIZARD.GetWlan0Status();
-                    }
-
-                    if (code == "0") {
-                        $('#wlan0_ap_mode').hide();
-                        $('#wlan0_client_mode_link').hide();
-                        $('#wlan0_ap_mode_work').hide();
-                        if (!WIZARD.ap_mode){
-                            $('#wlan0_mode option:first').prop('selected', true);
-                            $('#wlan0_mode').hide();
-                        }else{
-                            $('#wlan0_mode').show();
-                        }
-                        $('#wlan0_client_mode').show();
-                        $('#wlan0_mode_label').text("None");
-                        $("#wlan0_ssid_label").text("None");
-                        $('#wlan0_address_label').text("None");
-                        $('#wlan0_mask_label').text("None");
-                        if ($('#wlan0_mode').val() == "#wlan0_client_mode") {
-                            $('#wlan0_ap_mode').hide();
-                            $('#wlan0_client_mode').show();
-                        }
-
-                        if ($('#wlan0_mode').val() == "#wlan0_ap_mode") {
-                            $('#wlan0_client_mode').hide();
-                            $('#wlan0_ap_mode').show();
-                        }
-                    }
-
-                }
-            })
-            .error(function() {
-                // A scan, a connect or a service restart occupies the nginx
-                // worker for several seconds, so this 2 s poll times out through
-                // no fault of the service. Treating the first timeout as failure
-                // made "WIFI SERVICE IS FAILED" flash on every Refresh list,
-                // right before the network list appeared.
-                if (WIZARD.busy > 0) return;
-                if (++WIZARD.stateFailures < 3) return;
-
-                // #wlan0_block_fail has been in the markup all along with
-                // nothing to show it. Without this, a genuine nginx or script
-                // failure left the block on its placeholder indefinitely.
-                $('#wlan0_block_loading').hide();
-                $('#wlan0_block_entry').hide();
-                $('#wlan0_block_nodongle').hide();
-                $('#wlan0_block_fail').show();
-                WIZARD.stopWaiting();
-            })
+    WIZARD.endBusy = function () {
+        if (WIZARD.busy > 0) WIZARD.busy--;
+        /* A request that was already in flight when the blocking one started
+           can land after it finishes, still having timed out because of it.
+           Forget what was counted around a blocking call - none of it is
+           evidence that anything is actually down. */
+        if (WIZARD.busy === 0) {
+            WIZARD.pollFailures = 0;
+            WIZARD.ethFailures = 0;
+        }
     };
 
+    /* ------------------------------------------------------------------ */
+    /* helpers                                                             */
+    /* ------------------------------------------------------------------ */
 
-    WIZARD.getScanResult = function(scanResult) {
+    function esc(s) { return $('<div>').text(s === undefined || s === null ? '' : s).html(); }
 
-        $('body').addClass('loaded');
-        var htmlList = "";
-        if (scanResult.scan.length > 0){
-            for (i in scanResult.scan) {
-                var ssid       =  scanResult.scan[i].SSID;
-                var encryption =  scanResult.scan[i].enc !== "Open"
-                var level      =  scanResult.scan[i].sig
-                if ( ssid !== ""){
-                    htmlList += "<div>";
-                    var node = "<div style='width: 50px; float: left;height:32px'>"
-                    var lock = (encryption) ? "<img src='img/wifi-icons/lock.png' style='width:16px;margin-top:8px;margin-bottom:8px;margin-left:4px;margin-right:5px;vertical-align: top;'>" : "";
+    function msg(sel, text, cls) {
+        $(sel).attr('class', 'nm-msg ' + (cls || '')).text(text || '');
+    }
 
-                    if (level !== undefined){
-                        var style = "width: 20px; margin-left: 2px; margin-right: 3px;margin-top: 6px;"
-                        if      (level < -81)  node += "<img src='img/wifi-icons/connection_0.png' style='" + style + "'>"
-                        else if (level < -71)  node += "<img src='img/wifi-icons/connection_1.png' style='" + style + "'>"
-                        else if (level < -53)  node += "<img src='img/wifi-icons/connection_2.png' style='" + style + "'>"
-                        else                   node += "<img src='img/wifi-icons/connection_3.png' style='" + style + "'>"
-                    }else{
-                        node += "<div style='width:25px;height:32px;display: inline-block;'/>"
-                    }
+    function bytes(n) {
+        n = parseFloat(n);
+        if (!isFinite(n)) return '—';
+        var u = ['B', 'kB', 'MB', 'GB'], i = 0;
+        while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+        return (i === 0 ? n : n.toFixed(1)) + ' ' + u[i];
+    }
 
-                    node += lock + "</div>"
-                    var ssidEsc = $('<div>').text(ssid).html();
-                    htmlList += node + "<div key=\"" + ssidEsc + "\" class='btn-wifi-item btn'>" + ssidEsc + "&nbsp;</div>";
-                    htmlList += "</div>";
-                }
-            }
-        }else{
-            $.ajax({
-                url: '/wlan0_up',
-                type: 'GET',
-                timeout: 1000
-            });
+    function secs(n) {
+        n = parseInt(n, 10);
+        if (!isFinite(n)) return '—';
+        if (n < 60) return n + ' s';
+        if (n < 3600) return Math.floor(n / 60) + ' min';
+        return Math.floor(n / 3600) + ' h ' + Math.floor((n % 3600) / 60) + ' min';
+    }
+
+    /* key/value rows: [label, value, cssClass, markup]
+       A 4th element is used as the cell's contents verbatim instead of the
+       escaped value, for the one row that needs an element rather than text.
+       Anything interpolated into it must already have gone through esc(). */
+    function rows(sel, list) {
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+            var v = list[i][1];
+            if (v === undefined || v === null || v === '') v = '—';
+            html += '<tr><th>' + esc(list[i][0]) + '</th><td'
+                 + (list[i][2] ? ' class="' + list[i][2] + '"' : '') + '>'
+                 + (list[i][3] !== undefined ? list[i][3] : esc(v)) + '</td></tr>';
         }
+        $(sel).html(html);
+    }
 
-        // Update networks list if need
-        $('#wifi_loader').hide();
-        if ($('#wifi_scan_result').html() != htmlList)
-            $('#wifi_scan_result').html(htmlList);
+    /* Parse the key=value body of /get_wlan0_info. Values may contain "=", so
+       split on the first one only. */
+    function parseKV(text) {
+        var out = {}, lines = (text || '').split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var p = lines[i].indexOf('=');
+            if (p > 0) out[lines[i].substring(0, p)] = lines[i].substring(p + 1);
+        }
+        return out;
+    }
 
-        $('.btn-wifi-item').click(function() {
-            $('#ssid_input_client').val($(this).attr('key'));
+    /* iw prints "-29.00"; two decimals of dBm are noise. */
+    function dbm(v) {
+        var n = parseFloat(v);
+        return isFinite(n) ? Math.round(n) + ' dBm' : '—';
+    }
+
+    function barsFor(dbm) {
+        return '<span class="nm-bars s' + barLevel(dbm) + '"><i></i><i></i><i></i><i></i></span>';
+    }
+
+    /* The same four bands the scan table's bars use, so the Status icon and the
+       Scan icon never disagree about the same radio. */
+    function barLevel(dbm) {
+        var n = parseFloat(dbm);
+        return !isFinite(n) ? 0 : n >= -53 ? 4 : n >= -71 ? 3 : n >= -81 ? 2 : 1;
+    }
+
+    var SIGNAL_WORD = ['no signal', 'weak', 'fair', 'good', 'excellent'];
+
+    /* The Signal row on Status: the same bar glyph as the scan list, in front of
+       the number, with the reading spelled out on hover. -67 dBm means nothing
+       to most people; "good" does. */
+    function signalCell(sig) {
+        var lvl = barLevel(sig);
+        var reading = dbm(sig);
+        if (lvl === 0) return esc(reading);
+        return '<span class="adaptive-tooltip nm-sig">'
+             + barsFor(sig)
+             + '<span class="tooltiptext top">' + esc(SIGNAL_WORD[lvl])
+             + ' &mdash; ' + esc(reading) + ' (' + lvl + ' of 4)</span>'
+             + '</span>' + esc(reading);
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* passphrase reveal                                                   */
+    /* ------------------------------------------------------------------ */
+
+    /* Drawn inline rather than pulled from an icon font or an image, so the
+       control needs no asset and inherits the surrounding colour. */
+    var EYE_OPEN = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                 + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"'
+                 + ' aria-hidden="true">'
+                 + '<path d="M1.7 12S5.6 5.4 12 5.4 22.3 12 22.3 12 18.4 18.6 12 18.6 1.7 12 1.7 12z"/>'
+                 + '<circle cx="12" cy="12" r="2.9"/></svg>';
+
+    var EYE_SHUT = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+                 + ' stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"'
+                 + ' aria-hidden="true">'
+                 + '<path d="M1.7 12S5.6 5.4 12 5.4 22.3 12 22.3 12 18.4 18.6 12 18.6 1.7 12 1.7 12z"/>'
+                 + '<circle cx="12" cy="12" r="2.9"/>'
+                 + '<line x1="3.6" y1="20.4" x2="20.4" y2="3.6"/></svg>';
+
+    function setReveal(box, on) {
+        var input = box.find('input');
+        var btn = box.find('.nm-eye');
+        input.attr('type', on ? 'text' : 'password');
+        btn.attr('aria-pressed', on ? 'true' : 'false')
+           .attr('aria-label', on ? 'Hide passphrase' : 'Show passphrase')
+           .attr('title', on ? 'Hide passphrase' : 'Show passphrase')
+           .html(on ? EYE_SHUT : EYE_OPEN);
+    }
+
+    WIZARD.hideAllPass = function () {
+        $('.nm-pass').each(function () { setReveal($(this), false); });
+    };
+
+    WIZARD.bindReveal = function () {
+        WIZARD.hideAllPass();
+        $('.nm-pass .nm-eye').click(function () {
+            var box = $(this).closest('.nm-pass');
+            if (box.find('input').prop('disabled')) return;
+            setReveal(box, box.find('input').attr('type') === 'password');
         });
     };
 
-    WIZARD.startScan = function() {
-        // Show loader gif
-        $('#wifi_scan_result').html("");
-        $('#wifi_loader').show();
+    /* ------------------------------------------------------------------ */
+    /* tabs                                                                */
+    /* ------------------------------------------------------------------ */
 
-        WIZARD.beginBusy();
-        $.ajax({
-                url: '/get_wnet_list',
-                type: 'GET'
+    /* The ecosystem original marks the active link through evt.currentTarget.
+       That only holds while the browser is dispatching the event: trigger the
+       same handler from code (jQuery .click()) and currentTarget is undefined,
+       so the section switched but no link lit up. Resolve the link from the
+       section name instead - each one names its section in its onclick - and
+       the same function then works from a real click and from code alike. */
+    WIZARD.showTab = function (name) {
+        var i, c = document.getElementsByClassName('tabcontent');
+        for (i = 0; i < c.length; i++) c[i].classList.remove('shown');
+
+        var l = document.getElementsByClassName('tablinks');
+        for (i = 0; i < l.length; i++) {
+            l[i].className = l[i].className.replace(' active', '');
+            if ((l[i].getAttribute('onclick') || '').indexOf("'" + name + "'") !== -1) {
+                l[i].className += ' active';
+            }
+        }
+
+        var sec = document.getElementById(name);
+        if (sec) sec.classList.add('shown');
+
+        /* Leaving a section puts its passphrase back behind the dots. Revealing
+           one is meant to be a look, not a setting that outlives the visit. */
+        if (WIZARD.hideAllPass) WIZARD.hideAllPass();
+
+        /* Opening Wired shows what the board is set to now - unless there are
+           edits in progress, which fillEthForm leaves alone. */
+        if (name === 'nm_wired') WIZARD.fillEthForm();
+
+        if (name === 'nm_scan' && !WIZARD.scan.length) WIZARD.startScan();
+        if (name === 'nm_diag') WIZARD.loadDiag();
+        if (name === 'nm_ap') WIZARD.loadApClients();
+    };
+
+    /* Kept for the inline onclick in index.html, which follows the ecosystem
+       markup contract. */
+    WIZARD.openTab = function (evt, name) { WIZARD.showTab(name); };
+
+    /* ------------------------------------------------------------------ */
+    /* state polling                                                       */
+    /* ------------------------------------------------------------------ */
+
+    WIZARD.poll = function () {
+        $.ajax({ url: '/get_wlan0_state', type: 'GET', timeout: 2000 })
+            .success(function (m) {
+                WIZARD.pollFailures = 0;
+                if (!WIZARD.firstAnswer) {
+                    WIZARD.firstAnswer = true;
+                    $('#nm_loading').hide();
+                    $('#nm_shell').show();
+                }
+                $('#nm_fail').removeClass('on');
+
+                m = (m || '').trim();
+                WIZARD.present = m[0] === '1';
+                WIZARD.apCapable = m[1] === '1';
+                WIZARD.mode = m[2] === '1' ? 'client' : m[2] === '2' ? 'ap' : 'none';
+
+                $('body').toggleClass('nm-noadapter', !WIZARD.present);
+                $('#pill_wlan').attr('class', WIZARD.present ? 'up' : 'down')
+                    .text(!WIZARD.present ? 'absent' : WIZARD.mode === 'ap' ? 'AP' :
+                          WIZARD.mode === 'client' ? 'client' : 'idle');
+                $('#ap_start').prop('disabled', !WIZARD.apCapable);
+
+                WIZARD.loadWlanInfo();
             })
-            .done(function(msg) {
-                WIZARD.getScanResult(msg);
-            })
-            .fail(function (jqXHR, textStatus, errorThrown) {
-                console.log(textStatus,errorThrown)
-            })
-            .always(function() {
-                WIZARD.endBusy();
+            .error(function () {
+                /* A scan or a connect blocks the worker; those timeouts are not
+                   failures. Outside them, three misses in a row before saying so. */
+                if (WIZARD.busy > 0) return;
+                if (++WIZARD.pollFailures < 3) return;
+                $('#nm_loading').hide();
+                $('#nm_shell').hide();
+                $('#nm_fail').addClass('on');
             });
     };
 
-    WIZARD.getConnectedWlan = function() {
-        $.ajax({
-                url: '/get_connected_wlan',
-                type: 'GET',
-                timeout: 1000
-            })
-            .success(function(msg) {
-                msg = msg.trim()
-                if (msg == undefined || msg == "\n" || msg == "") {
-                    $("#wlan0_ssid_label").text("None");
+    WIZARD.loadWlanInfo = function () {
+        $.ajax({ url: '/get_wlan0_info', type: 'GET', timeout: 4000 })
+            .success(function (text) {
+                var d = parseKV(text);
+
+                if (d.present !== '1') {
+                    rows('#kv_wlan', [['State', 'absent']]);
+                    rows('#kv_adapter', [['Adapter', 'none']]);
                     return;
                 }
-                WIZARD.connectedSSID = msg;
-                $("#wlan0_ssid_label").text(WIZARD.connectedSSID);
+
+                var state = d.state === 'associated' ? 'associated'
+                          : d.state === 'ap' ? 'access point' : 'not connected';
+                var cls = d.state === 'associated' || d.state === 'ap' ? 'nm-up' : '';
+
+                rows('#kv_wlan', [
+                    ['State', state, cls],
+                    ['Mode', d.type],
+                    ['SSID', d.ssid],
+                    ['BSSID', d.bssid],
+                    ['Channel', d.channel ? d.channel + (d.freq ? ' (' + d.freq + ' MHz)' : '')
+                                           + (d.chanwidth ? ', ' + d.chanwidth : '') : ''],
+                    ['Signal', dbm(d.signal), '', signalCell(d.signal)],
+                    ['Tx rate', d.txrate],
+                    ['Rx rate', d.rxrate],
+                    ['Address', d.addr],
+                    ['Gateway', d.gw],
+                    ['MAC', d.mac],
+                    ['Power save', d.powersave],
+                    ['Traffic', 'rx ' + bytes(d.rxbytes) + ' / tx ' + bytes(d.txbytes)]
+                ]);
+
+                rows('#kv_adapter', [
+                    ['USB device', d.usbid ? d.usbid + (d.usbspeed ? ' · ' + d.usbspeed + ' Mbps' : '')
+                                             + (d.usbpower ? ' · ' + d.usbpower : '') : ''],
+                    ['Driver', d.driver],
+                    ['phy', d.phy ? 'phy' + d.phy : ''],
+                    ['Interface modes', d.modes],
+                    ['Autosuspend', d.usbctl],
+                    ['Country (configured)', d.country],
+                    ['Country (kernel)', d.regdomain]
+                ]);
+
+                $('#ap_country').val(d.country || '');
+
+                /* Prefill the wireless form once, from what is actually running,
+                   so Connect does not need retyping to reconnect. */
+                if (!WIZARD.ssidPrefilled && d.ssid && d.state === 'associated') {
+                    WIZARD.ssidPrefilled = true;
+                    if (!$('#wl_ssid').val()) $('#wl_ssid').val(d.ssid);
+                }
             });
     };
 
-    WIZARD.GetFirstAddress = function(obj) {
-        var ip = null;
-        var mask = null;
-
-        for (var i = 0; i < obj.length; ++i) {
-            ip = obj[i].split(" ")[1].split("/")[0];
-            mask = obj[i].split(" ")[1].split("/")[1];
-
-            // Link-local address checking.
-            // Do not use it if it is not the only one.
-            if (!ip.startsWith("169.254.")) {
-                // Return the first address.
-                break;
+    /* wired.network as sections of keys: {Network: {Address: "..."}, ...}.
+       Section-aware because DNS= exists under both [Network] and [DHCPServer]
+       and means different things there - the resolver this board uses, versus
+       the resolver it hands to its clients. */
+    function parseIni(text) {
+        var out = {}, sec = '', lines = (text || '').split('\n');
+        for (var i = 0; i < lines.length; i++) {
+            var l = lines[i].replace(/^\s+|\s+$/g, '');
+            if (!l || l.charAt(0) === '#' || l.charAt(0) === ';') continue;
+            var s = l.match(/^\[(.+)\]$/);
+            if (s) { sec = s[1]; out[sec] = out[sec] || {}; continue; }
+            var p = l.indexOf('=');
+            if (p > 0 && sec) {
+                out[sec][l.substring(0, p).replace(/\s+$/, '')] =
+                    l.substring(p + 1).replace(/^\s+/, '');
             }
         }
-
-        return {ip: ip, mask: mask};
-    };
-
-
-
-    WIZARD.ParseAddress = function(text) {
-        // inet ip/mask
-        var infoRegexp = /inet\s+\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/\d+/g;
-        var infoMatch = text.match(infoRegexp);
-        var ip = null;
-        var mask = null;
-
-        if (infoMatch !== null) {
-            var info = WIZARD.GetFirstAddress(infoMatch);
-            ip = info.ip;
-
-            if (info.mask) {
-                var cidr = parseInt(info.mask, 10);
-                if (cidr >= 0 && cidr <= 32) {
-                    var maskValue = 0xffffffff << (32 - cidr);
-                    var octet1 = (maskValue >> 24) & 0xff;
-                    var octet2 = (maskValue >> 16) & 0xff;
-                    var octet3 = (maskValue >> 8) & 0xff;
-                    var octet4 = maskValue & 0xff;
-                    mask = octet1 + "." + octet2 + "." + octet3 + "." + octet4;
-                }
-            }
-        }
-        return {ip: ip, mask: mask};
-    };
-
-    // GET WLAN0 IP ADDRESS
-    WIZARD.GetWlan0Status = function() {
-        $.ajax({
-            url: '/get_wlan0_status',
-            type: 'GET'
-        }).success(function(msg) {
-            var info = WIZARD.ParseAddress(msg);
-            if (info.ip != null) {
-                $('#wlan0_address_label').text("" + info.ip);
-                $('#wlan0_mask_label').text("" + info.mask);
-            }else{
-                $('#wlan0_address_label').text("None");
-                $('#wlan0_mask_label').text("None");
-            }
-
-        }).done(function(msg) {});
-    };
-
-    var routingIsGot = false
-    WIZARD.GetEth0Status = function() {
-        $.ajax({
-            url: '/get_eth0_status',
-            type: 'GET'
-        }).success(function(msg) {
-            var info = WIZARD.ParseAddress(msg);
-            var gateway = msg.split("gateway:")[1].split("\n")[0];
-            var config = msg.split("config:")[1];
-
-            const $select = document.querySelector('#eth0_mode');
-
-            if (!routingIsGot){
-                if (config.includes("DHCP=ipv4")){
-                    $select.value = "#eth0_dhcp_mode";
-                } else if (config.includes("DHCPServer=yes")){
-                    $select.value = "#eth0_dhcp_server_mode";
-                } else {
-                    $select.value = "#eth0_static_mode";
-                }
-                routingIsGot = true;
-            }
-
-            if (!gateway) {
-                gateway = "None";
-            }
-
-            $('#eth0_address_label').text((info.ip !== null) ? "" + info.ip : "None");
-            $('#eth0_mask_label').text((info.mask !== null) ? "" + info.mask : "None");
-            $('#eth0_gateway_label').text(gateway);
-
-        }).done(function(msg) {});
-    };
-
-    WIZARD.ValidateIPaddress = function(ipaddress) {
-        if (ipaddress == '')
-            return false;
-        if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {
-            return (true);
-        }
-        return (false);
+        return out;
     }
 
-    WIZARD.ValidateNetmask = function(netmask) {
-        if (netmask == '')
-            return false;
-        if (!/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(netmask)) {
-            return false;
-        }
-        var parts = netmask.split('.');
-        var octets = parts.map(function(x) { return parseInt(x, 10); });
-
-        var validOctetValues = [0, 128, 192, 224, 240, 248, 252, 254, 255];
-
+    /* systemd writes a prefix length; the form asks for a dotted mask. */
+    function prefixToMask(prefix) {
+        var n = parseInt(prefix, 10);
+        if (!(n >= 0 && n <= 32)) return '';
+        var o = [0, 0, 0, 0];
         for (var i = 0; i < 4; i++) {
-            if (validOctetValues.indexOf(octets[i]) === -1) {
-                return false;
-            }
+            var bits = Math.min(8, Math.max(0, n - i * 8));
+            o[i] = bits === 0 ? 0 : (256 - Math.pow(2, 8 - bits));
         }
-        var binaryString = '';
-        for (var i = 0; i < 4; i++) {
-            binaryString += octets[i].toString(2).padStart(8, '0');
-        }
-        var foundZero = false;
-        for (var i = 0; i < binaryString.length; i++) {
-            if (binaryString[i] === '0') {
-                foundZero = true;
-            } else if (binaryString[i] === '1' && foundZero) {
-                return false;
-            }
-        }
-        return true;
-    };
-
-    WIZARD.ValidateIPaddressPort = function(ipaddress) {
-        if (ipaddress == '')
-            return false;
-        if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/[0-9]{1,2}$/.test(ipaddress)) {
-            return (true);
-        }
-        return (false);
+        return o.join('.');
     }
 
-    WIZARD.ManualSetEth0 = function() {
-        var IPaddr = $('#ip_address_input').val();
-        var addrMask = $('#ip_mask_input').val();
-        var Gateway = $("#gateway_input").val();
-        var DNS = $("#dns_address_input").val();
+    /* What the board is actually configured to do, read back out of
+       wired.network so the form can show it. */
+    function parseNetwork(text) {
+        var raw = (text.split('config:')[1] || '');
+        var ini = parseIni(raw);
+        var net = ini.Network || {};
+        var srv = ini.DHCPServer || {};
+        var mode = /DHCPServer\s*=\s*yes/i.test(raw) ? 'server'
+                 : /^\s*DHCP\s*=\s*(ipv4|yes)/mi.test(raw) ? 'dhcp'
+                 : (net.Address ? 'static' : '');
 
-        var DHCP_ADDRES = $("#ip_address_input_dhcp").val();
-        var DHCP_MASK = $("#ip_mask_input_dhcp").val();
-        var DHCP_DNS = $("#dns_address_input_dhcp").val();
+        var cidr = (net.Address || '').split('/');
+        return {
+            mode: mode,
+            address: cidr[0] || '',
+            netmask: prefixToMask(cidr[1]),
+            gateway: net.Gateway || (ini.Route || {}).Gateway || '',
+            dns: net.DNS || '',
+            pool_offset: srv.PoolOffset || '',
+            pool_size: srv.PoolSize || '',
+            lease: srv.DefaultLeaseTimeSec || '',
+            router: srv.Router || '',
+            server_dns: srv.DNS || ''
+        };
+    }
 
-        var dhcp_flag = ($('#eth0_mode').val() === "#eth0_dhcp_mode") ? true : false;
-        var dhcp_server_flag = ($('#eth0_mode').val() === "#eth0_dhcp_server_mode") ? true : false;
-        var static_flag = ($('#eth0_mode').val() === "#eth0_static_mode") ? true : false;
-
-        var params = [];
-
-        if (IPaddr !== "")
-            params.push('address=' + IPaddr);
-        if (addrMask !== "")
-            params.push('netmask=' + addrMask);
-        if (Gateway !== "")
-            params.push('gateway=' + Gateway);
-        if (DNS !== "")
-            params.push('dns=' + DNS);
-        if (DHCP_DNS !== "")
-            params.push('dns=' + DHCP_DNS);
-        if (DHCP_ADDRES !== "")
-            params.push('dhcp_address=' + DHCP_ADDRES);
-        if (DHCP_MASK !== "")
-            params.push('dhcp_mask=' + DHCP_MASK);
-
-        var addr = ''
-        if (static_flag) {
-            addr = '/set_static_eth0';
-            var error = false
-            if (WIZARD.ValidateIPaddress(IPaddr) == false) {
-                $('#ip_address_input').fI();
-                error = true
-            }
-
-            if (WIZARD.ValidateNetmask(addrMask) == false) {
-                $('#ip_mask_input').fI();
-                error = true
-            }
-
-            if (WIZARD.ValidateIPaddress(Gateway) == false) {
-                $('#Gateway').fI();
-                error = true
-            }
-
-            if (WIZARD.ValidateIPaddress(DNS) == false) {
-                $('#dns_address_input').fI();
-                error = true
-            }
-            if (error) return
+    /* Every IPv4 address on the interface, with its scope, newest "ip addr"
+       layout or older - the fields between the prefix and "scope" vary (brd,
+       metric, dynamic, noprefixroute), so anchor on "inet" and on "scope"
+       rather than on their order. */
+    function inetAddrs(text) {
+        var out = [], re = /inet\s+([0-9.]+\/\d+)([^\n]*)/g, m;
+        while ((m = re.exec(text || '')) !== null) {
+            var scope = (m[2].match(/scope\s+(\S+)/) || [])[1] || '';
+            out.push({ cidr: m[1], scope: scope, link: scope === 'link' || /^169\.254\./.test(m[1]) });
         }
+        return out;
+    }
 
-        if (dhcp_flag) {
-            addr = '/set_dhcp_client_eth0';
-        }
+    /* /get_eth0_status returns the raw wired.network after "config:". Report
+       which of the three shapes it is rather than echoing its first line. */
+    function protoOf(text) {
+        var cfg = (text.split('config:')[1] || '');
+        if (/DHCPServer\s*=\s*yes/i.test(cfg)) return 'DHCP server';
+        if (/DHCP\s*=\s*(ipv4|yes)/i.test(cfg)) return 'DHCP client';
+        if (/^\s*Address\s*=/mi.test(cfg)) return 'static address';
+        if (/no .*wired\.network/i.test(cfg)) return 'unconfigured (link-local / DHCP fallback)';
+        return '';
+    }
 
-        if (dhcp_server_flag) {
-            addr = '/set_dhcp_server_eth0';
-            var error = false
-            if (WIZARD.ValidateIPaddress(DHCP_ADDRES) == false) {
-                $('#ip_address_input_dhcp').fI();
-                error = true
-            }
+    WIZARD.loadEth = function () {
+        $.ajax({ url: '/get_eth0_status', type: 'GET', timeout: 3000 })
+            .success(function (text) {
+                WIZARD.ethFailures = 0;
+                text = text || '';
 
-            if (WIZARD.ValidateNetmask(DHCP_MASK) == false) {
-                $('#ip_mask_input_dhcp').fI();
-                error = true
-            }
+                /* An interface can hold several addresses at once. Reporting
+                   whichever "inet" line came first showed 169.254.x.x on a board
+                   that had been given a static 200.0.0.11 - the link-local was
+                   simply printed above it. Show the routable ones; mention a
+                   link-local separately, since it is worth knowing it is there
+                   but it is never the answer to "what is this board's address". */
+                var all = inetAddrs(text);
+                var real = [], ll = [];
+                for (var i = 0; i < all.length; i++) {
+                    (all[i].link ? ll : real).push(all[i].cidr);
+                }
+                var addr = real.join(', ');
+                if (!addr && ll.length) addr = ll[0] + ' (link-local only)';
 
-            if (WIZARD.ValidateIPaddress(DHCP_DNS) == false) {
-                $('#dns_address_input_dhcp').fI();
-                error = true
-            }
-            if (error) return
+                var gw = (text.match(/gateway:\s*([0-9.]+)/) || [])[1];
+                var up = /state UP/.test(text) || real.length > 0;
 
-            params.push('gateway=' + DHCP_ADDRES);
-        }
+                $('#pill_eth').attr('class', up ? 'up' : 'down').text(up ? 'up' : 'down');
 
-        if (params.length !== 0) {
-            addr += '?';
-            for (var i = 0; i < params.length; i++) {
-                addr += params[i];
-                if (i < (params.length - 1))
-                    addr += '&';
-            }
-        }
+                WIZARD.ethConfig = parseNetwork(text);
 
-        $.ajax({
-            url: addr,
-            type: 'GET'
-        });
-        //setTimeout(window.open("http://" + $('#ip_address_and_mask_input').val().split("/")[0] + "/network_manager/", "_self"), 10000); // For update this page with new IP eth0 params
-    };
+                var list = [
+                    ['State', up ? 'up' : 'down', up ? 'nm-up' : 'nm-down'],
+                    ['Address', addr],
+                    ['Gateway', gw],
+                    ['Protocol', protoOf(text)]
+                ];
+                if (real.length && ll.length) {
+                    list.push(['Link-local', ll.join(', ')]);
+                }
+                rows('#kv_eth', list);
 
-    WIZARD.startWaiting = function() {
-        $('body').removeClass('loaded');
-    };
-
-
-    /**
-     * @name stopWaiting
-     * @function
-     * @description Put away a time-wait animation
-     */
-
-    WIZARD.stopWaiting = function() {
-        $('body').addClass('loaded');
-    };
-
-    /**
-     * @name dropAP
-     * @function
-     * @description Drop access point
-     */
-
-    WIZARD.dropAP = function() {
-        WIZARD.startWaiting();
-        WIZARD.beginBusy();
-        $.ajax({
-            url: '/remove_ap',
-            type: 'GET'
-        })
-        .always(function() {
-            WIZARD.endBusy();
-            WIZARD.apSSID = '';
-            WIZARD.stopWaiting();
-        });
-    };
-
-    /**
-     * @name getAccessPointSSID
-     * @description Restore AP SSID from iw output
-     */
-
-    /**
-     * @name loadCountry
-     * @description Read the stored regulatory country and select it in the list
-     */
-
-    WIZARD.loadCountry = function() {
-        $.ajax({
-                url: '/get_wifi_country',
-                type: 'GET',
-                timeout: 2000
+                /* Fill the form from what is actually on the board, once, so the
+                   Wired section opens showing the current configuration instead
+                   of an empty form defaulted to DHCP client. */
+                if (!WIZARD.ethFilled) {
+                    WIZARD.ethFilled = true;
+                    WIZARD.fillEthForm();
+                }
             })
-            .success(function(msg) {
-                var cc = (msg || '').trim().toUpperCase();
+            .error(function () {
+                /* A scan or a connect owns the single nginx worker for seconds,
+                   so this poll times out through no fault of eth0 - and the wired
+                   link is the one thing that certainly has not changed while the
+                   radio is busy. Say nothing: keep the last known state rather
+                   than flipping the pill to "?" every time someone scans.
+
+                   Outside a blocking call, three misses in a row before
+                   admitting it, for the same reason the state poll does. */
+                if (WIZARD.busy > 0) return;
+                if (++WIZARD.ethFailures < 3) return;
+                $('#pill_eth').attr('class', 'down').text('?');
+            });
+    };
+
+    /* ------------------------------------------------------------------ */
+    /* scan                                                                */
+    /* ------------------------------------------------------------------ */
+
+    WIZARD.startScan = function () {
+        if (!WIZARD.present) return;
+        $('#scan_body').html('<tr><td class="empty" colspan="5">Scanning…</td></tr>');
+        $('#scan_btn').prop('disabled', true);
+        WIZARD.beginBusy();
+
+        $.ajax({ url: '/get_wnet_list', type: 'GET', timeout: 30000 })
+            .done(function (m) {
+                if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { m = null; } }
+                WIZARD.scan = (m && m.scan) ? m.scan : [];
+                WIZARD.renderScan();
+            })
+            .fail(function () {
+                $('#scan_body').html('<tr><td class="empty" colspan="5">Scan failed.</td></tr>');
+            })
+            .always(function () {
+                WIZARD.endBusy();
+                $('#scan_btn').prop('disabled', false);
+            });
+    };
+
+    WIZARD.renderScan = function () {
+        var list = WIZARD.scan.slice();
+        var k = WIZARD.sortKey, asc = WIZARD.sortAsc;
+        list.sort(function (a, b) {
+            var x = a[k], y = b[k];
+            if (k === 'sig') { x = parseFloat(x); y = parseFloat(y); }
+            else { x = String(x).toLowerCase(); y = String(y).toLowerCase(); }
+            return (x < y ? -1 : x > y ? 1 : 0) * (asc ? 1 : -1);
+        });
+
+        $('#scan_count').text(list.length ? list.length : '');
+        $('#scan_sub').text(list.length ? list.length + ' networks' : '');
+
+        if (!list.length) {
+            $('#scan_body').html('<tr><td class="empty" colspan="5">No networks found.</td></tr>');
+            return;
+        }
+
+        var html = '';
+        for (var i = 0; i < list.length; i++) {
+            var n = list[i];
+            var open = n.enc === 'Open';
+            var cls = n.sae === 'Yes' ? 'wpa3' : open ? 'open' : '';
+            html += '<tr data-ssid="' + esc(n.SSID) + '" data-open="' + (open ? '1' : '0') + '">'
+                 + '<td>' + barsFor(n.sig) + '</td>'
+                 + '<td class="ssid">' + esc(n.SSID) + '</td>'
+                 + '<td><span class="nm-tag ' + cls + '">' + esc(n.enc) + '</span></td>'
+                 + '<td class="mono">' + esc(dbm(n.sig)) + '</td>'
+                 + '<td><button class="sm">Use</button></td>'
+                 + '</tr>';
+        }
+        $('#scan_body').html(html);
+    };
+
+    /* ------------------------------------------------------------------ */
+    /* access point                                                        */
+    /* ------------------------------------------------------------------ */
+
+    WIZARD.loadApClients = function () {
+        if (!WIZARD.present) return;
+        $.ajax({ url: '/get_ap_clients', type: 'GET', timeout: 4000 })
+            .success(function (m) {
+                if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { m = null; } }
+
+                /* Fill the addressing fields from the file the AP actually
+                   uses, once, and leave them alone afterwards so a half-typed
+                   address is not overwritten by the next refresh. */
+                if (m && m.net && !WIZARD.apFilled) {
+                    WIZARD.apFilled = true;
+                    var n = m.net;
+                    if (n.address) $('#ap_addr').val(n.address);
+                    if (n.netmask) $('#ap_mask').val(n.netmask);
+                    if (n.pool_offset) $('#ap_offset').val(n.pool_offset);
+                    if (n.pool_size) $('#ap_size').val(n.pool_size);
+                    if (n.lease) $('#ap_lease').val(n.lease);
+                    if (n.dns) $('#ap_dns').val(n.dns);
+                    WIZARD.showApPool();
+                }
+
+                var st = (m && m.stations) ? m.stations : [];
+                if (!st.length) {
+                    $('#ap_clients').html('<tr><td class="empty" colspan="6">No stations.</td></tr>');
+                    return;
+                }
+                var html = '';
+                for (var i = 0; i < st.length; i++) {
+                    html += '<tr><td class="ssid">' + esc(st[i].addr || '—') + '</td>'
+                         + '<td class="mono">' + esc(st[i].mac) + '</td>'
+                         + '<td class="mono">' + esc(dbm(st[i].signal)) + '</td>'
+                         + '<td class="mono">' + secs(st[i].connected) + '</td>'
+                         + '<td class="mono">' + bytes(st[i].rx) + '</td>'
+                         + '<td class="mono">' + bytes(st[i].tx) + '</td></tr>';
+                }
+                $('#ap_clients').html(html);
+            });
+    };
+
+    /* ------------------------------------------------------------------ */
+    /* diagnostics                                                         */
+    /* ------------------------------------------------------------------ */
+
+    /* The section is only worth a place in the rail when something is actually
+       wrong. "warn" and "bad" count; "info" does not - no adapter plugged in and
+       no wireless configured yet are legitimate states on a board used over
+       ethernet, and showing them as findings teaches people to ignore the whole
+       section. The backend counts them in "problems"; older payloads without
+       that field are counted here instead.
+
+       `quiet` is the automatic check on page load: it must not overwrite the
+       table with "Running…" or steal the section the user is looking at. */
+    WIZARD.loadDiag = function (quiet) {
+        if (!quiet) $('#diag_checks').html('<tr><td class="d" colspan="3">Running…</td></tr>');
+        WIZARD.beginBusy();
+        $.ajax({ url: '/get_diag', type: 'GET', timeout: 15000 })
+            .success(function (m) {
+                if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { m = null; } }
+                if (!m || !m.checks) {
+                    if (!quiet) {
+                        $('#diag_checks').html('<tr><td class="d" colspan="3">Could not read diagnostics.</td></tr>');
+                    }
+                    return;
+                }
+                var html = '', problems = 0;
+                var icon = { ok: '✓', info: '·', warn: '!', bad: '✗' };
+                for (var i = 0; i < m.checks.length; i++) {
+                    var c = m.checks[i];
+                    if (c.level === 'warn' || c.level === 'bad') problems++;
+                    html += '<tr class="' + esc(c.level) + '">'
+                         + '<td class="i">' + (icon[c.level] || '') + '</td>'
+                         + '<td>' + esc(c.title) + '</td>'
+                         + '<td class="d">' + esc(c.detail) + '</td></tr>';
+                }
+                if (typeof m.problems === 'number') problems = m.problems;
+
+                $('#diag_checks').html(html);
+                WIZARD.showDiagTab(problems);
+            })
+            .error(function () {
+                /* An endpoint that does not answer is itself a problem worth
+                   seeing - but only once the user has asked for the checks. */
+                if (!quiet) {
+                    $('#diag_checks').html('<tr><td class="d" colspan="3">Diagnostics endpoint failed.</td></tr>');
+                    WIZARD.showDiagTab(1);
+                }
+            })
+            .always(function () { WIZARD.endBusy(); });
+    };
+
+    /* Reveal or hide the rail entry. Hiding it while its section is on screen
+       would leave the user staring at a section with nothing selected in the
+       rail, so fall back to Status in that case. */
+    WIZARD.showDiagTab = function (problems) {
+        var link = $('#tab_diag');
+        if (problems > 0) {
+            link.show();
+            $('#diag_dot').addClass('on');
+            return;
+        }
+        link.hide();
+        $('#diag_dot').removeClass('on');
+        if ($('#nm_diag').hasClass('shown')) WIZARD.showTab('nm_status');
+    };
+
+    /* ------------------------------------------------------------------ */
+    /* country                                                             */
+    /* ------------------------------------------------------------------ */
+
+    WIZARD.loadCountry = function () {
+        $.ajax({ url: '/get_wifi_country', type: 'GET', timeout: 3000 })
+            .success(function (m) {
+                var cc = (m || '').trim().toUpperCase();
                 if (/^[A-Z0-9]{2}$/.test(cc)) {
                     $('#wlan0_country').val(cc);
+                    $('#ap_country').val(cc);
                 }
             });
     };
 
-    /**
-     * @name applyCountry
-     * @description Send the selected country and report what the kernel took
-     */
-
-    WIZARD.applyCountry = function(cc) {
-        var status = $('#wlan0_country_status');
-        status.css('color', '#999999').text('Applying ' + cc + '...');
+    WIZARD.applyCountry = function (cc) {
+        msg('#country_msg', 'Applying ' + cc + '…', 'busy');
         WIZARD.beginBusy();
-        $.ajax({
-                url: '/set_wifi_country?country=' + encodeURIComponent(cc),
-                type: 'GET',
-                timeout: 20000
-            })
-            .success(function(msg) {
-                var text = (msg || '').trim();
-                // set_country.sh answers "ok: XX" or "warning: ..."; the kernel
-                // can refuse a code that is absent from regulatory.db, so show
-                // what came back rather than assuming success.
-                if (text.indexOf('ok:') === 0) {
-                    status.css('color', '#7ab648').text('Country set to ' + cc);
+        $.ajax({ url: '/set_wifi_country?country=' + encodeURIComponent(cc), type: 'GET', timeout: 20000 })
+            .success(function (m) {
+                var t = (m || '').trim();
+                /* set_country.sh answers "ok: XX" or "warning: ..." - the kernel
+                   can refuse a code that regulatory.db does not carry, so show
+                   what came back rather than assuming it took. */
+                if (t.indexOf('ok:') === 0) {
+                    msg('#country_msg', 'Country set to ' + cc, 'ok');
+                    $('#ap_country').val(cc);
                 } else {
-                    status.css('color', '#d9a13b').text(text);
+                    msg('#country_msg', t, 'warn');
                 }
             })
-            .error(function(jqXHR) {
-                status.css('color', '#c0504d')
-                      .text((jqXHR.responseText || 'request failed').trim());
-            })
-            .always(function() {
+            .error(function (x) { msg('#country_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () { WIZARD.endBusy(); });
+    };
+
+    /* ------------------------------------------------------------------ */
+    /* actions                                                             */
+    /* ------------------------------------------------------------------ */
+
+    function answer(sel, text, fallbackOk) {
+        var t = (text || '').trim();
+        if (t.indexOf('error:') === 0) { msg(sel, t, 'bad'); return false; }
+        if (t.indexOf('warning:') === 0) { msg(sel, t, 'warn'); return false; }
+        if (t.indexOf('ok:') === 0) { msg(sel, t.substring(3).trim(), 'ok'); return true; }
+        msg(sel, fallbackOk, 'ok');
+        return true;
+    }
+
+    WIZARD.connect = function () {
+        var ssid = $('#wl_ssid').val();
+        var pass = $('#wl_pass').val();
+        var km = $('#wl_keymgmt').val();
+
+        if (!ssid) { msg('#wl_msg', 'Enter an SSID', 'bad'); return; }
+        if (km !== 'open' && pass && (pass.length < 8 || pass.length > 63)) {
+            msg('#wl_msg', 'Passphrase must be 8 to 63 characters', 'bad'); return;
+        }
+
+        msg('#wl_msg', 'Connecting… this can take up to 25 s', 'busy');
+        $('#wl_connect').prop('disabled', true);
+        WIZARD.beginBusy();
+
+        $.ajax({
+            url: '/connect_wifi?ssid=' + encodeURIComponent(ssid)
+               + '&password=' + encodeURIComponent(pass)
+               + '&keymgmt=' + encodeURIComponent(km)
+               + '&pmf=' + encodeURIComponent($('#wl_pmf').val())
+               + '&hidden=' + encodeURIComponent($('#wl_hidden').is(':checked') ? '1' : '0'),
+            type: 'GET', timeout: 70000
+        })
+            .success(function (m) { answer('#wl_msg', m, 'Connected'); })
+            .error(function (x) { msg('#wl_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () {
                 WIZARD.endBusy();
+                $('#wl_connect').prop('disabled', false);
+                WIZARD.loadWlanInfo();
             });
     };
 
-    WIZARD.restoreAPSSIDIfPossible = function() {
-        $.ajax({
-            url: '/get_ap_ssid',
-            type: 'GET',
-            timeout: 1000
-        })
-            .success(function(msg) {
-                WIZARD.apSSID = msg.replace(/(\r\n|\n|\r)/gm, "").match(/[^ ]+(?=$)/);
-                if (WIZARD.apSSID != undefined && WIZARD.apSSID.length > 0 ) {
-                    $('#wlan0_ssid_label').text(WIZARD.apSSID);
-                }
+    WIZARD.disconnect = function () {
+        msg('#wl_msg', 'Disconnecting…', 'busy');
+        WIZARD.beginBusy();
+        $.ajax({ url: '/disconnect_wifi', type: 'GET', timeout: 30000 })
+            .always(function () {
+                WIZARD.endBusy();
+                msg('#wl_msg', 'Disconnected', 'ok');
+                WIZARD.loadWlanInfo();
             });
+    };
+
+    /* Same arithmetic as the wired DHCP server, on the AP's own segment. An
+       empty field means create_ap.sh's default, so the range shown is real
+       either way - marked, so the line does not read as though the fields were
+       filled in. */
+    WIZARD.showApPool = function () {
+        var base = ($('#ap_addr').val() || '192.168.128.1').trim();
+        var rawOff = ($('#ap_offset').val() || '').trim();
+        var rawSize = ($('#ap_size').val() || '').trim();
+        var off = parseInt(rawOff || '10', 10);
+        var size = parseInt(rawSize || '40', 10);
+        var m = base.match(/^(\d+\.\d+\.\d+)\.(\d+)$/);
+        if (!m || !(off > 0) || !(size > 0) || off + size - 1 > 254) {
+            $('#ap_range').text('pool does not fit the address given');
+            return;
+        }
+        var note = (!rawOff || !rawSize) ? ' (default)' : '';
+        $('#ap_range').text('clients get ' + m[1] + '.' + off
+            + ' to ' + m[1] + '.' + (off + size - 1) + ', ' + size + ' addresses' + note);
+    };
+
+    WIZARD.startAP = function () {
+        var ssid = $('#ap_ssid').val();
+        var pass = $('#ap_pass').val();
+        var q = function (v) { return encodeURIComponent((v || '').trim()); };
+
+        if (!ssid) { msg('#ap_msg', 'Enter an SSID', 'bad'); return; }
+        if (pass && (pass.length < 8 || pass.length > 63)) {
+            msg('#ap_msg', 'Passphrase must be 8 to 63 characters, or empty for an open network', 'bad'); return;
+        }
+
+        /* Caught here so a bad pool does not cost an interface restart before
+           create_ap.sh says no. It checks all of this again regardless - it can
+           be run from a shell too. */
+        var addr = ($('#ap_addr').val() || '').trim();
+        var off = parseInt(($('#ap_offset').val() || '10').trim(), 10);
+        var size = parseInt(($('#ap_size').val() || '40').trim(), 10);
+        if (!(off > 0) || !(size > 0)) {
+            msg('#ap_msg', 'First address and pool size must be positive numbers', 'bad'); return;
+        }
+        if (off + size - 1 > 254) {
+            msg('#ap_msg', 'Pool runs past the end of the subnet: ' + off + ' + ' + size
+                + ' exceeds 254', 'bad'); return;
+        }
+        var host = parseInt((addr || '192.168.128.1').split('.')[3], 10);
+        if (host >= off && host < off + size) {
+            msg('#ap_msg', 'The board’s own address is inside the pool it hands out '
+                + '(' + off + '–' + (off + size - 1) + '); move the pool or the address', 'bad');
+            return;
+        }
+
+        msg('#ap_msg', 'Starting…', 'busy');
+        $('#ap_start').prop('disabled', true);
+        WIZARD.beginBusy();
+
+        $.ajax({
+            url: '/wifi_create_point?ssid=' + encodeURIComponent(ssid)
+               + '&password=' + encodeURIComponent(pass)
+               + '&channel=' + encodeURIComponent($('#ap_chan').val())
+               + '&hwmode=' + encodeURIComponent($('#ap_mode').val())
+               + '&address=' + q($('#ap_addr').val())
+               + '&netmask=' + q($('#ap_mask').val())
+               + '&pool_offset=' + q($('#ap_offset').val())
+               + '&pool_size=' + q($('#ap_size').val())
+               + '&lease=' + q($('#ap_lease').val())
+               + '&dns=' + q($('#ap_dns').val()),
+            type: 'GET', timeout: 60000
+        })
+            .success(function (m) { answer('#ap_msg', m, 'Access point running'); })
+            .error(function (x) { msg('#ap_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () {
+                WIZARD.endBusy();
+                $('#ap_start').prop('disabled', !WIZARD.apCapable);
+                WIZARD.loadApClients();
+            });
+    };
+
+    WIZARD.stopAP = function () {
+        msg('#ap_msg', 'Stopping…', 'busy');
+        WIZARD.beginBusy();
+        $.ajax({ url: '/remove_ap', type: 'GET', timeout: 30000 })
+            .always(function () {
+                WIZARD.endBusy();
+                msg('#ap_msg', 'Access point stopped', 'ok');
+                WIZARD.loadApClients();
+            });
+    };
+
+    /* What each protocol does with the four address rows.
+
+       'on'  - editable
+       'off' - shown but disabled: the setting exists in this mode, the board
+               just is not the one choosing it. A DHCP client is handed address,
+               netmask, gateway and DNS by the lease, so the fields stay visible
+               (that is what will be configured) but accept no input that would
+               be thrown away on apply.
+       'no'  - not part of this mode at all, so hidden. A DHCP server has no
+               gateway or upstream resolver of its own to set here; what it
+               hands to clients is the Router and DNS in the block below, and
+               leaving a greyed "Gateway" sitting above "Router" only invites
+               the question of which one wins. */
+    var ETH_FIELDS = {
+        dhcp:   { addr: 'off', mask: 'off', gw: 'off', dns: 'off', dhcpd: false, head: 'Address' },
+        static: { addr: 'on',  mask: 'on',  gw: 'on',  dns: 'on',  dhcpd: false, head: 'Address' },
+        server: { addr: 'on',  mask: 'on',  gw: 'no',  dns: 'no',  dhcpd: true,  head: 'Server address' }
+    };
+
+    /* Put the board's current configuration into the form: select the protocol
+       that is actually in effect and fill the fields belonging to it. Without
+       this the section opened on an empty form reading "DHCP client", which is
+       a claim about the board, and a wrong one on any board not using DHCP.
+
+       Edits win. Once something has been typed the form is the user's until
+       they apply or reset it - repopulating underneath them on every visit to
+       the section would throw away work. */
+    WIZARD.fillEthForm = function (force) {
+        var d = WIZARD.ethConfig;
+        if (!d || (WIZARD.ethDirty && !force)) return;
+
+        if (d.mode) $('#eth_mode').val(d.mode);
+
+        $('#eth_addr').val(d.address);
+        $('#eth_mask').val(d.netmask);
+        $('#eth_gw').val(d.gateway);
+        $('#eth_dns').val(d.mode === 'server' ? '' : d.dns);
+
+        $('#dhcpd_offset').val(d.pool_offset);
+        $('#dhcpd_size').val(d.pool_size);
+        $('#dhcpd_lease').val(d.lease);
+        $('#dhcpd_router').val(d.router);
+        $('#dhcpd_dns').val(d.server_dns);
+
+        WIZARD.ethDirty = false;
+        WIZARD.applyEthMode();
+    };
+
+    WIZARD.applyEthMode = function () {
+        var f = ETH_FIELDS[$('#eth_mode').val()] || ETH_FIELDS.dhcp;
+        var set = function (row, input, state) {
+            $(row).toggle(state !== 'no').toggleClass('off', state === 'off');
+            $(input).prop('disabled', state !== 'on');
+        };
+        set('#row_eth_addr', '#eth_addr', f.addr);
+        set('#row_eth_mask', '#eth_mask', f.mask);
+        set('#row_eth_gw', '#eth_gw', f.gw);
+        set('#row_eth_dns', '#eth_dns', f.dns);
+        $('#dhcpd_block').toggle(!!f.dhcpd);
+        $('#eth_static_head').find('div').text(f.head);
+        /* Whatever the last apply said was about the previous mode's fields,
+           half of which are now gone from the form. */
+        $('#eth_msg').attr('class', 'nm-msg').text('');
+        WIZARD.showPool();
+    };
+
+    /* The [DHCPServer] pool is an offset and a count, not a range, so show what
+       that actually works out to - "100 + 20" is not obviously 192.168.1.100 to
+       .119 until you see it written out. */
+    WIZARD.showPool = function () {
+        var base = ($('#eth_addr').val() || '').trim();
+        var rawOff = ($('#dhcpd_offset').val() || '').trim();
+        var rawSize = ($('#dhcpd_size').val() || '').trim();
+        var off = parseInt(rawOff || '100', 10);
+        var size = parseInt(rawSize || '20', 10);
+        var m = base.match(/^(\d+\.\d+\.\d+)\.(\d+)$/);
+        if (!m || !(off > 0) || !(size > 0) || off + size - 1 > 254) {
+            $('#dhcpd_range').text(base ? 'pool does not fit the address given' : '—');
+            return;
+        }
+        /* An empty field means the endpoint's default, so the range shown is
+           real either way - but say which numbers came from nowhere, or the
+           line reads as though the fields were filled in. */
+        var note = (!rawOff || !rawSize) ? ' (default)' : '';
+        $('#dhcpd_range').text('clients get ' + m[1] + '.' + off
+            + ' to ' + m[1] + '.' + (off + size - 1) + ', ' + size + ' addresses' + note);
+    };
+
+    WIZARD.applyEth = function () {
+        var mode = $('#eth_mode').val();
+        var q = function (v) { return encodeURIComponent((v || '').trim()); };
+        var url;
+
+        if (mode === 'dhcp') {
+            url = '/set_dhcp_client_eth0';
+        } else if (mode === 'static') {
+            if (!$('#eth_addr').val() || !$('#eth_mask').val()) {
+                msg('#eth_msg', 'Address and netmask are required', 'bad'); return;
+            }
+            url = '/set_static_eth0?address=' + q($('#eth_addr').val())
+                + '&netmask=' + q($('#eth_mask').val())
+                + '&gateway=' + q($('#eth_gw').val())
+                + '&dns=' + q($('#eth_dns').val());
+        } else {
+            if (!$('#eth_addr').val() || !$('#eth_mask').val()) {
+                msg('#eth_msg', 'Server address and netmask are required', 'bad'); return;
+            }
+            /* Checked here as well as on the server: the pool has to fit inside
+               the subnet, and "offset 200, size 100" is a mistake worth catching
+               before the interface is torn down to apply it. */
+            var off = parseInt($('#dhcpd_offset').val() || '100', 10);
+            var size = parseInt($('#dhcpd_size').val() || '20', 10);
+            if (!(off > 0) || !(size > 0)) {
+                msg('#eth_msg', 'First address and pool size must be positive numbers', 'bad'); return;
+            }
+            if (off + size - 1 > 254) {
+                msg('#eth_msg', 'Pool runs past the end of the subnet: ' + off + ' + '
+                    + size + ' exceeds 254', 'bad'); return;
+            }
+            var lease = ($('#dhcpd_lease').val() || '').trim();
+            if (lease && !/^\d+$/.test(lease)) {
+                msg('#eth_msg', 'Lease time must be a whole number of seconds', 'bad'); return;
+            }
+
+            url = '/set_dhcp_server_eth0?dhcp_address=' + q($('#eth_addr').val())
+                + '&dhcp_mask=' + q($('#eth_mask').val())
+                + '&pool_offset=' + off
+                + '&pool_size=' + size
+                + '&lease=' + q(lease)
+                + '&router=' + q($('#dhcpd_router').val())
+                + '&dns=' + q($('#dhcpd_dns').val());
+        }
+
+        msg('#eth_msg', 'Applying… the page may lose the board briefly', 'busy');
+        WIZARD.beginBusy();
+        $.ajax({ url: url, type: 'GET', timeout: 30000 })
+            .success(function (m) {
+                var t = (m || '').trim();
+                if (t.indexOf('error') === 0) msg('#eth_msg', t, 'bad');
+                else if (t.indexOf('warning') === 0) msg('#eth_msg', t, 'warn');
+                else {
+                    msg('#eth_msg', 'Applied', 'ok');
+                    /* What is on the board is now what is in the form, so the
+                       next visit may repopulate from it again. */
+                    WIZARD.ethDirty = false;
+                }
+            })
+            .error(function (x) { msg('#eth_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () { WIZARD.endBusy(); WIZARD.loadEth(); });
     };
 
 }(window.WIZARD = window.WIZARD || {}, jQuery));
 
-checkSSID = function(ssid) {
-    if (ssid.length > 0) {
-        return true;
-    }
-    $('#ssid_check_len').show();
-    return false
-};
 
-checkSSID_C = function(ssid) {
-    if (ssid.length > 0) {
-        return true;
-    }
-    $('#ssid_check_len_c').show();
-    return false
-};
+$(document).ready(function () {
 
-checkPassword = function(pass) {
-    if (pass.length >= 8) {
-        for (var i = 0; i < pass.length; i++){
-            var code = pass.charCodeAt(i);
-            if (code < 32 || code > 126){
-                $('#pass_check_sym').show();
-                return false;
-            }
-        }
-        return true;
-    }
-    $('#pass_check_len').show();
-    return false;
-};
-
-checkPassword_C = function(pass) {
-    if (pass.length >= 8 || pass.length == 0) {
-        for (var i = 0; i < pass.length; i++){
-            var code = pass.charCodeAt(i);
-            if (code < 32 || code > 126){
-                $('#pass_check_sym_c').show();
-                return false;
-            }
-        }
-        return true;
-    }
-    $('#pass_check_len_c').show();
-    return false;
-};
-
-// Page onload event handler
-$(document).ready(function() {
-
-     // Init help
-    Help.init(helpListNM);
-    Help.setState("idle");
-
-
-    WIZARD.loadCountry();
-
-    setInterval(WIZARD.checkState, 2000);
-    setInterval(WIZARD.GetEth0Status, 2000);
-
+    if (window.Help && window.helpListNM) { Help.init(helpListNM); Help.setState('idle'); }
     $('body').addClass('loaded');
-    $('#network_apply').click(WIZARD.ManualSetEth0);
-    $('#refresh_list_btn').click(WIZARD.startScan);
 
-    $('#wlan0_country').change(function() {
-        WIZARD.applyCountry($(this).val());
-    });
+    WIZARD.poll();
+    WIZARD.loadEth();
+    WIZARD.loadCountry();
+    WIZARD.applyEthMode();
+    WIZARD.bindReveal();
+    setInterval(WIZARD.poll, 2000);
+    setInterval(WIZARD.loadEth, 5000);
 
+    /* Whether the Diagnostic WiFi entry belongs in the rail is only knowable
+       after the checks have run, so run them once on load. Deferred a little:
+       get_diag shells out to dmesg and systemctl, and nginx has one worker, so
+       running it immediately would stall the first status render. */
+    setTimeout(function () { WIZARD.loadDiag(true); }, 2500);
 
-    /**
-     * @event onclick
-     */
+    $('#wlan0_country').change(function () { WIZARD.applyCountry($(this).val()); });
 
-    $('#client_connect').click(function(event) {
-        $('#ssid_check_len_c').hide();
-        $('#pass_check_len_c').hide();
-        $('#pass_check_sym_c').hide();
-        var ssid = $('#ssid_input_client').val();
-        var password = $('#password_input_client').val();
+    $('#scan_btn').click(WIZARD.startScan);
+    $('#diag_refresh').click(function () { WIZARD.loadDiag(); });
+    $('#wl_connect').click(WIZARD.connect);
+    $('#wl_disconnect').click(WIZARD.disconnect);
+    $('#ap_addr,#ap_offset,#ap_size').on('input', WIZARD.showApPool);
+    $('#ap_start').click(WIZARD.startAP);
+    $('#ap_stop').click(WIZARD.stopAP);
 
-        var ssid_check = checkSSID_C( ssid );
-        var pass_check = checkPassword_C( password );
-        if (ssid_check && pass_check) {
-        if ( $('#client_connect').text() === "Connect") {
-                WIZARD.state = "to_client";
-                WIZARD.startWaiting();
-                WIZARD.beginBusy();
-                $.ajax({
-                    url: '/connect_wifi?ssid=' + encodeURIComponent(ssid) + '&password=' + encodeURIComponent(password),
-                    type: 'GET'
-                })
-                .always(function() {
-                   WIZARD.endBusy();
-                   WIZARD.stopWaiting();
-                });
-            }
-        }
+    /* Any edit in the wired form makes it the user's, so revisiting the section
+       stops overwriting it from the board. */
+    var ETH_INPUTS = '#eth_mode,#eth_addr,#eth_mask,#eth_gw,#eth_dns,'
+                   + '#dhcpd_offset,#dhcpd_size,#dhcpd_lease,#dhcpd_router,#dhcpd_dns';
+    $(ETH_INPUTS).on('input change', function () { WIZARD.ethDirty = true; });
 
-    });
+    $('#eth_mode').change(WIZARD.applyEthMode);
+    $('#eth_addr,#dhcpd_offset,#dhcpd_size').on('input', WIZARD.showPool);
+    $('#eth_apply').click(WIZARD.applyEth);
 
-    $('#client_disconnect').click(function(event) {
-
-        var lastSSID = WIZARD.connectedSSID;
-        WIZARD.state = "to_normal";
-        WIZARD.startWaiting();
-        WIZARD.beginBusy();
-        $.ajax({
-            url: '/disconnect_wifi',
-            type: 'GET'
-        })
-        .always(function() {
-            WIZARD.endBusy();
-            WIZARD.connectedSSID = '';
-            WIZARD.stopWaiting();
-        });
-    });
-
-    $('#wifi_mode').click(function() {
-        $('.ap-main-container').hide();
-        $('.wifi-main-container').show();
-    });
-
-    $('#ap_mode').click(function() {
-        $('.wifi-main-container').hide();
-        $('.ap-main-container').show();
-    });
-
-    $('#wlan0_mode').change(function() {
-        $(".wlan0_entries").hide();
-        $($(this).val()).show();
-    });
-
-    $('#eth0_mode').change(function() {
-        $("#eth0_static_mode").hide();
-        $("#eth0_dhcp_server_mode").hide();
-
-        if ($(this).val() === "#eth0_static_mode") {
-            $($(this).val()).show();
-        }
-
-        if ($(this).val() === "#eth0_dhcp_server_mode") {
-            $($(this).val()).show();
+    /* Reset means "back to what the board is running", not "blank". Blanking
+       was of no use to anyone: the fields it emptied then had to be retyped
+       from the very configuration the page can read. */
+    $('#eth_reset').click(function () {
+        $('#eth_msg').attr('class', 'nm-msg').text('');
+        WIZARD.fillEthForm(true);
+        if (!WIZARD.ethConfig || !WIZARD.ethConfig.mode) {
+            $('#eth_addr,#eth_mask,#eth_gw,#eth_dns').val('');
+            $('#dhcpd_offset,#dhcpd_size,#dhcpd_lease,#dhcpd_router,#dhcpd_dns').val('');
+            WIZARD.ethDirty = false;
+            WIZARD.applyEthMode();
         }
     });
 
-    $('#access_point_create').click(function() {
-        if ($('#access_point_create').text() === "Create") {
-        	$('#ssid_check_len').hide();
-        	$('#pass_check_len').hide();
-            $('#pass_check_sym').hide();
+    /* Sorting: same column toggles direction, a new column starts descending
+       for signal and ascending for text. */
+    $('#scan_table thead th[data-k]').click(function () {
+        var k = $(this).data('k');
+        if (WIZARD.sortKey === k) WIZARD.sortAsc = !WIZARD.sortAsc;
+        else { WIZARD.sortKey = k; WIZARD.sortAsc = (k !== 'sig'); }
+        $('#scan_table thead th').removeClass('sorted asc');
+        $(this).addClass('sorted').toggleClass('asc', WIZARD.sortAsc);
+        WIZARD.renderScan();
+    });
 
-            var ssid_input = $('#ssid_input');
-            var pass_input = $('#password_input');
-
-            var ssid_check = checkSSID( ssid_input.val() );
-            var pass_check = checkPassword( pass_input.val() );
-
-        	if (ssid_check && pass_check){
-                WIZARD.state = "to_ap";
-                WIZARD.startWaiting();
-                WIZARD.beginBusy();
-                $.ajax({
-                    url: '/wifi_create_point?ssid=' + encodeURIComponent(ssid_input.val()) + '&password=' + encodeURIComponent(pass_input.val()),
-                    type: 'GET'
-                })
-                    .always(function() {
-                        WIZARD.endBusy();
-                        WIZARD.stopWaiting();
-                    })
-                    .success(function() {
-                        WIZARD.apSSID = ssid_input.val();
-                        ssid_input.val('');
-                        pass_input.val('');
-                    });
-        	}
+    /* A scan row fills the wireless form and moves there, rather than
+       connecting straight away: the passphrase is still needed. */
+    $('#scan_body').on('click', 'tr', function () {
+        var ssid = $(this).data('ssid');
+        if (!ssid) return;
+        $('#scan_body tr').removeClass('sel');
+        $(this).addClass('sel');
+        $('#wl_ssid').val(ssid);
+        if ($(this).data('open') === 1 || $(this).data('open') === '1') {
+            $('#wl_keymgmt').val('open');
+            $('#wl_pass').val('');
+        } else if ($('#wl_keymgmt').val() === 'open') {
+            $('#wl_keymgmt').val('auto');
         }
+        WIZARD.showTab('nm_wireless');
+        $('#wl_pass').focus();
     });
 
-    $('#ap_mode_stop').click(function() {
-        WIZARD.dropAP();
-        $('#wlan0_address_label').text('');
-        $('#wlan0_mask_label').text('');
-    });
-
-
-    $('#clear_entry').click(function() {
-        $('#ssid_input_client').val("");
-        $('#password_input_client').val("");
-    });
-
-    $('#client_reboot').click(function(event) {
-
-        WIZARD.startWaiting();
-        $.ajax({
-            url: '/reboot',
-            type: 'GET'
-        })
-        .always(function() {
-            setTimeout(function(){
-                window.location.reload(1);
-             }, 30000);
-        });
-    });
+    /* file:// and IP-only access give no hostname; an empty pill is just a box. */
+    var host = window.location.hostname;
+    if (host) $('#pill_host').text(host); else $('#pill_host').hide();
 });

@@ -2,7 +2,11 @@
 #
 # Connect wlan0 to an infrastructure network.
 #
-#   connect.sh <ssid> [passphrase]
+#   connect.sh <ssid> [passphrase] [keymgmt] [pmf] [hidden]
+#
+#     keymgmt  auto (WPA-PSK / WPA-PSK-SHA256 / SAE) | wpa2 | open   default auto
+#     pmf      0 disabled | 1 optional | 2 required                  default 1
+#     hidden   0 | 1  (scan_ssid)                                    default 1
 #
 # Exit code mirrors the contract the web UI expects (1 = adapter present,
 # -1/255 = no adapter) but now only on SUCCESS. On failure it prints a
@@ -10,6 +14,13 @@
 
 SSID="$1"
 PASS="$2"
+KEYMGMT="${3:-auto}"
+PMF="${4:-1}"
+HIDDEN="${5:-1}"
+
+case "$KEYMGMT" in auto|wpa2|open) : ;; *) echo "error: keymgmt must be auto, wpa2 or open"; exit 2 ;; esac
+case "$PMF"     in 0|1|2)          : ;; *) echo "error: pmf must be 0, 1 or 2";            exit 2 ;; esac
+case "$HIDDEN"  in 0|1)            : ;; *) echo "error: hidden must be 0 or 1";            exit 2 ;; esac
 
 RP_PATH=/opt/redpitaya/www/apps/network_manager/scripts
 WPA_SUP=/opt/redpitaya/wpa_supplicant.conf
@@ -35,7 +46,7 @@ if [ "$RES" == "0" ]; then
     exit -1
 fi
 
-log "ssid=[$SSID] pass_len=${#PASS} iface_present=$RES"
+log "ssid=[$SSID] pass_len=${#PASS} keymgmt=$KEYMGMT pmf=$PMF hidden=$HIDDEN iface_present=$RES"
 
 # country=00 leaves all 5 GHz channels PASSIVE-SCAN, so a 5 GHz AP can be seen
 # but never joined. Prefer what the user picked in the web UI; if nothing is set
@@ -75,24 +86,27 @@ rw
     # sae_pwe is a GLOBAL option in wpa_supplicant 2.10, not a per-network one.
     # Putting it inside network={} makes the whole block fail to parse and
     # wpa_supplicant refuses to start ("unknown network field 'sae_pwe'").
-    if [ -n "$PASS" ]; then
+    if [ -n "$PASS" ] && [ "$KEYMGMT" = "auto" ]; then
         echo "sae_pwe=2"
     fi
 
     # --- network section ---
     echo "network={"
     printf '\tssid="%s"\n' "$SSID"
-    echo "	scan_ssid=1"
-    if [ -z "$PASS" ]; then
+    echo "	scan_ssid=$HIDDEN"
+    if [ -z "$PASS" ] || [ "$KEYMGMT" = "open" ]; then
         echo "	key_mgmt=NONE"
     else
         printf '\tpsk="%s"\n' "$PASS"
-        # WPA2-PSK, WPA2-PSK-SHA256 and WPA3-SAE in one block; wpa_supplicant
-        # picks whatever the AP actually advertises.
-        # Force WPA2 only (e.g. if rtw88 misbehaves with SAE) by replacing the
-        # next two lines with:  key_mgmt=WPA-PSK   /   ieee80211w=0
-        echo "	key_mgmt=WPA-PSK WPA-PSK-SHA256 SAE"
-        echo "	ieee80211w=1"
+        if [ "$KEYMGMT" = "wpa2" ]; then
+            # Escape hatch for adapters whose driver misbehaves with SAE.
+            echo "	key_mgmt=WPA-PSK"
+        else
+            # WPA2-PSK, WPA2-PSK-SHA256 and WPA3-SAE in one block;
+            # wpa_supplicant picks whatever the AP actually advertises.
+            echo "	key_mgmt=WPA-PSK WPA-PSK-SHA256 SAE"
+        fi
+        echo "	ieee80211w=$PMF"
     fi
     echo "}"
 } > "$WPA_SUP"

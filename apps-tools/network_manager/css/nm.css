@@ -1,0 +1,506 @@
+/* ===================================================================
+   Network Manager layout.
+   Loaded after style.css and blocks.css, so it wins where they overlap.
+
+   Colours are the ones already in use across apps-tools: backgrounds
+   #282829 / #333434 / #3d3f3f, lines #474949, inputs #444444, text
+   #cdcccc / #999999, accent #ee3739.
+
+   The tab mechanics are the .tab / .tablinks / .tabcontent contract from
+   apps-tools/ecosystem (the main_menu page), rotated vertical for the
+   section rail and rotated back to horizontal below 860px.
+   =================================================================== */
+
+:root {
+    --nm-bg: #282829;
+    --nm-panel: #333434;
+    --nm-panel2: #3d3f3f;
+    --nm-line: #474949;
+    --nm-input: #444444;
+    --nm-text: #cdcccc;
+    --nm-muted: #999999;
+    --nm-bright: #ffffff;
+    --nm-accent: #ee3739;
+    --nm-ok: #7ab648;
+    --nm-warn: #d9a13b;
+    --nm-info: #75cede;
+    --nm-mono: "DejaVu Sans Mono", Consolas, "Courier New", monospace;
+
+    /* One number drives every size on the page. 14px is the default; a value in
+       /home/redpitaya/.config/network_manager.conf overrides it through
+       /nm_fonts.css, which is loaded after this file. Sizes are derived rather
+       than listed so the whole page scales together and nothing drifts out of
+       proportion when the base changes. */
+    --nm-fs: 14px;
+
+    /* Ratios, not fixed offsets. A -4px offset holds at 14px and collapses at
+       11px, where the smallest label would land on 7px; a ratio keeps the
+       proportions the design was drawn with at any base. The floors stop the
+       two smallest steps from becoming unreadable at the bottom of the range.
+       At the 14px default these evaluate to exactly 15/13/12/11/10. */
+    --nm-fs-lg: calc(var(--nm-fs) * 1.072);              /* section heading      */
+    --nm-fs-md: max(10px, calc(var(--nm-fs) * 0.929));   /* rail links, body     */
+    --nm-fs-sm: max(10px, calc(var(--nm-fs) * 0.858));   /* tables, forms        */
+    --nm-fs-xs: max(9px,  calc(var(--nm-fs) * 0.786));   /* notes, tags, pills   */
+    --nm-fs-xxs: max(9px, calc(var(--nm-fs) * 0.715));   /* uppercase captions   */
+
+    /* The boxes text sits in have to move with it. A label column fixed at
+       200px holds "Country (configured)" at 14px and collides with its value at
+       24px, so the widths are derived from the same base. These multipliers give
+       back exactly the hand-set pixel values at the 14px default. */
+    --nm-w-rail: calc(var(--nm-fs) * 13.6);   /* section rail        190px */
+    --nm-w-label: calc(var(--nm-fs) * 14.3);  /* kv / form labels    200px */
+    --nm-w-form: calc(var(--nm-fs) * 45.7);   /* form measure        640px */
+    --nm-h-shell: calc(var(--nm-fs) * 32.9);  /* shell min height    460px */
+    --nm-bar: calc(var(--nm-fs) * 0.858);     /* signal bars          12px */
+}
+
+/* Main text. Set on the shell rather than body so the rest of the suite's
+   chrome - navbar, modals - keeps the sizes it already had. */
+.nm-shell,
+.nm-main { font-size: var(--nm-fs); }
+
+/* ---------------- status pills in the standard header ---------------- */
+
+.nm-pills {
+    float: right;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 50px;
+}
+
+.nm-pill {
+    /* The pills sit in a flex row inside the bootstrap navbar container; without
+       this the last one is squeezed to a sliver instead of pushing the group. */
+    flex: 0 0 auto;
+    font-family: var(--nm-mono);
+    font-size: var(--nm-fs-xs);
+    padding: 2px 8px;
+    border: 1px solid var(--nm-line);
+    border-radius: 3px;
+    color: var(--nm-muted);
+    white-space: nowrap;
+}
+
+.nm-pill b { font-weight: normal; color: var(--nm-muted); }
+.nm-pill b.up { color: var(--nm-ok); }
+.nm-pill b.down { color: var(--nm-accent); }
+.nm-pill b.busy { color: var(--nm-warn); }
+
+/* ---------------- shell ---------------- */
+
+.nm-shell {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--nm-line);
+    border-radius: 5px;
+    overflow: hidden;
+    background: var(--nm-bg);
+    min-height: var(--nm-h-shell);
+}
+
+.nm-rail {
+    width: var(--nm-w-rail);
+    flex: 0 0 var(--nm-w-rail);
+    background: var(--nm-panel);
+    border-right: 1px solid var(--nm-line);
+    padding: 6px 0 14px;
+}
+
+.nm-rail .grp {
+    font-size: var(--nm-fs-xxs);
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: #6f7171;
+    padding: 12px 14px 5px;
+}
+
+.nm-rail .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    overflow: visible;
+}
+
+.nm-rail .tab h4 {
+    margin: 0;
+    font-size: var(--nm-fs-md);
+    font-weight: normal;
+    cursor: pointer;
+    padding: 7px 14px;
+    opacity: .55;
+    transition: .2s;
+    border-left: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--nm-text);
+}
+
+.nm-rail .tab h4:hover { opacity: 1; background: #3a3c3c; }
+
+.nm-rail .tab h4.active {
+    opacity: 1;
+    font-weight: bold;
+    color: var(--nm-bright);
+    border-left-color: var(--nm-accent);
+    background: var(--nm-panel2);
+}
+
+.nm-rail .tab h4 .n {
+    margin-left: auto;
+    font-family: var(--nm-mono);
+    font-size: var(--nm-fs-xxs);
+    color: var(--nm-muted);
+    font-weight: normal;
+}
+
+.nm-rail .tab h4 .dot {
+    margin-left: auto;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--nm-warn);
+    display: none;
+}
+
+.nm-rail .tab h4 .dot.on { display: block; }
+
+.nm-main { flex: 1; min-width: 0; padding: 14px 16px 26px; text-align: left; }
+
+.tabcontent { display: none; }
+.tabcontent.shown { display: block; }
+.unselectable { -webkit-user-select: none; -moz-user-select: none; user-select: none; }
+
+/* ---------------- headings, banners ---------------- */
+
+.nm-main h2 { font-size: var(--nm-fs-lg); font-weight: normal; color: var(--nm-bright); margin: 0 0 3px; }
+.nm-main p.sub { margin: 0 0 14px; color: var(--nm-muted); font-size: var(--nm-fs-sm); }
+/* bootstrap gives <code> a light pink panel, which reads as a highlight on a
+   dark page. Black, so an inline path looks like a path. */
+.nm-main p.sub code { font-family: var(--nm-mono); color: #8f9191; background-color: #000000; }
+
+.nm-banner {
+    border: 1px solid #5c4a34;
+    background: #3a3230;
+    color: var(--nm-warn);
+    border-radius: 3px;
+    padding: 8px 12px;
+    font-size: var(--nm-fs-sm);
+    margin-bottom: 14px;
+    display: none;
+}
+
+.nm-banner.bad { border-color: #5c3436; background: #3a2e2f; color: #e88c8e; }
+.nm-banner.ok { border-color: #3f5233; background: #2f3a2c; color: var(--nm-ok); }
+.nm-banner.on { display: block; }
+
+body.nm-noadapter .nm-dim { opacity: .4; pointer-events: none; }
+body.nm-noadapter .nm-na { display: block; }
+.nm-na { display: none; }
+
+/* ---------------- key/value tables ---------------- */
+
+table.nm-kv { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+
+/* The AP station table carried this same caption styling as an inline style,
+   which no stylesheet can scale. Both table kinds share the rule now. */
+table.nm-kv caption,
+table.nm-list caption {
+    caption-side: top;
+    text-align: left;
+    font-size: var(--nm-fs-xxs);
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: var(--nm-muted);
+    padding: 0 0 6px;
+}
+
+table.nm-kv th,
+table.nm-kv td { text-align: left; padding: 5px 10px; border-bottom: 1px solid #3a3c3c; }
+table.nm-kv th { font-weight: normal; color: var(--nm-muted); width: var(--nm-w-label); white-space: nowrap; font-size: var(--nm-fs-sm); }
+table.nm-kv td { font-family: var(--nm-mono); color: var(--nm-bright); font-size: var(--nm-fs-sm); word-break: break-all; }
+table.nm-kv tr:last-child th,
+table.nm-kv tr:last-child td { border-bottom: none; }
+
+.nm-up { color: var(--nm-ok); }
+.nm-down { color: var(--nm-accent); }
+.nm-busy { color: var(--nm-warn); }
+
+/* ---------------- list tables ---------------- */
+
+table.nm-list { width: 100%; border-collapse: collapse; font-size: var(--nm-fs-sm); }
+
+table.nm-list thead th {
+    font-size: var(--nm-fs-xxs);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--nm-muted);
+    border-bottom: 1px solid var(--nm-line);
+    padding: 0 8px 6px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+table.nm-list thead th:hover { color: var(--nm-bright); }
+table.nm-list thead th.sorted:after { content: " \25BE"; color: var(--nm-info); }
+table.nm-list thead th.sorted.asc:after { content: " \25B4"; }
+table.nm-list td { padding: 5px 8px; border-bottom: 1px solid #363838; white-space: nowrap; }
+table.nm-list tr:hover td { background: #3a3c3c; }
+table.nm-list tr.sel td { background: #414a4a; }
+table.nm-list .mono { font-family: var(--nm-mono); color: var(--nm-muted); }
+table.nm-list .ssid { color: var(--nm-bright); }
+table.nm-list td.empty { color: #6f7171; text-align: center; padding: 16px 8px; white-space: normal; }
+
+.nm-tablewrap { overflow-x: auto; margin-bottom: 20px; }
+
+.nm-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: var(--nm-bar); }
+.nm-bars i { width: 3px; background: var(--nm-line); border-radius: 1px; display: block; }
+.nm-bars i:nth-child(1) { height: calc(var(--nm-bar) * .25); }
+.nm-bars i:nth-child(2) { height: calc(var(--nm-bar) * .5); }
+.nm-bars i:nth-child(3) { height: calc(var(--nm-bar) * .75); }
+.nm-bars i:nth-child(4) { height: var(--nm-bar); }
+.nm-bars.s1 i:nth-child(-n+1),
+.nm-bars.s2 i:nth-child(-n+2),
+.nm-bars.s3 i:nth-child(-n+3),
+.nm-bars.s4 i:nth-child(-n+4) { background: var(--nm-ok); }
+
+.nm-tag { font-family: var(--nm-mono); font-size: var(--nm-fs-xs); color: var(--nm-muted); }
+.nm-tag.open { color: var(--nm-warn); }
+.nm-tag.wpa3 { color: var(--nm-info); }
+
+/* ---------------- forms ---------------- */
+
+.nm-form { max-width: var(--nm-w-form); }
+
+.nm-row {
+    display: grid;
+    grid-template-columns: var(--nm-w-label) 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.nm-row > label { color: var(--nm-muted); font-size: var(--nm-fs-sm); margin: 0; font-weight: normal; }
+.nm-row .note { grid-column: 2; font-size: var(--nm-fs-xs); color: #7d7f7f; margin-top: -4px; }
+
+/* A row whose field does not apply to the selected mode. The input carries
+   :disabled, which greys the box; this greys the label with it, so the pair
+   reads as one inactive row instead of a live label next to a dead field. */
+.nm-row.off > label { color: #6f7171; }
+
+.nm-head { margin: 18px 0 8px; }
+
+.nm-head > div {
+    font-size: var(--nm-fs-xxs);
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    color: var(--nm-muted);
+    border-bottom: 1px solid var(--nm-line);
+    padding-bottom: 5px;
+}
+
+.nm-main input[type=text],
+.nm-main input[type=password],
+.nm-main select {
+    width: 100%;
+    background: var(--nm-input);
+    border: 1px solid var(--nm-line);
+    border-radius: 2px;
+    color: var(--nm-text);
+    padding: 5px 8px;
+    font-size: var(--nm-fs-sm);
+    outline: none;
+    font-family: var(--nm-mono);
+    height: auto;
+    box-shadow: none;
+}
+
+.nm-main input:focus,
+.nm-main select:focus { border-color: var(--nm-info); box-shadow: none; }
+.nm-main input:disabled,
+.nm-main select:disabled { color: #6f7171; background: #3b3c3c; }
+
+/* ---------------- passphrase reveal ---------------- */
+
+/* The button sits inside the field box, so the input keeps its full grid cell
+   and the pair still lines up with every other field in the column. The input
+   is padded on the right by the button's width so a 63-character passphrase
+   does not run under it. */
+.nm-pass { position: relative; display: block; }
+
+/* ".nm-main input[type=password]" above sets padding as a shorthand and, with
+   an attribute selector, outranks a bare ".nm-pass input" - the override was
+   silently dropped. Match its specificity. */
+.nm-main .nm-pass input[type=password],
+.nm-main .nm-pass input[type=text] { padding-right: calc(var(--nm-fs) * 2.15); }
+
+/* Every declaration here has to outrank ".nm-main button" (0,1,1), which would
+   otherwise hand this a panel background, a border, 5px/12px padding and
+   width: auto - it is a glyph on the field, not a button on the form. Three
+   classes does it. */
+.nm-main .nm-pass .nm-eye {
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
+    width: calc(var(--nm-fs) * 2);
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--nm-muted);
+    cursor: pointer;
+    border-radius: 0 2px 2px 0;
+}
+
+.nm-main .nm-pass .nm-eye:hover { background: transparent; color: var(--nm-bright); }
+.nm-main .nm-pass .nm-eye:focus { outline: none; color: var(--nm-info); }
+.nm-main .nm-pass .nm-eye[aria-pressed="true"] { color: var(--nm-info); }
+
+/* The eye itself: an almond with a pupil, drawn as inline SVG so no image or
+   icon font is needed. The masked state adds the stroke through it. */
+.nm-main .nm-pass .nm-eye .ico {
+    display: block;
+    margin: 0 auto;
+    width: calc(var(--nm-fs) * 1.15);
+    height: calc(var(--nm-fs) * 1.15);
+}
+
+.nm-main .nm-pass input:disabled + .nm-eye { color: #5c5e5e; cursor: default; }
+
+/* ---------------- signal strength on Status ---------------- */
+
+/* .adaptive-tooltip carries margin: 20px, meant for a standalone indicator.
+   Here it is a glyph in front of a value in a table cell. */
+.adaptive-tooltip.nm-sig {
+    margin: 0 7px 0 0;
+    vertical-align: baseline;
+    cursor: help;
+}
+
+.adaptive-tooltip.nm-sig .tooltiptext {
+    font-family: var(--nm-mono);
+    font-size: var(--nm-fs-xs);
+    white-space: nowrap;
+    padding: 4px 8px;
+}
+
+/* The checkbox's own <label> is nested, so the "font-weight: normal" on
+   .nm-row > label does not reach it and bootstrap's bold label wins - the one
+   line on the page set heavier than everything around it. Reset it here. */
+.nm-chk { display: flex; align-items: center; gap: 7px; font-size: var(--nm-fs-sm); color: var(--nm-text); font-weight: normal; }
+.nm-chk label { font-weight: normal; }
+.nm-chk input { width: auto; margin: 0; }
+
+.nm-main button {
+    background: var(--nm-panel2);
+    border: 1px solid var(--nm-line);
+    color: var(--nm-text);
+    border-radius: 2px;
+    padding: 5px 12px;
+    font-size: var(--nm-fs-sm);
+    cursor: pointer;
+    width: auto;
+}
+
+.nm-main button:hover { background: var(--nm-input); color: var(--nm-bright); }
+.nm-main button.primary { background: var(--nm-accent); border-color: var(--nm-accent); color: #fff; }
+.nm-main button.primary:hover { background: #ff4749; }
+.nm-main button.sm { padding: 2px 8px; font-size: var(--nm-fs-xs); }
+.nm-main button:disabled { opacity: .5; cursor: default; }
+
+/* Buttons line up under the field column, so the indent is the label column
+   plus the grid gap - not a number that happens to equal it at 14px. */
+.nm-actions { display: flex; gap: 6px; margin: 16px 0 0 calc(var(--nm-w-label) + 10px); flex-wrap: wrap; align-items: center; }
+.nm-actions .sp { flex: 1; }
+.nm-msg { font-size: var(--nm-fs-xs); min-height: var(--nm-fs); }
+.nm-msg.ok { color: var(--nm-ok); }
+.nm-msg.bad { color: var(--nm-accent); }
+.nm-msg.warn { color: var(--nm-warn); }
+.nm-msg.busy { color: var(--nm-muted); }
+
+hr.nm-sep { border: none; border-top: 1px solid var(--nm-line); margin: 24px 0 16px; }
+
+/* ---------------- diagnostics ---------------- */
+
+table.nm-checks { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: var(--nm-fs-sm); }
+table.nm-checks td { padding: 6px 8px; border-bottom: 1px solid #363838; vertical-align: top; }
+table.nm-checks td.i { width: calc(var(--nm-fs) * 1.57); text-align: center; font-size: var(--nm-fs-md); }
+table.nm-checks tr.ok td.i { color: var(--nm-ok); }
+table.nm-checks tr.bad td.i { color: var(--nm-accent); }
+table.nm-checks tr.warn td.i { color: var(--nm-warn); }
+table.nm-checks td.d { font-family: var(--nm-mono); color: var(--nm-muted); font-size: var(--nm-fs-xs); word-break: break-all; }
+
+/* ---------------- loading placeholder ---------------- */
+
+.nm-loading { padding: 40px 0 34px; text-align: center; }
+
+.nm-loading .spin {
+    display: block;
+    position: relative;
+    width: 48px;
+    height: 48px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: #f00;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+}
+
+.nm-loading .spin:before,
+.nm-loading .spin:after { content: ""; position: absolute; border-radius: 50%; border: 2px solid transparent; }
+
+.nm-loading .spin:before {
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    border-top-color: #e74c3c;
+    -webkit-animation: spin 3s linear infinite;
+    animation: spin 3s linear infinite;
+}
+
+.nm-loading .spin:after {
+    top: 10px; left: 10px; right: 10px; bottom: 10px;
+    border-top-color: #cccccc;
+    -webkit-animation: spin 1.5s linear infinite;
+    animation: spin 1.5s linear infinite;
+}
+
+.nm-loading .txt { margin-top: 15px; color: var(--nm-muted); }
+
+/* ---------------- narrow ---------------- */
+
+@media (max-width: 860px) {
+    .nm-shell { display: block; }
+
+    .nm-rail {
+        width: auto;
+        flex: none;
+        border-right: none;
+        border-bottom: 1px solid var(--nm-line);
+        padding: 0;
+    }
+
+    .nm-rail .grp { display: none; }
+    .nm-rail .tab { flex-direction: row; overflow-x: auto; }
+
+    .nm-rail .tab h4 {
+        border-left: none;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+        padding: 9px 12px;
+    }
+
+    .nm-rail .tab h4.active { border-left-color: transparent; border-bottom-color: var(--nm-accent); }
+    .nm-rail .tab h4 .n, .nm-rail .tab h4 .dot { display: none; }
+
+    .nm-row { grid-template-columns: 1fr; gap: 3px; }
+    .nm-row .note { grid-column: 1; }
+    .nm-head > div { grid-column: 1; }
+    .nm-actions { margin-left: 0; }
+    table.nm-kv th { width: 44%; }
+    .nm-pills { float: none; height: auto; padding: 4px 0 8px; justify-content: center; }
+}

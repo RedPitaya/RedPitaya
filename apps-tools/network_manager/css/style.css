@@ -37,11 +37,11 @@ body {
 
 .modal {}
 
-.left-content-scpi > ul > li {
+.left-content-scpi>ul>li {
     list-style-type: none;
 }
 
-.left-content-scpi > ul > li:before {
+.left-content-scpi>ul>li:before {
     content: "- ";
 }
 
@@ -151,19 +151,19 @@ area:hover {
     text-align: center;
 }
 
-.nav > li > a {
+.nav>li>a {
     position: relative;
     display: block;
     padding: 10px 30px;
     border-left: 1px solid #999;
 }
 
-.navbar-inverse .navbar-nav > li > a {
+.navbar-inverse .navbar-nav>li>a {
     color: #cdcccc;
     outline: none;
 }
 
-.nav > li > a:hover {
+.nav>li>a:hover {
     background-color: #444 !important;
     color: #E5D5D5;
 }
@@ -344,8 +344,8 @@ area:hover {
     width: 90px;
 }
 
-.info-title > div,
-.info-value > div {
+.info-title>div,
+.info-value>div {
     display: none;
 }
 
@@ -885,6 +885,7 @@ btn:active {
 .logo-network-manager {
     padding-top: 10px;
     text-align: center;
+    font-size: 18pt;
 }
 
 a.list-group-item {
