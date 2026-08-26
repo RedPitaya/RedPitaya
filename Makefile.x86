@@ -100,6 +100,7 @@ FPGA_COMMIT ?= unify/dev
 
 HWID ?=
 DEF_PARAM ?=
+DEF_PARAM_PYRPL ?= ALLOW_TIMING_FAIL
 FPGA_PRJ ?=
 FPGA_VERSION ?=
 FPGA_MODEL ?=
@@ -338,7 +339,7 @@ ifneq "$(FPGA_BAREBONE)" ""
 endif
 
 ifneq "$(FPGA_PYRPL)" ""
-	$(call build_fpga,pyrpl,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_PYRPL))
+	$(call build_fpga,pyrpl,$(FPGA_MODEL),$(DEF_PARAM_PYRPL),$(HWID),$(FPGA_PYRPL))
 	cp -f fpga/$(FPGA_VERSION)/pyrpl/prj/pyrpl/out/fpga.dtbo  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/fpga.dtbo
 	cp -f fpga/$(FPGA_VERSION)/pyrpl/prj/pyrpl/out/fpga.dtso  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/pyrpl/fpga.dtso
 endif
@@ -615,4 +616,3 @@ docker-streaming_client_qt_win:
 streaming_client_qt_win:
 	$(MAKE) -i -C $(APP_STREAMINGMANAGER_DIR) clean
 	$(MAKE) -C $(APP_STREAMINGMANAGER_DIR) INSTALL_DIR=$(abspath $(INSTALL_DIR)) install_client_qt_win
-
