@@ -5,7 +5,7 @@
  *
  * @Author Red Pitaya
  *
- * (c) Red Pitaya  http://www.redpitaya.com
+ * (c) Red Pitaya http://www.redpitaya.com
  */
 
 #ifndef SRC_OSCILLOSCOPE_H_
@@ -193,8 +193,8 @@ typedef union {
  * @brief Split IRQ Mask Register (0xB4)
  * @details Enable/disable per-channel interrupt sources
  *
- * Bits 0-1:   Trigger enable for channels 1-2/3-4
- * Bits 4-5:   Buffer full enable for channels 1-2/3-4
+ * Bits 0-1: Trigger enable for channels 1-2/3-4
+ * Bits 4-5: Buffer full enable for channels 1-2/3-4
  */
 typedef union {
     struct {
@@ -218,10 +218,10 @@ typedef union {
 /**
  * @brief Split IRQ Status/Clear Register (0xB8)
  * @details Read: Get per-channel interrupt status
- *          Write: Clear pending interrupts (write 1 to clear)
+ * Write: Clear pending interrupts (write 1 to clear)
  *
- * Bits 0-1:   Trigger pending for channels 1-2/3-4
- * Bits 4-5:   Buffer full pending for channels 1-2/3-4
+ * Bits 0-1: Trigger pending for channels 1-2/3-4
+ * Bits 4-5: Buffer full pending for channels 1-2/3-4
  */
 typedef union {
     struct {
@@ -246,566 +246,566 @@ typedef union {
 typedef struct osc_control_s {
 
     /** @brief Offset 0x00 - configuration register
-     *
-     * Configuration register (offset 0x00):
-     * bit [0] - (W) arm_trigger  - ch1/common
-     * bit [1] - (W) rst_wr_state_machine
-     * bit [2] - (R) trigger_status
-     * bit [3] - (W) arm_keep
-     * bit [4] - (R) All data written to buffer
-     * bit [5] - (R/W) Independent mode on
-     * bits [7:6] - reserved
-     * bit [8] - (W) arm_trigger - ch2
-     * bit [9] - (W) rst_wr_state_machine
-     * bit [10] - (R) trigger_status
-     * bit [11] - (W) arm_keep
-     * bit [12] - (R) All data written to buffer
-     * bit [13] - (R/W) Independent mode on
-     * bits [15:14] - reserved
-     * bit [16] - (W) arm_trigger - ch3
-     * bit [17] - (W) rst_wr_state_machine
-     * bit [18] - (R) trigger_status
-     * bit [19] - (W) arm_keep
-     * bit [20] - (R) All data written to buffer
-     * bit [21] - (R/W) Independent mode on
-     * bits [23:22] - reserved
-     * bit [24] - (W) arm_trigger  - ch4
-     * bit [25] - (W) rst_wr_state_machine
-     * bit [26] - (R) trigger_status
-     * bit [27] - (W) arm_keep
-     * bit [28] - (R) All data written to buffer
-     * bit [29] - (R/W) Independent mode on
-     * bits [31:30] - reserved
-     */
+ *
+ * Configuration register (offset 0x00):
+ * bit [0] - (W) arm_trigger - ch1/common
+ * bit [1] - (W) rst_wr_state_machine
+ * bit [2] - (R) trigger_status
+ * bit [3] - (W) arm_keep
+ * bit [4] - (R) All data written to buffer
+ * bit [5] - (R/W) Independent mode on
+ * bits [7:6] - reserved
+ * bit [8] - (W) arm_trigger - ch2
+ * bit [9] - (W) rst_wr_state_machine
+ * bit [10] - (R) trigger_status
+ * bit [11] - (W) arm_keep
+ * bit [12] - (R) All data written to buffer
+ * bit [13] - (R/W) Independent mode on
+ * bits [15:14] - reserved
+ * bit [16] - (W) arm_trigger - ch3
+ * bit [17] - (W) rst_wr_state_machine
+ * bit [18] - (R) trigger_status
+ * bit [19] - (W) arm_keep
+ * bit [20] - (R) All data written to buffer
+ * bit [21] - (R/W) Independent mode on
+ * bits [23:22] - reserved
+ * bit [24] - (W) arm_trigger - ch4
+ * bit [25] - (W) rst_wr_state_machine
+ * bit [26] - (R) trigger_status
+ * bit [27] - (W) arm_keep
+ * bit [28] - (R) All data written to buffer
+ * bit [29] - (R/W) Independent mode on
+ * bits [31:30] - reserved
+ */
     uint32_t config;  // Can cast to config_u_t
 
     /** @brief Offset 0x04 - Trigger Source Register
-     *
-     * Each channel occupies an 8-bit (1-byte) slot.
-     * Common bits layout for each channel group:
-     *   bits [4 : 0] - Trigger source value (see table below)
-     *   bit  [5]     - Trigger lock state (1: Locked/Armed, 0: Waiting/Idle)
-     *   bits [7 : 6] - Reserved
-     *
-     * For 125 / 250 / lite / ll variants (2-channel):
-     *   bits [4 : 0]   - CH0 trigger source
-     *   bit  [5]       - CH0 trigger lock state
-     *   bits [12 : 8]  - CH1 trigger source
-     *   bit  [13]      - CH1 trigger lock state
-     *   bits [31 : 14] - Reserved
-     *
-     * For 125 4-Input variant (4-channel):
-     *   bits [4 : 0]   - CH0 trigger source
-     *   bit  [5]       - CH0 trigger lock state
-     *   bits [12 : 8]  - CH1 trigger source
-     *   bit  [13]      - CH1 trigger lock state
-     *   bits [20 : 16] - CH2 trigger source
-     *   bit  [21]      - CH2 trigger lock state
-     *   bits [28 : 24] - CH3 trigger source
-     *   bit  [29]      - CH3 trigger lock state
-     *   bits [31 : 30] - Reserved
-     *
-     * Trigger source values (for each channel):
-     *   0  - Disabled
-     *   1  - Trigger immediately
-     *   2  - Threshold positive edge (Self-trigger)
-     *   3  - Threshold negative edge (Self-trigger)
-     *   4  - Threshold positive edge (CH B for 2-ch, reserved for 4-ch)
-     *   5  - Threshold negative edge (CH B for 2-ch, reserved for 4-ch)
-     *   6  - External trigger positive edge (DIO0_P pin)
-     *   7  - External trigger negative edge
-     *   8  - AWG positive edge
-     *   9  - AWG negative edge
-     *   10 - Threshold positive edge (CH C for 4-ch)
-     *   11 - Threshold negative edge (CH C for 4-ch)
-     *   12 - Threshold positive edge (CH D for 4-ch)
-     *   13 - Threshold negative edge (CH D for 4-ch)
-     *   18 - Threshold any edge (Self-trigger)
-     *   20 - Threshold any edge (CH B for 2-ch, reserved for 4-ch)
-     *   22 - External trigger any edge
-     *   24 - AWG any edge
-     *   26 - Threshold any edge (CH C for 4-ch)
-     *   28 - Threshold any edge (CH D for 4-ch)
-     */
+ *
+ * Each channel occupies an 8-bit (1-byte) slot.
+ * Common bits layout for each channel group:
+ * bits [4 : 0] - Trigger source value (see table below)
+ * bit [5] - Trigger lock state (1: Locked/Armed, 0: Waiting/Idle)
+ * bits [7 : 6] - Reserved
+ *
+ * For 125 / 250 / lite / ll variants (2-channel):
+ * bits [4 : 0] - CH0 trigger source
+ * bit [5] - CH0 trigger lock state
+ * bits [12 : 8] - CH1 trigger source
+ * bit [13] - CH1 trigger lock state
+ * bits [31 : 14] - Reserved
+ *
+ * For 125 4-Input variant (4-channel):
+ * bits [4 : 0] - CH0 trigger source
+ * bit [5] - CH0 trigger lock state
+ * bits [12 : 8] - CH1 trigger source
+ * bit [13] - CH1 trigger lock state
+ * bits [20 : 16] - CH2 trigger source
+ * bit [21] - CH2 trigger lock state
+ * bits [28 : 24] - CH3 trigger source
+ * bit [29] - CH3 trigger lock state
+ * bits [31 : 30] - Reserved
+ *
+ * Trigger source values (for each channel):
+ * 0 - Disabled
+ * 1 - Trigger immediately
+ * 2 - Threshold positive edge (Self-trigger)
+ * 3 - Threshold negative edge (Self-trigger)
+ * 4 - Threshold positive edge (CH B for 2-ch, reserved for 4-ch)
+ * 5 - Threshold negative edge (CH B for 2-ch, reserved for 4-ch)
+ * 6 - External trigger positive edge (DIO0_P pin)
+ * 7 - External trigger negative edge
+ * 8 - AWG positive edge
+ * 9 - AWG negative edge
+ * 10 - Threshold positive edge (CH C for 4-ch)
+ * 11 - Threshold negative edge (CH C for 4-ch)
+ * 12 - Threshold positive edge (CH D for 4-ch)
+ * 13 - Threshold negative edge (CH D for 4-ch)
+ * 18 - Threshold any edge (Self-trigger)
+ * 20 - Threshold any edge (CH B for 2-ch, reserved for 4-ch)
+ * 22 - External trigger any edge
+ * 24 - AWG any edge
+ * 26 - Threshold any edge (CH C for 4-ch)
+ * 28 - Threshold any edge (CH D for 4-ch)
+ */
     uint32_t trig_source;
 
     /** @brief Offset 0x08 - Channel A threshold register
-     *
-     * Channel A threshold register (offset 0x08):
-     * for 125 and 250
-     * bits [13: 0] - ChA threshold
-     * bits [31:14] - reserved
-     * for 122
-     * bits [15: 0] - ChA threshold
-     * bits [31:16] - reserved
-     */
+ *
+ * Channel A threshold register (offset 0x08):
+ * for 125 and 250
+ * bits [13: 0] - ChA threshold
+ * bits [31:14] - reserved
+ * for 122
+ * bits [15: 0] - ChA threshold
+ * bits [31:16] - reserved
+ */
     uint32_t cha_thr;
 
     /** @brief Offset 0x0C - Channel B threshold register
-     *
-     * Channel B threshold register (offset 0x0C):
-     * for 125 and 250
-     * bits [13: 0] - ChB threshold
-     * bits [31:14] - reserved
-     * for 122
-     * bits [15: 0] - ChB threshold
-     * bits [31:16] - reserved
-     */
+ *
+ * Channel B threshold register (offset 0x0C):
+ * for 125 and 250
+ * bits [13: 0] - ChB threshold
+ * bits [31:14] - reserved
+ * for 122
+ * bits [15: 0] - ChB threshold
+ * bits [31:16] - reserved
+ */
     uint32_t chb_thr;
 
     /** @brief Offset 0x10 - After trigger delay register
-     *
-     * After trigger delay register (offset 0x10)
-     * bits [31: 0] - trigger delay
-     * 32 bit number - how many decimated samples should be stored into a buffer.
-     * (max 16k samples)
-     */
+ *
+ * After trigger delay register (offset 0x10)
+ * bits [31: 0] - trigger delay
+ * 32 bit number - how many decimated samples should be stored into a buffer.
+ * (max 16k samples)
+ */
     uint32_t trigger_delay;
 
     /** @brief Offset 0x14 - Data decimation register
-     *
-     * Data decimation register (offset 0x14):
-     * bits [16: 0] - decimation factor, legal values:
-     * 1, 8, 64, 1024, 8192 65536
-     * If other values are written data is undefined
-     * bits [31:17] - reserved
-     */
+ *
+ * Data decimation register (offset 0x14):
+ * bits [16: 0] - decimation factor, legal values:
+ * 1, 8, 64, 1024, 8192 65536
+ * If other values are written data is undefined
+ * bits [31:17] - reserved
+ */
     uint32_t data_dec;
 
     /** @brief Offset 0x18 - Current write pointer register
-     *
-     * Current write pointer register (offset 0x18), read only:
-     * bits [13: 0] - current write pointer
-     * bits [31:14] - reserved
-     */
+ *
+ * Current write pointer register (offset 0x18), read only:
+ * bits [13: 0] - current write pointer
+ * bits [31:14] - reserved
+ */
     uint32_t wr_ptr_cur;
 
     /** @brief Offset 0x1C - Trigger write pointer register
-     *
-     * Trigger write pointer register (offset 0x1C), read only:
-     * bits [13: 0] - trigger pointer (pointer where trigger was detected)
-     * bits [31:14] - reserved
-     */
+ *
+ * Trigger write pointer register (offset 0x1C), read only:
+ * bits [13: 0] - trigger pointer (pointer where trigger was detected)
+ * bits [31:14] - reserved
+ */
     uint32_t wr_ptr_trigger;
 
     /** @brief Offset 0x20 - ChA & ChB hysteresis - both of the format:
-     * for 125 and 250
-     * bits [13: 0] - ChB threshold
-     * bits [31:14] - reserved
-     * for 122
-     * bits [15: 0] - ChB threshold
-     * bits [31:16] - reserved
-     */
+ * for 125 and 250
+ * bits [13: 0] - ChB threshold
+ * bits [31:14] - reserved
+ * for 122
+ * bits [15: 0] - ChB threshold
+ * bits [31:16] - reserved
+ */
     uint32_t cha_hysteresis;
     uint32_t chb_hysteresis;
 
     /** @brief Offset 0x28
-     * bits [0] - enable signal average at decimation ch1
-     * bits [7:1] - reserved
-     * bits [8] - enable signal average at decimation ch2
-     * bits [9:15] - reserved
-     * bits [16] - enable signal average at decimation ch3
-     * bits [23:17] - reserved
-     * bits [24] - enable signal average at decimation ch4
-     * bits [31:25] - reserved
-     */
+ * bits [0] - enable signal average at decimation ch1
+ * bits [7:1] - reserved
+ * bits [8] - enable signal average at decimation ch2
+ * bits [9:15] - reserved
+ * bits [16] - enable signal average at decimation ch3
+ * bits [23:17] - reserved
+ * bits [24] - enable signal average at decimation ch4
+ * bits [31:25] - reserved
+ */
     uint32_t average;
 
     /** @brief Offset 0x2C - Pre Trigger counter
-     *
-     * Pre Trigger counter (offset 0x2C)
-     * bits [31: 0] - Pre Trigger counter
-     * 32 bit number - how many decimated samples have been stored into a buffer
-     * before trigger arrived.
-     */
+ *
+ * Pre Trigger counter (offset 0x2C)
+ * bits [31: 0] - Pre Trigger counter
+ * 32 bit number - how many decimated samples have been stored into a buffer
+ * before trigger arrived.
+ */
     uint32_t pre_trigger_counter;
 
     /** @brief Offset 0x30 - ChA Equalization filter
-     * bits [17:0] - AA coefficient (pole)
-     * bits [31:18] - reserved
-     */
+ * bits [17:0] - AA coefficient (pole)
+ * bits [31:18] - reserved
+ */
     uint32_t cha_filt_aa;
 
     /** @brief Offset 0x34 - ChA Equalization filter
-     * bits [24:0] - BB coefficient (zero)
-     * bits [31:25] - reserved
-     */
+ * bits [24:0] - BB coefficient (zero)
+ * bits [31:25] - reserved
+ */
     uint32_t cha_filt_bb;
 
     /** @brief Offset 0x38 - ChA Equalization filter
-     * bits [24:0] - KK coefficient (gain)
-     * bits [31:25] - reserved
-     */
+ * bits [24:0] - KK coefficient (gain)
+ * bits [31:25] - reserved
+ */
     uint32_t cha_filt_kk;
 
     /** @brief Offset 0x3C - ChA Equalization filter
-     * bits [24:0] - PP coefficient (pole)
-     * bits [31:25] - reserved
-     */
+ * bits [24:0] - PP coefficient (pole)
+ * bits [31:25] - reserved
+ */
     uint32_t cha_filt_pp;
 
     /** @brief Offset 0x40 - ChB Equalization filter
-     * bits [17:0] - AA coefficient (pole)
-     * bits [31:18] - reserved
-     */
+ * bits [17:0] - AA coefficient (pole)
+ * bits [31:18] - reserved
+ */
     uint32_t chb_filt_aa;
 
     /** @brief Offset 0x44 - ChB Equalization filter
-     * bits [24:0] - BB coefficient (zero)
-     * bits [31:25] - reserved
-     */
+ * bits [24:0] - BB coefficient (zero)
+ * bits [31:25] - reserved
+ */
     uint32_t chb_filt_bb;
 
     /** @brief Offset 0x48 - ChB Equalization filter
-     * bits [24:0] - KK coefficient (gain)
-     * bits [31:25] - reserved
-     */
+ * bits [24:0] - KK coefficient (gain)
+ * bits [31:25] - reserved
+ */
     uint32_t chb_filt_kk;
 
     /** @brief Offset 0x4C - ChB Equalization filter
-     * bits [24:0] - PP coefficient (pole)
-     * bits [31:25] - reserved
-     */
+ * bits [24:0] - PP coefficient (pole)
+ * bits [31:25] - reserved
+ */
     uint32_t chb_filt_pp;
 
     /** @brief Offset 0x50 - CH A AXI lower address
-     * bits [31:0] - start address of CH A AXI buffer
-     */
+ * bits [31:0] - start address of CH A AXI buffer
+ */
     uint32_t cha_axi_addr_low;
 
     /** @brief Offset 0x54 - CH A AXI upper address
-     * bits [31:0] - end address of CH A AXI buffer
-     */
+ * bits [31:0] - end address of CH A AXI buffer
+ */
     uint32_t cha_axi_addr_high;
 
     /** @brief Offset 0x58 - CH A AXI delay after trigger
-     * bits [31:0] - number of decimated data after the trigger is written to memory
-     */
+ * bits [31:0] - number of decimated data after the trigger is written to memory
+ */
     uint32_t cha_axi_delay;
 
     /** @brief Offset 0x5C - CH A AXI enable master
-     * bits [0] - enable AXI master
-     * bits [31:1] - reserved
-     */
+ * bits [0] - enable AXI master
+ * bits [31:1] - reserved
+ */
     uint32_t cha_axi_enable;
 
     /** @brief Offset 0x60 - CH A AXI write pointer - trigger
-     * bits [31:0] - write pointer at the moment the trigger arrives
-     */
+ * bits [31:0] - write pointer at the moment the trigger arrives
+ */
     uint32_t cha_axi_wr_ptr_trigger;
 
     /** @brief Offset 0x64 - CH A AXI write pointer - current
-     * bits [31:0] - current write pointer
-     */
+ * bits [31:0] - current write pointer
+ */
     uint32_t cha_axi_wr_ptr_cur;
 
     /** @brief Offset 0x68 - reserved
-     */
+ */
     uint32_t reserved_68[2];
 
     /** @brief Offset 0x70 - CH B AXI lower address
-     * bits [31:0] - start address of CH B AXI buffer
-     */
+ * bits [31:0] - start address of CH B AXI buffer
+ */
     uint32_t chb_axi_addr_low;
 
     /** @brief Offset 0x74 - CH B AXI upper address
-     * bits [31:0] - end address of CH B AXI buffer
-     */
+ * bits [31:0] - end address of CH B AXI buffer
+ */
     uint32_t chb_axi_addr_high;
 
     /** @brief Offset 0x78 - CH B AXI delay after trigger
-     * bits [31:0] - number of decimated data after the trigger is written to memory
-     */
+ * bits [31:0] - number of decimated data after the trigger is written to memory
+ */
     uint32_t chb_axi_delay;
 
     /** @brief Offset 0x7C - CH B AXI enable master
-     * bits [0] - enable AXI master
-     * bits [31:1] - reserved
-     */
+ * bits [0] - enable AXI master
+ * bits [31:1] - reserved
+ */
     uint32_t chb_axi_enable;
 
     /** @brief Offset 0x80 - CH B AXI write pointer - trigger
-     * bits [31:0] - write pointer at the moment the trigger arrives
-     */
+ * bits [31:0] - write pointer at the moment the trigger arrives
+ */
     uint32_t chb_axi_wr_ptr_trigger;
 
     /** @brief Offset 0x84 - CH B AXI write pointer - current
-     * bits [31:0] - current write pointer
-     */
+ * bits [31:0] - current write pointer
+ */
     uint32_t chb_axi_wr_ptr_cur;
 
     /** @brief Offset 0x88 - AXI state register
-     *
-     * Configuration register (offset 0x00):
-     * bit [0]      - (R) CH A AXI - Trigger armed
-     * bit [1]      - Reserved
-     * bit [2]      - (R) CH A AXI - Trigger has arrived
-     * bit [3]      - (R) CH A AXI - Trigger remines armed
-     * bit [4]      - (R) CH A AXI - ACQ delay has passed
-     * bit [15:5]   - reserved
-     * bit [16]     - (R) CH B AXI - Trigger armed
-     * bit [17]     - Reserved
-     * bit [18]     - (R) CH B AXI - Trigger has arrived
-     * bit [19]     - (R) CH B AXI - Trigger remines armed
-     * bit [20]     - (R) CH B AXI - ACQ delay has passed
-     * bits [31:21]  - reserved
-     */
+ *
+ * Configuration register (offset 0x00):
+ * bit [0] - (R) CH A AXI - Trigger armed
+ * bit [1] - Reserved
+ * bit [2] - (R) CH A AXI - Trigger has arrived
+ * bit [3] - (R) CH A AXI - Trigger remines armed
+ * bit [4] - (R) CH A AXI - ACQ delay has passed
+ * bit [15:5] - reserved
+ * bit [16] - (R) CH B AXI - Trigger armed
+ * bit [17] - Reserved
+ * bit [18] - (R) CH B AXI - Trigger has arrived
+ * bit [19] - (R) CH B AXI - Trigger remines armed
+ * bit [20] - (R) CH B AXI - ACQ delay has passed
+ * bits [31:21] - reserved
+ */
     uint32_t axi_state;
 
     /* Reserved */
     uint32_t reserved_8C;
 
     /**@brief Offset 0x90 - External trigger debuncer time
-    * bits [19:0] Number of ADC clock periods
-    * trigger is disabled after activation
-    * reset value is decimal 62500
-    * or equivalent to 0.5ms
-    */
+ * bits [19:0] Number of ADC clock periods
+ * trigger is disabled after activation
+ * reset value is decimal 62500
+ * or equivalent to 0.5ms
+ */
     uint32_t ext_trig_dbc;  // 0x90
 
     /**@brief Offset 0x94 - Trigger lock control
-     * bit[0] - (W) Write 1 for unlock trigger - ch1/common
-     * bit[7:1] - reserved
-     * bit[8] - (W) Write 1 for unlock trigger - ch2
-     * bit[15:9] - reserved
-     * bit[16] - (W) Write 1 for unlock trigger - ch3
-     * bit[23:17] - reserved
-     * bit[24] - (W) Write 1 for unlock trigger - ch4
-     * bit[31:25] - reserved
-    */
+ * bit[0] - (W) Write 1 for unlock trigger - ch1/common
+ * bit[7:1] - reserved
+ * bit[8] - (W) Write 1 for unlock trigger - ch2
+ * bit[15:9] - reserved
+ * bit[16] - (W) Write 1 for unlock trigger - ch3
+ * bit[23:17] - reserved
+ * bit[24] - (W) Write 1 for unlock trigger - ch4
+ * bit[31:25] - reserved
+ */
     uint32_t trigger_lock_ctr;
 
     /**
-     * Offset 0x98 - Reconstruction filter bypass
-     * bit[0] - (R/W) Bypass ch1
-     * bit[1] - (R/W) Bypass ch2
-     * bit[31:2] - reserved
-    */
+ * Offset 0x98 - Reconstruction filter bypass
+ * bit[0] - (R/W) Bypass ch1
+ * bit[1] - (R/W) Bypass ch2
+ * bit[31:2] - reserved
+ */
     uint32_t filter_bypass;
 
     /**
-     * @brief Offset 0x9С-0xA8 - Reserved area
-    * @note 11 reserved registers (0x98 to 0xA8 inclusive)
-    */
+ * @brief Offset 0x9C-0xA8 - Reserved area
+ * @note 11 reserved registers (0x98 to 0xA8 inclusive)
+ */
     uint32_t reserved_9C[4];  // 0x9C - 0xA8
 
     /**
-     * @brief 0xAC - IRQ Mask
-     * @details Enable interrupt sources
-     * Values: 0x1 (trigger), 0x2 (buffer full), 0x3 (both)
-     */
+ * @brief 0xAC - IRQ Mask
+ * @details Enable interrupt sources
+ * Values: 0x1 (trigger), 0x2 (buffer full), 0x3 (both)
+ */
     uint32_t irq_mask;
 
     /**
-     * @brief 0xB0 - IRQ Status/Clear
-     * @details Read: get latched IRQ status (bits: 0=trigger, 1=buffer full)
-     *          Write: clear pending IRQs (write 1 to corresponding bit)
-     */
+ * @brief 0xB0 - IRQ Status/Clear
+ * @details Read: get latched IRQ status (bits: 0=trigger, 1=buffer full)
+ * Write: clear pending IRQs (write 1 to corresponding bit)
+ */
     uint32_t irq_status_clear;
 
     /**
-     * @brief 0xB4 - Split IRQ Mask Register
-     * @details Enable/disable per-channel interrupt sources for independent trigger mode.
-     *          Used when indep_mode is enabled (each channel operates independently).
-     *
-     * Bit mapping:
-     * - Bits 0-3:   Trigger event enable for channels 1-4
-     * - Bits 4-7:   Buffer full / acquisition finished enable for channels 1-4
-     * - Bits 8-31:  Reserved (write 0, read undefined)
-     *
-     * Values per bit:
-     * - 0: Interrupt disabled
-     * - 1: Interrupt enabled
-     *
-     * Common mask values:
-     * - 0x01: Enable trigger only on channel 1
-     * - 0x02: Enable trigger only on channel 2
-     * - 0x04: Enable trigger only on channel 3
-     * - 0x08: Enable trigger only on channel 4
-     * - 0x10: Enable buffer full only on channel 1
-     * - 0x20: Enable buffer full only on channel 2
-     * - 0x30: Enable buffer full on channels 1 and 2
-     * - 0x0F: Enable trigger on all channels
-     * - 0xF0: Enable buffer full on all channels
-     * - 0xFF: Enable all events on all channels
-     *
-     * @note This register is only effective when indep_mode = 1
-     * @note For legacy combined mode, use irq_mask (0xAC) instead
-     *
-     * @example Enable trigger on channel 1 and buffer full on channel 2:
-     *         monitor 0x401000B4 0x21  (0x20 | 0x01)
-    **/
+ * @brief 0xB4 - Split IRQ Mask Register
+ * @details Enable/disable per-channel interrupt sources for independent trigger mode.
+ * Used when indep_mode is enabled (each channel operates independently).
+ *
+ * Bit mapping:
+ * - Bits 0-3: Trigger event enable for channels 1-4
+ * - Bits 4-7: Buffer full / acquisition finished enable for channels 1-4
+ * - Bits 8-31: Reserved (write 0, read undefined)
+ *
+ * Values per bit:
+ * - 0: Interrupt disabled
+ * - 1: Interrupt enabled
+ *
+ * Common mask values:
+ * - 0x01: Enable trigger only on channel 1
+ * - 0x02: Enable trigger only on channel 2
+ * - 0x04: Enable trigger only on channel 3
+ * - 0x08: Enable trigger only on channel 4
+ * - 0x10: Enable buffer full only on channel 1
+ * - 0x20: Enable buffer full only on channel 2
+ * - 0x30: Enable buffer full on channels 1 and 2
+ * - 0x0F: Enable trigger on all channels
+ * - 0xF0: Enable buffer full on all channels
+ * - 0xFF: Enable all events on all channels
+ *
+ * @note This register is only effective when indep_mode = 1
+ * @note For legacy combined mode, use irq_mask (0xAC) instead
+ *
+ * @example Enable trigger on channel 1 and buffer full on channel 2:
+ * monitor 0x401000B4 0x21 (0x20 | 0x01)
+ **/
     uint32_t irq_split_mask;
 
     /**
-     * @brief 0xB8 - Split IRQ Status / Clear Register
-     * @details Read: Get latched per-channel interrupt status
-     *          Write: Clear pending interrupts (write 1 to corresponding bit)
-     *
-     * Bit mapping (same as mask register):
-     * - Bits 0-3:   Trigger event pending for channels 1-4
-     * - Bits 4-7:   Buffer full pending for channels 1-4
-     * - Bits 8-31:  Reserved (read as 0)
-     *
-     * Status values when reading:
-     * - 0x00: No pending interrupts on any channel
-     * - 0x01: Trigger pending on channel 1
-     * - 0x02: Trigger pending on channel 2
-     * - 0x04: Trigger pending on channel 3
-     * - 0x08: Trigger pending on channel 4
-     * - 0x10: Buffer full pending on channel 1
-     * - 0x20: Buffer full pending on channel 2
-     * - 0x30: Buffer full pending on channels 1 and 2
-     * - 0x0F: Trigger pending on all channels
-     * - 0xF0: Buffer full pending on all channels
-     * - 0xFF: All events pending on all channels
-     *
-     * Clearing interrupts (write):
-     * - Write 1 to a bit to clear the corresponding pending interrupt
-     * - Multiple bits can be cleared simultaneously
-     * - Write 0x0F to clear all trigger events
-     * - Write 0xF0 to clear all buffer full events
-     * - Write 0xFF to clear all events on all channels
-     *
-     * @note Interrupts are edge-triggered and latched until cleared
-     * @note Writing 0 has no effect
-     * @note After clearing, the bit returns to 0 if no new event occurred
-     *
-    **/
+ * @brief 0xB8 - Split IRQ Status / Clear Register
+ * @details Read: Get latched per-channel interrupt status
+ * Write: Clear pending interrupts (write 1 to corresponding bit)
+ *
+ * Bit mapping (same as mask register):
+ * - Bits 0-3: Trigger event pending for channels 1-4
+ * - Bits 4-7: Buffer full pending for channels 1-4
+ * - Bits 8-31: Reserved (read as 0)
+ *
+ * Status values when reading:
+ * - 0x00: No pending interrupts on any channel
+ * - 0x01: Trigger pending on channel 1
+ * - 0x02: Trigger pending on channel 2
+ * - 0x04: Trigger pending on channel 3
+ * - 0x08: Trigger pending on channel 4
+ * - 0x10: Buffer full pending on channel 1
+ * - 0x20: Buffer full pending on channel 2
+ * - 0x30: Buffer full pending on channels 1 and 2
+ * - 0x0F: Trigger pending on all channels
+ * - 0xF0: Buffer full pending on all channels
+ * - 0xFF: All events pending on all channels
+ *
+ * Clearing interrupts (write):
+ * - Write 1 to a bit to clear the corresponding pending interrupt
+ * - Multiple bits can be cleared simultaneously
+ * - Write 0x0F to clear all trigger events
+ * - Write 0xF0 to clear all buffer full events
+ * - Write 0xFF to clear all events on all channels
+ *
+ * @note Interrupts are edge-triggered and latched until cleared
+ * @note Writing 0 has no effect
+ * @note After clearing, the bit returns to 0 if no new event occurred
+ *
+ **/
     uint32_t irq_split_status_clear;
 
-    /** @brief Offset 0xBС to 0x10C */
+    /** @brief Offset 0xBC to 0x10C */
     uint32_t reserved_BC[21];
 
     /** @brief Offset 0x110 - After trigger delay register
-     *
-     * After trigger delay register (offset 0x110)
-     * bits [31: 0] - trigger delay
-     * 32 bit number - how many decimated samples should be stored into a buffer.
-     * (max 16k samples)
-     */
+ *
+ * After trigger delay register (offset 0x110)
+ * bits [31: 0] - trigger delay
+ * 32 bit number - how many decimated samples should be stored into a buffer.
+ * (max 16k samples)
+ */
     uint32_t trigger_delay_ch2;
 
     /** @brief Offset 0x114 - Data decimation register
-     *
-     * Data decimation register (offset 0x114):
-     * bits [16: 0] - decimation factor, legal values:
-     * 1, 8, 64, 1024, 8192 65536
-     * If other values are written data is undefined
-     * bits [31:17] - reserved
-     */
+ *
+ * Data decimation register (offset 0x114):
+ * bits [16: 0] - decimation factor, legal values:
+ * 1, 8, 64, 1024, 8192 65536
+ * If other values are written data is undefined
+ * bits [31:17] - reserved
+ */
     uint32_t data_dec_ch2;
 
     /** @brief Offset 0x118 - Current write pointer register
-     *
-     * Current write pointer register (offset 0x118), read only:
-     * bits [13: 0] - current write pointer
-     * bits [31:14] - reserved
-     */
+ *
+ * Current write pointer register (offset 0x118), read only:
+ * bits [13: 0] - current write pointer
+ * bits [31:14] - reserved
+ */
     uint32_t wr_ptr_cur_ch2;
 
     /** @brief Offset 0x11C - Trigger write pointer register
-     *
-     * Trigger write pointer register (offset 0x1C), read only:
-     * bits [13: 0] - trigger pointer (pointer where trigger was detected)
-     * bits [31:14] - reserved
-     */
+ *
+ * Trigger write pointer register (offset 0x1C), read only:
+ * bits [13: 0] - trigger pointer (pointer where trigger was detected)
+ * bits [31:14] - reserved
+ */
     uint32_t wr_ptr_trigger_ch2;
 
     /** @brief Offset 0x120 - reserved
-     */
+ */
     uint32_t reserved_120[3];
 
     /** @brief Offset 0x12C - Pre Trigger counter
-     *
-     * Pre Trigger counter (offset 0x12C)
-     * bits [31: 0] - Pre Trigger counter
-     * 32 bit number - how many decimated samples have been stored into a buffer
-     * before trigger arrived.
-     */
+ *
+ * Pre Trigger counter (offset 0x12C)
+ * bits [31: 0] - Pre Trigger counter
+ * 32 bit number - how many decimated samples have been stored into a buffer
+ * before trigger arrived.
+ */
     uint32_t pre_trigger_counter_ch2;
 
     /** @brief Offset 0x130 - reserved
-     */
+ */
     uint32_t reserved_130[52];
 
     /** @brief Calibration offset CH1 0x200
-     *
-     * Trigger write pointer register (offset 0x200):
-     * bits [15: 0] - Offset R/W
-     * bits [31:16] - reserved
-     */
+ *
+ * Trigger write pointer register (offset 0x200):
+ * bits [15: 0] - Offset R/W
+ * bits [31:16] - reserved
+ */
     uint32_t calib_offset_ch1;
 
     /** @brief Calibration gain CH1 0x204
-     *
-     * Trigger write pointer register (offset 0x204):
-     * bits [15: 0] - Gain R/W
-     * bits [31:16] - reserved
-     */
+ *
+ * Trigger write pointer register (offset 0x204):
+ * bits [15: 0] - Gain R/W
+ * bits [31:16] - reserved
+ */
     uint32_t calib_gain_ch1;
 
     /** @brief Calibration offset CH2 0x208
-     *
-     * Trigger write pointer register (offset 0x208):
-     * bits [15: 0] - Offset R/W
-     * bits [31:16] - reserved
-     */
+ *
+ * Trigger write pointer register (offset 0x208):
+ * bits [15: 0] - Offset R/W
+ * bits [31:16] - reserved
+ */
     uint32_t calib_offset_ch2;
 
     /** @brief Calibration gain CH2 0x20C
-     *
-     * Trigger write pointer register (offset 0x20C):
-     * bits [15: 0] - Gain R/W
-     * bits [31:16] - reserved
-     */
+ *
+ * Trigger write pointer register (offset 0x20C):
+ * bits [15: 0] - Gain R/W
+ * bits [31:16] - reserved
+ */
     uint32_t calib_gain_ch2;
 
     /** @brief Offset 0x210 - Reserved
-     */
+ */
     uint32_t reserved_210[4];
 
     /** @brief Offset 0x220 - Global Timestamp Counter LO
-     *
-     * Lower 32 bits of the global 64-bit timer.
-     * IMPORTANT: Reading this register latches (snapshots) the full 64-bit
-     * counter value into a temporary buffer. Always read LO first.
-     */
+ *
+ * Lower 32 bits of the global 64-bit timer.
+ * IMPORTANT: Reading this register latches (snapshots) the full 64-bit
+ * counter value into a temporary buffer. Always read LO first.
+ */
     uint32_t timestamp_init_lo;
 
     /** @brief Offset 0x224 - Global Timestamp Counter HI
-     *
-     * Upper 32 bits of the global 64-bit timer.
-     * Returns the upper 32 bits of the value latched when LO was read.
-     */
+ *
+ * Upper 32 bits of the global 64-bit timer.
+ * Returns the upper 32 bits of the value latched when LO was read.
+ */
     uint32_t timestamp_init_hi;
 
     /** @brief Offset 0x228 - CH1 Trigger Timestamp LO
-     *
-     * Lower 32 bits of the timestamp captured at the last CH1 trigger event.
-     */
+ *
+ * Lower 32 bits of the timestamp captured at the last CH1 trigger event.
+ */
     uint32_t trig_timestamp_lo_ch1;
 
     /** @brief Offset 0x22C - CH1 Trigger Timestamp HI
-     *
-     * Upper 32 bits of the timestamp captured at the last CH1 trigger event.
-     */
+ *
+ * Upper 32 bits of the timestamp captured at the last CH1 trigger event.
+ */
     uint32_t trig_timestamp_hi_ch1;
 
     /** @brief Offset 0x230 - CH2 Trigger Timestamp LO
-     *
-     * Lower 32 bits of the timestamp captured at the last CH2 trigger event.
-     */
+ *
+ * Lower 32 bits of the timestamp captured at the last CH2 trigger event.
+ */
     uint32_t trig_timestamp_lo_ch2;
 
     /** @brief Offset 0x234 - CH2 Trigger Timestamp HI
-     *
-     * Upper 32 bits of the timestamp captured at the last CH2 trigger event.
-     */
+ *
+ * Upper 32 bits of the timestamp captured at the last CH2 trigger event.
+ */
     uint32_t trig_timestamp_hi_ch2;
 
     /* ChA & ChB data - 14 LSB bits valid starts from 0x10000 and
-     * 0x20000 and are each 16k samples long */
+ * 0x20000 and are each 16k samples long */
 } osc_control_t;
 
 static const uint32_t DATA_DEC_MASK = 0x1FFFF;           // (17 bits)
