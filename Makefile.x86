@@ -52,7 +52,7 @@ $(INSTALL_DIR):
 ################################################################################
 
 UBOOT_TAG      = redpitaya-v2026.1
-LINUX_TAG      = branch-redpitaya-v2026.1
+LINUX_TAG      = branch-redpitaya-v2026-dev
 
 UBOOT_DIR     = $(TMP)/u-boot-xlnx-$(UBOOT_TAG)
 LINUX_DIR     = $(TMP)/linux-xlnx-$(LINUX_TAG)
