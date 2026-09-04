@@ -63,7 +63,7 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -lrp-hw -li2c -lm -lstdc++ -lpthread)
+target_link_libraries(${PROJECT_NAME} PRIVATE rp-hw-profiles rp-hw i2c m stdc++ pthread)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 
