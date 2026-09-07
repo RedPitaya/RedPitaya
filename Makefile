@@ -57,11 +57,12 @@ LIBRP_FORMATTER_DIR   	= rp-api/api-formatter
 LIBRP_ARB_DIR		   	= rp-api/api-arb
 LIBRP_UPDATER_DIR		= rp-api/api-updater
 LIBRP_LA_DIR		   	= rp-api/api-la
+LIBRP_PTCC_DIR		   	= rp-api/api-ptcc
 ECOSYSTEM_DIR   		= Applications/ecosystem
 
-.PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla
+.PHONY: api librp librp250_12 librp_hw librp_dsp librp_hw_profiles librp_hw_calibration librp_hw_can librparb librp_sweep librpapp librpla libptcc
 
-api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater librp_calibration
+api: librp librp_hw librp_hw_can librp_dsp librpapp librp_formatter librparb librp_sweep librpla librpupdater librp_calibration libptcc
 
 librp: librp250_12 librp_hw_calibration librp_hw_profiles
 	cmake -B$(abspath $(LIBRP_DIR)/build) -S$(abspath $(LIBRP_DIR)) $(CMAKEVAR)
@@ -118,6 +119,10 @@ librpupdater:
 librpla:  librp
 	cmake -B$(abspath $(LIBRP_LA_DIR)/build) -S$(abspath $(LIBRP_LA_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(LIBRP_LA_DIR)/build install -j$(CPU_CORES)
+
+libptcc:  librp
+	cmake -B$(abspath $(LIBRP_PTCC_DIR)/build) -S$(abspath $(LIBRP_PTCC_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(LIBRP_PTCC_DIR)/build install -j$(CPU_CORES)
 
 
 ################################################################################
@@ -327,12 +332,13 @@ XADC_DIR           = tools/xadc
 UPDATER_DIR        = tools/updater
 DAISY_TOOL_DIR     = tools/daisy_tool
 E3_LED_CON_DIR     = tools/e3_led_controller
+PTCC_CONTROL_DIR   = tools/ptcc_control
 STARTUPSH          = $(INSTALL_DIR)/sbin/startup.sh
 
 .PHONY: examples fpgautils
-.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib phytool
+.PHONY: lcr bode monitor profiles generator acquire acquire_p calib spectrum led_control daisy_tool la e3_led_controller updater_tool filter_calib phytool ptcc_control
 
-examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib phytool
+examples: lcr bode monitor profiles calib spectrum acquire acquire_p generator led_control fpgautils daisy_tool la e3_led_controller updater_tool filter_calib phytool ptcc_control
 
 
 lcr: api
@@ -398,6 +404,10 @@ phytool:
 e3_led_controller: api
 	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(E3_LED_CON_DIR)/build install -j$(CPU_CORES)
+
+ptcc_control: api
+	cmake -B$(abspath $(PTCC_CONTROL_DIR)/build) -S$(abspath $(PTCC_CONTROL_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(PTCC_CONTROL_DIR)/build install -j$(CPU_CORES)
 
 updater_tool: librpupdater librpwebsocket
 	cmake -B$(abspath $(UPDATER_DIR)/build) -S$(abspath $(UPDATER_DIR)) $(CMAKEVAR)
@@ -526,6 +536,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(LIBRP_CALIB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_ARB_DIR)/build)
 	rm -rf $(abspath $(LIBRP_UPDATER_DIR)/build)
+	rm -rf $(abspath $(LIBRP_PTCC_DIR)/build)
 
 	rm -rf $(abspath $(LIBRP_SYSTEM_DIR)/build)
 	rm -rf $(abspath $(LIBRP_CLIENT_DIR)/build)
@@ -547,6 +558,7 @@ clean: nginx_clean scpi_clean
 	rm -rf $(abspath $(SPECTRUM_DIR)/build)
 	rm -rf $(abspath $(LIBRPAPP_DIR)/build)
 	rm -rf $(abspath $(E3_LED_CON_DIR)/build)
+	rm -rf $(abspath $(PTCC_CONTROL_DIR)/build)
 
 
 	rm -rf $(abspath $(APP_ECOSYSTEM_DIR)/build)

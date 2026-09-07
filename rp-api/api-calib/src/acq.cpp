@@ -34,13 +34,14 @@ auto trapezoidalApprox(double* data, float T, int size) -> float {
 
 auto isSineTester(float* data, uint32_t size, uint32_t dec) -> bool {
     double T = (dec / g_adc_smpl_freq);
-    double ch_rms[size];
-    double ch_avr[size];
+    static std::vector<double> ch_rms, ch_avr;
+    ch_rms.resize(size);
+    ch_avr.resize(size);
     for (uint32_t i = 0; i < size; i++) {
         ch_rms[i] = data[i] * data[i];
         ch_avr[i] = fabs(data[i]);
     }
-    double K0 = sqrtf(T * size * trapezoidalApprox(ch_rms, T, size)) / trapezoidalApprox(ch_avr, T, size);
+    double K0 = sqrtf(T * size * trapezoidalApprox(ch_rms.data(), T, size)) / trapezoidalApprox(ch_avr.data(), T, size);
     return ((K0 > 1.10) && (K0 < 1.12));
 }
 
