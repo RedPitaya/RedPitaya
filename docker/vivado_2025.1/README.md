@@ -1,8 +1,11 @@
-# Documentation: Docker Image for Vivado Jenkins Agent
+# Documentation: Docker Image for Vivado
 
 ## Overview
 
-This project provides a Docker image `vivado-jenkins-agent:2025.1` for running a Jenkins agent with AMD Vitis Unified Software Platform (Vivado) installed. The image is designed for headless usage in CI/CD pipelines for FPGA synthesis and development.
+This project provides a Docker image `vivado:2025.1` for running AMD Vitis Unified Software Platform (Vivado).
+The image is designed for headless usage in CI/CD pipelines for FPGA synthesis and development.
+
+<br/>
 
 ---
 
@@ -10,54 +13,185 @@ This project provides a Docker image `vivado-jenkins-agent:2025.1` for running a
 
 | File | Purpose |
 |------|---------|
-| `Dockerfile.jenkins` | Multi-stage image build |
+| `Dockerfile.vivado` | Multi-stage Vivado image build |
 | `install_config.txt` | Vivado installation configuration |
-| `jenkins-agent-setup.sh` | Jenkins agent startup script |
+
+<!-- | `Dockerfile.jenkins` | Multi-stage Jenkins image build | 
+| `jenkins-agent-setup.sh` | Jenkins agent startup script | -->
+
+<br/>
+
+---
+
+## Requirements
+
+To build the full image approximately 600 GB of space is required on the computer or an external disk of which:
+
+- Roughly 120 GB is required for unpacking the Vivado archive.
+- Around 450 GB is required for building the Docker image.
+
+Once the build is finished, the temporary files can be deleted. This will bring the image size down to about 150 GB.
+
+<br/>
 
 ---
 
 ## Build Preparation
 
-### 1. Obtaining Vivado Installer Files
+### 1. Download the code
 
-Download the Vivado installer from the official AMD (formerly Xilinx) website:
+Download the RedPitaya/RedPitaya repository code and copy the "vivado_2025.1" directory to the chosen location of the Docker Image.
 
 ```bash
-# Example for version 2025.1 (replace URL with actual one)
-wget https://www.xilinx.com/member/forms/download/xef.html?filename=Xilinx_Unified_2025.1_MMDD_YYYY.tar.gz
+git clone https://github.com/RedPitaya/RedPitaya
 ```
 
-### 2. Extracting the Installer
+<br/>
+
+### 2. Install Docker
+
+Install Docker or its desktop variation (Docker Desktop).
+
+<br/>
+
+### 3. Configure external disk (optional)
+
+If you want to build the Docker image on an external disk:
+
+- Linux - Adjust Docker and Contanerd service to enable building on an external drive
+- Windows - Open settings in Docker Desktop and locate the "Resources" menu. Look for the "Disk image location" path under the "Advanced" tab.
+
+![Docker path change](img/Docker_image_location.png)
+
+Change the Disk image location path to the external disk. This will change the image build location from the system drive to the external drive.
+
+<br/>
+
+### 4. Obtaining Vivado Installer Files
+
+Download the Vivado installer from the official AMD (formerly Xilinx) website. The current versions of Red Pitaya OS require Vitis 2025.1 for proper operation.
+
+```bash
+# Example for version 2025.1
+wget https://www.amd.com/en/support/downloads/adaptive-socs-and-fpgas/development-tools/2025-1.html
+```
+
+<br/>
+
+### 5. Extracting the Installer
+
+Create a new directory named "vivado_installer" inside the build directory "vivado_2025.1". Extract the Vitis .tar image to the newly created "vivado_installer" directory.
+Make sure that the **xsetup** file is located directly inside the vivado_installer. Any folders in between will result in build failure.
 
 ```bash
 # Create directory for the installer
 mkdir -p vivado_installer
 
 # Extract the archive (replace with actual filename)
-tar -xzf Xilinx_Unified_2025.1_MMDD_YYYY.tar.gz -C vivado_installer
+tar -xzf 3DFPGAs_AdaptiveSoCs_Unified_SDI_2025.1_0530_0145.tar -C vivado_installer
 
 # Verify xsetup file exists
 ls -la vivado_installer/xsetup
 ```
 
-### 3. Placing Configuration Files
+<br/>
 
-Ensure all files are in the same directory:
+### 6. Check the build directory
+
+Ensure all files are in the same directory.
+
+<!-- For Jenkins build, please ensure the following:
 
 ```bash
 ls -la
 # Should see:
-# - Dockerfile
 # - install_config.txt
+# - Dockerfile.jenkins
 # - jenkins-agent-setup.sh
 # - vivado_installer/
 ```
 
+For Vivado build, please ensure the following:
+-->
+
+```bash
+ls -la
+# Should see:
+# - install_config.txt
+# - Dockerfile.vivado
+# - vivado_installer/
+```
+
+Great, now we are ready to build the docker image.
+
+<br/>
+
 ---
 
-## Vivado Installation Configuration
+## Building the Docker Image
 
-### `install_config.txt` — Main Parameters
+### Basic Build
+
+**Linux**
+```bash
+export DOCKER_BUILDKIT=1
+docker build -t vivado:2025.1 -f Dockerfile.vivado .
+```
+
+**Windows**
+
+```bash
+set DOCKER_BUILDKIT=1
+docker build -t vivado:2025.1 -f Dockerfile.vivado .
+```
+
+<br/>
+    
+### Build with Platform Specification
+
+**Linux**
+
+```bash
+# For AMD64 (x86_64)
+export DOCKER_BUILDKIT=1
+docker build --platform linux/amd64 -t vivado:2025.1 -f Dockerfile.vivado .
+```
+
+**Windows**
+
+```bash
+# For AMD64 (x86_64)
+set DOCKER_BUILDKIT=1
+docker build --platform linux/amd64 -t vivado:2025.1 -f Dockerfile.vivado .
+```
+
+<br/>
+
+### Build Without Cache (Clean Build)**
+
+**Linux**
+
+```bash
+export DOCKER_BUILDKIT=1
+docker build --no-cache -t vivado:2025.1 -f Dockerfile.vivado .
+```
+
+**Windows**
+
+```bash
+set DOCKER_BUILDKIT=1
+docker build --no-cache -t vivado:2025.1 -f Dockerfile.vivado .
+```
+
+<br/>
+
+---
+
+## Configuration and build file descriptions
+
+### Vivado Installation Configuration
+
+#### `install_config.txt` — Main Parameters
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
@@ -65,7 +199,7 @@ ls -la
 | `Destination` | `/opt/Xilinx` | Installation path |
 | `Modules` | `Zynq-7000:1,DocNav:1` | Modules to install |
 
-### Installed Modules
+#### Installed Modules
 
 The current configuration installs only:
 - **Zynq-7000** — Zynq-7000 SoC support (enabled)
@@ -73,18 +207,19 @@ The current configuration installs only:
 
 > **Note**: All other FPGA families (Virtex, Kintex, Artix, etc.) are disabled. If needed, uncomment the `Modules` line in `install_config.txt` and configure the required components by changing `:0` to `:1`.
 
----
+<br/>
 
-## Jenkins Agent Script
+<!--
+### Jenkins Agent Script
 
-### `jenkins-agent-setup.sh` — Functionality
+#### `jenkins-agent-setup.sh` — Functionality
 
 1. Starts SSH daemon in background
 2. Loads Vivado environment (`settings64.sh`)
 3. Connects to Jenkins master (if environment variables are present)
 4. Starts interactive Bash (if variables are absent)
 
-### Jenkins Environment Variables
+#### Jenkins Environment Variables
 
 | Variable | Description | Required |
 |----------|-------------|----------|
@@ -92,7 +227,8 @@ The current configuration installs only:
 | `JENKINS_SECRET` | Agent secret token | Yes (for agent mode) |
 | `JENKINS_AGENT_NAME` | Agent name | Yes (for agent mode) |
 
----
+<br/>
+-->
 
 ### Dockerfile: Build Details
 
@@ -150,31 +286,7 @@ RUN --mount=type=bind,source=vivado_installer,target=/tmp/vivado_installer,rw \
 # Mounts are automatically unmounted here
 ```
 
----
-
-## Building the Docker Image
-
-### Basic Build
-
-```bash
-export DOCKER_BUILDKIT=1
-docker build -t vivado-jenkins-agent:2025.1 -f Dockerfile.jenkins .
-```
-
-### Build with Platform Specification
-
-```bash
-# For AMD64 (x86_64)
-export DOCKER_BUILDKIT=1
-docker build --platform linux/amd64 -t vivado-jenkins-agent:2025.1 -f Dockerfile.jenkins .
-```
-
-### Build Without Cache (Clean Build)
-
-```bash
-export DOCKER_BUILDKIT=1
-docker build --no-cache -t vivado-jenkins-agent:2025.1 -f Dockerfile.jenkins .
-```
+<br/>
 
 ---
 
@@ -183,46 +295,49 @@ docker build --no-cache -t vivado-jenkins-agent:2025.1 -f Dockerfile.jenkins .
 ### Export Image to TAR
 
 ```bash
-docker save -o vivado-jenkins-agent-2025.1.tar vivado-jenkins-agent:2025.1
+docker save -o vivado-2025.1.tar vivado:2025.1
 ```
 
 ### Compress TAR File
 
 ```bash
-gzip vivado-jenkins-agent-2025.1.tar
-# Result: vivado-jenkins-agent-2025.1.tar.gz
+gzip vivado-2025.1.tar
+# Result: vivado-2025.1.tar.gz
 ```
 
 ### Quick Export with Compression (Single Command)
 
 ```bash
-docker save vivado-jenkins-agent:2025.1 | gzip > vivado-jenkins-agent-2025.1.tar.gz
+docker save vivado:2025.1 | gzip > vivado-2025.1.tar.gz
 ```
 
 ### Maximum Compression
 
 ```bash
-docker save vivado-jenkins-agent:2025.1 | gzip -9 > vivado-jenkins-agent-2025.1.tar.gz
+docker save vivado:2025.1 | gzip -9 > vivado-2025.1.tar.gz
 ```
 
 ### View Image Information Before Export
 
 ```bash
 # List images
-docker images | grep vivado-jenkins-agent
+docker images | grep vivado
 
 # Detailed information
-docker inspect vivado-jenkins-agent:2025.1
+docker inspect vivado:2025.1
 
 # Layer size
-docker history vivado-jenkins-agent:2025.1
+docker history vivado:2025.1
 ```
 
 ---
 
+<!--
 ## Automated Build Script
 
-Create `build.sh`:
+This is specifically for the full Jenkins Build. 
+
+1. Create a `build.sh`:
 
 ```bash
 #!/bin/bash
@@ -296,12 +411,14 @@ echo "  - Docker image: ${IMAGE_NAME}:${VERSION}"
 echo "  - TAR archive: ${ARCHIVE_NAME}"
 ```
 
-Run the script:
+2. Run the script:
 
 ```bash
 chmod +x build.sh
 ./build.sh
 ```
+
+<br/>
 
 ---
 
@@ -327,6 +444,8 @@ docker load -i vivado-jenkins-agent-2025.1.tar
 docker images | grep vivado-jenkins-agent
 ```
 
+<br/>
+
 ---
 
 ## Running and Usage
@@ -342,6 +461,8 @@ docker run -d \
   vivado-jenkins-agent:2025.1
 ```
 
+<br/>
+
 ### Interactive Run (Debug/Development Mode)
 
 ```bash
@@ -350,6 +471,8 @@ docker run -it \
   -v "$(pwd)":/workspace \
   vivado-jenkins-agent:2025.1
 ```
+
+<br/>
 
 ### Run with SSH Access
 
@@ -365,6 +488,8 @@ ssh jenkins@localhost -p 2222
 # Password: jenkins
 ```
 
+<br/>
+
 ### Run with Explicit Locale Settings
 
 ```bash
@@ -374,6 +499,8 @@ docker run -it \
   -e LANGUAGE=en_US:en \
   vivado-jenkins-agent:2025.1
 ```
+
+<br/>
 
 ---
 
@@ -400,6 +527,8 @@ root@container:/# echo $XILINX_VIVADO
 root@container:/# which vivado
 /opt/Xilinx/2025.1/Vivado/bin/vivado
 ```
+
+<br/>
 
 ---
 
@@ -465,6 +594,7 @@ pipeline {
     }
 }
 ```
+<br/>
 
 ### Usage with Kubernetes (Jenkins Kubernetes Plugin)
 
@@ -507,7 +637,10 @@ spec:
       path: /opt/xilinx_licenses
 ```
 
+<br/>
+
 ---
+-->
 
 ## Troubleshooting
 
@@ -521,6 +654,8 @@ spec:
 docker run -e LANG=en_US.UTF-8 -e LC_ALL=en_US.UTF-8 ...
 ```
 
+<br/>
+
 ### Error: "libtinfo.so.5: cannot open shared object file"
 
 **Cause**: Missing symbolic links to libraries.
@@ -528,8 +663,10 @@ docker run -e LANG=en_US.UTF-8 -e LC_ALL=en_US.UTF-8 ...
 **Solution**: Check for links:
 
 ```bash
-docker run --rm vivado-jenkins-agent:2025.1 ls -la /lib/x86_64-linux-gnu/libtinfo.so*
+docker run --rm vivado:2025.1 ls -la /lib/x86_64-linux-gnu/libtinfo.so*
 ```
+
+<br/>
 
 ### Error: Vivado installer not found during build
 
@@ -543,6 +680,8 @@ ls -la vivado_installer/xsetup
 chmod +x vivado_installer/xsetup
 ```
 
+<br/>
+
 ### Vivado won't start (X server required)
 
 **Cause**: Attempting to run in GUI mode.
@@ -555,15 +694,20 @@ vivado -mode batch -source script.tcl
 vivado -mode tcl -source script.tcl
 ```
 
+<br/>
+
 ### Insufficient memory during synthesis
 
 **Solution**: Increase memory limits for the container:
 
 ```bash
 docker run --memory="16g" --memory-swap="16g" \
-  vivado-jenkins-agent:2025.1
+  vivado:2025.1
 ```
 
+<br/>
+
+<!--
 ### Jenkins agent fails to connect
 
 **Solution**: Check environment variables and network connectivity:
@@ -574,22 +718,29 @@ docker run --rm vivado-jenkins-agent:2025.1 \
   curl -v http://jenkins-master:8080/
 ```
 
+<br/>
+-->
+
 ### TAR archive is too large
 
 **Solution**: Use maximum compression and clean Docker cache before export:
 
 ```bash
 docker system prune -a
-docker save vivado-jenkins-agent:2025.1 | gzip -9 > image.tar.gz
+docker save vivado:2025.1 | gzip -9 > image.tar.gz
 ```
+
+<br/>
 
 ### Verify no mounts remain in final image
 
 ```bash
 # Check that no mounts exist in the final image
-docker run --rm vivado-jenkins-agent:2025.1 mount | grep /tmp
+docker run --rm vivado:2025.1 mount | grep /tmp
 # Should be empty
 ```
+
+<br/>
 
 ---
 
@@ -597,16 +748,19 @@ docker run --rm vivado-jenkins-agent:2025.1 mount | grep /tmp
 
 | Action | Command |
 |--------|---------|
-| Build image | `docker build -t vivado-jenkins-agent:2025.1 .` |
-| Build with BuildKit | `DOCKER_BUILDKIT=1 docker build -t vivado-jenkins-agent:2025.1 .` |
-| Export to TAR.GZ | `docker save vivado-jenkins-agent:2025.1 \| gzip > vivado-jenkins-agent-2025.1.tar.gz` |
-| Load from TAR.GZ | `gunzip -c vivado-jenkins-agent-2025.1.tar.gz \| docker load` |
-| Run Jenkins agent | `docker run -d -e JENKINS_URL=... -e JENKINS_SECRET=... vivado-jenkins-agent:2025.1` |
-| Interactive run | `docker run -it vivado-jenkins-agent:2025.1` |
-| Interactive run with locale | `docker run -it -e LANG=en_US.UTF-8 -e LC_ALL=en_US.UTF-8 vivado-jenkins-agent:2025.1` |
+| Build image | `docker build -t vivado:2025.1 .` |
+| Build with BuildKit | `DOCKER_BUILDKIT=1 docker build -t vivado:2025.1 .` |
+| Export to TAR.GZ | `docker save vivado:2025.1 \| gzip > vivado-2025.1.tar.gz` |
+| Load from TAR.GZ | `gunzip -c vivado-2025.1.tar.gz \| docker load` |
+| Interactive run | `docker run -it vivado:2025.1` |
+| Interactive run with locale | `docker run -it -e LANG=en_US.UTF-8 -e LC_ALL=en_US.UTF-8 vivado:2025.1` |
 | View logs | `docker logs <container-id>` |
 | Stop container | `docker stop <container-id>` |
 | Remove container | `docker rm <container-id>` |
-| Remove image | `docker rmi vivado-jenkins-agent:2025.1` |
-| Check locale | `docker run --rm vivado-jenkins-agent:2025.1 locale` |
-| Check Vivado | `docker run --rm vivado-jenkins-agent:2025.1 vivado -version` |
+| Remove image | `docker rmi vivado:2025.1` |
+| Check locale | `docker run --rm vivado:2025.1 locale` |
+| Check Vivado | `docker run --rm vivado-:2025.1 vivado -version` |
+
+<!--
+| Run Jenkins agent | `docker run -d -e JENKINS_URL=... -e JENKINS_SECRET=... vivado-jenkins-agent:2025.1` |
+-->
