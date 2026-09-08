@@ -25,6 +25,7 @@ rp_calib_params_t calib_GetDefaultCalib(bool setFilterZero);
 rp_calib_params_t calib_GetUniversalDefaultCalib(bool setFilterZero, uint8_t version);
 
 rp_calib_error calib_GetVersion(uint8_t* version);
+rp_calib_error calib_GetIsError(bool* is_error);
 
 rp_calib_error calib_WriteParams(rp_HPeModels_t model, rp_calib_params_t* calib_params, bool use_factory_zone, bool skip_recalculate);
 rp_calib_error calib_SetParams(rp_calib_params_t* calib_params);

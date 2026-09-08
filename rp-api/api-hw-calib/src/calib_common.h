@@ -46,6 +46,7 @@
 #define CHECK_GAIN_LIMIT(X) (X < 0 ? 0 : (X > 50 ? 50 : X))
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #define CHECK_VALID_GAIN_LIMIT(X) (X >= GAIN_MIN_VALUE && X <= GAIN_MAX_VALUE)
+#define CLAMP_TO_VALID_GAIN_LIMIT(X) X = std::clamp(X, GAIN_MIN_VALUE, GAIN_MAX_VALUE);
 
 uint8_t* readFromEpprom(uint16_t* size);
 uint8_t* readFromFactoryEpprom(uint16_t* size);

@@ -27,6 +27,10 @@ rp_calib_error rp_GetCalibrationVersion(uint8_t* version) {
     return calib_GetVersion(version);
 }
 
+rp_calib_error rp_GetCalibrationErrorState(bool* is_error) {
+    return calib_GetIsError(is_error);
+}
+
 rp_calib_params_t rp_GetCalibrationSettings() {
     return calib_GetParams();
 }

@@ -1109,6 +1109,7 @@ bool recalculateGain(rp_calib_params_t* param) {
         param->fast_adc_1_1[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc)) {
             ERROR_LOG("Invalid gain fast_adc_1_1[%d] = %f", i, param->fast_adc_1_1[i].gainCalc);
+            CLAMP_TO_VALID_GAIN_LIMIT(param->fast_adc_1_1[i].gainCalc)
             return false;
         }
     }
@@ -1121,6 +1122,7 @@ bool recalculateGain(rp_calib_params_t* param) {
         param->fast_adc_1_20[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc)) {
             ERROR_LOG("Invalid gain fast_adc_1_20[%d] = %f", i, param->fast_adc_1_20[i].gainCalc);
+            CLAMP_TO_VALID_GAIN_LIMIT(param->fast_adc_1_20[i].gainCalc)
             return false;
         }
     }
@@ -1133,6 +1135,7 @@ bool recalculateGain(rp_calib_params_t* param) {
         param->fast_adc_1_1_ac[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc)) {
             ERROR_LOG("Invalid gain fast_adc_1_1_ac[%d] = %f", i, param->fast_adc_1_1_ac[i].gainCalc);
+            CLAMP_TO_VALID_GAIN_LIMIT(param->fast_adc_1_1_ac[i].gainCalc)
             return false;
         }
     }
@@ -1145,6 +1148,7 @@ bool recalculateGain(rp_calib_params_t* param) {
         param->fast_adc_1_20_ac[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc)) {
             ERROR_LOG("Invalid gain fast_adc_1_20_ac[%d] = %f", i, param->fast_adc_1_20_ac[i].gainCalc);
+            CLAMP_TO_VALID_GAIN_LIMIT(param->fast_adc_1_20_ac[i].gainCalc)
             return false;
         }
     }
@@ -1157,6 +1161,7 @@ bool recalculateGain(rp_calib_params_t* param) {
         param->fast_dac_x1[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc)) {
             ERROR_LOG("Invalid gain fast_dac_x1[%d] = %f", i, param->fast_dac_x1[i].gainCalc);
+            CLAMP_TO_VALID_GAIN_LIMIT(param->fast_dac_x1[i].gainCalc)
             return false;
         }
     }
@@ -1169,6 +1174,7 @@ bool recalculateGain(rp_calib_params_t* param) {
         param->fast_dac_x5[i].gainCalc = CHECK_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc);
         if (!CHECK_VALID_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc)) {
             ERROR_LOG("Invalid gain fast_dac_x5[%d = %f", i, param->fast_dac_x5[i].gainCalc);
+            CLAMP_TO_VALID_GAIN_LIMIT(param->fast_dac_x5[i].gainCalc)
             return false;
         }
     }

@@ -362,6 +362,11 @@ a.list-group-item:hover:visited {
     display: inline-block;
 }
 
+#CALIB_STATE_ID.blinking {
+    animation: redTint 1.5s ease-in-out infinite;
+    display: inline-block;
+}
+
 @keyframes redTint {
     0% {
         filter: none;

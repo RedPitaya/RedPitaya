@@ -14,6 +14,7 @@
 #include "common/version.h"
 #include "main.h"
 #include "rp.h"
+#include "rp_hw_calib.h"
 #include "web/rp_client.h"
 #include "web/rp_system.h"
 #include "web/rp_websocket.h"
@@ -39,6 +40,18 @@ CStringParameter g_last_release("RP_LAST_RELEASE", CBaseParameter::RO, "", 250);
 CIntParameter adc_base_rate("RP_ADC_BASE_RATE", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
 CIntParameter dac_base_rate("RP_DAC_BASE_RATE", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
 CIntParameter rp_command("RP_COMMAND", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
+CBooleanParameter calib_error_state("RP_CALIB_ERROR_STATE", CBaseParameter::RO, false, 0);
+
+// Reads the calibration error flag and pushes it to the UI only on change.
+static void updateCalibrationErrorState(bool force) {
+    bool is_error = false;
+    if (rp_GetCalibrationErrorState(&is_error) != RP_HW_CALIB_OK) {
+        is_error = true;
+    }
+    if (force || calib_error_state.Value() != is_error) {
+        calib_error_state.SendValue(is_error);
+    }
+}
 
 const char* rp_app_desc(void) {
     return (const char*)"Red Pitaya main menu application.\n";
@@ -82,6 +95,8 @@ int rp_app_init(void) {
             }
         }
     });
+
+    updateCalibrationErrorState(true);
 
     adc_base_rate.SendValue(rp_HPGetBaseFastADCSpeedHzOrDefault());
     dac_base_rate.SendValue(rp_HPGetBaseFastDACSpeedHzOrDefault());
@@ -134,6 +149,7 @@ int rp_app_exit(void) {
 
 void UpdateParams(void) {
     rp_WS_UpdateParameters(false);
+    updateCalibrationErrorState(false);
 }
 
 void OnNewParams(void) {

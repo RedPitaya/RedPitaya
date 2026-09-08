@@ -36,6 +36,9 @@
     MAIN.adc_base_rate = 0;
     MAIN.dac_base_rate = 0;
 
+    MAIN.is_clock = true;
+    MAIN.calib_error = false;
+
 
     MAIN.processSignals = function(SIG){
     }
@@ -233,13 +236,32 @@
     MAIN.setCommand = function(new_params) {
     }
 
-    MAIN.setClockState = function(new_params) {
-        MAIN.is_clock = new_params['RP_SYSTEM_CLOCK_STATE'].value
-        if (new_params['RP_SYSTEM_CLOCK_STATE'].value){
+    // Header info icon blinks while any of the monitored subsystems reports a problem
+    MAIN.updateInfoIconState = function() {
+        if (MAIN.is_clock && !MAIN.calib_error){
             $('.info-icon img').removeClass('blinking');
         }else{
             $('.info-icon img').addClass('blinking');
         }
+    }
+
+    MAIN.setClockState = function(new_params) {
+        MAIN.is_clock = new_params['RP_SYSTEM_CLOCK_STATE'].value
+        MAIN.updateInfoIconState();
+    }
+
+    MAIN.setCalibErrorState = function(new_params) {
+        MAIN.calib_error = new_params['RP_CALIB_ERROR_STATE'].value
+        if (MAIN.calib_error){
+            $('#CALIB_STATE_ID').text("ERROR");
+            $('#CALIB_STATE_ID').addClass('blinking');
+            $('#IS_CALIB_ERROR').show();
+        }else{
+            $('#CALIB_STATE_ID').text("OK");
+            $('#CALIB_STATE_ID').removeClass('blinking');
+            $('#IS_CALIB_ERROR').hide();
+        }
+        MAIN.updateInfoIconState();
     }
 
      MAIN.setClockRate = function(new_params) {
@@ -293,6 +315,8 @@
 
     MAIN.param_callbacks["RP_SYSTEM_CLOCK_STATE"] = MAIN.setClockState;
     MAIN.param_callbacks["RP_SYSTEM_CLOCK_RATE"] = MAIN.setClockRate;
+
+    MAIN.param_callbacks["RP_CALIB_ERROR_STATE"] = MAIN.setCalibErrorState;
 
 }(window.MAIN = window.MAIN || {}, jQuery));
 

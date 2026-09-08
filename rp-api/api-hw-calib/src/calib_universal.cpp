@@ -5,12 +5,13 @@
 #include "calib_common.h"
 #include "rp_log.h"
 
-#define GET_PARAMETER(X, Y, Z)                                                               \
+#define GET_PARAMETER(X, Y, Z, W)                                                            \
     {                                                                                        \
         bool err = false;                                                                    \
         int32_t val = getParameter(Z, Y, &err);                                              \
         if (err) {                                                                           \
             ERROR_LOG("Missing calib item %s (%d) .\n", getNameOfUniversalId(Y).c_str(), Y); \
+            W = true;                                                                        \
         }                                                                                    \
         X = val;                                                                             \
     }
@@ -228,48 +229,48 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             calib.fast_dac_count_x1 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_20[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param, calib.isBroken)
 
             calib.fast_adc_1_20[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param, calib.isBroken)
 
             calib.fast_dac_x1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param, calib.isBroken)
 
             calib.fast_dac_x1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param, calib.isBroken)
 
             break;
         }
@@ -292,48 +293,48 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             calib.fast_dac_count_x1 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_20[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param, calib.isBroken)
 
             calib.fast_adc_1_20[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param, calib.isBroken)
 
             calib.fast_dac_x1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param, calib.isBroken)
 
             calib.fast_dac_x1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param, calib.isBroken)
 
             break;
         }
@@ -344,20 +345,20 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             calib.fast_dac_count_x1 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_dac_x1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param, calib.isBroken)
 
             calib.fast_dac_x1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param, calib.isBroken)
             break;
         }
 
@@ -369,76 +370,76 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             calib.fast_adc_count_1_20 = 4;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_1[2].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[2].calibValue, UC_ADC_CH3_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[2].offset, UC_ADC_CH3_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[2].calibValue, UC_ADC_CH3_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[2].offset, UC_ADC_CH3_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_1[3].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[3].calibValue, UC_ADC_CH4_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[3].offset, UC_ADC_CH4_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[3].calibValue, UC_ADC_CH4_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[3].offset, UC_ADC_CH4_OFFSET_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[2].aa, UC_ADC_CH3_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[2].bb, UC_ADC_CH3_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[2].pp, UC_ADC_CH3_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[2].kk, UC_ADC_CH3_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[2].aa, UC_ADC_CH3_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[2].bb, UC_ADC_CH3_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[2].pp, UC_ADC_CH3_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[2].kk, UC_ADC_CH3_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[3].aa, UC_ADC_CH4_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[3].bb, UC_ADC_CH4_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[3].pp, UC_ADC_CH4_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[3].kk, UC_ADC_CH4_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[3].aa, UC_ADC_CH4_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[3].bb, UC_ADC_CH4_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[3].pp, UC_ADC_CH4_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[3].kk, UC_ADC_CH4_KK_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_20[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param, calib.isBroken)
 
             calib.fast_adc_1_20[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param, calib.isBroken)
 
             calib.fast_adc_1_20[2].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[2].calibValue, UC_ADC_CH3_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[2].offset, UC_ADC_CH3_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[2].calibValue, UC_ADC_CH3_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[2].offset, UC_ADC_CH3_OFFSET_1_20, param, calib.isBroken)
 
             calib.fast_adc_1_20[3].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[3].calibValue, UC_ADC_CH4_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[3].offset, UC_ADC_CH4_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[3].calibValue, UC_ADC_CH4_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[3].offset, UC_ADC_CH4_OFFSET_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[2].aa, UC_ADC_CH3_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[2].bb, UC_ADC_CH3_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[2].pp, UC_ADC_CH3_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[2].kk, UC_ADC_CH3_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[2].aa, UC_ADC_CH3_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[2].bb, UC_ADC_CH3_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[2].pp, UC_ADC_CH3_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[2].kk, UC_ADC_CH3_KK_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[3].aa, UC_ADC_CH4_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[3].bb, UC_ADC_CH4_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[3].pp, UC_ADC_CH4_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[3].kk, UC_ADC_CH4_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[3].aa, UC_ADC_CH4_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[3].bb, UC_ADC_CH4_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[3].pp, UC_ADC_CH4_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[3].kk, UC_ADC_CH4_KK_1_20, param, calib.isBroken)
             break;
         }
 
@@ -456,72 +457,72 @@ rp_calib_params_t convertUniversaltoCommon(rp_HPeModels_t model, rp_calib_params
             calib.fast_dac_count_x5 = 2;
 
             calib.fast_adc_1_1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[0].calibValue, UC_ADC_CH1_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[0].offset, UC_ADC_CH1_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param)
-            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param)
+            GET_PARAMETER(calib.fast_adc_1_1[1].calibValue, UC_ADC_CH2_GAIN_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1[1].offset, UC_ADC_CH2_OFFSET_1_1, param, calib.isBroken)
 
             calib.fast_adc_1_20[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[0].calibValue, UC_ADC_CH1_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[0].offset, UC_ADC_CH1_OFFSET_1_20, param, calib.isBroken)
 
             calib.fast_adc_1_20[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param)
-            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param)
+            GET_PARAMETER(calib.fast_adc_1_20[1].calibValue, UC_ADC_CH2_GAIN_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20[1].offset, UC_ADC_CH2_OFFSET_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].aa, UC_ADC_CH1_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].bb, UC_ADC_CH1_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].pp, UC_ADC_CH1_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[0].kk, UC_ADC_CH1_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].aa, UC_ADC_CH1_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].bb, UC_ADC_CH1_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].pp, UC_ADC_CH1_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[0].kk, UC_ADC_CH1_KK_1_20, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].aa, UC_ADC_CH2_AA_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].bb, UC_ADC_CH2_BB_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].pp, UC_ADC_CH2_PP_1_1, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_1[1].kk, UC_ADC_CH2_KK_1_1, param, calib.isBroken)
 
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param)
-            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].aa, UC_ADC_CH2_AA_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].bb, UC_ADC_CH2_BB_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].pp, UC_ADC_CH2_PP_1_20, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_filter_1_20[1].kk, UC_ADC_CH2_KK_1_20, param, calib.isBroken)
 
             calib.fast_adc_1_1_ac[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1_ac[0].calibValue, UC_ADC_CH1_GAIN_1_1_AC, param)
-            GET_PARAMETER(calib.fast_adc_1_1_ac[0].offset, UC_ADC_CH1_OFFSET_1_1_AC, param)
+            GET_PARAMETER(calib.fast_adc_1_1_ac[0].calibValue, UC_ADC_CH1_GAIN_1_1_AC, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1_ac[0].offset, UC_ADC_CH1_OFFSET_1_1_AC, param, calib.isBroken)
 
             calib.fast_adc_1_1_ac[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_1_ac[1].calibValue, UC_ADC_CH2_GAIN_1_1_AC, param)
-            GET_PARAMETER(calib.fast_adc_1_1_ac[1].offset, UC_ADC_CH2_OFFSET_1_1_AC, param)
+            GET_PARAMETER(calib.fast_adc_1_1_ac[1].calibValue, UC_ADC_CH2_GAIN_1_1_AC, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_1_ac[1].offset, UC_ADC_CH2_OFFSET_1_1_AC, param, calib.isBroken)
 
             calib.fast_adc_1_20_ac[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20_ac[0].calibValue, UC_ADC_CH1_GAIN_1_20_AC, param)
-            GET_PARAMETER(calib.fast_adc_1_20_ac[0].offset, UC_ADC_CH1_OFFSET_1_20_AC, param)
+            GET_PARAMETER(calib.fast_adc_1_20_ac[0].calibValue, UC_ADC_CH1_GAIN_1_20_AC, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20_ac[0].offset, UC_ADC_CH1_OFFSET_1_20_AC, param, calib.isBroken)
 
             calib.fast_adc_1_20_ac[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_adc_1_20_ac[1].calibValue, UC_ADC_CH2_GAIN_1_20_AC, param)
-            GET_PARAMETER(calib.fast_adc_1_20_ac[1].offset, UC_ADC_CH2_OFFSET_1_20_AC, param)
+            GET_PARAMETER(calib.fast_adc_1_20_ac[1].calibValue, UC_ADC_CH2_GAIN_1_20_AC, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_adc_1_20_ac[1].offset, UC_ADC_CH2_OFFSET_1_20_AC, param, calib.isBroken)
 
             calib.fast_dac_x1[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[0].calibValue, UC_DAC_CH1_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[0].offset, UC_DAC_CH1_OFFSET, param, calib.isBroken)
 
             calib.fast_dac_x1[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param)
-            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param)
+            GET_PARAMETER(calib.fast_dac_x1[1].calibValue, UC_DAC_CH2_GAIN, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x1[1].offset, UC_DAC_CH2_OFFSET, param, calib.isBroken)
 
             calib.fast_dac_x5[0].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x5[0].calibValue, UC_DAC_CH1_GAIN_X5, param)
-            GET_PARAMETER(calib.fast_dac_x5[0].offset, UC_DAC_CH1_OFFSET_X5, param)
+            GET_PARAMETER(calib.fast_dac_x5[0].calibValue, UC_DAC_CH1_GAIN_X5, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x5[0].offset, UC_DAC_CH1_OFFSET_X5, param, calib.isBroken)
 
             calib.fast_dac_x5[1].baseScale = 1.0;
-            GET_PARAMETER(calib.fast_dac_x5[1].calibValue, UC_DAC_CH2_GAIN_X5, param)
-            GET_PARAMETER(calib.fast_dac_x5[1].offset, UC_DAC_CH2_OFFSET_X5, param)
+            GET_PARAMETER(calib.fast_dac_x5[1].calibValue, UC_DAC_CH2_GAIN_X5, param, calib.isBroken)
+            GET_PARAMETER(calib.fast_dac_x5[1].offset, UC_DAC_CH2_OFFSET_X5, param, calib.isBroken)
             break;
         }
 

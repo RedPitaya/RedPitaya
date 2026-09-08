@@ -49,6 +49,10 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
             rp_calib_params_universal_t calib_uni;
             memcpy(&calib_uni, buffer, size);
             *calib = convertUniversaltoCommon(model, &calib_uni);
+            if (calib->isBroken) {
+                *calib = getDefault(model, false);
+                calib->isBroken = true;
+            }
             free(buffer);
         } else {
             free(buffer);
@@ -183,6 +187,7 @@ rp_calib_error calib_InitModelEx(rp_HPeModels_t model, bool use_factory_zone, rp
     }
     if (!recalculateGain(calib)) {
         ERROR_LOG("Cannot correctly recalculate gain on calibration.");
+        calib->isBroken = true;
     }
     return RP_HW_CALIB_OK;
 }
@@ -383,6 +388,18 @@ rp_calib_error calib_GetVersion(uint8_t* version) {
         }
     }
     *version = g_calib.dataStructureId;
+    return RP_HW_CALIB_OK;
+}
+
+rp_calib_error calib_GetIsError(bool* is_error) {
+    if (!g_model_loaded) {
+        auto ret = calib_Init(false);
+        if (ret != RP_HW_CALIB_OK) {
+            *is_error = true;
+            return ret;
+        }
+    }
+    *is_error = g_calib.isBroken;
     return RP_HW_CALIB_OK;
 }
 
@@ -804,6 +821,7 @@ rp_calib_error calib_ConvertToOld(rp_calib_params_t* out) {
 rp_calib_error calib_PrintEx(FILE* __restrict out, rp_calib_params_t* calib) {
     fprintf(out, "dataStructureId: %d\n", calib->dataStructureId);
     fprintf(out, "wpCheck: %d\n", calib->wpCheck);
+    fprintf(out, "Error: %d\n\n", calib->isBroken);
     fprintf(out, "time stamp: %u (0x%X)\n", calib->timeStamp, calib->timeStamp);
     fprintf(out, "time stamp: %s\n", formatY2KTimestamp(calib->timeStamp).c_str());
     fprintf(out, "commit hash: %llx\n\n", calib->hash_commit);

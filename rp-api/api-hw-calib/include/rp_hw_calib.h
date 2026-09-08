@@ -147,6 +147,7 @@ typedef struct {
 typedef struct rp_calib_params_t {
     char dataStructureId;  ///< Data structure identifier
     char wpCheck;          ///< Write protection check
+    bool isBroken;         ///< The flag is set to true if a conversion error occurred.
 
     uint32_t timeStamp;    /// Packed time in seconds since 01-01-2000 00:00:00
     uint64_t hash_commit;  /// Commit hash
@@ -238,6 +239,16 @@ rp_calib_error rp_CalibInitSpecific(rp_HPeModels_t model);
   * @return Status code (RP_HW_CALIB_OK on success)
   */
 rp_calib_error rp_GetCalibrationVersion(uint8_t* version);
+
+/**
+ * @brief Checks if the device calibration is in an error state
+ *
+ * @param is_error Output parameter that will be set to:
+ *        - true if calibration error is present
+ *        - false if calibration is functioning correctly
+* @return Status code (RP_HW_CALIB_OK on success)
+ */
+rp_calib_error rp_GetCalibrationErrorState(bool* is_error);
 
 /**
   * @brief Gets current calibration settings
