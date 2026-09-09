@@ -99,8 +99,12 @@ FPGA_COMMIT ?= unify/dev
 
 
 HWID ?=
-DEF_PARAM ?= ALLOW_TIMING_FAIL
+DEF_PARAM_BAREBONE ?=
 DEF_PARAM_PYRPL ?= ALLOW_TIMING_FAIL
+DEF_PARAM_STREAM_APP ?= ALLOW_TIMING_FAIL
+DEF_PARAM_LOGIC ?=
+DEF_PARAM_V094 ?=
+
 FPGA_PRJ ?=
 FPGA_VERSION ?=
 FPGA_MODEL ?=
@@ -213,7 +217,6 @@ ifeq ($(MODEL),Z20_250_12_1_0)
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250_1_0
 	HWID=v1r0
-	DEF_PARAM = ALLOW_TIMING_FAIL
 
 endif
 
@@ -228,7 +231,6 @@ ifeq ($(MODEL),Z20_250_12)
 
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250
-	DEF_PARAM = ALLOW_TIMING_FAIL
 
 endif
 
@@ -241,7 +243,6 @@ ifeq ($(MODEL),Z20_250_12a)
 
 	FPGA_MODEL = Z20_250
 	FPGA_VERSION = z20_250a
-	DEF_PARAM = ALLOW_TIMING_FAIL
 
 endif
 
@@ -331,7 +332,7 @@ $(INSTALL_DIR)/fpga: $(DTREE_DIR)
 	mkdir -p $(INSTALL_DIR)/fpga
 
 ifneq "$(FPGA_BAREBONE)" ""
-	$(call build_fpga,barebones,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_BAREBONE))
+	$(call build_fpga,barebones,$(FPGA_MODEL),$(DEF_PARAM_BAREBONE),$(HWID),$(FPGA_BAREBONE))
 	mkdir -p $(INSTALL_DIR)/dts/$(FPGA_VERSION)
 	cp -f fpga/$(FPGA_VERSION)/barebones/prj/barebones/out/dts/dtraw.dtb  $(INSTALL_DIR)/dts/$(FPGA_VERSION)/devicetree.dtb
 	cp -f fpga/$(FPGA_VERSION)/barebones/prj/barebones/out/dts/dtraw.dtbs  $(INSTALL_DIR)/dts/$(FPGA_VERSION)/dtraw.dts
@@ -345,19 +346,19 @@ ifneq "$(FPGA_PYRPL)" ""
 endif
 
 ifneq "$(FPGA_STREAM_APP)" ""
-	$(call build_fpga,stream_app,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_STREAM_APP))
+	$(call build_fpga,stream_app,$(FPGA_MODEL),$(DEF_PARAM_STREAM_APP),$(HWID),$(FPGA_STREAM_APP))
 	cp -f fpga/$(FPGA_VERSION)/stream_app/prj/stream_app/out/fpga.dtbo  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app/fpga.dtbo
 	cp -f fpga/$(FPGA_VERSION)/stream_app/prj/stream_app/out/fpga.dtso  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/stream_app/fpga.dtso
 endif
 
 ifneq "$(FPGA_LOGIC)" ""
-	$(call build_fpga,logic,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_LOGIC))
+	$(call build_fpga,logic,$(FPGA_MODEL),$(DEF_PARAM_LOGIC),$(HWID),$(FPGA_LOGIC))
 	cp -f fpga/$(FPGA_VERSION)/logic/prj/logic/out/fpga.dtbo  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/logic/fpga.dtbo
 	cp -f fpga/$(FPGA_VERSION)/logic/prj/logic/out/fpga.dtso  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/logic/fpga.dtso
 endif
 
 ifneq "$(FPGA_0_94)" ""
-	$(call build_fpga,v0.94,$(FPGA_MODEL),$(DEF_PARAM),$(HWID),$(FPGA_0_94))
+	$(call build_fpga,v0.94,$(FPGA_MODEL),$(DEDEF_PARAM_V094F_PARAM),$(HWID),$(FPGA_0_94))
 	cp -f fpga/$(FPGA_VERSION)/v0.94/prj/v0.94/out/fpga.dtbo  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/fpga.dtbo
 	cp -f fpga/$(FPGA_VERSION)/v0.94/prj/v0.94/out/fpga.dtso  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/fpga.dtso
 endif
