@@ -94,6 +94,8 @@ auto deleteSweepController() -> void {
     g_sweepController = nullptr;
 }
 
+static GenChannelSettings oldSettings[MAX_DAC_CHANNELS];
+
 auto generateOutSignalForWeb(float tscale) -> void {
     /* ------ UPDATE OUT SIGNALS ------*/
     if (rp_HPIsFastDAC_PresentOrDefault()) {
@@ -106,6 +108,9 @@ auto generateOutSignalForWeb(float tscale) -> void {
                 outSignal[i].ForceSend();
             } else {
                 outSignal[i].Resize(0);
+                // Invalidate the cached settings so the signal is re-synthesized
+                // instead of staying zero-filled once outShow/outState is re-enabled.
+                oldSettings[i] = GenChannelSettings();
             }
         }
     }
@@ -147,7 +152,6 @@ auto generate(rp_channel_t channel, float tscale) -> void {
     // int burstCount, burstReps;
 
     signal = &outSignal[channel];
-    static GenChannelSettings oldSettings[MAX_DAC_CHANNELS];
     GenChannelSettings settings(outWaveform[channel].Value(),
                                 outFrequency[channel].Value(),
                                 (float)(outPhase[channel].Value() / 180.0f * M_PI),
