@@ -11,6 +11,7 @@
 #define PTCC_BRIDGE_H
 
 #include <atomic>
+#include <cstdint>
 #include <condition_variable>
 #include <mutex>
 #include <string>
@@ -46,6 +47,14 @@ struct BasicParams {
     int supply_ctrl = 0;
     int fan_ctrl = 0;
     int tec_ctrl = 0;
+    bool valid = false;
+};
+
+struct Limits {
+    double setpoint_min_k = 0.0;
+    double setpoint_max_k = 0.0;
+    double i_tec_max_min_a = 0.0;
+    double i_tec_max_max_a = 0.0;
     bool valid = false;
 };
 
@@ -102,17 +111,18 @@ class Bridge {
 
     bool isOpen() const;
     std::string devicePath() const;
-    int moduleType() const;
+    Result moduleType(int &out) const;
 
     Result setThrottleMs(uint32_t value);
     Result setTimeoutMs(uint32_t value);
 
     Result readMonitor(MonitorData &out);
     Result readBasicParams(BasicParams &out, int reg);
+    Result readLimits(Limits &out);
     Result readDeviceIden(DeviceIden &out);
     Result readModuleIden(ModuleIden &out);
 
-    Result setTemperature(double kelvin);
+    Result setTemperature(int32_t kelvin);
     Result setMaxCurrent(double amperes);
     Result setCooler(int mode);
     Result setFan(int mode);
@@ -122,13 +132,13 @@ class Bridge {
     bool isMonitoring() const { return m_polling.load(); }
     MonitorData cachedMonitor() const;
 
-    uint64_t errorCount() const;
+    Result errorCount(uint64_t &out) const;
 
     /** Newline separated list of candidate serial ports. */
     std::string listPorts() const;
 
     std::string statusText(int code) const;
-    bool isErrorStatus(int code) const;
+    Result isErrorStatus(int code, bool &out) const;
     std::string protocolRevision() const;
 
    private:

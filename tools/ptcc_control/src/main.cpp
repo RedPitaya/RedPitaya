@@ -87,6 +87,18 @@ int get_float(float *value, const char *str) {
     return 0;
 }
 
+int get_long(long *value, const char *str) {
+    char *end = NULL;
+    const long parsed = strtol(str, &end, 10);
+    if (end == str || *end != '\0') {
+        fprintf(stderr, "Not an integer: %s\n", str);
+        return -1;
+    }
+
+    *value = parsed;
+    return 0;
+}
+
 int get_ulong(unsigned long *value, const char *str) {
     char *end = NULL;
     const unsigned long parsed = strtoul(str, &end, 10);
@@ -97,6 +109,16 @@ int get_ulong(unsigned long *value, const char *str) {
 
     *value = parsed;
     return 0;
+}
+
+/** Prints an API error together with the underlying Python exception. */
+void report(const char *what, rp_ptcc_error error) {
+    const char *detail = rp_PtccGetLastPythonError();
+    if (detail != NULL && detail[0] != '\0') {
+        fprintf(stderr, "[Error] %s: %s (%s)\n", what, rp_PtccGetErrorText(error), detail);
+    } else {
+        fprintf(stderr, "[Error] %s: %s\n", what, rp_PtccGetErrorText(error));
+    }
 }
 
 const char *module_name(rp_ptcc_module_t module) {
@@ -174,7 +196,8 @@ void usage() {
             "\n"
             "Control:\n"
             "   -t    Without a value prints the temperature setpoint.\n"
-            "         With =Kelvin writes a new setpoint (100 to 400 K).\n"
+            "         With =Kelvin writes a new setpoint, in whole Kelvins.\n"
+            "         The accepted range depends on the module, see -i.\n"
             "   -x    TEC current limit in Amperes.\n"
             "   -c    Cooler control. Without a value prints the current mode.\n"
             "   -f    Fan control. Without a value prints the current mode.\n"
@@ -213,8 +236,10 @@ void print_monitor(const rp_ptcc_monitor_t *monitor) {
     printf("PWM                  = %8u\n", monitor->pwm);
     printf("Supply / fan         = %s / %s\n", monitor->supply_on ? "on" : "off",
            monitor->fan_on ? "on" : "off");
-    printf("Status               = %u %s - %s\n", monitor->status,
-           rp_PtccIsErrorStatus(monitor->status) ? "[ERROR]" : "", rp_PtccGetStatusText(monitor->status));
+    bool is_error = false;
+    rp_PtccIsErrorStatus(monitor->status, &is_error);
+    printf("Status               = %u %s - %s\n", monitor->status, is_error ? "[ERROR]" : "",
+           rp_PtccGetStatusText(monitor->status));
 }
 
 void print_monitor_json(const rp_ptcc_monitor_t *monitor) {
@@ -233,7 +258,9 @@ void print_monitor_json(const rp_ptcc_monitor_t *monitor) {
     printf("\"supply_on\":%s,", monitor->supply_on ? "true" : "false");
     printf("\"fan_on\":%s,", monitor->fan_on ? "true" : "false");
     printf("\"status\":%u,", monitor->status);
-    printf("\"is_error\":%s,", rp_PtccIsErrorStatus(monitor->status) ? "true" : "false");
+    bool is_error = false;
+    rp_PtccIsErrorStatus(monitor->status, &is_error);
+    printf("\"is_error\":%s,", is_error ? "true" : "false");
     printf("\"status_text\":\"%s\",", rp_PtccGetStatusText(monitor->status));
     printf("\"valid\":%s,", monitor->valid ? "true" : "false");
     printf("\"timestamp\":%lld", static_cast<long long>(monitor->timestamp));
@@ -247,7 +274,7 @@ int print_params(rp_ptcc_register_t reg, bool json) {
 
     const rp_ptcc_error result = rp_PtccGetParams(reg, &params);
     if (result != RP_PTCC_OK) {
-        fprintf(stderr, "[Error] Can't read parameters: %s\n", rp_PtccGetErrorText(result));
+        report("Can't read parameters", result);
         return -1;
     }
 
@@ -286,8 +313,7 @@ int print_iden(bool json) {
 
     const rp_ptcc_error device_result = rp_PtccGetDeviceIden(&device);
     if (device_result != RP_PTCC_OK) {
-        fprintf(stderr, "[Error] Can't read device identification: %s\n",
-                rp_PtccGetErrorText(device_result));
+        report("Can't read device identification", device_result);
         return -1;
     }
 
@@ -320,6 +346,16 @@ int print_iden(bool json) {
 
     printf("Port                 = %s\n", path);
     printf("Module type          = %s\n", module_name(module_type));
+
+    rp_ptcc_limits_t limits;
+    memset(&limits, 0, sizeof(limits));
+    if (rp_PtccGetLimits(&limits) == RP_PTCC_OK && limits.valid) {
+        printf("Setpoint range       = %.1f .. %.1f K\n", static_cast<double>(limits.setpoint_min),
+               static_cast<double>(limits.setpoint_max));
+        printf("Current limit range  = %.4f .. %.4f A\n", static_cast<double>(limits.i_tec_max_min),
+               static_cast<double>(limits.i_tec_max_max));
+    }
+
     printf("---- Controller ----\n");
     printf("Type                 = %s\n", device.type);
     printf("Name                 = %s\n", device.name);
@@ -465,7 +501,7 @@ int main(int argc, char *argv[]) {
 
     bool temperature_flag = false;
     bool set_temperature = false;
-    float temperature = 0.0F;
+    long temperature = 0;
 
     bool current_flag = false;
     bool set_current = false;
@@ -564,7 +600,7 @@ int main(int argc, char *argv[]) {
                 temperature_flag = true;
                 if (optarg) {
                     set_temperature = true;
-                    if (get_float(&temperature, optarg) != 0) {
+                    if (optarg[0] != '=' || get_long(&temperature, optarg + 1) != 0) {
                         usage();
                         exit(EXIT_FAILURE);
                     }
@@ -653,7 +689,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (init_result != RP_PTCC_OK) {
-        fprintf(stderr, "[Error] Can't open PTCC controller: %s\n", rp_PtccGetErrorText(init_result));
+        report("Can't open PTCC controller", init_result);
         return -1;
     }
 
@@ -684,19 +720,18 @@ int main(int argc, char *argv[]) {
 
     if (temperature_flag) {
         if (set_temperature) {
-            const rp_ptcc_error result = rp_PtccSetSetpoint(temperature);
+            const rp_ptcc_error result = rp_PtccSetSetpoint(static_cast<int32_t>(temperature));
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't set temperature: %s\n", rp_PtccGetErrorText(result));
+                report("Can't set temperature", result);
                 exit_code = -1;
             } else {
-                printf("Setpoint = %.3f K\n", static_cast<double>(temperature));
+                printf("Setpoint = %ld K\n", temperature);
             }
         } else {
             float value = 0.0F;
             const rp_ptcc_error result = rp_PtccGetSetpoint(&value);
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't get temperature setpoint: %s\n",
-                        rp_PtccGetErrorText(result));
+                report("Can't get temperature setpoint", result);
                 exit_code = -1;
             } else {
                 printf("Setpoint = %.3f K\n", static_cast<double>(value));
@@ -708,7 +743,7 @@ int main(int argc, char *argv[]) {
         if (set_current) {
             const rp_ptcc_error result = rp_PtccSetMaxCurrent(current);
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't set current limit: %s\n", rp_PtccGetErrorText(result));
+                report("Can't set current limit", result);
                 exit_code = -1;
             } else {
                 printf("TEC current limit = %.4f A\n", static_cast<double>(current));
@@ -718,7 +753,7 @@ int main(int argc, char *argv[]) {
             memset(&params, 0, sizeof(params));
             const rp_ptcc_error result = rp_PtccGetParams(RP_PTCC_REG_USER_SET, &params);
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't read parameters: %s\n", rp_PtccGetErrorText(result));
+                report("Can't read parameters", result);
                 exit_code = -1;
             } else {
                 printf("TEC current limit = %.4f A\n", static_cast<double>(params.i_tec_max));
@@ -730,7 +765,7 @@ int main(int argc, char *argv[]) {
         if (set_cooler) {
             const rp_ptcc_error result = rp_PtccSetCooler(cooler_mode);
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't set cooler mode: %s\n", rp_PtccGetErrorText(result));
+                report("Can't set cooler mode", result);
                 exit_code = -1;
             } else {
                 printf("Cooler = %s\n", ctrl_name(cooler_mode));
@@ -740,7 +775,7 @@ int main(int argc, char *argv[]) {
             memset(&params, 0, sizeof(params));
             const rp_ptcc_error result = rp_PtccGetParams(RP_PTCC_REG_USER_SET, &params);
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't read parameters: %s\n", rp_PtccGetErrorText(result));
+                report("Can't read parameters", result);
                 exit_code = -1;
             } else {
                 printf("Cooler = %s\n", ctrl_name(params.tec_ctrl));
@@ -752,7 +787,7 @@ int main(int argc, char *argv[]) {
         if (set_fan) {
             const rp_ptcc_error result = rp_PtccSetFan(fan_mode);
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't set fan mode: %s\n", rp_PtccGetErrorText(result));
+                report("Can't set fan mode", result);
                 exit_code = -1;
             } else {
                 printf("Fan = %s\n", ctrl_name(fan_mode));
@@ -762,7 +797,7 @@ int main(int argc, char *argv[]) {
             memset(&params, 0, sizeof(params));
             const rp_ptcc_error result = rp_PtccGetParams(RP_PTCC_REG_USER_SET, &params);
             if (result != RP_PTCC_OK) {
-                fprintf(stderr, "[Error] Can't read parameters: %s\n", rp_PtccGetErrorText(result));
+                report("Can't read parameters", result);
                 exit_code = -1;
             } else {
                 printf("Fan = %s\n", ctrl_name(params.fan_ctrl));
@@ -774,7 +809,7 @@ int main(int argc, char *argv[]) {
         float value = 0.0F;
         const rp_ptcc_error result = rp_PtccGetTemperature(&value);
         if (result != RP_PTCC_OK) {
-            fprintf(stderr, "[Error] Can't read temperature: %s\n", rp_PtccGetErrorText(result));
+            report("Can't read temperature", result);
             exit_code = -1;
         } else {
             printf("%.3f\n", static_cast<double>(value));
@@ -786,7 +821,7 @@ int main(int argc, char *argv[]) {
         memset(&monitor, 0, sizeof(monitor));
         const rp_ptcc_error result = rp_PtccReadMonitor(&monitor);
         if (result != RP_PTCC_OK) {
-            fprintf(stderr, "[Error] Can't read monitor: %s\n", rp_PtccGetErrorText(result));
+            report("Can't read monitor", result);
             exit_code = -1;
         } else if (status_flag && !monitor_flag) {
             printf("%u\n", monitor.status);

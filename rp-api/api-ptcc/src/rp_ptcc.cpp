@@ -183,7 +183,12 @@ rp_ptcc_error rp_PtccGetModuleType(rp_ptcc_module_t *_out_value) {
     if (!bridge()) {
         return RP_PTCC_ENOINIT;
     }
-    *_out_value = static_cast<rp_ptcc_module_t>(bridge()->moduleType());
+    int module = 0;
+    const ptcc::Result result = bridge()->moduleType(module);
+    if (result != ptcc::Result::OK) {
+        return toApiError(result);
+    }
+    *_out_value = static_cast<rp_ptcc_module_t>(module);
     return RP_PTCC_OK;
 }
 
@@ -343,25 +348,38 @@ rp_ptcc_error rp_PtccGetSetpoint(float *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccSetSetpoint(float kelvin) {
-    if (kelvin < RP_PTCC_MIN_TEMPERATURE || kelvin > RP_PTCC_MAX_TEMPERATURE) {
-        ERROR_LOG("setpoint %.3f K outside [%.1f, %.1f]", static_cast<double>(kelvin),
-                  static_cast<double>(RP_PTCC_MIN_TEMPERATURE), static_cast<double>(RP_PTCC_MAX_TEMPERATURE));
-        return RP_PTCC_ERANGE;
+rp_ptcc_error rp_PtccGetLimits(rp_ptcc_limits_t *_out_value) {
+    if (_out_value == nullptr) {
+        return RP_PTCC_EIP;
     }
-
     std::lock_guard<std::mutex> guard(g_mutex);
     if (!bridge()) {
         return RP_PTCC_ENOINIT;
     }
-    return toApiError(bridge()->setTemperature(static_cast<double>(kelvin)));
+
+    ptcc::Limits limits;
+    const ptcc::Result result = bridge()->readLimits(limits);
+    if (result != ptcc::Result::OK) {
+        return toApiError(result);
+    }
+
+    _out_value->setpoint_min = static_cast<float>(limits.setpoint_min_k);
+    _out_value->setpoint_max = static_cast<float>(limits.setpoint_max_k);
+    _out_value->i_tec_max_min = static_cast<float>(limits.i_tec_max_min_a);
+    _out_value->i_tec_max_max = static_cast<float>(limits.i_tec_max_max_a);
+    _out_value->valid = limits.valid;
+    return RP_PTCC_OK;
+}
+
+rp_ptcc_error rp_PtccSetSetpoint(int32_t kelvin) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setTemperature(kelvin));
 }
 
 rp_ptcc_error rp_PtccSetMaxCurrent(float amperes) {
-    if (amperes < 0.0F) {
-        return RP_PTCC_ERANGE;
-    }
-
     std::lock_guard<std::mutex> guard(g_mutex);
     if (!bridge()) {
         return RP_PTCC_ENOINIT;
@@ -442,8 +460,7 @@ rp_ptcc_error rp_PtccGetErrorCount(uint64_t *_out_value) {
     if (!bridge()) {
         return RP_PTCC_ENOINIT;
     }
-    *_out_value = bridge()->errorCount();
-    return RP_PTCC_OK;
+    return toApiError(bridge()->errorCount(*_out_value));
 }
 
 const char *rp_PtccGetStatusText(uint8_t status) {
@@ -459,13 +476,18 @@ const char *rp_PtccGetStatusText(uint8_t status) {
     return text.c_str();
 }
 
-bool rp_PtccIsErrorStatus(uint8_t status) {
+rp_ptcc_error rp_PtccIsErrorStatus(uint8_t status, bool *_out_value) {
+    if (_out_value == nullptr) {
+        return RP_PTCC_EIP;
+    }
+
     std::lock_guard<std::mutex> guard(g_mutex);
     ptcc::Bridge *instance = lookupBridge();
     if (instance == nullptr) {
-        return status >= 128;
+        return RP_PTCC_EPYTHON;
     }
-    return instance->isErrorStatus(static_cast<int>(status));
+
+    return toApiError(instance->isErrorStatus(static_cast<int>(status), *_out_value));
 }
 
 const char *rp_PtccGetErrorText(rp_ptcc_error error) {

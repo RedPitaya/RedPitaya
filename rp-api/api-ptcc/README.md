@@ -107,9 +107,19 @@ rp_PtccGetMonitor(&monitor);
 * `rp_PtccSetSetpoint()` and `rp_PtccSetMaxCurrent()` write to the module
   EEPROM. Debounce them in the UI and issue one write per confirmed user
   action.
-* The accepted setpoint range is 100 to 400 K, checked in the C layer before
-  anything is sent.
-* `LAB_M` modules reject the basic temperature commands with `RP_PTCC_ENOTSUP`.
+* Value ranges are enforced by the upstream library and by the device, never
+  by a copy of their tables in this driver. An out of range setpoint comes back
+  as `RP_PTCC_ERANGE` with the upstream message attached
+  (`rp_PtccGetLastPythonError()`). `rp_PtccGetLimits()` reads the module's
+  USER_MIN / USER_MAX registers so a UI can bound its controls, but it is
+  informational only.
+* `rp_PtccSetSetpoint()` takes whole Kelvins, matching the upstream signature.
+* A field the device did not report is `RP_PTCC_ERESP`, not a zero. Zeros from
+  this API are always measurements.
+* The cooler only cools. Asking for a setpoint above ambient will not be
+  reached and the device reports "detector overheat" after 120 s.
+* `LAB_M` modules take the temperature setpoint like any other: the controller
+  panel is the same for every module, only the amplifier settings differ.
 * The library embeds one interpreter per process. Calls are serialised behind a
   mutex and the GIL, so the API is thread safe but not concurrent.
 

@@ -63,6 +63,8 @@ TEST_F(PtccDevice, MonitorValuesArriveInSiUnits) {
     EXPECT_NEAR(monitor.i_fan, 0.11F, 1e-4F);
     EXPECT_NEAR(monitor.u_sup_plus, 5.02F, 1e-3F);
     EXPECT_NEAR(monitor.u_sup_minus, -5.01F, 1e-3F);
+    EXPECT_NEAR(monitor.i_sup_plus, 0.0655F, 1e-4F);
+    EXPECT_NEAR(monitor.i_sup_minus, -0.0732F, 1e-4F);
     EXPECT_EQ(monitor.pwm, 12800u);
     EXPECT_EQ(monitor.status, 2u);
     EXPECT_TRUE(monitor.supply_on);
@@ -81,10 +83,11 @@ TEST_F(PtccDevice, GetTemperatureMatchesTheMonitorField) {
 }
 
 TEST_F(PtccDevice, ParametersAreDecodedForEveryRegister) {
-    const rp_ptcc_register_t registers[] = {RP_PTCC_REG_USER_SET, RP_PTCC_REG_DEFAULT,
-                                            RP_PTCC_REG_USER_MIN, RP_PTCC_REG_USER_MAX};
+    // USER_SET and DEFAULT carry the working values; USER_MIN and USER_MAX
+    // carry the range, so only their setpoint field is comparable.
+    const rp_ptcc_register_t working[] = {RP_PTCC_REG_USER_SET, RP_PTCC_REG_DEFAULT};
 
-    for (const rp_ptcc_register_t target : registers) {
+    for (const rp_ptcc_register_t target : working) {
         rp_ptcc_params_t params;
         std::memset(&params, 0, sizeof(params));
 
@@ -95,6 +98,15 @@ TEST_F(PtccDevice, ParametersAreDecodedForEveryRegister) {
         EXPECT_EQ(params.tec_ctrl, RP_PTCC_CTRL_ON);
         EXPECT_EQ(params.fan_ctrl, RP_PTCC_CTRL_AUTO);
     }
+
+    rp_ptcc_params_t minimum;
+    rp_ptcc_params_t maximum;
+    std::memset(&minimum, 0, sizeof(minimum));
+    std::memset(&maximum, 0, sizeof(maximum));
+
+    ASSERT_EQ(rp_PtccGetParams(RP_PTCC_REG_USER_MIN, &minimum), RP_PTCC_OK);
+    ASSERT_EQ(rp_PtccGetParams(RP_PTCC_REG_USER_MAX, &maximum), RP_PTCC_OK);
+    EXPECT_LT(minimum.setpoint, maximum.setpoint);
 }
 
 TEST_F(PtccDevice, GetSetpointReadsTheUserRegister) {
@@ -120,6 +132,18 @@ TEST_F(PtccDevice, ModuleIdentificationIsDecoded) {
     ASSERT_EQ(rp_PtccGetModuleIden(&iden), RP_PTCC_OK);
     EXPECT_TRUE(iden.valid);
     EXPECT_EQ(iden.cool_time, 300u);
+}
+
+// The protocol tables allow 100-400 K, but a real module only accepts a
+// fraction of that. The limits come from its USER_MIN / USER_MAX registers.
+TEST_F(PtccDevice, LimitsAreReadFromTheModuleRegisters) {
+    rp_ptcc_limits_t limits;
+    std::memset(&limits, 0, sizeof(limits));
+
+    ASSERT_EQ(rp_PtccGetLimits(&limits), RP_PTCC_OK);
+    EXPECT_TRUE(limits.valid);
+    EXPECT_LT(limits.setpoint_min, limits.setpoint_max);
+    EXPECT_GT(limits.setpoint_min, 0.0F);
 }
 
 TEST_F(PtccDevice, ErrorCounterStaysAtZeroOnCleanTraffic) {

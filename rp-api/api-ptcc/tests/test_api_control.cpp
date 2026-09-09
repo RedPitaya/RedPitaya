@@ -33,18 +33,25 @@ class PtccControl : public ::testing::Test {
 
 }  // namespace
 
-TEST_F(PtccControl, SetpointInsideTheRangeIsAccepted) {
-    EXPECT_EQ(rp_PtccSetSetpoint(230.0F), RP_PTCC_OK);
-    EXPECT_EQ(rp_PtccSetSetpoint(RP_PTCC_MIN_TEMPERATURE), RP_PTCC_OK);
-    EXPECT_EQ(rp_PtccSetSetpoint(RP_PTCC_MAX_TEMPERATURE), RP_PTCC_OK);
+TEST_F(PtccControl, SetpointIsAccepted) {
+    EXPECT_EQ(rp_PtccSetSetpoint(230), RP_PTCC_OK);
+    EXPECT_EQ(rp_PtccSetSetpoint(200), RP_PTCC_OK);
+    EXPECT_EQ(rp_PtccSetSetpoint(280), RP_PTCC_OK);
 }
 
-TEST_F(PtccControl, SetpointOutsideTheRangeNeverReachesTheDevice) {
-    EXPECT_EQ(rp_PtccSetSetpoint(99.0F), RP_PTCC_ERANGE);
-    EXPECT_EQ(rp_PtccSetSetpoint(401.0F), RP_PTCC_ERANGE);
+// The rejection comes from the upstream value tables, not from a copy of them
+// in the C layer, and it arrives as ERANGE rather than a decode failure.
+TEST_F(PtccControl, OutOfRangeSetpointIsRejectedByTheUpstreamLibrary) {
+    EXPECT_EQ(rp_PtccSetSetpoint(50), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetSetpoint(500), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetSetpoint(-273), RP_PTCC_ERANGE);
 
-    // The link is still usable afterwards.
-    EXPECT_EQ(rp_PtccSetSetpoint(250.0F), RP_PTCC_OK);
+    EXPECT_EQ(rp_PtccSetSetpoint(230), RP_PTCC_OK);
+}
+
+TEST_F(PtccControl, OutOfRangeCurrentLimitIsRejectedByTheUpstreamLibrary) {
+    EXPECT_EQ(rp_PtccSetMaxCurrent(-1.0F), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetMaxCurrent(100.0F), RP_PTCC_ERANGE);
 }
 
 TEST_F(PtccControl, CurrentLimitIsAccepted) {
@@ -137,6 +144,25 @@ TEST(PtccFailure, TimeoutIsReportedAndTheLinkRecovers) {
     rp_PtccRelease();
 }
 
+// A field the device did not send must be reported, never substituted with a
+// zero that would be indistinguishable from a real measurement.
+TEST(PtccFailure, MissingMonitorFieldIsReportedNotZeroed) {
+    EmulatedDevice device("--drop-field");
+    ASSERT_FALSE(device.port().empty());
+    ASSERT_EQ(rp_PtccInitDevice(device.port().c_str()), RP_PTCC_OK);
+    rp_PtccSetThrottle(0);
+
+    rp_ptcc_monitor_t monitor;
+    std::memset(&monitor, 0, sizeof(monitor));
+    EXPECT_EQ(rp_PtccReadMonitor(&monitor), RP_PTCC_ERESP);
+    EXPECT_FALSE(monitor.valid);
+
+    const std::string detail = rp_PtccGetLastPythonError();
+    EXPECT_NE(detail.find("I_TEC"), std::string::npos) << "detail: " << detail;
+
+    rp_PtccRelease();
+}
+
 TEST(PtccFailure, NomemModuleIsDetected) {
     EmulatedDevice device("--module NOMEM");
     ASSERT_FALSE(device.port().empty());
@@ -149,9 +175,10 @@ TEST(PtccFailure, NomemModuleIsDetected) {
     rp_PtccRelease();
 }
 
-// LAB_M has no basic temperature setpoint; upstream raises instead of
-// silently writing to the wrong register.
-TEST(PtccFailure, LabMModuleRejectsTheTemperatureSetpoint) {
+// PtccLabMDevice derives from PtccMemDevice and inherits the temperature
+// setpoint, so the controller panel works with a LAB_M module just like with
+// any other. A guard here would break exactly what Smart Manager can do.
+TEST(PtccFailure, LabMModuleAcceptsTheTemperatureSetpoint) {
     EmulatedDevice device("--module LAB_M");
     ASSERT_FALSE(device.port().empty());
     ASSERT_EQ(rp_PtccInitDevice(device.port().c_str()), RP_PTCC_OK);
@@ -161,7 +188,7 @@ TEST(PtccFailure, LabMModuleRejectsTheTemperatureSetpoint) {
     ASSERT_EQ(rp_PtccGetModuleType(&module), RP_PTCC_OK);
     ASSERT_EQ(module, RP_PTCC_MODULE_LAB_M);
 
-    EXPECT_EQ(rp_PtccSetSetpoint(230.0F), RP_PTCC_ENOTSUP);
+    EXPECT_EQ(rp_PtccSetSetpoint(230), RP_PTCC_OK);
 
     rp_PtccRelease();
 }

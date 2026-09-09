@@ -18,7 +18,6 @@ from ptcc_library import (
     DeviceRegister,
     ModuleType,
     PtccCtrl,
-    PtccLabMDevice,
     PtccMessageReceiver,
     PtccObjectID,
     detect_device,
@@ -127,6 +126,7 @@ class Bridge:
         self.errors = 0
         self._captured = {}
         self._registered = set()
+        self._limits = None
 
     # -- connection ------------------------------------------------------
 
@@ -155,6 +155,7 @@ class Bridge:
                 self.receiver = receiver
                 self._captured = {}
                 self._registered = set()
+                self._limits = None
                 return {"port": candidate, "module_type": int(found.module_type.value)}
             except (IOError, ValueError) as error:
                 last_error = error
@@ -168,6 +169,7 @@ class Bridge:
         self.transport = None
         self.device = None
         self.receiver = None
+        self._limits = None
 
     def is_open(self):
         return self.device is not None
@@ -278,6 +280,20 @@ class Bridge:
             "tec_ctrl": _ctrl(values, PtccObjectID.MODULE_BASIC_PARAMS_TEC_CTRL),
         }
 
+    def limits(self):
+        """Per-module USER_MIN / USER_MAX, read once and cached.
+
+        Informational only: the value ranges are enforced by the upstream
+        library and by the device, not here.
+        """
+        if self._limits is None:
+            try:
+                self._limits = (self.read_params(int(DeviceRegister.USER_MIN.value)),
+                                self.read_params(int(DeviceRegister.USER_MAX.value)))
+            except (IOError, TimeoutError, ValueError):
+                self._limits = ({}, {})
+        return self._limits
+
     def read_device_iden(self):
         values = self._request(self.device.write_msg_get_device_iden,
                                PtccObjectID.DEVICE_IDEN.value)
@@ -309,11 +325,9 @@ class Bridge:
 
     def set_temperature(self, kelvin):
         self._require_device()
-        if isinstance(self.device, PtccLabMDevice):
-            raise NotImplementedError("LAB_M modules do not accept a temperature setpoint")
         return self._request(self.device.write_msg_set_temperature,
                              PtccObjectID.MODULE_BASIC_PARAMS.value,
-                             value_in_kelvins=int(round(kelvin)))
+                             value_in_kelvins=kelvin)
 
     def set_max_current(self, amperes):
         self._require_device()
@@ -358,6 +372,7 @@ def status_text(code):
 
 
 def is_error_status(code):
+    """True when the upstream table lists this code as an error."""
     return code in error_messages
 
 
@@ -365,6 +380,14 @@ def protocol_revision():
     import ptcc_library
 
     return getattr(ptcc_library, "__version__", "unknown")
+
+
+class FieldError(LookupError):
+    """A field is missing from the response or cannot be decoded.
+
+    Raised instead of substituting a default: a zero that never came from the
+    device is indistinguishable from a real measurement.
+    """
 
 
 def _flatten(children):
@@ -378,31 +401,37 @@ def _flatten(children):
     return values
 
 
+def _require(values, object_id):
+    if object_id.value not in values:
+        raise FieldError(f"{object_id.name} missing from the response")
+    return values[object_id.value]
+
+
 def _number(values, object_id):
-    value = values.get(object_id.value, 0)
+    value = _require(values, object_id)
     try:
         return float(value)
-    except (TypeError, ValueError):
-        return 0.0
+    except (TypeError, ValueError) as error:
+        raise FieldError(f"{object_id.name} is not numeric: {value!r}") from error
 
 
 def _text(values, object_id):
-    value = values.get(object_id.value, "")
+    value = _require(values, object_id)
     return value if isinstance(value, str) else str(value)
 
 
 def _ctrl(values, object_id):
     """Maps a control value back to the 0/1/2 AUTO/OFF/ON encoding."""
-    value = values.get(object_id.value)
+    value = _require(values, object_id)
     if isinstance(value, str):
         for member in PtccCtrl:
             if member.name.lower() == value.strip().lower():
                 return int(member.value)
-        return int(PtccCtrl.AUTO.value)
+        raise FieldError(f"{object_id.name} has an unknown mode {value!r}")
     try:
         return int(value)
-    except (TypeError, ValueError):
-        return int(PtccCtrl.AUTO.value)
+    except (TypeError, ValueError) as error:
+        raise FieldError(f"{object_id.name} is not a control mode: {value!r}") from error
 
 
 _BRIDGE = Bridge()
@@ -451,6 +480,16 @@ def read_monitor():
 
 def read_params(register=1):
     return _BRIDGE.read_params(register)
+
+
+def limits():
+    low, high = _BRIDGE.limits()
+    return {
+        "setpoint_min": low.get("setpoint", 0.0),
+        "setpoint_max": high.get("setpoint", 0.0),
+        "i_tec_max_min": low.get("i_tec_max", 0.0),
+        "i_tec_max_max": high.get("i_tec_max", 0.0),
+    }
 
 
 def read_device_iden():

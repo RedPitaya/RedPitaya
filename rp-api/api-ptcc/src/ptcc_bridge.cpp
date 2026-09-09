@@ -70,8 +70,14 @@ Result consumeError(Result fallback) {
             result = Result::TIMEOUT;
         } else if (PyErr_GivenExceptionMatches(type, PyExc_NotImplementedError)) {
             result = Result::NOT_SUPPORTED;
+        } else if (PyErr_GivenExceptionMatches(type, PyExc_LookupError)) {
+            /* rp_ptcc_bridge.FieldError: the device did not report a field. */
+            result = Result::BAD_RESPONSE;
         } else if (PyErr_GivenExceptionMatches(type, PyExc_ValueError)) {
+            /* Range checks live in the upstream library. */
             result = Result::OUT_OF_RANGE;
+        } else if (PyErr_GivenExceptionMatches(type, PyExc_TypeError)) {
+            result = Result::NOT_SUPPORTED;
         } else if (PyErr_GivenExceptionMatches(type, PyExc_OSError)) {
             result = Result::IO_ERROR;
         }
@@ -86,45 +92,80 @@ Result consumeError(Result fallback) {
     return result;
 }
 
-double dictDouble(PyObject *dict, const char *key) {
+/* The bridge guarantees every documented key, so a missing one is a bug or a
+ * truncated response, never a zero. All readers below report failure instead
+ * of substituting a default. */
+bool dictDouble(PyObject *dict, const char *key, double &out) {
     PyObject *item = PyDict_GetItemString(dict, key);
     if (item == nullptr) {
-        return 0.0;
+        g_last_error = std::string("field missing from the bridge response: ") + key;
+        return false;
     }
     const double value = PyFloat_AsDouble(item);
     if (value == -1.0 && PyErr_Occurred()) {
         PyErr_Clear();
-        return 0.0;
+        g_last_error = std::string("field is not a number: ") + key;
+        return false;
     }
-    return value;
+    out = value;
+    return true;
 }
 
-long dictLong(PyObject *dict, const char *key) {
+bool dictLong(PyObject *dict, const char *key, long &out) {
     PyObject *item = PyDict_GetItemString(dict, key);
     if (item == nullptr) {
-        return 0;
+        g_last_error = std::string("field missing from the bridge response: ") + key;
+        return false;
     }
     const long value = PyLong_AsLong(item);
     if (value == -1 && PyErr_Occurred()) {
         PyErr_Clear();
-        return 0;
+        g_last_error = std::string("field is not an integer: ") + key;
+        return false;
     }
-    return value;
+    out = value;
+    return true;
 }
 
-bool dictBool(PyObject *dict, const char *key) {
+bool dictBool(PyObject *dict, const char *key, bool &out) {
     PyObject *item = PyDict_GetItemString(dict, key);
-    return item != nullptr && PyObject_IsTrue(item) == 1;
+    if (item == nullptr) {
+        g_last_error = std::string("field missing from the bridge response: ") + key;
+        return false;
+    }
+    out = PyObject_IsTrue(item) == 1;
+    return true;
 }
 
-std::string dictString(PyObject *dict, const char *key) {
+bool dictString(PyObject *dict, const char *key, std::string &out) {
     PyObject *item = PyDict_GetItemString(dict, key);
-    if (item == nullptr || !PyUnicode_Check(item)) {
-        return std::string();
+    if (item == nullptr) {
+        g_last_error = std::string("field missing from the bridge response: ") + key;
+        return false;
+    }
+    if (!PyUnicode_Check(item)) {
+        PyObject *text = PyObject_Str(item);
+        if (text == nullptr) {
+            PyErr_Clear();
+            g_last_error = std::string("field is not a string: ") + key;
+            return false;
+        }
+        const char *utf8 = PyUnicode_AsUTF8(text);
+        out = utf8 != nullptr ? utf8 : "";
+        Py_DECREF(text);
+        return true;
     }
     const char *utf8 = PyUnicode_AsUTF8(item);
-    return utf8 != nullptr ? std::string(utf8) : std::string();
+    out = utf8 != nullptr ? utf8 : "";
+    return true;
 }
+
+/* Collects the outcome of a group of reads. */
+struct Reader {
+    bool ok = true;
+
+    void take(bool result) { ok = ok && result; }
+};
 
 /** Calls a module level function, returns a new reference or nullptr. */
 PyObject *call(const char *name, PyObject *args) {
@@ -213,8 +254,11 @@ Result Bridge::initialize() {
         for (const char *directory : directories) {
             PyObject *entry = PyUnicode_FromString(directory);
             if (entry != nullptr) {
+                // Appended, not inserted: PYTHONPATH and virtualenvs keep
+                // priority, so a development tree can override the installed
+                // bridge without reinstalling.
                 if (PySequence_Contains(sys_path, entry) == 0) {
-                    PyList_Insert(sys_path, 0, entry);
+                    PyList_Append(sys_path, entry);
                 }
                 Py_DECREF(entry);
             }
@@ -314,9 +358,11 @@ std::string Bridge::devicePath() const {
     return value;
 }
 
-int Bridge::moduleType() const {
+/* 0 is a valid module type (NONE), so a failure cannot be reported as a
+ * value: it goes through the return code. */
+Result Bridge::moduleType(int &out) const {
     if (!m_initialized || !Py_IsInitialized()) {
-        return 0;
+        return Result::NOT_INITIALIZED;
     }
 
     std::lock_guard<std::mutex> guard(g_python_mutex);
@@ -324,13 +370,17 @@ int Bridge::moduleType() const {
 
     PyObject *result = call("module_type", nullptr);
     if (result == nullptr) {
-        PyErr_Clear();
-        return 0;
+        return consumeError(Result::PYTHON_ERROR);
     }
 
-    const int value = static_cast<int>(PyLong_AsLong(result));
+    const long value = PyLong_AsLong(result);
     Py_DECREF(result);
-    return value;
+    if (value == -1 && PyErr_Occurred()) {
+        return consumeError(Result::BAD_RESPONSE);
+    }
+
+    out = static_cast<int>(value);
+    return Result::OK;
 }
 
 Result Bridge::setThrottleMs(uint32_t value) {
@@ -361,24 +411,34 @@ Result Bridge::readMonitor(MonitorData &out) {
             return consumeError(Result::IO_ERROR);
         }
 
-        out.t_det_k = dictDouble(result, "t_det");
-        out.t_int_c = dictDouble(result, "t_int");
-        out.i_tec_a = dictDouble(result, "i_tec");
-        out.u_tec_v = dictDouble(result, "u_tec");
-        out.i_sup_plus_a = dictDouble(result, "i_sup_plus");
-        out.i_sup_minus_a = dictDouble(result, "i_sup_minus");
-        out.u_sup_plus_v = dictDouble(result, "u_sup_plus");
-        out.u_sup_minus_v = dictDouble(result, "u_sup_minus");
-        out.i_fan_a = dictDouble(result, "i_fan");
-        out.th_resistance = dictDouble(result, "th_resistance");
-        out.pwm = static_cast<uint32_t>(dictLong(result, "pwm"));
-        out.status = static_cast<uint8_t>(dictLong(result, "status"));
-        out.supply_on = dictBool(result, "supply_on");
-        out.fan_on = dictBool(result, "fan_on");
+        Reader reader;
+        long pwm = 0;
+        long status = 0;
+        reader.take(dictDouble(result, "t_det", out.t_det_k));
+        reader.take(dictDouble(result, "t_int", out.t_int_c));
+        reader.take(dictDouble(result, "i_tec", out.i_tec_a));
+        reader.take(dictDouble(result, "u_tec", out.u_tec_v));
+        reader.take(dictDouble(result, "i_sup_plus", out.i_sup_plus_a));
+        reader.take(dictDouble(result, "i_sup_minus", out.i_sup_minus_a));
+        reader.take(dictDouble(result, "u_sup_plus", out.u_sup_plus_v));
+        reader.take(dictDouble(result, "u_sup_minus", out.u_sup_minus_v));
+        reader.take(dictDouble(result, "i_fan", out.i_fan_a));
+        reader.take(dictDouble(result, "th_resistance", out.th_resistance));
+        reader.take(dictLong(result, "pwm", pwm));
+        reader.take(dictLong(result, "status", status));
+        reader.take(dictBool(result, "supply_on", out.supply_on));
+        reader.take(dictBool(result, "fan_on", out.fan_on));
+        Py_DECREF(result);
+
+        if (!reader.ok) {
+            out = MonitorData();
+            return Result::BAD_RESPONSE;
+        }
+
+        out.pwm = static_cast<uint32_t>(pwm);
+        out.status = static_cast<uint8_t>(status);
         out.timestamp_ms = nowMs();
         out.valid = true;
-
-        Py_DECREF(result);
         g_last_error.clear();
     }
 
@@ -402,17 +462,61 @@ Result Bridge::readBasicParams(BasicParams &out, int reg) {
         return consumeError(Result::IO_ERROR);
     }
 
-    out.setpoint_k = dictDouble(result, "setpoint");
-    out.i_tec_max_a = dictDouble(result, "i_tec_max");
-    out.u_sup_plus_v = dictDouble(result, "u_sup_plus");
-    out.u_sup_minus_v = dictDouble(result, "u_sup_minus");
-    out.pwm = static_cast<uint32_t>(dictLong(result, "pwm"));
-    out.supply_ctrl = static_cast<int>(dictLong(result, "supply_ctrl"));
-    out.fan_ctrl = static_cast<int>(dictLong(result, "fan_ctrl"));
-    out.tec_ctrl = static_cast<int>(dictLong(result, "tec_ctrl"));
-    out.valid = true;
-
+    Reader reader;
+    long pwm = 0;
+    long supply_ctrl = 0;
+    long fan_ctrl = 0;
+    long tec_ctrl = 0;
+    reader.take(dictDouble(result, "setpoint", out.setpoint_k));
+    reader.take(dictDouble(result, "i_tec_max", out.i_tec_max_a));
+    reader.take(dictDouble(result, "u_sup_plus", out.u_sup_plus_v));
+    reader.take(dictDouble(result, "u_sup_minus", out.u_sup_minus_v));
+    reader.take(dictLong(result, "pwm", pwm));
+    reader.take(dictLong(result, "supply_ctrl", supply_ctrl));
+    reader.take(dictLong(result, "fan_ctrl", fan_ctrl));
+    reader.take(dictLong(result, "tec_ctrl", tec_ctrl));
     Py_DECREF(result);
+
+    if (!reader.ok) {
+        out = BasicParams();
+        return Result::BAD_RESPONSE;
+    }
+
+    out.pwm = static_cast<uint32_t>(pwm);
+    out.supply_ctrl = static_cast<int>(supply_ctrl);
+    out.fan_ctrl = static_cast<int>(fan_ctrl);
+    out.tec_ctrl = static_cast<int>(tec_ctrl);
+    out.valid = true;
+    g_last_error.clear();
+    return Result::OK;
+}
+
+Result Bridge::readLimits(Limits &out) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+
+    PyObject *result = call("limits", nullptr);
+    if (result == nullptr) {
+        return consumeError(Result::IO_ERROR);
+    }
+
+    Reader reader;
+    reader.take(dictDouble(result, "setpoint_min", out.setpoint_min_k));
+    reader.take(dictDouble(result, "setpoint_max", out.setpoint_max_k));
+    reader.take(dictDouble(result, "i_tec_max_min", out.i_tec_max_min_a));
+    reader.take(dictDouble(result, "i_tec_max_max", out.i_tec_max_max_a));
+    Py_DECREF(result);
+
+    if (!reader.ok) {
+        out = Limits();
+        return Result::BAD_RESPONSE;
+    }
+
+    out.valid = out.setpoint_max_k > out.setpoint_min_k;
     g_last_error.clear();
     return Result::OK;
 }
@@ -430,14 +534,24 @@ Result Bridge::readDeviceIden(DeviceIden &out) {
         return consumeError(Result::IO_ERROR);
     }
 
-    out.type = dictString(result, "type");
-    out.name = dictString(result, "name");
-    out.serial = dictString(result, "serial");
-    out.firmware_version = static_cast<uint32_t>(dictLong(result, "firmware_version"));
-    out.hardware_version = static_cast<uint32_t>(dictLong(result, "hardware_version"));
-    out.valid = true;
-
+    Reader reader;
+    long firmware = 0;
+    long hardware = 0;
+    reader.take(dictString(result, "type", out.type));
+    reader.take(dictString(result, "name", out.name));
+    reader.take(dictString(result, "serial", out.serial));
+    reader.take(dictLong(result, "firmware_version", firmware));
+    reader.take(dictLong(result, "hardware_version", hardware));
     Py_DECREF(result);
+
+    if (!reader.ok) {
+        out = DeviceIden();
+        return Result::BAD_RESPONSE;
+    }
+
+    out.firmware_version = static_cast<uint32_t>(firmware);
+    out.hardware_version = static_cast<uint32_t>(hardware);
+    out.valid = true;
     g_last_error.clear();
     return Result::OK;
 }
@@ -455,26 +569,34 @@ Result Bridge::readModuleIden(ModuleIden &out) {
         return consumeError(Result::IO_ERROR);
     }
 
-    out.type = dictString(result, "type");
-    out.name = dictString(result, "name");
-    out.detector_name = dictString(result, "detector_name");
-    out.serial = dictString(result, "serial");
-    out.detector_serial = dictString(result, "detector_serial");
-    out.cool_time_s = static_cast<uint32_t>(dictLong(result, "cool_time"));
-    out.valid = true;
-
+    Reader reader;
+    long cool_time = 0;
+    reader.take(dictString(result, "type", out.type));
+    reader.take(dictString(result, "name", out.name));
+    reader.take(dictString(result, "detector_name", out.detector_name));
+    reader.take(dictString(result, "serial", out.serial));
+    reader.take(dictString(result, "detector_serial", out.detector_serial));
+    reader.take(dictLong(result, "cool_time", cool_time));
     Py_DECREF(result);
+
+    if (!reader.ok) {
+        out = ModuleIden();
+        return Result::BAD_RESPONSE;
+    }
+
+    out.cool_time_s = static_cast<uint32_t>(cool_time);
+    out.valid = true;
     g_last_error.clear();
     return Result::OK;
 }
 
-Result Bridge::setTemperature(double kelvin) {
+Result Bridge::setTemperature(int32_t kelvin) {
     if (!m_initialized) {
         return Result::NOT_INITIALIZED;
     }
     std::lock_guard<std::mutex> guard(g_python_mutex);
     Gil gil;
-    return callVoid("set_temperature", Py_BuildValue("(d)", kelvin), Result::IO_ERROR);
+    return callVoid("set_temperature", Py_BuildValue("(i)", kelvin), Result::IO_ERROR);
 }
 
 Result Bridge::setMaxCurrent(double amperes) {
@@ -504,9 +626,9 @@ Result Bridge::setFan(int mode) {
     return callVoid("set_fan", Py_BuildValue("(i)", mode), Result::IO_ERROR);
 }
 
-uint64_t Bridge::errorCount() const {
+Result Bridge::errorCount(uint64_t &out) const {
     if (!m_initialized || !Py_IsInitialized()) {
-        return 0;
+        return Result::NOT_INITIALIZED;
     }
 
     std::lock_guard<std::mutex> guard(g_python_mutex);
@@ -514,14 +636,17 @@ uint64_t Bridge::errorCount() const {
 
     PyObject *result = call("error_count", nullptr);
     if (result == nullptr) {
-        PyErr_Clear();
-        return 0;
+        return consumeError(Result::PYTHON_ERROR);
     }
 
-    const uint64_t value = static_cast<uint64_t>(PyLong_AsUnsignedLongLong(result));
+    const unsigned long long value = PyLong_AsUnsignedLongLong(result);
     Py_DECREF(result);
-    PyErr_Clear();
-    return value;
+    if (PyErr_Occurred()) {
+        return consumeError(Result::BAD_RESPONSE);
+    }
+
+    out = static_cast<uint64_t>(value);
+    return Result::OK;
 }
 
 std::string Bridge::listPorts() const {
@@ -576,10 +701,10 @@ std::string Bridge::statusText(int code) const {
     return value;
 }
 
-bool Bridge::isErrorStatus(int code) const {
+Result Bridge::isErrorStatus(int code, bool &out) const {
     std::lock_guard<std::mutex> guard(g_python_mutex);
     if (g_module == nullptr || !Py_IsInitialized()) {
-        return code >= 128;
+        return Result::PYTHON_ERROR;
     }
 
     Gil gil;
@@ -587,13 +712,12 @@ bool Bridge::isErrorStatus(int code) const {
     PyObject *result = call("is_error_status", args);
     Py_XDECREF(args);
     if (result == nullptr) {
-        PyErr_Clear();
-        return code >= 128;
+        return consumeError(Result::PYTHON_ERROR);
     }
 
-    const bool value = PyObject_IsTrue(result) == 1;
+    out = PyObject_IsTrue(result) == 1;
     Py_DECREF(result);
-    return value;
+    return Result::OK;
 }
 
 std::string Bridge::protocolRevision() const {

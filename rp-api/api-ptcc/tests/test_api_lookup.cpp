@@ -48,18 +48,32 @@ TEST(PtccLookup, NormalStatusCodesResolveToText) {
     for (uint8_t code = 0; code <= 3; ++code) {
         const std::string text = rp_PtccGetStatusText(code);
         EXPECT_NE(text, "unknown status code") << "no text for status " << static_cast<int>(code);
-        EXPECT_FALSE(rp_PtccIsErrorStatus(code)) << "status " << static_cast<int>(code) << " is not an error";
+
+        bool is_error = true;
+        ASSERT_EQ(rp_PtccIsErrorStatus(code, &is_error), RP_PTCC_OK);
+        EXPECT_FALSE(is_error) << "status " << static_cast<int>(code) << " is not an error";
     }
 }
 
 TEST(PtccLookup, ErrorStatusCodesAreClassifiedAsErrors) {
-    // 128 is the first error code in the upstream table.
-    EXPECT_TRUE(rp_PtccIsErrorStatus(128));
+    bool is_error = false;
+    ASSERT_EQ(rp_PtccIsErrorStatus(128, &is_error), RP_PTCC_OK);
+    EXPECT_TRUE(is_error);
     EXPECT_NE(std::string(rp_PtccGetStatusText(128)), "unknown status code");
 }
 
-TEST(PtccLookup, UnusedStatusCodeReportsUnknown) {
+// Classification follows the upstream error table, not a "code >= 128" guess:
+// a code above the table is unknown, and must not be reported as an error.
+TEST(PtccLookup, UnusedStatusCodeIsUnknownRatherThanAnError) {
     EXPECT_STREQ(rp_PtccGetStatusText(200), "unknown status code");
+
+    bool is_error = true;
+    ASSERT_EQ(rp_PtccIsErrorStatus(200, &is_error), RP_PTCC_OK);
+    EXPECT_FALSE(is_error);
+}
+
+TEST(PtccLookup, IsErrorStatusRejectsNull) {
+    EXPECT_EQ(rp_PtccIsErrorStatus(0, nullptr), RP_PTCC_EIP);
 }
 
 TEST(PtccLookup, StatusTextIsStableAcrossCalls) {

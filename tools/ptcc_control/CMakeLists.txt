@@ -30,7 +30,6 @@ message(STATUS "VERSION=${VERSION}")
 message(STATUS "REVISION=${REVISION}")
 message(STATUS "BUILD_NUMBER=${BUILD_NUMBER}")
 message(STATUS "LINUX_VER=${LINUX_VER}")
-message(STATUS "Run tests ${BUILD_UNIT_TESTS}")
 
 message(STATUS "Compiler C path: ${CMAKE_C_COMPILER}")
 message(STATUS "Compiler C ID: ${CMAKE_C_COMPILER_ID}")

@@ -58,18 +58,24 @@ class LookupTests(unittest.TestCase):
     def test_status_text_comes_from_the_upstream_tables(self):
         self.assertNotEqual(rp_ptcc.rp_PtccGetStatusText(0), "unknown status code")
         self.assertEqual(rp_ptcc.rp_PtccGetStatusText(200), "unknown status code")
-        self.assertTrue(rp_ptcc.rp_PtccIsErrorStatus(128))
-        self.assertFalse(rp_ptcc.rp_PtccIsErrorStatus(0))
+
+        result, is_error = rp_ptcc.rp_PtccIsErrorStatus(128)
+        self.assertEqual(result, rp_ptcc.RP_PTCC_OK)
+        self.assertTrue(is_error)
+
+        result, is_error = rp_ptcc.rp_PtccIsErrorStatus(0)
+        self.assertEqual(result, rp_ptcc.RP_PTCC_OK)
+        self.assertFalse(is_error)
 
     def test_list_ports_returns_a_count_and_a_buffer(self):
         result, ports, count = rp_ptcc.rp_PtccListPorts(1024)
         self.assertEqual(result, rp_ptcc.RP_PTCC_OK)
         self.assertEqual(count == 0, ports.strip() == "")
 
-    def test_setpoint_range_is_enforced_before_init(self):
-        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(50.0), rp_ptcc.RP_PTCC_ERANGE)
-        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(500.0), rp_ptcc.RP_PTCC_ERANGE)
-        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(230.0), rp_ptcc.RP_PTCC_ENOINIT)
+    def test_ranges_are_left_to_the_upstream_library(self):
+        # No device, so nothing reaches the value tables yet.
+        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(50), rp_ptcc.RP_PTCC_ENOINIT)
+        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(230), rp_ptcc.RP_PTCC_ENOINIT)
 
 
 class DeviceTests(unittest.TestCase):
@@ -122,7 +128,8 @@ class DeviceTests(unittest.TestCase):
         self.assertEqual(module["cool_time"], 300)
 
     def test_setpoint_round_trip(self):
-        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(230.0), rp_ptcc.RP_PTCC_OK)
+        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(230), rp_ptcc.RP_PTCC_OK)
+        self.assertEqual(rp_ptcc.rp_PtccSetSetpoint(50), rp_ptcc.RP_PTCC_ERANGE)
 
         result, setpoint = rp_ptcc.rp_PtccGetSetpoint()
         self.assertEqual(result, rp_ptcc.RP_PTCC_OK)

@@ -25,7 +25,7 @@ typedef enum {
     RP_PTCC_EOPEN = 2,     ///< Cannot open the serial port
     RP_PTCC_EIO = 3,       ///< Serial I/O error
     RP_PTCC_ETIMEOUT = 4,  ///< No response in time
-    RP_PTCC_ERESP = 5,     ///< Unexpected or malformed response
+    RP_PTCC_ERESP = 5,     ///< Missing field, or malformed response
     RP_PTCC_EIP = 6,       ///< Invalid parameter
     RP_PTCC_ERANGE = 7,    ///< Value out of range
     RP_PTCC_ENOTSUP = 8,   ///< Not supported by the attached module
@@ -36,8 +36,6 @@ typedef enum {
 #define RP_PTCC_DEFAULT_BAUDRATE 57600
 #define RP_PTCC_THROTTLE_MS 550
 #define RP_PTCC_TIMEOUT_MS 2000
-#define RP_PTCC_MIN_TEMPERATURE 100.0F  ///< [K]
-#define RP_PTCC_MAX_TEMPERATURE 400.0F  ///< [K]
 #define RP_PTCC_STR_LEN 64
 
 typedef enum {
@@ -86,6 +84,16 @@ typedef struct {
     rp_ptcc_ctrl_t tec_ctrl;
     bool valid;
 } rp_ptcc_params_t;
+
+/** Range the attached module actually accepts, from its USER_MIN/USER_MAX
+ *  registers. Much narrower than the protocol limits: typically 180 to 300 K. */
+typedef struct {
+    float setpoint_min;   ///< [K]
+    float setpoint_max;   ///< [K]
+    float i_tec_max_min;  ///< [A]
+    float i_tec_max_max;  ///< [A]
+    bool valid;
+} rp_ptcc_limits_t;
 
 typedef struct {
     char type[RP_PTCC_STR_LEN];
@@ -153,11 +161,17 @@ rp_ptcc_error rp_PtccGetParams(rp_ptcc_register_t target, rp_ptcc_params_t *_out
 
 rp_ptcc_error rp_PtccGetSetpoint(float *_out_value);
 
+/** Reads the range this module accepts. Cached after the first call. */
+rp_ptcc_error rp_PtccGetLimits(rp_ptcc_limits_t *_out_value);
+
 /**
+ * @param kelvin Whole Kelvins, as accepted by the upstream library. The valid
+ *        range is enforced by the library and the device; use
+ *        rp_PtccGetLimits() to populate a UI.
  * @warning Stored in the module EEPROM. Call only on a confirmed user action,
  *          never on every slider event.
  */
-rp_ptcc_error rp_PtccSetSetpoint(float kelvin);
+rp_ptcc_error rp_PtccSetSetpoint(int32_t kelvin);
 
 /** @warning Stored in EEPROM, see rp_PtccSetSetpoint(). */
 rp_ptcc_error rp_PtccSetMaxCurrent(float amperes);
@@ -175,7 +189,8 @@ rp_ptcc_error rp_PtccGetErrorCount(uint64_t *_out_value);
 
 const char *rp_PtccGetStatusText(uint8_t status);
 
-bool rp_PtccIsErrorStatus(uint8_t status);
+/** Classification comes from the upstream error table, not from the code range. */
+rp_ptcc_error rp_PtccIsErrorStatus(uint8_t status, bool *_out_value);
 
 const char *rp_PtccGetErrorText(rp_ptcc_error error);
 

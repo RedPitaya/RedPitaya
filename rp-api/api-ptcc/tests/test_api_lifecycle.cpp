@@ -82,20 +82,12 @@ TEST_F(PtccApi, CallsBeforeInitReportNotInitialized) {
     EXPECT_EQ(rp_PtccStopMonitoring(), RP_PTCC_ENOINIT);
 }
 
-// The range check has to happen in the C layer: reaching the device with an
-// out of range setpoint would burn an EEPROM write cycle for nothing.
-TEST_F(PtccApi, SetpointRangeIsRejectedBeforeTouchingTheDevice) {
-    EXPECT_EQ(rp_PtccSetSetpoint(RP_PTCC_MIN_TEMPERATURE - 0.1F), RP_PTCC_ERANGE);
-    EXPECT_EQ(rp_PtccSetSetpoint(RP_PTCC_MAX_TEMPERATURE + 0.1F), RP_PTCC_ERANGE);
-    EXPECT_EQ(rp_PtccSetSetpoint(0.0F), RP_PTCC_ERANGE);
-    EXPECT_EQ(rp_PtccSetSetpoint(-273.0F), RP_PTCC_ERANGE);
-
-    // In range, but no device: the range check passed and the call moved on.
-    EXPECT_EQ(rp_PtccSetSetpoint(230.0F), RP_PTCC_ENOINIT);
-}
-
-TEST_F(PtccApi, NegativeCurrentLimitIsRejected) {
-    EXPECT_EQ(rp_PtccSetMaxCurrent(-0.5F), RP_PTCC_ERANGE);
+// Value ranges are owned by the upstream library, so without a device even an
+// absurd setpoint fails on "not initialized" rather than on a local guess.
+TEST_F(PtccApi, RangesAreNotSecondGuessedInTheCLayer) {
+    EXPECT_EQ(rp_PtccSetSetpoint(-273), RP_PTCC_ENOINIT);
+    EXPECT_EQ(rp_PtccSetSetpoint(230), RP_PTCC_ENOINIT);
+    EXPECT_EQ(rp_PtccSetMaxCurrent(-0.5F), RP_PTCC_ENOINIT);
     EXPECT_EQ(rp_PtccSetMaxCurrent(1.5F), RP_PTCC_ENOINIT);
 }
 
@@ -131,6 +123,8 @@ TEST_F(PtccApi, LookupsDoNotMakeTheLibraryLookInitialized) {
     uint32_t count = 0;
     ASSERT_EQ(rp_PtccListPorts(buffer, sizeof(buffer), &count), RP_PTCC_OK);
     ASSERT_NE(rp_PtccGetStatusText(0), nullptr);
+    bool is_error = false;
+    ASSERT_EQ(rp_PtccIsErrorStatus(0, &is_error), RP_PTCC_OK);
     ASSERT_NE(rp_PtccGetProtocolRevision(), nullptr);
 
     bool connected = true;
@@ -140,9 +134,9 @@ TEST_F(PtccApi, LookupsDoNotMakeTheLibraryLookInitialized) {
     rp_ptcc_monitor_t monitor;
     std::memset(&monitor, 0, sizeof(monitor));
     EXPECT_EQ(rp_PtccReadMonitor(&monitor), RP_PTCC_ENOINIT);
-    EXPECT_EQ(rp_PtccSetSetpoint(230.0F), RP_PTCC_ENOINIT);
+    EXPECT_EQ(rp_PtccSetSetpoint(230), RP_PTCC_ENOINIT);
     EXPECT_EQ(rp_PtccSetCooler(RP_PTCC_CTRL_ON), RP_PTCC_ENOINIT);
 
     EXPECT_EQ(rp_PtccRelease(), RP_PTCC_OK);
-    EXPECT_EQ(rp_PtccSetSetpoint(230.0F), RP_PTCC_ENOINIT);
+    EXPECT_EQ(rp_PtccSetSetpoint(230), RP_PTCC_ENOINIT);
 }
