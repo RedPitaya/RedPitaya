@@ -358,7 +358,7 @@ ifneq "$(FPGA_LOGIC)" ""
 endif
 
 ifneq "$(FPGA_0_94)" ""
-	$(call build_fpga,v0.94,$(FPGA_MODEL),$(DEDEF_PARAM_V094F_PARAM),$(HWID),$(FPGA_0_94))
+	$(call build_fpga,v0.94,$(FPGA_MODEL),$(DEF_PARAM_V094),$(HWID),$(FPGA_0_94))
 	cp -f fpga/$(FPGA_VERSION)/v0.94/prj/v0.94/out/fpga.dtbo  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/fpga.dtbo
 	cp -f fpga/$(FPGA_VERSION)/v0.94/prj/v0.94/out/fpga.dtso  $(INSTALL_DIR)/fpga/$(FPGA_VERSION)/v0.94/fpga.dtso
 endif
