@@ -3,7 +3,10 @@
     // App configuration
     RP_DATA_STREAM.config = {};
     RP_DATA_STREAM.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    RP_DATA_STREAM.config.socket_url = 'ws://' + (RP_DATA_STREAM.config.server_ip.length ? RP_DATA_STREAM.config.server_ip : window.location.hostname) + ':9900';
+    // Over https, through nginx (/wsd): a plain ws:// would be blocked as mixed content.
+    RP_DATA_STREAM.config.socket_url = window.location.protocol === 'https:'
+        ? 'wss://' + window.location.host + '/wsd'
+        : 'ws://' + (RP_DATA_STREAM.config.server_ip.length ? RP_DATA_STREAM.config.server_ip : window.location.hostname) + ':9900';
     RP_DATA_STREAM.config.debug = false
 
     RP_DATA_STREAM.socket_opened = false

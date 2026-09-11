@@ -88,4 +88,13 @@ then
     fi
 fi
 
+# A certificate nginx cannot load would stop it from starting at all, taking
+# the web interface with it. This moves the TLS block aside so the board still
+# comes up on http.
+HTTPS_CHECK=/opt/redpitaya/www/apps/network_manager/scripts/https_boot_check.sh
+if [[ -f "$HTTPS_CHECK" ]]
+then
+    bash "$HTTPS_CHECK"
+fi
+
 # Here you can specify commands for autorun at system startup

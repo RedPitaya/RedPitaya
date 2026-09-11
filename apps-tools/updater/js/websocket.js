@@ -3,7 +3,10 @@
     // App configuration
     RP_CLIENT.config = {};
     RP_CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    RP_CLIENT.config.socket_url = 'ws://' + (RP_CLIENT.config.server_ip.length ? RP_CLIENT.config.server_ip : window.location.hostname) + ':9092';
+    // Over https, through nginx (/wsu): a plain ws:// would be blocked as mixed content.
+    RP_CLIENT.config.socket_url = window.location.protocol === 'https:'
+        ? 'wss://' + window.location.host + '/wsu'
+        : 'ws://' + (RP_CLIENT.config.server_ip.length ? RP_CLIENT.config.server_ip : window.location.hostname) + ':9092';
     RP_CLIENT.config.debug = true
 
     RP_CLIENT.ws = null;

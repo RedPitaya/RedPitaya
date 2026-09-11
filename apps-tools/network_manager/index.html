@@ -44,7 +44,7 @@
     <script src="../assets/popupstack.js?1" onerror="location.reload()"></script>
     <script src="../assets/help-system/help-system.js?1" onerror="location.reload()"></script>
     <script src="js/help-nm.js?1" onerror="location.reload()"></script>
-    <script src="js/manager.js?5" onerror="location.reload()"></script>
+    <script src="js/manager.js?6" onerror="location.reload()"></script>
 </head>
 
 <body>
@@ -118,6 +118,11 @@
                             <h4 class="tablinks unselectable" onclick="WIZARD.openTab(event,'nm_scan')">Scan
                                 <span id="scan_count" class="n"></span></h4>
                             <h4 class="tablinks unselectable" onclick="WIZARD.openTab(event,'nm_ap')">Access point</h4>
+                        </div>
+                        <div class="grp">Security</div>
+                        <div class="tab">
+                            <h4 class="tablinks unselectable" onclick="WIZARD.openTab(event,'nm_https')">HTTPS
+                                <span id="https_dot" class="dot"></span></h4>
                         </div>
                     </nav>
 
@@ -567,6 +572,197 @@
                             </div>
                         </div>
 
+                        <!-- ================= HTTPS ================= -->
+                        <div id="nm_https" class="tabcontent">
+                            <h2>HTTPS</h2>
+                            <p class="sub">Settings in <code>/etc/redpitaya/https.conf</code>, certificate in
+                                <code>/etc/redpitaya/ssl</code>. Both are on the root filesystem, so an ecosystem
+                                update keeps them.</p>
+
+                            <!-- Said once at the top: the only fix is a rebuilt ecosystem. -->
+                            <div class="nm-banner bad" id="https_no_module">This nginx build has no SSL module.
+                                Rebuild the ecosystem with <code>--with-http_ssl_module</code> before turning
+                                HTTPS on.</div>
+                            <div class="nm-banner" id="https_self_warn">The certificate is self-signed, so browsers
+                                will warn about it on the first visit. That is expected: the traffic is still
+                                encrypted, and the warning goes away once a certificate signed by an authority
+                                your machines trust is installed.</div>
+                            <div class="nm-banner" id="https_pending">These settings differ from what nginx is
+                                serving right now. Press <b>Save &amp; apply</b>.</div>
+                            <!-- The board booted with a TLS block nginx refused, so
+                                 https_boot_check.sh brought it up on http instead. -->
+                            <div class="nm-banner bad" id="https_boot_off">HTTPS was turned off at the last boot:
+                                nginx could not load the certificate, so the board came up on plain http. Install
+                                a working certificate and apply again. The reason is in
+                                <code>dmesg</code>.</div>
+
+                            <table class="nm-kv">
+                                <caption>current certificate</caption>
+                                <tbody id="kv_https"></tbody>
+                            </table>
+
+                            <div class="nm-actions" style="margin-bottom: 18px;">
+                                <button id="https_download">Download certificate</button>
+                                <button id="https_export">Export certificate + key&hellip;</button>
+                                <span class="sp"></span>
+                                <span class="nm-msg" id="https_download_msg"></span>
+                                <span class="nm-msg" id="https_export_msg"></span>
+                            </div>
+                            <p class="sub">Trusting this file on the machines that open the board stops the browser
+                                warning a self-signed certificate causes. Linux: copy it to
+                                <code>/usr/local/share/ca-certificates/</code> and run
+                                <code>update-ca-certificates</code>. Windows: import into <i>Trusted Root
+                                Certification Authorities</i>. macOS: add to the login keychain and set it to
+                                <i>Always Trust</i>. Firefox keeps its own store, under Settings &rarr; Certificates.
+                                Check the SHA-256 above against what you imported.</p>
+
+                            <div class="nm-form">
+                                <div class="nm-row nm-head"><div>Server</div></div>
+                                <div class="nm-row"><label>HTTPS</label>
+                                    <label class="nm-chk"><input type="checkbox" id="https_enabled">
+                                        Serve the web interface over TLS</label>
+                                </div>
+                                <div class="nm-row" id="row_https_port"><label for="https_port">Port</label>
+                                    <input type="text" id="https_port" placeholder="443"></div>
+                                <div class="nm-row" id="row_https_redirect"><label>Redirect</label>
+                                    <label class="nm-chk"><input type="checkbox" id="https_redirect">
+                                        Send plain HTTP requests to HTTPS</label>
+                                </div>
+                                <div class="nm-row"><div class="note">Port 80 keeps working either way. Leaving the
+                                    redirect off is the safer choice: if a certificate turns out to be unusable,
+                                    the board is still reachable over http.</div></div>
+
+                                <div class="nm-row nm-head"><div>Certificate</div></div>
+                                <div class="nm-row"><label for="https_source">Source</label>
+                                    <select id="https_source" autocomplete="off">
+                                        <option value="self">Self-signed, generated on the board</option>
+                                        <option value="upload">External certificate</option>
+                                        <option value="p12">Import .p12 bundle</option>
+                                        <option value="acme">Let&apos;s Encrypt (certbot)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Only the group belonging to the selected source is shown:
+                                     the three ways of getting a certificate share no fields. -->
+                                <div id="https_self_block">
+                                    <div class="nm-row"><label for="https_cn">Common name</label>
+                                        <input type="text" id="https_cn" placeholder="board hostname"></div>
+                                    <div class="nm-row"><label for="https_san">Also valid for</label>
+                                        <input type="text" id="https_san" placeholder="rp.lab.local,192.168.1.50"></div>
+                                    <div class="nm-row"><div class="note">Comma separated. The hostname, its
+                                        <code>.local</code> name and the board's current addresses are always
+                                        included. Listing more names does not give this board another name to
+                                        answer to &mdash; it answers to its hostname, and mDNS publishes that one
+                                        name only; rename the board if you want a different one. Extra names are
+                                        for the other boards this certificate is to be shared with.</div></div>
+                                    <div class="nm-row"><label for="https_days">Valid for, days</label>
+                                        <input type="text" id="https_days" placeholder="825"></div>
+                                    <div class="nm-actions">
+                                        <button id="https_gen">Generate</button>
+                                        <span class="sp"></span>
+                                        <span class="nm-msg" id="https_gen_msg"></span>
+                                    </div>
+                                </div>
+
+                                <div id="https_upload_block" style="display: none;">
+                                    <div class="nm-row nm-stack"><label for="https_cert_pem">Certificate (PEM,
+                                        full chain if you have one)</label>
+                                        <textarea id="https_cert_pem" class="nm-pem"
+                                            placeholder="-----BEGIN CERTIFICATE-----"></textarea></div>
+                                    <div class="nm-row nm-stack"><label for="https_key_pem">Private key (PEM,
+                                        without a passphrase)</label>
+                                        <textarea id="https_key_pem" class="nm-pem"
+                                            placeholder="-----BEGIN PRIVATE KEY-----"></textarea></div>
+                                    <div class="nm-row"><div class="note">The key is checked against the
+                                        certificate before either is installed, and is never shown again once
+                                        it is.</div></div>
+                                    <div class="nm-actions">
+                                        <button id="https_install">Install</button>
+                                        <span class="sp"></span>
+                                        <span class="nm-msg" id="https_install_msg"></span>
+                                    </div>
+                                </div>
+
+                                <div id="https_p12_block" style="display: none;">
+                                    <div class="nm-row"><label for="https_p12_file">Bundle</label>
+                                        <input type="file" id="https_p12_file" accept=".p12,.pfx"></div>
+                                    <div class="nm-row"><label for="https_p12_pw">Password</label>
+                                        <input type="password" id="https_p12_pw"></div>
+                                    <div class="nm-row"><div class="note">A .p12 exported from another board, above
+                                        under <b>Copy to another board</b>. The certificate has to name this board
+                                        as well, or browsers will object to it here; the names it covers are
+                                        reported after the import.</div></div>
+                                    <div class="nm-actions">
+                                        <button id="https_import">Import bundle</button>
+                                        <span class="sp"></span>
+                                        <span class="nm-msg" id="https_import_msg"></span>
+                                    </div>
+                                </div>
+
+                                <div id="https_acme_block" style="display: none;">
+                                    <div class="nm-banner bad" id="https_no_certbot">certbot is not installed on
+                                        this board. Add it to the OS image, then come back here.</div>
+                                    <div class="nm-row"><label for="https_domain">Domain</label>
+                                        <input type="text" id="https_domain" placeholder="rp.example.com"></div>
+                                    <div class="nm-row"><label for="https_email">E-mail</label>
+                                        <input type="text" id="https_email" placeholder="you@example.com"></div>
+                                    <div class="nm-row"><label>Staging</label>
+                                        <label class="nm-chk"><input type="checkbox" id="https_staging">
+                                            Use the staging service (test runs)</label>
+                                    </div>
+                                    <div class="nm-row"><div class="note">The authority verifies the request by
+                                        fetching a file from this board over port 80, so the domain must resolve to
+                                        it and port 80 must be reachable from the internet. Renewal is left to
+                                        certbot's own timer.</div></div>
+                                    <div class="nm-actions">
+                                        <button id="https_acme">Request certificate</button>
+                                        <span class="sp"></span>
+                                        <span class="nm-msg" id="https_acme_msg"></span>
+                                    </div>
+                                </div>
+
+                                <div class="nm-actions">
+                                    <button class="primary" id="https_apply">Save &amp; apply</button>
+                                    <span class="sp"></span>
+                                    <span class="nm-msg" id="https_msg"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="https_export_dialog" tabindex="-1" role="dialog"
+        aria-labelledby="https_export_title" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="https_export_title">Export certificate and key</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Packs the certificate <b>together with its private key</b> into a <code>.p12</code> file,
+                        encrypted with the password below. Import it on another board under
+                        <b>Import .p12 bundle</b>.</p>
+                    <p>Whoever holds this file and its password can impersonate every board the certificate names.
+                        Keep it accordingly, and delete it once it has been imported.</p>
+                    <p style="margin-top: 18px;">
+                        <label for="https_export_pw" style="display: block; font-weight: normal;">Password,
+                            at least 8 characters</label>
+                        <input type="password" id="https_export_pw" class="form-control" autocomplete="new-password">
+                    </p>
+                    <p><span class="nm-msg" id="https_export_dlg_msg"></span></p>
+                </div>
+                <div class="modal-footer" style="text-align: center;">
+                    <div class="bazaar-link" style="display: inline-block; width: 35%; margin: 0 3%;">
+                        <a href="#" id="https_export_confirm" class="list-group-item btn">Export</a>
+                    </div>
+                    <div class="bazaar-link" style="display: inline-block; width: 35%; margin: 0 3%;">
+                        <a href="#" data-dismiss="modal" class="list-group-item btn">Cancel</a>
                     </div>
                 </div>
             </div>

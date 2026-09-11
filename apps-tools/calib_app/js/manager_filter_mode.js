@@ -275,8 +275,8 @@ $(function() {
         }
 
         if (_mode == "am_filt_switch") {
+            let load = OBJ.filterIsLoad(OBJ.filterModel) ? " (50 Ohm load)" : ""
             if ($("#FILTER_HV_LV_MODE").is(':checked')) {
-                let load = OBJ.filterIsLoad(OBJ.filterModel) ? " (50 Ohm load)" : ""
                 if (_state) {
                     $("#am_filt_dialog_img").attr("src", "./img/125/RP_125_GEN_HV_AUTO_MODE.png");
                     $("#am_filt_dialog_text").text("Please set HV mode and connect OUT1 to IN1 and IN2"+load+".");

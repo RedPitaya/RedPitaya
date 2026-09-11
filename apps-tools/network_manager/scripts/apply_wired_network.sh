@@ -51,11 +51,11 @@ RESTART_STATUS=$?
 
 ro
 
-# Prefer the pid file nginx itself writes; only fall back to a pattern match
-# if that's unavailable, and match specifically on "master process" rather
-# than plain "nginx" (which also matches worker processes).
-kill -HUP "$(cat /run/nginx.pid 2>/dev/null)" 2>/dev/null \
-    || kill -HUP "$(pgrep -f 'nginx: master process' 2>/dev/null | head -1)" 2>/dev/null
+# redpitaya_nginx.service defines ExecReload; the direct call is the fallback
+# when the unit is not in charge, and it needs the prefix. This used to signal
+# /run/nginx.pid, which never exists -- the pid file is /run/redpitaya_nginx.pid.
+systemctl reload redpitaya_nginx 2>/dev/null \
+    || /opt/redpitaya/sbin/nginx -p /opt/redpitaya/www -s reload 2>/dev/null
 
 if [ "$RESTART_STATUS" -ne 0 ]; then
     echo "error: systemd-networkd restart failed (status $RESTART_STATUS)" >&2

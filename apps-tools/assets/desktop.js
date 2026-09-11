@@ -291,7 +291,9 @@
             check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "web_ssh", name: "Web Console",
             description: "SSH console based on the shellinabox",
-            url: "http://" + window.location.hostname + ":4200",
+            // Through nginx, so the console uses the board's port and
+            // certificate; shellinabox itself speaks plain http on 4200.
+            url: "/console/",
             image_path: "../assets/images/pack/ssh_icon",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },

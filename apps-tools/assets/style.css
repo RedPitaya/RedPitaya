@@ -323,3 +323,10 @@ fieldset[disabled] .btn-primary.active {
 				no-repeat;
 	background-size:  25px 25px;
 }
+
+/* A clicked link must not keep a focus frame around it -- the desktop tiles are
+   <a href="#">. */
+a:focus,
+a:active {
+    outline: 0 !important;
+}

@@ -77,7 +77,9 @@
 
     OSC.config.start_app_url = window.location.origin + '/bazaar?start=' + OSC.config.app_id;
     OSC.config.stop_app_url = window.location.origin + '/bazaar?stop=' + OSC.config.app_id;
-    OSC.config.socket_url = 'ws://' + window.location.host + '/wss';
+    // wss:// when the page came over https, which refuses plain ws://.
+    OSC.config.socket_url = (window.location.protocol === 'https:' ? 'wss://' : 'ws://')
+        + window.location.host + '/wss';
     OSC.rp_model = "";
     OSC.rp_model_id = undefined;
     OSC.adc_channels = 2;

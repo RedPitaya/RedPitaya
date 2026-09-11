@@ -11,7 +11,7 @@ CPU_CORES = $(shell ./get_cpu_ram.sh)
 ################################################################################
 
 # Required OS version
-LINUX_VER = 3.03
+LINUX_VER = 3.04
 BUILD_NUMBER ?= dev
 REVISION ?= $(shell git rev-parse --short HEAD)
 VERSION = $(LINUX_VER)-$(BUILD_NUMBER)
@@ -247,6 +247,7 @@ $(NGINX_SRC_DIR): $(NGINX_TAR)
 	mkdir -p $@
 	tar -xzf $< --strip-components=1 --directory=$@
 	cp -f apps-tools/nginx.conf $@/conf/
+	cp -f apps-tools/nginx_server_common.conf $@/conf/server_common.conf
 	mkdir -p $@/conf/lua/
 	cp -fr patches/lua/* $@/conf/lua/
 

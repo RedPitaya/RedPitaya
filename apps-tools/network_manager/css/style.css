@@ -112,6 +112,14 @@ option:focus {
     -webkit-appearance: none !important;
 }
 
+/* Links too: a clicked link must not keep a focus frame around it.
+   -webkit-appearance is deliberately left alone here - on a checkbox it
+   removes the control itself. */
+a:focus,
+a:active {
+    outline: 0 !important;
+}
+
 area:hover {
     cursor: pointer;
 }

@@ -2,7 +2,7 @@ FROM ubuntu:22.04 AS extractor
 
 RUN apt-get update && apt-get install -y wget tar && \
     mkdir -p /rootfs && \
-    wget -O- https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS_3.00.36.tar.gz | tar -xz -C /rootfs
+    wget -O- https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS_3.04.75.tar.gz | tar -xz -C /rootfs
 
 FROM scratch
 COPY --from=extractor /rootfs /

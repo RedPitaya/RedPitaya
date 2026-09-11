@@ -30,6 +30,10 @@ configuration  = --add-module=../ngx_ext_modules/ngx_http_rp_module
 configuration += --add-module=../ngx_ext_modules/lua-nginx-module
 configuration += --error-log-path=/var/log/redpitaya_nginx/error.log
 configuration += --with-ipv6
+# HTTPS for the web interface: the Network Manager writes the TLS server block,
+# which nginx cannot load without this module. libssl-dev is already in the OS
+# image (RedPitaya/ubuntu, debian/dev_tools.sh).
+configuration += --with-http_ssl_module
 configuration += --with-http_dav_module
 configuration += --with-ld-opt="-Wl,-rpath,/usr/lib/arm-linux-gnueabihf"
 
@@ -61,6 +65,7 @@ install:
 	cp $(NGINX)                     '$(DESTDIR)/sbin/'
 	cp $(NGINX_DIR)/conf/mime.types '$(DESTDIR)/www/conf/'
 	cp $(NGINX_DIR)/conf/nginx.conf '$(DESTDIR)/www/conf/'
+	cp $(NGINX_DIR)/conf/server_common.conf '$(DESTDIR)/www/conf/'
 	cp -r $(WS_SERVER_DIR)/rp_sdk/*.h '$(DESTDIR)/rp_sdk/'
 	cp -r $(WS_SERVER_DIR)/rp_sdk/*.a '$(DESTDIR)/rp_sdk/'
 	make -C ngx_ext_modules/lua-resty-module install  PREFIX=/www/conf

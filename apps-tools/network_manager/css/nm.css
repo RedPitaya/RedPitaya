@@ -180,7 +180,10 @@
 .nm-main p.sub { margin: 0 0 14px; color: var(--nm-muted); font-size: var(--nm-fs-sm); }
 /* bootstrap gives <code> a light pink panel, which reads as a highlight on a
    dark page. Black, so an inline path looks like a path. */
-.nm-main p.sub code { font-family: var(--nm-mono); color: #8f9191; background-color: #000000; }
+.nm-main p.sub code,
+.nm-main .note code,
+.nm-main .nm-banner code,
+.modal-body code { font-family: var(--nm-mono); color: #8f9191; background-color: #000000; }
 
 .nm-banner {
     border: 1px solid #5c4a34;
@@ -306,6 +309,7 @@ table.nm-list td.empty { color: #6f7171; text-align: center; padding: 16px 8px; 
 
 .nm-main input[type=text],
 .nm-main input[type=password],
+.nm-main textarea,
 .nm-main select {
     width: 100%;
     background: var(--nm-input);
@@ -321,7 +325,24 @@ table.nm-list td.empty { color: #6f7171; text-align: center; padding: 16px 8px; 
 }
 
 .nm-main input:focus,
+.nm-main textarea:focus,
 .nm-main select:focus { border-color: var(--nm-info); box-shadow: none; }
+
+/* PEM text: monospaced and unwrapped. A pasted block is meant to be
+   recognisable, not readable. */
+.nm-main textarea.nm-pem {
+    min-height: calc(var(--nm-fs) * 7);
+    resize: vertical;
+    white-space: pre;
+    overflow: auto;
+}
+
+/* A row whose field is a block rather than a line: the label goes above it,
+   not beside a 64-column box. */
+.nm-row.nm-stack {
+    grid-template-columns: 1fr;
+    align-items: start;
+}
 .nm-main input:disabled,
 .nm-main select:disabled { color: #6f7171; background: #3b3c3c; }
 
@@ -392,9 +413,23 @@ table.nm-list td.empty { color: #6f7171; text-align: center; padding: 16px 8px; 
 /* The checkbox's own <label> is nested, so the "font-weight: normal" on
    .nm-row > label does not reach it and bootstrap's bold label wins - the one
    line on the page set heavier than everything around it. Reset it here. */
-.nm-chk { display: flex; align-items: center; gap: 7px; font-size: var(--nm-fs-sm); color: var(--nm-text); font-weight: normal; }
-.nm-chk label { font-weight: normal; }
-.nm-chk input { width: auto; margin: 0; }
+/* ".nm-main" so the rule outranks ".nm-row > label", which would otherwise
+   style a .nm-chk that is itself the row's label - the form where the input is
+   nested inside it, as in main_menu, so every click lands on the control. */
+.nm-main .nm-chk { display: flex; align-items: center; gap: 7px; font-size: var(--nm-fs-sm); color: var(--nm-text); font-weight: normal; margin: 0; cursor: pointer; }
+.nm-chk label { font-weight: normal; margin: 0; cursor: pointer; }
+.nm-chk input { width: auto; margin: 0; cursor: pointer; accent-color: var(--nm-accent); }
+
+/* style.css drops -webkit-appearance on any focused input to hide focus rings.
+   On a checkbox that removes the box itself, so the state it was just set to is
+   invisible until focus moves away. Put the native control back and show focus
+   as an outline instead. */
+.nm-main input[type=checkbox]:focus {
+    -webkit-appearance: checkbox !important;
+    appearance: auto;
+    outline: 1px solid var(--nm-info) !important;
+    outline-offset: 1px;
+}
 
 .nm-main button {
     background: var(--nm-panel2);

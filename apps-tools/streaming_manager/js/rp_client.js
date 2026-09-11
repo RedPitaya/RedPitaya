@@ -3,7 +3,10 @@
     // App configuration
     RP_CLIENT.config = {};
     RP_CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    RP_CLIENT.config.socket_url = 'ws://' + (RP_CLIENT.config.server_ip.length ? RP_CLIENT.config.server_ip : window.location.hostname) + ':9091';
+    // Over https, through nginx (/wsc): a plain ws:// would be blocked as mixed content.
+    RP_CLIENT.config.socket_url = window.location.protocol === 'https:'
+        ? 'wss://' + window.location.host + '/wsc'
+        : 'ws://' + (RP_CLIENT.config.server_ip.length ? RP_CLIENT.config.server_ip : window.location.hostname) + ':9091';
     RP_CLIENT.config.debug = false
 
     RP_CLIENT.client_id = undefined;

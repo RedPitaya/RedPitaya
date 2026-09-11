@@ -213,6 +213,14 @@
         if (name === 'nm_scan' && !WIZARD.scan.length) WIZARD.startScan();
         if (name === 'nm_diag') WIZARD.loadDiag();
         if (name === 'nm_ap') WIZARD.loadApClients();
+        if (name === 'nm_https') {
+            /* Entering the section starts from what the board is running. The
+               form stops refreshing itself once edited, and leaving and coming
+               back is the gesture that means "show me the real state again". */
+            WIZARD.httpsDirty = false;
+            WIZARD.httpsSourceTouched = false;
+            WIZARD.loadHttps();
+        }
     };
 
     /* Kept for the inline onclick in index.html, which follows the ecosystem
@@ -951,6 +959,313 @@
             .always(function () { WIZARD.endBusy(); WIZARD.loadEth(); });
     };
 
+    /* ------------------------------------------------------------------ */
+    /* https                                                               */
+    /* ------------------------------------------------------------------ */
+
+    WIZARD.https = null;          /* last answer from /get_https_status */
+    WIZARD.httpsDirty = false;    /* the form has edits the board has not seen */
+    WIZARD.httpsSourceTouched = false;  /* the user picked a way to get a certificate */
+
+    /* One request answers the whole section. */
+    WIZARD.loadHttps = function (quiet) {
+        $.ajax({ url: '/get_https_status', type: 'GET', dataType: 'json', timeout: 8000 })
+            .success(function (st) {
+                WIZARD.https = st || {};
+                WIZARD.renderHttps();
+                if (!quiet) WIZARD.fillHttpsForm();
+            })
+            .error(function () {
+                if (!quiet) msg('#https_msg', 'Could not read the HTTPS state', 'bad');
+            });
+    };
+
+    WIZARD.renderHttps = function () {
+        var st = WIZARD.https;
+        if (!st) return;
+
+        $('#https_no_module').toggleClass('on', st.ssl_module !== 1);
+        $('#https_no_certbot').toggleClass('on', st.certbot !== 1);
+        $('#https_self_warn').toggleClass('on',
+            st.cert_present === 1 && st.self_signed === 1);
+
+        /* Asked for and being served are separate facts: a failed reload or an
+           unpressed Apply leaves them apart. */
+        var pending = (st.enabled === 1) !== (st.applied === 1)
+                   || (st.enabled === 1 && (st.redirect === 1) !== (st.redirect_applied === 1));
+
+        /* Both say "asked for but not running"; only the one naming a cause is
+           shown, so nobody is sent to press Apply on a doomed certificate. */
+        var bootOff = st.boot_disabled === 1;
+        $('#https_boot_off').toggleClass('on', bootOff);
+        $('#https_pending').toggleClass('on', pending && !bootOff);
+
+        var days = parseInt(st.days_left, 10);
+
+        /* The dot means "needs attention", as in the diagnostics section: a
+           setting that never took effect, or a certificate about to expire. */
+        var attention = pending || bootOff
+            || (st.enabled === 1 && st.cert_present !== 1)
+            || (st.cert_present === 1 && isFinite(days) && days < 14);
+        $('#https_dot').toggleClass('on', !!attention);
+
+        var expiry = st.not_after || '';
+        if (isFinite(days)) {
+            expiry += days < 0 ? ' (expired)' : ' (' + days + ' days left)';
+        }
+
+        var sourceName = { self: 'self-signed', upload: 'external', acme: "Let's Encrypt" };
+
+        rows('#kv_https', [
+            ['State', st.applied === 1
+                ? 'serving https on port ' + st.port
+                : (st.enabled === 1 ? 'enabled but not applied' : 'off')],
+            ['Source', sourceName[st.cert_source] || st.cert_source],
+            ['File', st.cert_file],
+            ['Subject', st.cert_present === 1 ? st.subject : 'no certificate installed'],
+            ['Issuer', st.cert_present === 1 ? st.issuer : ''],
+            ['Valid until', st.cert_present === 1 ? expiry : '',
+                isFinite(days) && days < 0 ? 'bad' : ''],
+            ['Names', st.cert_present === 1 ? st.san : ''],
+            ['SHA-256', st.cert_present === 1 ? st.fingerprint : ''],
+            ['Renewal', st.cert_source === 'acme'
+                ? (st.certbot === 1 ? 'certbot timer ' + st.certbot_timer : 'certbot not installed')
+                : 'manual']
+        ]);
+
+        $('#https_download').prop('disabled', st.cert_present !== 1);
+        $('#https_export').prop('disabled', st.cert_present !== 1 || st.key_present !== 1);
+    };
+
+    /* Same contract as fillEthForm: edits in progress are left alone. */
+    WIZARD.fillHttpsForm = function (force) {
+        var st = WIZARD.https;
+        if (!st) return;
+        if (WIZARD.httpsDirty && !force) return;
+
+        $('#https_enabled').prop('checked', st.enabled === 1);
+        $('#https_redirect').prop('checked', st.redirect === 1);
+        $('#https_port').val(st.port || 443);
+        if (!WIZARD.httpsSourceTouched) $('#https_source').val('self');
+        if (!$('#https_cn').val()) $('#https_cn').val(st.hostname || '');
+        if (st.acme_domain) $('#https_domain').val(st.acme_domain);
+        if (st.acme_email) $('#https_email').val(st.acme_email);
+        $('#https_staging').prop('checked', st.acme_staging === 1);
+
+        WIZARD.httpsDirty = false;
+        WIZARD.applyHttpsSource();
+    };
+
+    WIZARD.applyHttpsSource = function () {
+        var src = $('#https_source').val();
+        $('#https_self_block').toggle(src === 'self');
+        $('#https_upload_block').toggle(src === 'upload');
+        $('#https_p12_block').toggle(src === 'p12');
+        $('#https_acme_block').toggle(src === 'acme');
+    };
+
+    /* The scripts prefix their answer with "error:" or "warning:" and say why,
+       so it is shown as it is. */
+    function scriptMsg(sel, text, okText) {
+        var t = (text || '').trim();
+        if (t.indexOf('error') === 0) { msg(sel, t, 'bad'); return false; }
+        if (t.indexOf('warning') === 0) { msg(sel, t, 'warn'); return true; }
+        msg(sel, okText || t.replace(/^OK\s*/, '') || 'Done', 'ok');
+        return true;
+    }
+
+    WIZARD.applyHttps = function () {
+        var on = $('#https_enabled').is(':checked') ? 1 : 0;
+        var port = ($('#https_port').val() || '443').trim();
+        var redirect = $('#https_redirect').is(':checked') ? 1 : 0;
+        var source = WIZARD.httpsSourceTouched ? $('#https_source').val() : '';
+        if (source === 'p12') source = 'upload';
+
+        if (!/^\d+$/.test(port) || +port < 1 || +port > 65535) {
+            msg('#https_msg', 'Port must be a whole number between 1 and 65535', 'bad'); return;
+        }
+        if (on && WIZARD.https && WIZARD.https.ssl_module !== 1) {
+            msg('#https_msg', 'This nginx build has no SSL module', 'bad'); return;
+        }
+
+        msg('#https_msg', 'Applying…', 'busy');
+        WIZARD.beginBusy();
+        $.ajax({
+            url: '/set_https_config?enabled=' + on + '&port=' + encodeURIComponent(port)
+                 + '&redirect=' + redirect + '&source=' + encodeURIComponent(source),
+            type: 'GET', timeout: 30000
+        })
+            .success(function (m) {
+                if (!scriptMsg('#https_msg', m)) return;
+                WIZARD.httpsDirty = false;
+
+                /* A link, not a redirect: a self-signed certificate has to be
+                   accepted first, and a jump would land on a browser error. */
+                if (on && window.location.protocol !== 'https:') {
+                    var url = 'https://' + window.location.hostname
+                            + (port === '443' ? '' : ':' + port) + '/network_manager/';
+                    $('#https_msg').append(' &mdash; <a href="' + esc(url) + '">open over https</a>');
+                }
+            })
+            .error(function (x) { msg('#https_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () { WIZARD.endBusy(); WIZARD.loadHttps(true); });
+    };
+
+    WIZARD.genCert = function () {
+        var cn = ($('#https_cn').val() || '').trim();
+        var san = ($('#https_san').val() || '').replace(/\s+/g, '');
+        var days = ($('#https_days').val() || '825').trim();
+
+        if (cn && !/^[A-Za-z0-9.-]+$/.test(cn)) {
+            msg('#https_gen_msg', 'The common name may only contain letters, digits, dots and hyphens', 'bad'); return;
+        }
+        if (san && !/^[A-Za-z0-9.,-]+$/.test(san)) {
+            msg('#https_gen_msg', 'Additional names must be a comma separated list of host names or addresses', 'bad'); return;
+        }
+        if (!/^\d+$/.test(days) || +days < 1 || +days > 3650) {
+            msg('#https_gen_msg', 'Validity must be between 1 and 3650 days', 'bad'); return;
+        }
+
+        msg('#https_gen_msg', 'Generating…', 'busy');
+        WIZARD.beginBusy();
+        $.ajax({
+            url: '/gen_self_signed?cn=' + encodeURIComponent(cn)
+                 + '&san=' + encodeURIComponent(san) + '&days=' + days,
+            type: 'GET', timeout: 60000
+        })
+            .success(function (m) { scriptMsg('#https_gen_msg', m, 'Certificate generated'); })
+            .error(function (x) { msg('#https_gen_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () { WIZARD.endBusy(); WIZARD.loadHttps(true); });
+    };
+
+    WIZARD.installCert = function () {
+        var cert = $('#https_cert_pem').val() || '';
+        var key = $('#https_key_pem').val() || '';
+
+        if (cert.indexOf('-----BEGIN') < 0 || key.indexOf('-----BEGIN') < 0) {
+            msg('#https_install_msg', 'Paste both PEM blocks, including their BEGIN and END lines', 'bad'); return;
+        }
+
+        msg('#https_install_msg', 'Installing…', 'busy');
+        WIZARD.beginBusy();
+        $.ajax({
+            url: '/install_cert', type: 'POST', timeout: 30000,
+            contentType: 'application/json',
+            data: JSON.stringify({ cert: cert, key: key })
+        })
+            .success(function (m) {
+                if (scriptMsg('#https_install_msg', m, 'Certificate installed')) {
+                    /* The key is on the board now; no reason to keep it in the
+                       DOM. */
+                    $('#https_key_pem').val('');
+                    $('#https_cert_pem').val('');
+                }
+            })
+            .error(function (x) { msg('#https_install_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () { WIZARD.endBusy(); WIZARD.loadHttps(true); });
+    };
+
+    /* The answer is a binary attachment, so it is fetched rather than
+       navigated to: a failed export must show its reason on the page instead of
+       replacing it. */
+    WIZARD.exportBundle = function () {
+        var pw = $('#https_export_pw').val() || '';
+        if (pw.length < 8) {
+            msg('#https_export_dlg_msg', 'The password must be at least 8 characters', 'bad'); return;
+        }
+
+        msg('#https_export_dlg_msg', 'Packing…', 'busy');
+        WIZARD.beginBusy();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/export_bundle', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.responseType = 'blob';
+        xhr.onload = function () {
+            WIZARD.endBusy();
+            if (xhr.status !== 200) {
+                /* The failure belongs in the dialog: it is still open, and the
+                   password that caused it is still in it. */
+                var reader = new FileReader();
+                reader.onload = function () { msg('#https_export_dlg_msg', (reader.result || '').trim(), 'bad'); };
+                reader.readAsText(xhr.response);
+                return;
+            }
+            var name = 'redpitaya-' + (window.location.hostname || 'board').split('.')[0] + '.p12';
+            var url = URL.createObjectURL(xhr.response);
+            var a = document.createElement('a');
+            a.href = url; a.download = name;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            msg('#https_export_msg', 'Saved as ' + name, 'ok');
+            msg('#https_export_dlg_msg', '');
+            $('#https_export_pw').val('');
+            $('#https_export_dialog').modal('hide');
+        };
+        xhr.onerror = function () { WIZARD.endBusy(); msg('#https_export_dlg_msg', 'request failed', 'bad'); };
+        xhr.send(JSON.stringify({ password: pw }));
+    };
+
+    WIZARD.importBundle = function () {
+        var file = ($('#https_p12_file')[0].files || [])[0];
+        var pw = $('#https_p12_pw').val() || '';
+        if (!file) { msg('#https_import_msg', 'Choose the .p12 file first', 'bad'); return; }
+        if (!pw) { msg('#https_import_msg', 'Enter the password the bundle was exported with', 'bad'); return; }
+
+        msg('#https_import_msg', 'Importing…', 'busy');
+        WIZARD.beginBusy();
+        var reader = new FileReader();
+        reader.onload = function () {
+            /* The file is binary; JSON is not, hence base64. */
+            var bytes = new Uint8Array(reader.result), bin = '';
+            for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+
+            $.ajax({
+                url: '/install_bundle', type: 'POST', timeout: 30000,
+                contentType: 'application/json',
+                data: JSON.stringify({ p12: btoa(bin), password: pw })
+            })
+                .success(function (m) {
+                    if (scriptMsg('#https_import_msg', m, 'Certificate installed')) {
+                        $('#https_p12_pw').val('');
+                        $('#https_p12_file').val('');
+                    }
+                })
+                .error(function (x) { msg('#https_import_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+                .always(function () { WIZARD.endBusy(); WIZARD.loadHttps(true); });
+        };
+        reader.onerror = function () { WIZARD.endBusy(); msg('#https_import_msg', 'Could not read the file', 'bad'); };
+        reader.readAsArrayBuffer(file);
+    };
+
+    WIZARD.acmeRequest = function () {
+        var domain = ($('#https_domain').val() || '').trim();
+        var email = ($('#https_email').val() || '').trim();
+        var staging = $('#https_staging').is(':checked') ? 1 : 0;
+
+        if (!/^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(domain)) {
+            msg('#https_acme_msg', 'Enter the fully qualified name that points at this board', 'bad'); return;
+        }
+        if (!/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(email)) {
+            msg('#https_acme_msg', 'Enter an e-mail address for the certificate authority', 'bad'); return;
+        }
+        if (WIZARD.https && WIZARD.https.certbot !== 1) {
+            msg('#https_acme_msg', 'certbot is not installed on this board', 'bad'); return;
+        }
+
+        /* nginx has one worker and this request blocks it, so the interface
+           stalls while certbot talks to the authority. */
+        msg('#https_acme_msg', 'Requesting… this can take a minute, and the page will not respond meanwhile', 'busy');
+        WIZARD.beginBusy();
+        $.ajax({
+            url: '/acme_request?domain=' + encodeURIComponent(domain)
+                 + '&email=' + encodeURIComponent(email) + '&staging=' + staging,
+            type: 'GET', timeout: 180000
+        })
+            .success(function (m) { scriptMsg('#https_acme_msg', m, 'Certificate issued'); })
+            .error(function (x) { msg('#https_acme_msg', (x.responseText || 'request failed').trim(), 'bad'); })
+            .always(function () { WIZARD.endBusy(); WIZARD.loadHttps(true); });
+    };
+
 }(window.WIZARD = window.WIZARD || {}, jQuery));
 
 
@@ -1006,6 +1321,38 @@ $(document).ready(function () {
             WIZARD.applyEthMode();
         }
     });
+
+    var HTTPS_INPUTS = '#https_enabled,#https_port,#https_redirect,#https_source';
+    $(HTTPS_INPUTS).on('input change', function () { WIZARD.httpsDirty = true; });
+
+    $('#https_source').change(function () {
+        WIZARD.httpsSourceTouched = true;
+        WIZARD.applyHttpsSource();
+    });
+    $('#https_apply').click(WIZARD.applyHttps);
+    $('#https_gen').click(WIZARD.genCert);
+    $('#https_install').click(WIZARD.installCert);
+    $('#https_acme').click(WIZARD.acmeRequest);
+    $('#https_export').click(function () {
+        if ($(this).prop('disabled')) return;
+        $('#https_export_pw').val('');
+        $('#https_export_msg').attr('class', 'nm-msg').text('');
+        $('#https_export_dlg_msg').attr('class', 'nm-msg').text('');
+        $('#https_export_dialog').modal('show');
+    });
+    $('#https_export_confirm').click(function (e) { e.preventDefault(); WIZARD.exportBundle(); });
+    $('#https_import').click(WIZARD.importBundle);
+
+    /* A navigation, not an ajax call: the response is an attachment, so the
+       browser saves it and the page stays where it is. */
+    $('#https_download').click(function () {
+        if ($(this).prop('disabled')) return;
+        $('#https_download_msg').attr('class', 'nm-msg ok').text('Saved');
+        window.location = '/download_cert';
+    });
+    /* Fetched once on load for the rail dot, deferred for the same reason as
+       the diagnostics: one nginx worker, and this shells out to openssl. */
+    setTimeout(function () { WIZARD.loadHttps(true); }, 3000);
 
     /* Sorting: same column toggles direction, a new column starts descending
        for signal and ascending for text. */

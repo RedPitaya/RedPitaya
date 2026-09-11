@@ -1,6 +1,6 @@
 #!/bin/bash
 
-RP_UBUNTU=red_pitaya_OS_3.00.36.tar.gz
+RP_UBUNTU=red_pitaya_OS_3.04.75.tar.gz
 SCHROOT_CONF_PATH=/etc/schroot/chroot.d/red-pitaya-ubuntu.conf
 
 function print_ok(){
