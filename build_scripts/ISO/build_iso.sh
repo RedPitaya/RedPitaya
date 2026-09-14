@@ -18,7 +18,7 @@ SUFFIX=$3
 REV="$(echo $1 | cut -d'-' -f2)"
 NUM="$(echo $1 | cut -d'-' -f3)"
 
-wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS_3.04.75.img.zip
+wget -N https://downloads.redpitaya.com/downloads/LinuxOS/red_pitaya_OS_3.03.74.img.zip
 unzip -n red_pitaya_OS_3.00.36.img.zip
 rm -f redpitaya.img
 mv *.img redpitaya.img
