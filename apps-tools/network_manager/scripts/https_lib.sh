@@ -17,8 +17,6 @@ FRAG_DIR=$RP_ETC/nginx/http
 FRAG80_DIR=$RP_ETC/nginx/http80
 FRAG_SSL=$FRAG_DIR/https.conf
 FRAG_REDIRECT=$FRAG80_DIR/redirect.conf
-ACME_ROOT=/run/acme
-ACME_HOOK=/etc/letsencrypt/renewal-hooks/deploy/redpitaya-nginx.sh
 LOCK_FILE=/run/lock/rp-network.lock
 
 NGINX_BIN=/opt/redpitaya/sbin/nginx
@@ -46,20 +44,14 @@ https_load() {
     HTTPS_PORT=$DEF_PORT
     HTTPS_REDIRECT=$DEF_REDIRECT
     HTTPS_CERT_SOURCE=$DEF_CERT_SOURCE
-    HTTPS_ACME_DOMAIN=''
-    HTTPS_ACME_EMAIL=''
-    HTTPS_ACME_STAGING=0
 
     [ -r "$HTTPS_CONF" ] || return 0
 
     local v
     v=$(conf_get enabled);      case "$v" in 0|1) HTTPS_ENABLED=$v ;; esac
     v=$(conf_get redirect);     case "$v" in 0|1) HTTPS_REDIRECT=$v ;; esac
-    v=$(conf_get acme_staging); case "$v" in 0|1) HTTPS_ACME_STAGING=$v ;; esac
-    v=$(conf_get cert_source);  case "$v" in self|upload|acme) HTTPS_CERT_SOURCE=$v ;; esac
+    v=$(conf_get cert_source);  case "$v" in self|upload) HTTPS_CERT_SOURCE=$v ;; esac
     v=$(conf_get port);         is_port "$v" && HTTPS_PORT=$v
-    v=$(conf_get acme_domain);  is_domain "$v" && HTTPS_ACME_DOMAIN=$v
-    v=$(conf_get acme_email);   is_email "$v" && HTTPS_ACME_EMAIL=$v
     return 0
 }
 
@@ -70,32 +62,9 @@ is_port() {
     [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
 }
 
-is_domain() {
-    [ -n "$1" ] && [ ${#1} -le 253 ] || return 1
-    printf '%s' "$1" | grep -Eq '^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$'
-}
-
-is_email() {
-    [ -n "$1" ] && [ ${#1} -le 254 ] || return 1
-    printf '%s' "$1" | grep -Eq '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'
-}
-
-# Looser than is_domain: a hostname may be a single label.
 is_hostname() {
     [ -n "$1" ] && [ ${#1} -le 253 ] || return 1
     printf '%s' "$1" | grep -Eq '^[A-Za-z0-9]([A-Za-z0-9.-]*[A-Za-z0-9])?$'
-}
-
-# For ACME, point nginx straight at /etc/letsencrypt: certbot renews in place,
-# and a copy would go stale.
-cert_paths() {
-    if [ "$HTTPS_CERT_SOURCE" = "acme" ] && [ -n "$HTTPS_ACME_DOMAIN" ]; then
-        CERT_FILE=/etc/letsencrypt/live/$HTTPS_ACME_DOMAIN/fullchain.pem
-        KEY_FILE=/etc/letsencrypt/live/$HTTPS_ACME_DOMAIN/privkey.pem
-    else
-        CERT_FILE=$SSL_CRT
-        KEY_FILE=$SSL_KEY
-    fi
 }
 
 ssl_module_available() {

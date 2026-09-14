@@ -638,7 +638,6 @@
                                         <option value="self">Self-signed, generated on the board</option>
                                         <option value="upload">External certificate</option>
                                         <option value="p12">Import .p12 bundle</option>
-                                        <option value="acme">Let&apos;s Encrypt (certbot)</option>
                                     </select>
                                 </div>
 
@@ -696,28 +695,6 @@
                                         <button id="https_import">Import bundle</button>
                                         <span class="sp"></span>
                                         <span class="nm-msg" id="https_import_msg"></span>
-                                    </div>
-                                </div>
-
-                                <div id="https_acme_block" style="display: none;">
-                                    <div class="nm-banner bad" id="https_no_certbot">certbot is not installed on
-                                        this board. Add it to the OS image, then come back here.</div>
-                                    <div class="nm-row"><label for="https_domain">Domain</label>
-                                        <input type="text" id="https_domain" placeholder="rp.example.com"></div>
-                                    <div class="nm-row"><label for="https_email">E-mail</label>
-                                        <input type="text" id="https_email" placeholder="you@example.com"></div>
-                                    <div class="nm-row"><label>Staging</label>
-                                        <label class="nm-chk"><input type="checkbox" id="https_staging">
-                                            Use the staging service (test runs)</label>
-                                    </div>
-                                    <div class="nm-row"><div class="note">The authority verifies the request by
-                                        fetching a file from this board over port 80, so the domain must resolve to
-                                        it and port 80 must be reachable from the internet. Renewal is left to
-                                        certbot's own timer.</div></div>
-                                    <div class="nm-actions">
-                                        <button id="https_acme">Request certificate</button>
-                                        <span class="sp"></span>
-                                        <span class="nm-msg" id="https_acme_msg"></span>
                                     </div>
                                 </div>
 

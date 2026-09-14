@@ -29,16 +29,13 @@ die() { echo "error: $1" >&2; cleanup; exit "${2:-1}"; }
 [ -r "$PW_FILE" ] || die "no password was supplied" 2
 [ "$(wc -c < "$PW_FILE")" -ge 8 ] || die "the export password must be at least 8 characters" 2
 
-https_load
-cert_paths
-
-[ -r "$CERT_FILE" ] || die "no certificate at $CERT_FILE"
-[ -r "$KEY_FILE" ]  || die "no private key at $KEY_FILE"
+[ -r "$SSL_CRT" ] || die "no certificate at $SSL_CRT"
+[ -r "$SSL_KEY" ]  || die "no private key at $SSL_KEY"
 
 NAME="Red Pitaya $(hostname)"
 
 OUT_ERR=$(openssl pkcs12 -export \
-            -in "$CERT_FILE" -inkey "$KEY_FILE" \
+            -in "$SSL_CRT" -inkey "$SSL_KEY" \
             -name "$NAME" -passout file:"$PW_FILE" -out "$OUT" 2>&1)
 if [ $? -ne 0 ]; then
     rm -f "$OUT" 2>/dev/null

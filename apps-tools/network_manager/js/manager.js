@@ -985,7 +985,6 @@
         if (!st) return;
 
         $('#https_no_module').toggleClass('on', st.ssl_module !== 1);
-        $('#https_no_certbot').toggleClass('on', st.certbot !== 1);
         $('#https_self_warn').toggleClass('on',
             st.cert_present === 1 && st.self_signed === 1);
 
@@ -1014,7 +1013,7 @@
             expiry += days < 0 ? ' (expired)' : ' (' + days + ' days left)';
         }
 
-        var sourceName = { self: 'self-signed', upload: 'external', acme: "Let's Encrypt" };
+        var sourceName = { self: 'self-signed', upload: 'external' };
 
         rows('#kv_https', [
             ['State', st.applied === 1
@@ -1027,10 +1026,7 @@
             ['Valid until', st.cert_present === 1 ? expiry : '',
                 isFinite(days) && days < 0 ? 'bad' : ''],
             ['Names', st.cert_present === 1 ? st.san : ''],
-            ['SHA-256', st.cert_present === 1 ? st.fingerprint : ''],
-            ['Renewal', st.cert_source === 'acme'
-                ? (st.certbot === 1 ? 'certbot timer ' + st.certbot_timer : 'certbot not installed')
-                : 'manual']
+            ['SHA-256', st.cert_present === 1 ? st.fingerprint : '']
         ]);
 
         $('#https_download').prop('disabled', st.cert_present !== 1);
@@ -1048,9 +1044,6 @@
         $('#https_port').val(st.port || 443);
         if (!WIZARD.httpsSourceTouched) $('#https_source').val('self');
         if (!$('#https_cn').val()) $('#https_cn').val(st.hostname || '');
-        if (st.acme_domain) $('#https_domain').val(st.acme_domain);
-        if (st.acme_email) $('#https_email').val(st.acme_email);
-        $('#https_staging').prop('checked', st.acme_staging === 1);
 
         WIZARD.httpsDirty = false;
         WIZARD.applyHttpsSource();
@@ -1061,7 +1054,6 @@
         $('#https_self_block').toggle(src === 'self');
         $('#https_upload_block').toggle(src === 'upload');
         $('#https_p12_block').toggle(src === 'p12');
-        $('#https_acme_block').toggle(src === 'acme');
     };
 
     /* The scripts prefix their answer with "error:" or "warning:" and say why,
@@ -1237,35 +1229,6 @@
         reader.readAsArrayBuffer(file);
     };
 
-    WIZARD.acmeRequest = function () {
-        var domain = ($('#https_domain').val() || '').trim();
-        var email = ($('#https_email').val() || '').trim();
-        var staging = $('#https_staging').is(':checked') ? 1 : 0;
-
-        if (!/^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(domain)) {
-            msg('#https_acme_msg', 'Enter the fully qualified name that points at this board', 'bad'); return;
-        }
-        if (!/^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$/.test(email)) {
-            msg('#https_acme_msg', 'Enter an e-mail address for the certificate authority', 'bad'); return;
-        }
-        if (WIZARD.https && WIZARD.https.certbot !== 1) {
-            msg('#https_acme_msg', 'certbot is not installed on this board', 'bad'); return;
-        }
-
-        /* nginx has one worker and this request blocks it, so the interface
-           stalls while certbot talks to the authority. */
-        msg('#https_acme_msg', 'Requesting… this can take a minute, and the page will not respond meanwhile', 'busy');
-        WIZARD.beginBusy();
-        $.ajax({
-            url: '/acme_request?domain=' + encodeURIComponent(domain)
-                 + '&email=' + encodeURIComponent(email) + '&staging=' + staging,
-            type: 'GET', timeout: 180000
-        })
-            .success(function (m) { scriptMsg('#https_acme_msg', m, 'Certificate issued'); })
-            .error(function (x) { msg('#https_acme_msg', (x.responseText || 'request failed').trim(), 'bad'); })
-            .always(function () { WIZARD.endBusy(); WIZARD.loadHttps(true); });
-    };
-
 }(window.WIZARD = window.WIZARD || {}, jQuery));
 
 
@@ -1332,7 +1295,6 @@ $(document).ready(function () {
     $('#https_apply').click(WIZARD.applyHttps);
     $('#https_gen').click(WIZARD.genCert);
     $('#https_install').click(WIZARD.installCert);
-    $('#https_acme').click(WIZARD.acmeRequest);
     $('#https_export').click(function () {
         if ($(this).prop('disabled')) return;
         $('#https_export_pw').val('');
