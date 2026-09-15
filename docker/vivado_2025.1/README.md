@@ -333,6 +333,39 @@ chmod +x vivado_installer/xsetup
 
 <br/>
 
+### Vivado crashes at `launch_runs` (`Abnormal program termination`)
+
+**Cause**: the Xilinx license manager `dlopen()`s `libudev` to derive the host
+id, and its use of the library corrupts the heap under the glibc shipped in
+Ubuntu 24.04. The crash happens inside `udev_enumerate_scan_devices`, reported
+either as signal 11 or as `realloc(): invalid pointer` with signal 6. Mounting
+the host's `/run/udev` into the container does not help.
+
+**Solution**: make the library unloadable so the manager falls back to another
+host id source:
+
+```bash
+docker run --rm \
+  -v /dev/null:/lib/x86_64-linux-gnu/libudev.so.1:ro \
+  ... \
+  vivado:2025.1
+```
+
+<br/>
+
+### `xsct` or `arm-none-eabi-gcc` not found
+
+**Cause**: only `Vivado/bin` is on the image `PATH`.
+
+**Solution**: add the other tool directories in the container:
+
+```bash
+export PATH=/opt/Xilinx/2025.1/Vitis/bin:\
+/opt/Xilinx/2025.1/gnu/aarch32/lin/gcc-arm-none-eabi/bin:$PATH
+```
+
+<br/>
+
 ### Vivado won't start (X server required)
 
 **Cause**: Attempting to run in GUI mode.
