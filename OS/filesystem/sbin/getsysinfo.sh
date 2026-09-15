@@ -8,7 +8,6 @@ FPGA_VER=$(profiles -f)
 S_VER=$(profiles -i)
 NAME=$(profiles -n)
 IS_MOLDE_VALID=$(profiles -c)
-IS_512_BOOT=$(cmp /opt/redpitaya/boot.bin /opt/redpitaya/uboot/boot_512Mb_ram.bin)
 SLAVE=$(cat /opt/redpitaya/bin/.streaming_mode 2> /dev/null)
 
 STATE=$(cat /tmp/loaded_fpga.inf 2> /dev/null)
@@ -48,18 +47,6 @@ echo \"dna\": \"$DNA_1$DNA_2\", >> /tmp/sysinfo.json
 echo \"ecosystem\": $(cat /opt/redpitaya/www/apps/info/info.json ), >> /tmp/sysinfo.json
 echo \"linux\": \"$(cat /root/.version)\",  >> /tmp/sysinfo.json
 echo \"mem_size\":\"$(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE) / (1024 * 1024)))\",  >> /tmp/sysinfo.json
-
-if [[ "$FPGA_VER" == "z20_250" || "$FPGA_VER" == "z20_125_v2" ]]; then
-echo \"mem_upgrade\":\"1\",  >> /tmp/sysinfo.json
-else
-echo \"mem_upgrade\":\"0\",  >> /tmp/sysinfo.json
-fi
-
-if [ -z "$IS_512_BOOT" ]; then
-echo \"boot_512\":\"1\",  >> /tmp/sysinfo.json
-else
-echo \"boot_512\":\"0\",  >> /tmp/sysinfo.json
-fi
 
 echo \"fpga\":{  >> /tmp/sysinfo.json
 

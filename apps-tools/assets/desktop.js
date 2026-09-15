@@ -10,7 +10,6 @@
     var sys_info_obj = undefined;
     Desktop.sys_info_obj = undefined;
 
-    var base_ram = "512"
     var board_ver = -1
 
     var groups = [{
@@ -358,37 +357,6 @@
             });
         });
 
-        $("#up_boot_id").click(function(event) {
-            $.ajax({
-                method: "GET",
-                url: '/check_bootbin'
-            })
-            .done(function(result) {
-                console.log("/check_bootbin: res" + result);
-                if (result.trim().length === 0){
-                    $.ajax({
-                        method: "GET",
-                        url: '/copy_bootbin_1G'
-                    })
-                    .done(function(result) {
-                        console.log("/copy_bootbin_1G: res" + result);
-                        $('#up_boot_id a').text( base_ram + "MB RAM")
-                        $('#UBOOT_MODE_ID').text("BOOT mode: 1GB RAM");
-                    });
-                }else{
-                    $.ajax({
-                        method: "GET",
-                        url: '/copy_bootbin_512'
-                    })
-                    .done(function(result) {
-                        console.log("/copy_bootbin_512: res" + result);
-                        $('#up_boot_id a').text("Up to 1GB RAM")
-                        $('#UBOOT_MODE_ID').text("BOOT mode: " + base_ram + "MB RAM");
-                    });
-                }
-            });
-        });
-
         $("#info").click(function(event) {
 
 
@@ -402,24 +370,15 @@
                         var model = obj['name'];
                         var is_slave = obj['is_slave'];
                         var is_valid_model = obj['is_model_valid'];
-                        if (model.startsWith('STEMlab 125-10 v1.0')) { base_ram = "256"; }
                         if (is_slave.includes('slave mode')) model += " / Streaming Slave";
                         $('#SI_B_MODEL').text(model);
                         $('#SI_MAC').text(obj['mac']);
                         $('#SI_DNA').text(obj['dna']);
                         $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
                         $('#SI_LINUX').text(obj['linux']);
-                        $('#UBOOT_MODE_ID').text(obj['boot_512'] == "1" ? "BOOT mode: " + base_ram + "MB RAM" : "BOOT mode: 1GB RAM");
 
                         if (is_valid_model == "0"){
                             $("#IS_VALID_MODEL").removeAttr("style");
-                        }
-
-                        if (obj['mem_upgrade'] == "1"){
-                            $('#up_boot_id a').text(obj['boot_512'] == "1" ? "Up to 1GB RAM" : base_ram + "MB RAM")
-                            $('#up_boot_id').show()
-                        }else{
-                            $('#up_boot_id').hide()
                         }
 
                         var fpga_list = obj['fpga']

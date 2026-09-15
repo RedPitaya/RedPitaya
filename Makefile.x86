@@ -376,35 +376,33 @@ endif
 ################################################################################
 # FSBL for uboot processing
 ################################################################################
+#
+# One FSBL serves every board. It reads hw_rev from the EEPROM before the DDR
+# controller is configured and switches to the 32-bit bus on the models that
+# carry a second DDR chip. The list of those models is generated from the board
+# profiles, which are the only place the memory size is recorded.
+#
+# MODEL is not passed on: it selects the part number for the PL stub and has no
+# effect on the PS initialisation the FSBL actually uses.
 
 FSBL = $(TMP)/fsbl.elf
 FSBL_DTS = $(TMP)/fsbl_dts.dtb
+
+RAM_PROFILES = fpga/fsbl/prj/fsbl/src/rp_ram_profiles.h
 
 .PHONY: fsbl_ub
 
 fsbl_ub:
 	echo $@
 	./download_fpga.sh all fsbl $(GIT_MODE) $(FPGA_UBOOT) $(GITLAB_TOKEN) fsbl $(GIT_LOCAL_PATH)
-	make -C fpga/fsbl fsbl MODEL=Z10 RAM=512
+	python3 build_scripts/gen_ram_profiles.py \
+		--profiles-dir rp-api/api-hw-profiles/src \
+		--out $(RAM_PROFILES) \
+		--check-uboot-script patches/u-boot/u-boot.script
+	make -C fpga/fsbl fsbl
+	make -C fpga/fsbl fsbl_test
 	cp  fpga/fsbl/prj/fsbl/out/fsbl.elf $(FSBL)
 	cp  fpga/fsbl/prj/fsbl/out/devicetree_uboot.dtb $(FSBL_DTS)
-
-
-################################################################################
-# FSBL for uboot 1Gb RAM processing
-################################################################################
-
-FSBL_1Gb_ram = $(TMP)/fsbl_1Gb_ram.elf
-FSBL_DTS_1Gb_ram = $(TMP)/fsbl_dts_1GB_ram.dtb
-
-.PHONY: fsbl_ub_1Gb_ram
-
-fsbl_ub_1Gb_ram:
-	echo $@
-	./download_fpga.sh all fsbl_1Gb_ram $(GIT_MODE) $(FPGA_UBOOT) $(GITLAB_TOKEN) fsbl_1Gb_ram $(GIT_LOCAL_PATH)
-	make -C fpga/fsbl_1Gb_ram fsbl MODEL=Z20 RAM=1024
-	cp  fpga/fsbl_1Gb_ram/prj/fsbl/out/fsbl.elf $(FSBL_1Gb_ram)
-	cp  fpga/fsbl_1Gb_ram/prj/fsbl/out/devicetree_uboot.dtb $(FSBL_DTS_1Gb_ram)
 
 
 ################################################################################
@@ -414,12 +412,10 @@ fsbl_ub_1Gb_ram:
 UBOOT           = $(TMP)/u-boot.elf
 
 UBOOT_SCRIPT    		= $(INSTALL_DIR)/u-boot.scr
-UBOOT_SCRIPT_512Mb_ram	= $(INSTALL_DIR)/uboot/u-boot_512Mb_ram.scr
-UBOOT_SCRIPT_1Gb_ram    = $(INSTALL_DIR)/uboot/u-boot_1Gb_ram.scr
 
 .PHONY: u-boot $(UBOOT_TAR) $(UBOOT_DIR) $(UBOOT)
 
-u-boot: $(UBOOT) $(UBOOT_SCRIPT_512Mb_ram)
+u-boot: $(UBOOT) $(UBOOT_SCRIPT)
 
 $(UBOOT_TAR): | $(DL)
 	curl -L $(UBOOT_URL) -o $@
@@ -439,31 +435,20 @@ $(UBOOT): $(UBOOT_DIR) $(TMP) fsbl_ub
 	make -C $< -j $(shell grep -c ^processor /proc/cpuinfo) DEVICE_TREE="red-pitaya"
 	cp $(UBOOT_DIR)/u-boot.elf $@
 
-$(UBOOT_SCRIPT_512Mb_ram): $(UBOOT) $(INSTALL_DIR)
-	mkdir -p $(INSTALL_DIR)/uboot
-	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $(UBOOT_SCRIPT_512Mb_ram)
-	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot_1Gb_ram.script $(UBOOT_SCRIPT_1Gb_ram)
-	cp $(UBOOT_SCRIPT_512Mb_ram) $(UBOOT_SCRIPT)
+$(UBOOT_SCRIPT): $(UBOOT) $(INSTALL_DIR)
+	$(UBOOT_DIR)/tools/mkimage -A ARM -O linux -T script -C none -a 0 -e 0 -n "boot Debian" -d patches/u-boot/u-boot.script $(UBOOT_SCRIPT)
 
 ################################################################################
 # boot file generator
 ################################################################################
 
 BOOT = $(INSTALL_DIR)/boot.bin
-BOOT_512Mb_ram = $(INSTALL_DIR)/uboot/boot_512Mb_ram.bin
-BOOT_1Gb_ram = $(INSTALL_DIR)/uboot/boot_1Gb_ram.bin
 
 .PHONY: boot
 
-boot: u-boot fsbl_ub fsbl_ub_1Gb_ram $(INSTALL_DIR)
-	mkdir -p $(INSTALL_DIR)/uboot
-
-	@echo the_ROM_image:{[bootloader] $(FSBL) $(UBOOT) } > tmp/boot_uboot_512Mb_ram.bif
-	bootgen -image tmp/boot_uboot_512Mb_ram.bif -arch zynq -o $(BOOT_512Mb_ram) -w on -log
-
-	@echo the_ROM_image:{[bootloader] $(FSBL_1Gb_ram) $(UBOOT) } > tmp/boot_uboot_1Gb_ram.bif
-	bootgen -image tmp/boot_uboot_1Gb_ram.bif -arch zynq -o $(BOOT_1Gb_ram) -w on -log
-	cp $(BOOT_512Mb_ram) $(BOOT)
+boot: u-boot fsbl_ub $(INSTALL_DIR)
+	@echo the_ROM_image:{[bootloader] $(FSBL) $(UBOOT) } > tmp/boot_uboot.bif
+	bootgen -image tmp/boot_uboot.bif -arch zynq -o $(BOOT) -w on -log
 
 
 
