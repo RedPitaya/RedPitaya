@@ -1584,6 +1584,11 @@ int acq_SetDefault(rp_channel_t channel) {
     acq_SetChannelThreshold(channel, 0.0);
     acq_SetChannelThresholdHyst(channel, 0.005);
     acq_SetGain(channel, RP_LOW);
+    // The FPGA powers up with the equalization filter in the path. Leave it
+    // bypassed unless an application asks for it.
+    if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
+        acq_SetEqFilterBypass(channel, true);
+    }
     acq_axi_Enable(channel, false);
     acq_axi_SetBufferBytes(channel, start, 0);
     acq_axi_SetTriggerDelay(channel, 1);
