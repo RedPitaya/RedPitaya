@@ -122,11 +122,12 @@ int main(int argc, char* argv[]) {
     if (isAutoInt || option.isParam("auto_ext")) {
         std::string info_msg = "";
         rp_Init();
-        auto acq = rp_calib::COscilloscope::Create(8);
+        auto dec = rp_calib::COscilloscope::calcFilterCalibDecimation();
+        auto acq = rp_calib::COscilloscope::Create(dec);
         auto calib_man = rp_calib::CCalibMan::Create(acq);
         auto filter_logicNch = rp_calib::CFilter_logicNch::Create(calib_man);
         acq->start();
-        calib_man->initSq(8);
+        calib_man->initSq(dec);
         calib_man->setModeLV_HV(gain);
         filter_logicNch->init();
         if (isAutoInt) {
@@ -138,7 +139,7 @@ int main(int argc, char* argv[]) {
             calib_man->enableGen(RP_CH_1, true);
         }
         printf("Starting data capture and filter initialization");
-        acq->startAutoFilterNCh(8);
+        acq->startAutoFilterNCh(dec);
         if (option.isParam("initK")) {
             for (int i = 0; i < g_adcChannes; i++) {
                 auto kk = option.getInt("initK");
@@ -209,8 +210,10 @@ int main(int argc, char* argv[]) {
             filter_logicNch->setGoodCalibParameterCh((rp_channel_t)ch);
             std::this_thread::sleep_for(std::chrono::microseconds(1000000));
             auto volt_ref = 0.9;
+            auto lastIndex = acq->getDataAutoFilterSync().valueCH[ch].index;
             while (1) {
-                auto d = acq->getDataAutoFilterSync();
+                auto d = acq->getNewDataAutoFilterSync(lastIndex);
+                lastIndex = d.valueCH[ch].index;
                 if (filter_logicNch->calibPPCh((rp_channel_t)ch, d, volt_ref) != 0)
                     break;
                 if (g_stopApp) {

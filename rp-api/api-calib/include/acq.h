@@ -97,6 +97,9 @@ class COscilloscope {
     auto getDataSq() -> DataPassSq;
     auto getDataAutoFilter() -> DataPassAutoFilter;
     auto getDataAutoFilterSync() -> DataPassAutoFilterSync;
+    auto getNewDataAutoFilter(uint64_t _lastIndex, uint32_t _timeoutMs = 1000) -> DataPassAutoFilter;
+    auto getNewDataAutoFilterSync(uint64_t _lastIndex, uint32_t _timeoutMs = 1000) -> DataPassAutoFilterSync;
+    static auto calcFilterCalibDecimation() -> uint32_t;
     auto setZoomMode(bool enable) -> void;
     auto setCursor1(float value) -> void;
     auto setCursor2(float value) -> void;

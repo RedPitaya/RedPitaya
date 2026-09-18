@@ -1,6 +1,7 @@
 #include "acq.h"
 #include <math.h>
 #include <cassert>
+#include <cmath>
 #include <chrono>
 #include <cstring>
 #include <fstream>
@@ -882,6 +883,52 @@ COscilloscope::DataPassAutoFilterSync COscilloscope::getDataAutoFilterSync() {
     local_pass = m_crossDataAutoFilterSync;
     pthread_mutex_unlock(&m_mutex);
     return local_pass;
+}
+
+// The acquisition thread publishes a buffer only when it managed to capture it with
+// unchanged filter coefficients, so the last published data can stay valid for a long
+// time. Calibration loops must step on new data instead of spinning on the old one.
+COscilloscope::DataPassAutoFilter COscilloscope::getNewDataAutoFilter(uint64_t _lastIndex, uint32_t _timeoutMs) {
+    auto deadline = steady_clock::now() + milliseconds(_timeoutMs);
+    while (true) {
+        auto data = getDataAutoFilter();
+        if (data.index != _lastIndex || steady_clock::now() >= deadline)
+            return data;
+        std::this_thread::sleep_for(milliseconds(1));
+    }
+}
+
+COscilloscope::DataPassAutoFilterSync COscilloscope::getNewDataAutoFilterSync(uint64_t _lastIndex, uint32_t _timeoutMs) {
+    auto deadline = steady_clock::now() + milliseconds(_timeoutMs);
+    while (true) {
+        auto data = getDataAutoFilterSync();
+        if (data.valueCH[0].index != _lastIndex || steady_clock::now() >= deadline)
+            return data;
+        std::this_thread::sleep_for(milliseconds(1));
+    }
+}
+
+// The filter calibration drives a 1 kHz square signal and the measurement math expects
+// the buffer to hold slightly more than one period of it: the trigger (rising edge) lands
+// at a quarter of the buffer and the next zero crossing has to be the falling edge. Scale
+// the decimation with the ADC rate so that the captured window stays the same on every
+// board: 8 at 125 MHz, 4 at 62.5 MHz.
+uint32_t COscilloscope::calcFilterCalibDecimation() {
+    constexpr double calibSignalFreq = 1000.0;
+    constexpr uint32_t defaultDecimation = 8;
+    auto rate = getADCRate();
+    if (rate == 0) {
+        ERROR_LOG("Can't get ADC rate, using default decimation %d for filter calibration", defaultDecimation);
+        return defaultDecimation;
+    }
+    // Half a period of the signal has to cover half of the buffer.
+    auto ideal = (double)rate / (calibSignalFreq * ADC_BUFFER_SIZE);
+    auto power = std::lround(std::log2(ideal));
+    if (power < 0)
+        power = 0;
+    if (power > 16)
+        power = 16;
+    return 1u << power;
 }
 
 void COscilloscope::setGEN_DISABLE() {

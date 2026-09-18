@@ -36,6 +36,7 @@ using namespace rp_calib;
 CFilter_logic::Ptr g_filter_logic = nullptr;
 CFilter_logicNch::Ptr g_filter_logicNch = nullptr;
 int g_sub_progress = 0;
+uint32_t g_filter_calib_dec = 8;
 
 COscilloscope::Ptr g_acq = nullptr;
 CCalib::Ptr g_calib = nullptr;
@@ -193,6 +194,7 @@ int rp_app_init(void) {
     g_calib_man = CCalibMan::Create(g_acq);
 
     if (rp_HPGetFastADCIsFilterPresentOrDefault()) {
+        g_filter_calib_dec = COscilloscope::calcFilterCalibDecimation();
         g_filter_logic = CFilter_logic::Create(g_calib_man);
         g_filter_logicNch = CFilter_logicNch::Create(g_calib_man);
         g_acq->setCursor1(cursor_x1.Value());
@@ -486,7 +488,7 @@ void calibFilter() {
 
         g_calib_man->setDisableFilter((rp_channel_t)adc_channel.Value(), f_init_kk_value.Value());  // Disable filter in calib manager
 
-        g_acq->startAutoFilter(8);
+        g_acq->startAutoFilter(g_filter_calib_dec);
         filt_calib_step.SendValue(2);
         fauto_calib_progress.SendValue(0);
         return;
@@ -513,8 +515,10 @@ void calibFilter() {
     if (filt_calib_step.Value() == 3) {
         g_filter_logic->setGoodCalibParameter();
         std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+        auto lastIndex = g_acq->getDataAutoFilter().index;
         while (1) {
-            auto d = g_acq->getDataAutoFilter();
+            auto d = g_acq->getNewDataAutoFilter(lastIndex);
+            lastIndex = d.index;
             if (d.ampl > 0) {
                 float nominal = 0.9;
                 // Use external generator
@@ -550,6 +554,22 @@ void calibFilter() {
     }
 }
 
+// Amplitude (PP) calibration of one channel. The loop is paced by the acquisition
+// thread: every step works on a buffer that was captured after the previous step had
+// been applied, instead of spinning on the last published one.
+void calibFilterPPCh(rp_channel_t _ch) {
+    g_filter_logicNch->setGoodCalibParameterCh(_ch);
+    std::this_thread::sleep_for(std::chrono::microseconds(1000000));
+    auto volt_ref = f_external_gen.Value() ? f_ref_volt.Value() : 0.9;
+    auto lastIndex = g_acq->getDataAutoFilterSync().valueCH[_ch].index;
+    while (1) {
+        auto d = g_acq->getNewDataAutoFilterSync(lastIndex);
+        lastIndex = d.valueCH[_ch].index;
+        if (g_filter_logicNch->calibPPCh(_ch, d, volt_ref) != 0)
+            break;
+    }
+}
+
 int calibAutoFilter() {
     if (!g_filter_logicNch || !g_calib_man || !g_acq)
         return 0;
@@ -572,7 +592,7 @@ int calibAutoFilter() {
             fauto_value_ch_after[i].Value() = 0;
         }
         g_sub_progress = 0;
-        g_calib_man->initSq(8);
+        g_calib_man->initSq(g_filter_calib_dec);
         g_filter_logicNch->init();
         if (getDACChannels() >= 2) {
             g_calib_man->setOffset(RP_CH_1, 0);
@@ -582,7 +602,7 @@ int calibAutoFilter() {
             g_calib_man->enableGen(RP_CH_1, true);
         }
         g_acq->setFilterBypass(false);
-        g_acq->startAutoFilterNCh(8);
+        g_acq->startAutoFilterNCh(g_filter_calib_dec);
         f_ss_state.SendValue(f_ss_next_step.Value());
         f_ss_next_step.SendValue(-1);
         return 1;
@@ -630,34 +650,14 @@ int calibAutoFilter() {
         }
 
         if (g_sub_progress == 2) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_1);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_1, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_1);
             fauto_calib_progress.SendValue(110);
             g_sub_progress = 3;
             return 1;
         }
 
         if (g_sub_progress == 3) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_2);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_2, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_2);
             fauto_calib_progress.SendValue(120);
 
             g_sub_progress = 4;
@@ -669,34 +669,14 @@ int calibAutoFilter() {
         }
 
         if (g_sub_progress == 4) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_3);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_3, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_3);
             fauto_calib_progress.SendValue(130);
             g_sub_progress = 5;
             return 1;
         }
 
         if (g_sub_progress == 5) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_4);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_4, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_4);
             fauto_calib_progress.SendValue(140);
             g_sub_progress = 6;
             return 1;
@@ -743,7 +723,7 @@ int calibAutoFilter() {
             g_calib_man->enableGen(RP_CH_2, true);
         }
 
-        g_acq->startAutoFilterNCh(8);
+        g_acq->startAutoFilterNCh(g_filter_calib_dec);
         f_ss_state.SendValue(f_ss_next_step.Value());
         f_ss_next_step.SendValue(-1);
         return 1;
@@ -787,34 +767,14 @@ int calibAutoFilter() {
         }
 
         if (g_sub_progress == 2) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_1);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_1, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_1);
             fauto_calib_progress.SendValue(110);
             g_sub_progress = 3;
             return 1;
         }
 
         if (g_sub_progress == 3) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_2);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_2, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_2);
             fauto_calib_progress.SendValue(120);
 
             g_sub_progress = 4;
@@ -825,34 +785,14 @@ int calibAutoFilter() {
         }
 
         if (g_sub_progress == 4) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_3);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_3, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_3);
             fauto_calib_progress.SendValue(120);
             g_sub_progress = 5;
             return 1;
         }
 
         if (g_sub_progress == 5) {
-            g_filter_logicNch->setGoodCalibParameterCh(RP_CH_4);
-            std::this_thread::sleep_for(std::chrono::microseconds(1000000));
-            auto ext = f_external_gen.Value();
-            auto volt_ref = f_ref_volt.Value();
-            if (!ext)
-                volt_ref = 0.9;
-            while (1) {
-                auto d = g_acq->getDataAutoFilterSync();
-                if (g_filter_logicNch->calibPPCh(RP_CH_4, d, volt_ref) != 0)
-                    break;
-            }
+            calibFilterPPCh(RP_CH_4);
             fauto_calib_progress.SendValue(120);
             g_sub_progress = 6;
             return 1;
