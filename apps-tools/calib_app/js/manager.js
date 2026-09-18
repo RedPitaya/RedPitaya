@@ -22,7 +22,7 @@
             $("#B_DISABLE_CONT").hide();
             $("#B_AUTO_CLOSE_CONT").hide();
             $("#B_RESET_CONT").hide();
-            $("#B_EEPROM_SHOW_CONT").hide();
+            $("#B_MENU_CONT").hide();
             SW.setWinShow(false)
         } else {
             $("#main_menu_body").hide();
@@ -54,7 +54,7 @@
                 $("#B_APPLY_CONT").show();
                 $("#B_CLOSE_CONT").show();
                 $("#B_RESET_CONT").show();
-                $("#B_EEPROM_SHOW_CONT").show();
+                $("#B_MENU_CONT").show();
             } else {
                 $("#adc_mode_body").hide();
             }
@@ -348,6 +348,14 @@
 
         $('#B_EEPROM_SHOW').on('click', function(ev) {
             SW.setWinShow(true)
+        });
+
+        $('#B_AUTO_ADC_SHOW').on('click', function(ev) {
+            OBJ.adcAutoShowDialog();
+        });
+
+        $('#auto_adc_calib_btn').on('click', function(ev) {
+            OBJ.adcAutoStartCalib();
         });
 
 

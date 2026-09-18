@@ -7,6 +7,8 @@
 #include <fstream>
 
 #include <algorithm>
+#include <cmath>
+#include <cstdio>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -106,6 +108,12 @@ CFloatParameter ch_gain_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_gain_a
 CIntParameter ch_off_adc_new[RP_CALIB_MAX_ADC_CHANNELS] = INIT("ch", "_off_adc_new", CBaseParameter::RW, 0, 0, -16382, 16382);
 
 CBooleanParameter adc_man_filter_bypass("adc_man_filter_bypass", CBaseParameter::RW, true, 0);
+
+// Parameters of the automatic ADC calibration started from the manual mode
+CBooleanParameter auto_adc_ch_enable[RP_CALIB_MAX_ADC_CHANNELS] = INIT("auto_adc_ch", "_enable", CBaseParameter::RW, false, 0);
+CFloatParameter auto_adc_amp("auto_adc_amp", CBaseParameter::RW, 0.9, 0, 0.001, 20);
+CIntParameter auto_adc_state("auto_adc_state", CBaseParameter::RW, 0, 0, -1, 1);  // 0 - idle, 1 - done, -1 - error
+CStringParameter auto_adc_status("auto_adc_status", CBaseParameter::RW, "", 0);
 
 CIntParameter calib_sig("calib_sig", CBaseParameter::RW, 0, 0, -2147483647, 2147483647);
 CBooleanParameter hv_lv_mode("hv_lv_mode", CBaseParameter::RW, false, 0);
@@ -303,6 +311,173 @@ void getNewCalib() {
 
         sendCalibInManualMode(true);
     }
+}
+
+#define AUTO_ADC_SKIP_BUFFERS 2       // buffers dropped after the calibration has been changed
+#define AUTO_ADC_MIN_BUFFERS 2        // buffers that have to be averaged for one measurement
+#define AUTO_ADC_MAX_BUFFERS 20       // buffers after which one measurement stops early
+#define AUTO_ADC_MEASURE_TIME_MS 600  // time budget of one measurement, the decimation sets the buffer rate
+#define AUTO_ADC_TIMEOUT_MS 5000      // a measurement that takes longer means a broken acquisition
+#define AUTO_ADC_MAX_ITERATION 4
+#define AUTO_ADC_OFFSET_EPS 1.0       // ADC counts
+#define AUTO_ADC_GAIN_EPS 0.0002      // relative deviation of the measured amplitude
+#define AUTO_ADC_MIN_AMPLITUDE 0.01   // V
+
+struct autoADCMeasure_t {
+    double mean_raw[RP_CALIB_MAX_ADC_CHANNELS];  // DC level of the signal in ADC counts
+    double p_p[RP_CALIB_MAX_ADC_CHANNELS];       // peak to peak value of the signal in volts
+};
+
+// Averages the buffers acquired within AUTO_ADC_MEASURE_TIME_MS. The rate of the buffers depends
+// on the decimation, so the measurement is limited by time and not by a fixed number of buffers.
+// The buffers acquired right after a calibration change can still hold the previous calibration,
+// AUTO_ADC_SKIP_BUFFERS of them are dropped first.
+bool measureForAutoADC(autoADCMeasure_t* _out) {
+    for (auto i = 0u; i < RP_CALIB_MAX_ADC_CHANNELS; i++) {
+        _out->mean_raw[i] = 0;
+        _out->p_p[i] = 0;
+    }
+
+    auto last_index = g_acq->getData().index;
+    auto start = std::chrono::steady_clock::now();
+    auto skip = AUTO_ADC_SKIP_BUFFERS;
+    auto collected = 0;
+
+    while (collected < AUTO_ADC_MAX_BUFFERS) {
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start).count();
+        if (elapsed >= AUTO_ADC_TIMEOUT_MS)
+            break;
+        if (collected >= AUTO_ADC_MIN_BUFFERS && elapsed >= AUTO_ADC_MEASURE_TIME_MS)
+            break;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        auto d = g_acq->getData();
+        if (d.index == last_index)
+            continue;
+        last_index = d.index;
+        if (skip > 0) {
+            skip--;
+            continue;
+        }
+        for (auto i = 0u; i < getADCChannels(); i++) {
+            _out->mean_raw[i] += d.ch_mean_raw[i];
+            _out->p_p[i] += d.ch_p_p[i];
+        }
+        collected++;
+    }
+
+    if (collected < AUTO_ADC_MIN_BUFFERS)
+        return false;
+
+    for (auto i = 0u; i < getADCChannels(); i++) {
+        _out->mean_raw[i] /= collected;
+        _out->p_p[i] /= collected;
+    }
+    return true;
+}
+
+// Automatic offset and gain calibration of the channels selected in the manual mode dialog.
+// A periodic signal of the amplitude set in the dialog has to be applied to every selected
+// input: the DC level of the signal gives the offset, the peak to peak value gives the gain.
+// Only the calibration of the currently selected input mode is changed, writing it to the
+// EEPROM is left to the SAVE button.
+void calibManualAutoADC() {
+    if (!g_calib_man || !g_acq)
+        return;
+
+    std::vector<uint8_t> channels;
+    for (auto i = 0u; i < getADCChannels(); i++) {
+        if (auto_adc_ch_enable[i].Value())
+            channels.push_back(i);
+    }
+
+    if (channels.empty()) {
+        auto_adc_status.SendValue("No channel selected");
+        auto_adc_state.SendValue(-1);
+        return;
+    }
+
+    // The averaging filter of the acquisition still holds the buffers measured before the
+    // calibration was changed, measureForAutoADC() does its own averaging instead.
+    g_acq->setAvgFilter(false);
+
+    auto finish = [](int _state, const char* _status) {
+        g_acq->setAvgFilter(avg_last_mode.Value());
+        g_acq->resetAvgFilter();
+        auto_adc_status.SendValue(_status);
+        auto_adc_state.SendValue(_state);
+    };
+
+    autoADCMeasure_t m;
+    auto amplitude = auto_adc_amp.Value();
+
+    // Offset. The measured DC level is expressed in ADC counts of the calibrated signal,
+    // the gain has to be removed from it before it is added to the calibration offset.
+    for (auto iteration = 0; iteration < AUTO_ADC_MAX_ITERATION; iteration++) {
+        if (!measureForAutoADC(&m)) {
+            finish(-1, "No data from the ADC");
+            return;
+        }
+
+        // Nothing is changed until it is known that all the selected channels have a signal.
+        if (iteration == 0) {
+            for (auto ch : channels) {
+                if (m.p_p[ch] / 2.0 < AUTO_ADC_MIN_AMPLITUDE) {
+                    char status[64];
+                    snprintf(status, sizeof(status), "No signal on channel %d", ch + 1);
+                    finish(-1, status);
+                    return;
+                }
+            }
+        }
+
+        auto done = true;
+        for (auto ch : channels) {
+            auto gain = g_calib_man->getCalibValue((rp_channel_t)ch, ADC_CH_GAIN);
+            if (gain <= 0)
+                gain = 1;
+            auto delta = m.mean_raw[ch] / gain;
+            if (fabs(delta) < AUTO_ADC_OFFSET_EPS)
+                continue;
+            auto offset = g_calib_man->getCalibValue((rp_channel_t)ch, ADC_CH_OFF) + delta;
+            offset = std::clamp(std::round(offset), (double)ch_off_adc[ch].GetMin(), (double)ch_off_adc[ch].GetMax());
+            g_calib_man->setCalibValue((rp_channel_t)ch, ADC_CH_OFF, offset);
+            g_calib_man->updateCalib((rp_channel_t)ch);
+            done = false;
+        }
+
+        if (done)
+            break;
+    }
+
+    // Gain. The measured peak to peak value has to become twice the reference amplitude.
+    // The offset is applied before the gain, so it stays valid when the gain is changed.
+    for (auto iteration = 0; iteration < AUTO_ADC_MAX_ITERATION; iteration++) {
+        if (!measureForAutoADC(&m)) {
+            finish(-1, "No data from the ADC");
+            return;
+        }
+
+        auto done = true;
+        for (auto ch : channels) {
+            if (m.p_p[ch] <= 0)
+                continue;
+            auto k = (amplitude * 2.0) / m.p_p[ch];
+            if (fabs(k - 1.0) < AUTO_ADC_GAIN_EPS)
+                continue;
+            auto gain = g_calib_man->getCalibValue((rp_channel_t)ch, ADC_CH_GAIN) * k;
+            gain = std::clamp(gain, (double)ch_gain_adc[ch].GetMin(), (double)ch_gain_adc[ch].GetMax());
+            g_calib_man->setCalibValue((rp_channel_t)ch, ADC_CH_GAIN, gain);
+            g_calib_man->updateCalib((rp_channel_t)ch);
+            done = false;
+        }
+
+        if (done)
+            break;
+    }
+
+    sendCalibInManualMode(true);
+    finish(1, "");
 }
 
 void setupGen() {
@@ -886,6 +1061,17 @@ void UpdateParams(void) {
             reset_filter_channel.Update();
         }
 
+        // AUTO ADC CALIBRATION IN MANUAL MODE
+        for (auto i = 0u; i < getADCChannels(); i++) {
+            if (auto_adc_ch_enable[i].IsNewValue()) {
+                auto_adc_ch_enable[i].Update();
+            }
+        }
+
+        if (auto_adc_amp.IsNewValue()) {
+            auto_adc_amp.Update();
+        }
+
         if (ss_next_step.IsNewValue() || ref_volt.IsNewValue()) {
             ss_next_step.Update();
             ref_volt.Update();
@@ -993,6 +1179,10 @@ void UpdateParams(void) {
 
             if (sig == 5) {
                 g_calib_man->writeCalib();
+            }
+
+            if (sig == 11) {
+                calibManualAutoADC();
             }
 
             // FILTER MANUAL CALIB

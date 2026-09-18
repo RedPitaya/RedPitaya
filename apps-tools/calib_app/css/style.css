@@ -493,3 +493,43 @@ rbutton {
 .ok_button_dialog:hover {
     color: #444 !important;
 }
+
+.auto_adc_ch {
+    display: inline-block;
+    margin-right: 20px;
+    margin-bottom: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* The box is drawn here instead of using the native control. "input" above gives
+   every input the look of a text field and -webkit-user-modify, which on a
+   checkbox puts a caret on click instead of toggling it, and "input:focus" drops
+   -webkit-appearance, which removes a native box the moment it is clicked. */
+.auto_adc_ch input[type=checkbox] {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-user-modify: read-only;
+    position: relative;
+    width: 16px;
+    height: 16px;
+    margin: 0 6px 0 0;
+    padding: 0;
+    vertical-align: -3px;
+    background: #2b2b2a;
+    border: 1px solid #999;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.auto_adc_ch input[type=checkbox]:checked::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 4px;
+    height: 9px;
+    border: solid #C0C0C0;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}

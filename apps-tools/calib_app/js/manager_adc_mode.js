@@ -629,6 +629,85 @@ $(function() {
         $("#B_DEC_SELECTOR").val(_value.value);
     }
 
+    OBJ.adcAutoCalibRun = false;
+    OBJ.adcAutoStatusMsg = "";
+
+    OBJ.adcAutoShowStatus = function(_text, _is_error) {
+        $("#AUTO_ADC_STATUS").css('color', _is_error ? '#ff5512' : '');
+        $("#AUTO_ADC_STATUS").text(_text);
+    }
+
+    OBJ.adcAutoLockDialog = function(_lock) {
+        $("#auto_adc_channels input").prop('disabled', _lock);
+        $("#AUTO_ADC_AMPL").prop('disabled', _lock);
+        $("#auto_adc_calib_btn").css('pointer-events', _lock ? 'none' : '');
+        $("#auto_adc_calib_btn").css('opacity', _lock ? 0.5 : '');
+    }
+
+    OBJ.adcAutoShowDialog = function() {
+        if (OBJ.adcAutoCalibRun) return;
+        OBJ.adcAutoShowStatus("", false);
+        OBJ.adcAutoLockDialog(false);
+        $("#dialog_auto_adc").modal('show');
+    }
+
+    OBJ.adcAutoStartCalib = function() {
+        if (OBJ.adcAutoCalibRun) return;
+
+        var state = [];
+        var selected = 0;
+        for (var ch = 1; ch <= 4; ch++) {
+            var box = $("#AUTO_ADC_CH" + ch);
+            state[ch] = (box.length !== 0) && box.is(':checked');
+            if (state[ch]) selected++;
+        }
+
+        if (selected === 0) {
+            OBJ.adcAutoShowStatus("Select at least one channel.", true);
+            return;
+        }
+
+        if (checkFloatParameters2("#AUTO_ADC_AMPL", 0.001, 20) === 0) {
+            return;
+        }
+
+        for (var ch = 1; ch <= 4; ch++) {
+            CLIENT.parametersCache["auto_adc_ch" + ch + "_enable"] = { value: state[ch] };
+        }
+        CLIENT.parametersCache["auto_adc_amp"] = { value: parseFloat($("#AUTO_ADC_AMPL").val()) };
+        CLIENT.sendParameters();
+
+        OBJ.adcAutoCalibRun = true;
+        OBJ.adcAutoStatusMsg = "";
+        OBJ.adcAutoLockDialog(true);
+        OBJ.adcAutoShowStatus("Calibration in progress...", false);
+
+        CLIENT.parametersCache["calib_sig"] = { value: 11 };
+        CLIENT.sendParameters();
+    }
+
+    OBJ.adcAutoSetStatus = function(_value) {
+        OBJ.adcAutoStatusMsg = _value.value;
+    }
+
+    OBJ.adcAutoSetState = function(_value) {
+        if (!OBJ.adcAutoCalibRun) return;
+        OBJ.adcAutoCalibRun = false;
+        OBJ.adcAutoLockDialog(false);
+
+        var state = _value.value;
+        // The status message can arrive in the same packet, but after the state.
+        setTimeout(function() {
+            if (state === 1) {
+                OBJ.adcCalibChange = true;
+                OBJ.adcAutoShowStatus("Calibration finished.", false);
+                setTimeout(function() { $("#dialog_auto_adc").modal('hide'); }, 1000);
+            } else {
+                OBJ.adcAutoShowStatus(OBJ.adcAutoStatusMsg !== "" ? OBJ.adcAutoStatusMsg : "Calibration failed.", true);
+            }
+        }, 0);
+    }
+
     OBJ.amConnectCallbacks = function() {
         $('.man_flipswitch').change(function() {
             $(this).next().text($(this).is(':checked') ? ':checked' : ':not(:checked)');
@@ -768,4 +847,7 @@ $(function() {
     SM.param_callbacks["ch1_off_dac"] = OBJ.amSetCh1OffDAC;
     SM.param_callbacks["ch2_off_dac"] = OBJ.amSetCh2OffDAC;
     SM.param_callbacks["EEPROM_CALIB_VALUE"] = SW.setEppromValuesInDialog;
+
+    SM.param_callbacks["auto_adc_state"] = OBJ.adcAutoSetState;
+    SM.param_callbacks["auto_adc_status"] = OBJ.adcAutoSetStatus;
 });

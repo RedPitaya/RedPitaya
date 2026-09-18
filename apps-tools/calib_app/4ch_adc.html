@@ -96,11 +96,15 @@
                 </div>
                 <div class="collapse navbar-collapse">
                     <ul class="nav navbar-nav">
-                        <ul class="nav navbar-nav">
-                            <li id="B_EEPROM_SHOW_CONT" style="display: none">
-                                <a id="B_EEPROM_SHOW" href="#" style="color:#cdcccc">EEPROM</a>
-                            </li>
-                        </ul>
+                        <li class="dropdown" id="B_MENU_CONT" style="display: none">
+                            <a class="btn btn-default dropdown-toggle" type="button" id="menu2"
+                                data-toggle="dropdown">MENU<span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="menu2"
+                                style="background: #cdcccc; min-width: 0px;">
+                                <li><a id="B_EEPROM_SHOW" href="#">EEPROM</a></li>
+                                <li><a id="B_AUTO_ADC_SHOW" href="#">AUTO ADC</a></li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
                 <div align="center"
@@ -1309,6 +1313,50 @@
 
                 <div class="bazaar-link" style="float: right; width: 45%;">
                     <a style="border: 1px solid; width: 100%" id="reset_cancel_btn" data-dismiss="modal"
+                        class="btn">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="dialog_auto_adc" tabindex="-1" role="dialog" aria-labelledby="bazaar_naLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Auto ADC calibration</h4>
+            </div>
+            <div class="modal-body" style="text-align: center; font-size: 18px;">
+                <p id="auto_adc_dialog_text" style="margin: 0;">Apply a periodic signal of the amplitude set below to
+                    the selected inputs. Offset and gain are calculated for the input mode that is currently
+                    selected.</p>
+                <div class="container_inline" style="margin-bottom: 5px;">
+                    <div style="width: 200px;text-align: right;">Channels:</div>
+                    <div id="auto_adc_channels" style="width: 230px;margin-left: 10px;text-align: left;">
+                        <label class="auto_adc_ch"><input id="AUTO_ADC_CH1" type="checkbox" checked>1</label>
+                        <label class="auto_adc_ch"><input id="AUTO_ADC_CH2" type="checkbox" checked>2</label>
+                        <label class="auto_adc_ch"><input id="AUTO_ADC_CH3" type="checkbox" checked>3</label>
+                        <label class="auto_adc_ch"><input id="AUTO_ADC_CH4" type="checkbox" checked>4</label>
+                    </div>
+                </div>
+                <div class="container_inline">
+                    <div style="width: 200px;text-align: right;">Amplitude (V):</div>
+                    <div style="width: 230px;margin-left: 10px;text-align: left;">
+                        <input id="AUTO_ADC_AMPL" type="text" size="5" style="width: 230px;"
+                            value="0.9" step="0.001" min="0.001" max="20">
+                    </div>
+                </div>
+                <p id="AUTO_ADC_STATUS" style="margin-top: 15px;margin-bottom: 0;font-size: 15px;height: 20px;"></p>
+            </div>
+            <div class="modal-footer">
+                <div class="bazaar-link" style="float: left; width: 45%;">
+                    <a style="border: 1px solid; width: 100%" id="auto_adc_calib_btn" class="btn">Calibrate</a>
+                </div>
+
+                <div class="bazaar-link" style="float: right; width: 45%;">
+                    <a style="border: 1px solid; width: 100%" id="auto_adc_cancel_btn" data-dismiss="modal"
                         class="btn">Cancel</a>
                 </div>
             </div>
