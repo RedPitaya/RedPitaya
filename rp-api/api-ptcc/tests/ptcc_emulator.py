@@ -20,7 +20,7 @@ import sys
 from ptcc_library import PtccObjectID as OID
 from ptcc_library.communication.ptcc_protocol import calculate_ptcc_crc
 from ptcc_library.ptcc_object import PtccObject
-from ptcc_library.ptcc_defines import ValType
+from ptcc_library.ptcc_defines import LOOKUP_VALUE_LISTS, ValType
 from ptcc_library.ptcc_utils import to_bytes
 
 MODULE_TYPES = {"NONE": 0, "NOMEM": 1, "MEM": 2, "LAB_M": 3}
@@ -72,7 +72,7 @@ def frame(container_id, items):
     return bytes([ord("$")] + encoded + [ord("#")])
 
 
-def build_responses(args):
+def build_responses(args, basic, lab_m):
     module = MODULE_TYPES[args.module]
 
     monitor_fields = [
@@ -99,24 +99,26 @@ def build_responses(args):
 
     monitor = frame(OID.PTCC_MONITOR, monitor_fields)
 
-    def basic_params(setpoint, current_limit):
+    def basic_params(values):
         return frame(OID.MODULE_BASIC_PARAMS, [
-            (OID.MODULE_BASIC_PARAMS_T_DET, setpoint),
-            (OID.MODULE_BASIC_PARAMS_I_TEC_MAX, current_limit),
-            (OID.MODULE_BASIC_PARAMS_U_SUP_PLUS, 9.0),
-            (OID.MODULE_BASIC_PARAMS_U_SUP_MINUS, -9.0),
-            (OID.MODULE_BASIC_PARAMS_PWM, 1000),
-            (OID.MODULE_BASIC_PARAMS_SUP_CTRL, 0),
-            (OID.MODULE_BASIC_PARAMS_FAN_CTRL, 0),
-            (OID.MODULE_BASIC_PARAMS_TEC_CTRL, 2),
+            (OID.MODULE_BASIC_PARAMS_T_DET, values["setpoint"]),
+            (OID.MODULE_BASIC_PARAMS_I_TEC_MAX, values["current_limit"]),
+            (OID.MODULE_BASIC_PARAMS_U_SUP_PLUS, values["u_sup_plus"]),
+            (OID.MODULE_BASIC_PARAMS_U_SUP_MINUS, values["u_sup_minus"]),
+            (OID.MODULE_BASIC_PARAMS_PWM, values["pwm"]),
+            (OID.MODULE_BASIC_PARAMS_SUP_CTRL, values["supply_ctrl"]),
+            (OID.MODULE_BASIC_PARAMS_FAN_CTRL, values["fan_ctrl"]),
+            (OID.MODULE_BASIC_PARAMS_TEC_CTRL, values["tec_ctrl"]),
         ])
 
-    params = basic_params(args.setpoint, 1.5)
+    params = basic_params(basic)
 
     # Real modules restrict the setpoint far more than the protocol does;
     # the user guide quotes 180 to 300 K.
-    params_min = basic_params(args.min_setpoint, 0.0)
-    params_max = basic_params(args.max_setpoint, 2.0)
+    params_min = basic_params(dict(basic, setpoint=args.min_setpoint, current_limit=0.0,
+                                   u_sup_plus=3.0, u_sup_minus=-15.0, pwm=0))
+    params_max = basic_params(dict(basic, setpoint=args.max_setpoint, current_limit=2.0,
+                                   u_sup_plus=15.0, u_sup_minus=-3.0, pwm=65535))
 
     device_iden = frame(OID.DEVICE_IDEN, [
         (OID.DEVICE_IDEN_TYPE, 1),
@@ -152,10 +154,167 @@ def build_responses(args):
     for command in (OID.GET_MODULE_USER_MAX, OID.GET_PTCC_MOD_NO_MEM_USER_MAX):
         responses[command.value] = params_max
 
+    if module == MODULE_TYPES["LAB_M"]:
+        responses.update(lab_m_responses(lab_m))
+
     return responses
 
 
-def serve(master, responses, corrupt_crc):
+def lab_m_responses(state):
+    """The second container pair only a LAB_M module answers.
+
+    DET_U, DET_I and OFFSET are linear mapped upstream (raw 0..256 to 0..1 V,
+    0..10 mA and +1..-1 V), so the values here are SI and the encoder does the
+    mapping. GAIN is a device code, TRANS/ACDC/BW are indices into the
+    upstream value lists.
+    """
+
+    def lab_m_params(values):
+        return frame(OID.MODULE_LAB_M_PARAMS, [
+            (OID.MODULE_LAB_M_PARAMS_DET_U, values["det_bias_u"]),
+            (OID.MODULE_LAB_M_PARAMS_DET_I, values["det_bias_i"]),
+            (OID.MODULE_LAB_M_PARAMS_GAIN, values["gain_code"]),
+            (OID.MODULE_LAB_M_PARAMS_OFFSET, values["offset"]),
+            (OID.MODULE_LAB_M_PARAMS_VARACTOR, values["varactor"]),
+            (OID.MODULE_LAB_M_PARAMS_TRANS, values["transimpedance"]),
+            (OID.MODULE_LAB_M_PARAMS_ACDC, values["coupling"]),
+            (OID.MODULE_LAB_M_PARAMS_BW, values["bandwidth"]),
+        ])
+
+    monitor = frame(OID.MODULE_LAB_M_MONITOR, [
+        (OID.MODULE_LAB_M_MONITOR_SUP_PLUS, 5.02),
+        (OID.MODULE_LAB_M_MONITOR_SUP_MINUS, -5.01),
+        (OID.MODULE_LAB_M_MONITOR_FAN_PLUS, 11.98),
+        (OID.MODULE_LAB_M_MONITOR_TEC_PLUS, 0.842),
+        (OID.MODULE_LAB_M_MONITOR_TEC_MINUS, -0.840),
+        (OID.MODULE_LAB_M_MONITOR_TH1, 1.234),
+        (OID.MODULE_LAB_M_MONITOR_TH2, 0.987),
+        (OID.MODULE_LAB_M_MONITOR_U_DET, 0.650),
+        (OID.MODULE_LAB_M_MONITOR_U_1ST, 0.112),
+        (OID.MODULE_LAB_M_MONITOR_U_OUT, 1.503),
+        (OID.MODULE_LAB_M_MONITOR_TEMP, 29.5),
+    ])
+
+    params = lab_m_params(state)
+    # Raw 0 is +1 V for OFFSET, so USER_MIN carries the higher voltage.
+    params_min = lab_m_params({"det_bias_u": 0.0, "det_bias_i": 0.0, "gain_code": 48,
+                               "offset": 1.0, "varactor": 0, "transimpedance": 0,
+                               "coupling": 0, "bandwidth": 0})
+    params_max = lab_m_params({"det_bias_u": 1.0, "det_bias_i": 0.01, "gain_code": 111,
+                               "offset": -1.0, "varactor": 4095, "transimpedance": 1,
+                               "coupling": 1, "bandwidth": 2})
+
+    return {
+        OID.GET_MODULE_LAB_M_MONITOR.value: monitor,
+        OID.GET_MODULE_LAB_M_USER_SET.value: params,
+        OID.GET_MODULE_LAB_M_DEFAULT.value: params,
+        OID.SET_MODULE_LAB_M_USER_SET.value: params,
+        OID.GET_MODULE_LAB_M_USER_MIN.value: params_min,
+        OID.GET_MODULE_LAB_M_USER_MAX.value: params_max,
+    }
+
+
+class Responder:
+    """Answers requests and remembers what was written.
+
+    A SET command updates the stored basic parameters before it is answered,
+    so the next read returns the value the driver actually put on the wire.
+    Only the writable fields are tracked, the rest of the answers are static.
+    """
+
+    SET_COMMANDS = (OID.SET_MODULE_USER_SET.value,
+                    OID.SET_PTCC_MOD_NO_MEM_USER_SET.value,
+                    OID.SET_MODULE_LAB_M_USER_SET.value)
+
+    # Writable leaf -> the state entry it lands in.
+    BASIC_FIELDS = {
+        OID.MODULE_BASIC_PARAMS_T_DET.value: "setpoint",
+        OID.MODULE_BASIC_PARAMS_I_TEC_MAX.value: "current_limit",
+        OID.MODULE_BASIC_PARAMS_U_SUP_PLUS.value: "u_sup_plus",
+        OID.MODULE_BASIC_PARAMS_U_SUP_MINUS.value: "u_sup_minus",
+        OID.MODULE_BASIC_PARAMS_PWM.value: "pwm",
+        OID.MODULE_BASIC_PARAMS_SUP_CTRL.value: "supply_ctrl",
+        OID.MODULE_BASIC_PARAMS_FAN_CTRL.value: "fan_ctrl",
+        OID.MODULE_BASIC_PARAMS_TEC_CTRL.value: "tec_ctrl",
+    }
+    LAB_M_FIELDS = {
+        OID.MODULE_LAB_M_PARAMS_DET_U.value: "det_bias_u",
+        OID.MODULE_LAB_M_PARAMS_DET_I.value: "det_bias_i",
+        OID.MODULE_LAB_M_PARAMS_GAIN.value: "gain_code",
+        OID.MODULE_LAB_M_PARAMS_OFFSET.value: "offset",
+        OID.MODULE_LAB_M_PARAMS_VARACTOR.value: "varactor",
+        OID.MODULE_LAB_M_PARAMS_TRANS.value: "transimpedance",
+        OID.MODULE_LAB_M_PARAMS_ACDC.value: "coupling",
+        OID.MODULE_LAB_M_PARAMS_BW.value: "bandwidth",
+    }
+
+    def __init__(self, args):
+        self.args = args
+        self.basic = {
+            "setpoint": float(args.setpoint),
+            "current_limit": 1.5,
+            "u_sup_plus": 9.0,
+            "u_sup_minus": -9.0,
+            "pwm": 1000,
+            "supply_ctrl": 0,
+            "fan_ctrl": 0,
+            "tec_ctrl": 2,
+        }
+        self.lab_m = {
+            "det_bias_u": 0.5,
+            "det_bias_i": 0.004,
+            "gain_code": 85,     # X10
+            "offset": 0.0,
+            "varactor": 2048,
+            "transimpedance": 1,  # HIGH
+            "coupling": 1,        # DC
+            "bandwidth": 2,       # HIGH
+        }
+        self._rebuild()
+
+    def _rebuild(self):
+        self.responses = build_responses(self.args, self.basic, self.lab_m)
+
+    def answer(self, raw):
+        command = int.from_bytes(raw[0:2], "big")
+        if command in self.SET_COMMANDS:
+            self._apply(raw)
+        return self.responses.get(command)
+
+    def _apply(self, raw):
+        """Decodes a SET frame with the upstream parser and stores its values."""
+        try:
+            request = PtccObject(raw_object=raw[:-2])
+        except (ValueError, KeyError):
+            return
+
+        for container in request.objects:
+            for item in container.objects:
+                try:
+                    value = item.value
+                except (ValueError, KeyError):
+                    continue
+
+                if item.obj_id in self.BASIC_FIELDS:
+                    self.basic[self.BASIC_FIELDS[item.obj_id]] = _index_of(item.obj_id, value)
+                elif item.obj_id in self.LAB_M_FIELDS:
+                    self.lab_m[self.LAB_M_FIELDS[item.obj_id]] = _index_of(item.obj_id, value)
+
+        self._rebuild()
+
+
+def _index_of(object_id, value):
+    """Turns a decoded label back into the index the frames are built from."""
+    if not isinstance(value, str):
+        return value
+    labels = LOOKUP_VALUE_LISTS[OID(object_id)]
+    for index, label in enumerate(labels):
+        if label.strip().lower() == value.strip().lower():
+            return index
+    raise ValueError(f"unknown value {value!r} for {OID(object_id).name}")
+
+
+def serve(master, responder, corrupt_crc):
     buffer = b""
     while True:
         try:
@@ -179,7 +338,7 @@ def serve(master, responses, corrupt_crc):
             if len(raw) < 2:
                 continue
 
-            response = responses.get(int.from_bytes(raw[0:2], "big"))
+            response = responder.answer(raw) if responder else None
             if response is None:
                 continue
 
@@ -195,7 +354,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--module", default="MEM", choices=sorted(MODULE_TYPES))
     parser.add_argument("--t-det", type=float, default=253.150)
-    parser.add_argument("--setpoint", type=int, default=250)
+    parser.add_argument("--setpoint", type=float, default=250)
     parser.add_argument("--min-setpoint", type=int, default=180)
     parser.add_argument("--max-setpoint", type=int, default=300)
     parser.add_argument("--status", type=int, default=2)
@@ -207,7 +366,7 @@ def main():
                         help="accept requests but never answer, to exercise timeouts")
     args = parser.parse_args()
 
-    responses = {} if args.silent else build_responses(args)
+    responder = None if args.silent else Responder(args)
 
     master, slave = pty.openpty()
     print(os.ttyname(slave), flush=True)
@@ -215,7 +374,7 @@ def main():
     sys.stdout.flush()
 
     try:
-        serve(master, responses, args.corrupt_crc)
+        serve(master, responder, args.corrupt_crc)
     except KeyboardInterrupt:
         pass
 

@@ -77,6 +77,7 @@ add_executable(rp_ptcc_tests
     test_api_lookup.cpp
     test_api_monitor.cpp
     test_api_control.cpp
+    test_api_labm.cpp
 )
 
 target_include_directories(rp_ptcc_tests PRIVATE

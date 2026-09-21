@@ -86,6 +86,8 @@ TEST_F(PtccApi, CallsBeforeInitReportNotInitialized) {
 // absurd setpoint fails on "not initialized" rather than on a local guess.
 TEST_F(PtccApi, RangesAreNotSecondGuessedInTheCLayer) {
     EXPECT_EQ(rp_PtccSetSetpoint(-273), RP_PTCC_ENOINIT);
+    EXPECT_EQ(rp_PtccSetSupply(RP_PTCC_CTRL_ON, 12.0F, -12.0F), RP_PTCC_ENOINIT);
+    EXPECT_EQ(rp_PtccSetPwm(0), RP_PTCC_ENOINIT);
     EXPECT_EQ(rp_PtccSetSetpoint(230), RP_PTCC_ENOINIT);
     EXPECT_EQ(rp_PtccSetMaxCurrent(-0.5F), RP_PTCC_ENOINIT);
     EXPECT_EQ(rp_PtccSetMaxCurrent(1.5F), RP_PTCC_ENOINIT);

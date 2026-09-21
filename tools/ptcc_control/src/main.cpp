@@ -13,10 +13,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/param.h>
 #include <unistd.h>
 
 #include <iostream>
+#include <vector>
 
 extern "C" {
 #include "rp_ptcc.h"
@@ -48,26 +50,41 @@ int get_mode(rp_ptcc_ctrl_t *mode, const char *str) {
     return -1;
 }
 
-int get_register(rp_ptcc_register_t *reg, const char *str) {
-    if (strncmp(str, "=Set", 4) == 0) {
-        *reg = RP_PTCC_REG_USER_SET;
-        return 0;
-    }
-    if (strncmp(str, "=Default", 8) == 0) {
-        *reg = RP_PTCC_REG_DEFAULT;
-        return 0;
-    }
-    if (strncmp(str, "=Min", 4) == 0) {
-        *reg = RP_PTCC_REG_USER_MIN;
-        return 0;
-    }
-    if (strncmp(str, "=Max", 4) == 0) {
-        *reg = RP_PTCC_REG_USER_MAX;
-        return 0;
+int parse_register(rp_ptcc_register_t *reg, const char *str) {
+    static const char *const names[] = {"Default", "Set", "Min", "Max"};
+    static const rp_ptcc_register_t values[] = {RP_PTCC_REG_DEFAULT, RP_PTCC_REG_USER_SET,
+                                                RP_PTCC_REG_USER_MIN, RP_PTCC_REG_USER_MAX};
+
+    for (size_t index = 0; index < sizeof(values) / sizeof(values[0]); ++index) {
+        if (strcasecmp(str, names[index]) == 0) {
+            *reg = values[index];
+            return 0;
+        }
     }
 
     fprintf(stderr, "Unknown register: %s\n", str);
     return -1;
+}
+
+int get_register(rp_ptcc_register_t *reg, const char *str) {
+    if (str[0] != '=') {
+        fprintf(stderr, "Expected =<register>, got: %s\n", str);
+        return -1;
+    }
+    return parse_register(reg, str + 1);
+}
+
+/* Long options arrive without the '=' the short ones carry. */
+int parse_float(float *value, const char *str) {
+    char *end = NULL;
+    const double parsed = strtod(str, &end);
+    if (end == str || *end != '\0') {
+        fprintf(stderr, "Not a number: %s\n", str);
+        return -1;
+    }
+
+    *value = static_cast<float>(parsed);
+    return 0;
 }
 
 int get_float(float *value, const char *str) {
@@ -75,16 +92,86 @@ int get_float(float *value, const char *str) {
         fprintf(stderr, "Expected =<value>, got: %s\n", str);
         return -1;
     }
+    return parse_float(value, str + 1);
+}
 
-    char *end = NULL;
-    const double parsed = strtod(str + 1, &end);
-    if (end == str + 1 || *end != '\0') {
-        fprintf(stderr, "Not a number: %s\n", str + 1);
-        return -1;
+/* Matches one of the names a discrete setting accepts, case insensitively. */
+int parse_choice(int *value, const char *str, const char *const *names, int count,
+                 const char *what) {
+    for (int index = 0; index < count; ++index) {
+        if (strcasecmp(str, names[index]) == 0) {
+            *value = index;
+            return 0;
+        }
     }
 
-    *value = static_cast<float>(parsed);
-    return 0;
+    fprintf(stderr, "Unknown %s: %s (expected", what, str);
+    for (int index = 0; index < count; ++index) {
+        fprintf(stderr, " %s", names[index]);
+    }
+    fprintf(stderr, ")\n");
+    return -1;
+}
+
+void usage();
+
+/* Long only options for the detection module. */
+enum {
+    OPT_LABM_MONITOR = 1000,
+    OPT_LABM_PARAMS,
+    OPT_GAINS,
+    OPT_BIAS_VOLTAGE,
+    OPT_BIAS_CURRENT,
+    OPT_OFFSET,
+    OPT_GAIN,
+    OPT_VARACTOR,
+    OPT_TRANS,
+    OPT_COUPLING,
+    OPT_BANDWIDTH,
+    OPT_SUPPLY_MODE,
+    OPT_SUPPLY_PLUS,
+    OPT_SUPPLY_MINUS,
+    OPT_PWM,
+};
+
+/** One optional setting: printed when the option carries no value. */
+struct Setting {
+    bool requested = false;
+    bool write = false;
+    float value = 0.0F;
+};
+
+const char *const CTRL_NAMES[] = {"Auto", "Off", "On"};
+const char *const TRANS_NAMES[] = {"Low", "High"};
+const char *const COUPLING_NAMES[] = {"AC", "DC"};
+const char *const BANDWIDTH_NAMES[] = {"Low", "Mid", "High"};
+
+void take_value(Setting *option, const char *argument) {
+    option->requested = true;
+    if (argument == NULL) {
+        return;
+    }
+    if (parse_float(&option->value, argument) != 0) {
+        usage();
+        exit(EXIT_FAILURE);
+    }
+    option->write = true;
+}
+
+void take_choice(Setting *option, const char *argument, const char *const *names, int count,
+                 const char *what) {
+    option->requested = true;
+    if (argument == NULL) {
+        return;
+    }
+
+    int index = 0;
+    if (parse_choice(&index, argument, names, count, what) != 0) {
+        usage();
+        exit(EXIT_FAILURE);
+    }
+    option->value = static_cast<float>(index);
+    option->write = true;
 }
 
 int get_long(long *value, const char *str) {
@@ -196,18 +283,39 @@ void usage() {
             "\n"
             "Control:\n"
             "   -t    Without a value prints the temperature setpoint.\n"
-            "         With =Kelvin writes a new setpoint, in whole Kelvins.\n"
+            "         With =Kelvin writes a new setpoint, fractions allowed.\n"
             "         The accepted range depends on the module, see -i.\n"
             "   -x    TEC current limit in Amperes.\n"
             "   -c    Cooler control. Without a value prints the current mode.\n"
             "   -f    Fan control. Without a value prints the current mode.\n"
+            "   --supply-mode[=State]   Module supply control.\n"
+            "   --supply-plus[=V]       Positive supply rail, 3 to 15 V.\n"
+            "   --supply-minus[=V]      Negative supply rail, -15 to -3 V.\n"
+            "         The three travel in one message: the fields left out keep\n"
+            "         the value the module already holds.\n"
+            "   --pwm[=value]           TEC PWM setting, 0 to 65535.\n"
+            "\n"
+            "Detection module, LAB_M modules only:\n"
+            "   --labm-monitor          Read the detection module monitor.\n"
+            "   --labm-params[=Reg]     Dump a detection module register, Set by default.\n"
+            "   --gains                 List the gains the device accepts.\n"
+            "   --bias-voltage[=V]      Detector bias voltage.\n"
+            "   --bias-current[=A]      Detector bias current compensation.\n"
+            "   --offset[=V]            Output DC offset.\n"
+            "   --gain[=V/V]            Preamplifier gain, one of --gains.\n"
+            "   --varactor[=code]       Preamp 1st stage frequency compensation.\n"
+            "   --transimpedance[=Low|High]\n"
+            "   --coupling[=AC|DC]\n"
+            "   --bandwidth[=Low|Mid|High]\n"
+            "         Each of these prints the current value when given without one.\n"
             "\n"
             "Optional parameters:\n"
             "    State    = [Off | On | Auto]\n"
             "    Register = [Set | Default | Min | Max]\n"
             "\n"
-            "WARNING: -t and -x write to the module EEPROM. Do not call them in\n"
-            "         a loop, the memory has a limited number of write cycles.\n"
+            "WARNING: -t, -x and every detection module setting write to the module\n"
+            "         EEPROM. Do not call them in a loop, the memory has a limited\n"
+            "         number of write cycles.\n"
             "\n"
             "Examples:\n"
             "    %s -i                    print identification\n"
@@ -217,9 +325,13 @@ void usage() {
             "    %s -t                    print the current setpoint\n"
             "    %s -t=230                cool the detector to 230 K\n"
             "    %s -c=On -d /dev/ttyACM0 force the cooler on\n"
+            "    %s --labm-params        detection module settings\n"
+            "    %s --gain=10 --coupling=DC\n"
+            "                             set the preamplifier gain and coupling\n"
             "\n";
 
-    fprintf(stderr, format, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0);
+    fprintf(stderr, format, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0, g_argv0,
+            g_argv0, g_argv0);
 }
 
 void print_monitor(const rp_ptcc_monitor_t *monitor) {
@@ -302,6 +414,137 @@ int print_params(rp_ptcc_register_t reg, bool json) {
     printf("Supply control       = %s\n", ctrl_name(params.supply_ctrl));
     printf("Fan control          = %s\n", ctrl_name(params.fan_ctrl));
     printf("Cooler control       = %s\n", ctrl_name(params.tec_ctrl));
+    return 0;
+}
+
+int print_labm_monitor(bool json) {
+    rp_ptcc_labm_monitor_t monitor;
+    memset(&monitor, 0, sizeof(monitor));
+
+    const rp_ptcc_error result = rp_PtccReadLabMMonitor(&monitor);
+    if (result != RP_PTCC_OK) {
+        report("Can't read the detection module monitor", result);
+        return -1;
+    }
+
+    if (json) {
+        printf("{");
+        printf("\"u_sup_plus\":%.3f,", static_cast<double>(monitor.u_sup_plus));
+        printf("\"u_sup_minus\":%.3f,", static_cast<double>(monitor.u_sup_minus));
+        printf("\"u_fan\":%.3f,", static_cast<double>(monitor.u_fan));
+        printf("\"i_tec_plus\":%.4f,", static_cast<double>(monitor.i_tec_plus));
+        printf("\"i_tec_minus\":%.4f,", static_cast<double>(monitor.i_tec_minus));
+        printf("\"u_th1\":%.3f,", static_cast<double>(monitor.u_th1));
+        printf("\"u_th2\":%.3f,", static_cast<double>(monitor.u_th2));
+        printf("\"u_det\":%.3f,", static_cast<double>(monitor.u_det));
+        printf("\"u_1st\":%.3f,", static_cast<double>(monitor.u_1st));
+        printf("\"u_out\":%.3f,", static_cast<double>(monitor.u_out));
+        printf("\"temperature\":%.1f,", static_cast<double>(monitor.temperature));
+        printf("\"valid\":%s,", monitor.valid ? "true" : "false");
+        printf("\"timestamp\":%lld", static_cast<long long>(monitor.timestamp));
+        printf("}\n");
+        return 0;
+    }
+
+    printf("Supply voltage +/-   = %8.3f / %8.3f V\n", static_cast<double>(monitor.u_sup_plus),
+           static_cast<double>(monitor.u_sup_minus));
+    printf("Fan voltage          = %8.3f V\n", static_cast<double>(monitor.u_fan));
+    printf("TEC current +/-      = %8.4f / %8.4f A\n", static_cast<double>(monitor.i_tec_plus),
+           static_cast<double>(monitor.i_tec_minus));
+    printf("Thermistor 1 / 2     = %8.3f / %8.3f V\n", static_cast<double>(monitor.u_th1),
+           static_cast<double>(monitor.u_th2));
+    printf("Detector bias        = %8.3f V\n", static_cast<double>(monitor.u_det));
+    printf("Preamp 1st stage     = %8.3f V\n", static_cast<double>(monitor.u_1st));
+    printf("Preamp output        = %8.3f V\n", static_cast<double>(monitor.u_out));
+    printf("Enclosure temp.      = %8.1f C\n", static_cast<double>(monitor.temperature));
+    return 0;
+}
+
+int print_labm_params(rp_ptcc_register_t reg, bool json) {
+    rp_ptcc_labm_params_t params;
+    memset(&params, 0, sizeof(params));
+
+    const rp_ptcc_error result = rp_PtccGetLabMParams(reg, &params);
+    if (result != RP_PTCC_OK) {
+        report("Can't read the detection module parameters", result);
+        return -1;
+    }
+
+    if (json) {
+        printf("{");
+        printf("\"register\":\"%s\",", register_name(reg));
+        printf("\"det_bias_u\":%.4f,", static_cast<double>(params.det_bias_u));
+        printf("\"det_bias_i\":%.6f,", static_cast<double>(params.det_bias_i));
+        printf("\"offset\":%.4f,", static_cast<double>(params.offset));
+        printf("\"gain\":%.1f,", static_cast<double>(params.gain));
+        printf("\"gain_code\":%u,", params.gain_code);
+        printf("\"gain_known\":%s,", params.gain_known ? "true" : "false");
+        printf("\"varactor\":%u,", params.varactor);
+        printf("\"transimpedance\":\"%s\",", TRANS_NAMES[params.transimpedance]);
+        printf("\"coupling\":\"%s\",", COUPLING_NAMES[params.coupling]);
+        printf("\"bandwidth\":\"%s\"", BANDWIDTH_NAMES[params.bandwidth]);
+        printf("}\n");
+        return 0;
+    }
+
+    printf("Register             = %s\n", register_name(reg));
+    printf("Detector bias        = %8.4f V\n", static_cast<double>(params.det_bias_u));
+    printf("Bias current comp.   = %8.6f A\n", static_cast<double>(params.det_bias_i));
+    printf("Output DC offset     = %8.4f V\n", static_cast<double>(params.offset));
+    if (params.gain_known) {
+        printf("Preamplifier gain    = %8.1f V/V (code %u)\n", static_cast<double>(params.gain),
+               params.gain_code);
+    } else {
+        printf("Preamplifier gain    = code %u, outside the documented set\n", params.gain_code);
+    }
+    printf("Varactor             = %8u\n", params.varactor);
+    printf("Transimpedance       = %s\n", TRANS_NAMES[params.transimpedance]);
+    printf("Signal coupling      = %s\n", COUPLING_NAMES[params.coupling]);
+    printf("Bandwidth            = %s\n", BANDWIDTH_NAMES[params.bandwidth]);
+
+    rp_ptcc_labm_limits_t limits;
+    memset(&limits, 0, sizeof(limits));
+    if (rp_PtccGetLabMLimits(&limits) == RP_PTCC_OK && limits.valid) {
+        printf("Bias range           = %.4f .. %.4f V\n", static_cast<double>(limits.det_bias_u_min),
+               static_cast<double>(limits.det_bias_u_max));
+        printf("Bias current range   = %.6f .. %.6f A\n", static_cast<double>(limits.det_bias_i_min),
+               static_cast<double>(limits.det_bias_i_max));
+        printf("Offset range         = %.4f .. %.4f V\n", static_cast<double>(limits.offset_min),
+               static_cast<double>(limits.offset_max));
+        printf("Varactor range       = %u .. %u\n", limits.varactor_min, limits.varactor_max);
+    }
+    return 0;
+}
+
+int print_gain_values(bool json) {
+    uint32_t count = 0;
+    rp_ptcc_error result = rp_PtccGetLabMGainValues(NULL, 0, &count);
+    if (result != RP_PTCC_OK) {
+        report("Can't read the gain list", result);
+        return -1;
+    }
+
+    std::vector<float> values(count, 0.0F);
+    result = rp_PtccGetLabMGainValues(values.data(), values.size(), &count);
+    if (result != RP_PTCC_OK) {
+        report("Can't read the gain list", result);
+        return -1;
+    }
+
+    if (json) {
+        printf("[");
+        for (size_t index = 0; index < values.size(); ++index) {
+            printf("%s%.1f", index > 0 ? "," : "", static_cast<double>(values[index]));
+        }
+        printf("]\n");
+        return 0;
+    }
+
+    printf("Gains [V/V]          =");
+    for (size_t index = 0; index < values.size(); ++index) {
+        printf(" %g", static_cast<double>(values[index]));
+    }
+    printf("\n");
     return 0;
 }
 
@@ -501,7 +744,7 @@ int main(int argc, char *argv[]) {
 
     bool temperature_flag = false;
     bool set_temperature = false;
-    long temperature = 0;
+    float temperature = 0.0F;
 
     bool current_flag = false;
     bool set_current = false;
@@ -515,6 +758,28 @@ int main(int argc, char *argv[]) {
     bool set_fan = false;
     rp_ptcc_ctrl_t fan_mode = RP_PTCC_CTRL_AUTO;
 
+    // Detection module (LAB_M). Each setting is either printed, when the
+    // option carries no value, or written.
+    bool labm_monitor_flag = false;
+    bool labm_params_flag = false;
+    rp_ptcc_register_t labm_register = RP_PTCC_REG_USER_SET;
+    bool gains_flag = false;
+
+    Setting bias_voltage;
+    Setting bias_current;
+    Setting offset;
+    Setting gain;
+    Setting varactor;
+    Setting transimpedance;
+    Setting coupling;
+    Setting bandwidth;
+
+    // Module supply and TEC PWM, on the controller side of the panel.
+    Setting supply_mode;
+    Setting supply_plus;
+    Setting supply_minus;
+    Setting pwm;
+
     if (argc < MINARGS) {
         usage();
         exit(EXIT_FAILURE);
@@ -522,8 +787,27 @@ int main(int argc, char *argv[]) {
 
     const char *optstring = "d:b:T:O:limqew::p::t::c::f::x::sjvh";
 
+    static const struct option long_options[] = {
+        {"labm-monitor", no_argument, NULL, OPT_LABM_MONITOR},
+        {"labm-params", optional_argument, NULL, OPT_LABM_PARAMS},
+        {"gains", no_argument, NULL, OPT_GAINS},
+        {"bias-voltage", optional_argument, NULL, OPT_BIAS_VOLTAGE},
+        {"bias-current", optional_argument, NULL, OPT_BIAS_CURRENT},
+        {"offset", optional_argument, NULL, OPT_OFFSET},
+        {"gain", optional_argument, NULL, OPT_GAIN},
+        {"varactor", optional_argument, NULL, OPT_VARACTOR},
+        {"transimpedance", optional_argument, NULL, OPT_TRANS},
+        {"coupling", optional_argument, NULL, OPT_COUPLING},
+        {"bandwidth", optional_argument, NULL, OPT_BANDWIDTH},
+        {"supply-mode", optional_argument, NULL, OPT_SUPPLY_MODE},
+        {"supply-plus", optional_argument, NULL, OPT_SUPPLY_PLUS},
+        {"supply-minus", optional_argument, NULL, OPT_SUPPLY_MINUS},
+        {"pwm", optional_argument, NULL, OPT_PWM},
+        {NULL, 0, NULL, 0},
+    };
+
     int ch = -1;
-    while ((ch = getopt(argc, argv, optstring)) != -1) {
+    while ((ch = getopt_long(argc, argv, optstring, long_options, NULL)) != -1) {
         switch (ch) {
             case 'd':
                 device_path = optarg;
@@ -600,7 +884,7 @@ int main(int argc, char *argv[]) {
                 temperature_flag = true;
                 if (optarg) {
                     set_temperature = true;
-                    if (optarg[0] != '=' || get_long(&temperature, optarg + 1) != 0) {
+                    if (get_float(&temperature, optarg) != 0) {
                         usage();
                         exit(EXIT_FAILURE);
                     }
@@ -652,6 +936,70 @@ int main(int argc, char *argv[]) {
                 version_flag = true;
                 break;
 
+            case OPT_LABM_MONITOR:
+                labm_monitor_flag = true;
+                break;
+
+            case OPT_LABM_PARAMS:
+                labm_params_flag = true;
+                if (optarg && parse_register(&labm_register, optarg) != 0) {
+                    usage();
+                    exit(EXIT_FAILURE);
+                }
+                break;
+
+            case OPT_GAINS:
+                gains_flag = true;
+                break;
+
+            case OPT_BIAS_VOLTAGE:
+                take_value(&bias_voltage, optarg);
+                break;
+
+            case OPT_BIAS_CURRENT:
+                take_value(&bias_current, optarg);
+                break;
+
+            case OPT_OFFSET:
+                take_value(&offset, optarg);
+                break;
+
+            case OPT_GAIN:
+                take_value(&gain, optarg);
+                break;
+
+            case OPT_VARACTOR:
+                take_value(&varactor, optarg);
+                break;
+
+            case OPT_TRANS:
+                take_choice(&transimpedance, optarg, TRANS_NAMES, 2, "transimpedance");
+                break;
+
+            case OPT_COUPLING:
+                take_choice(&coupling, optarg, COUPLING_NAMES, 2, "coupling");
+                break;
+
+            case OPT_BANDWIDTH:
+                take_choice(&bandwidth, optarg, BANDWIDTH_NAMES, 3, "bandwidth");
+                break;
+
+            case OPT_SUPPLY_MODE:
+                take_choice(&supply_mode, optarg, CTRL_NAMES, 3, "supply mode");
+                break;
+
+            case OPT_SUPPLY_PLUS:
+                take_value(&supply_plus, optarg);
+                break;
+
+            case OPT_SUPPLY_MINUS:
+                take_value(&supply_minus, optarg);
+                break;
+
+            case OPT_PWM:
+                take_value(&pwm, optarg);
+                break;
+
             case 'h':
             default:
                 usage();
@@ -659,9 +1007,18 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    const bool labm_settings = bias_voltage.requested || bias_current.requested ||
+                               offset.requested || gain.requested || varactor.requested ||
+                               transimpedance.requested || coupling.requested ||
+                               bandwidth.requested;
+
+    const bool supply_settings = supply_mode.requested || supply_plus.requested ||
+                                 supply_minus.requested || pwm.requested;
+
     const bool needs_device = iden_flag || link_flag || monitor_flag || quick_flag || watch_flag ||
                               params_flag || temperature_flag || current_flag || cooler_flag || fan_flag ||
-                              status_flag;
+                              status_flag || labm_monitor_flag || labm_params_flag || gains_flag ||
+                              labm_settings || supply_settings;
 
     if (version_flag) {
         printf("ptcc_control, library %s, protocol %s\n", rp_PtccGetVersion(),
@@ -720,12 +1077,12 @@ int main(int argc, char *argv[]) {
 
     if (temperature_flag) {
         if (set_temperature) {
-            const rp_ptcc_error result = rp_PtccSetSetpoint(static_cast<int32_t>(temperature));
+            const rp_ptcc_error result = rp_PtccSetSetpoint(temperature);
             if (result != RP_PTCC_OK) {
                 report("Can't set temperature", result);
                 exit_code = -1;
             } else {
-                printf("Setpoint = %ld K\n", temperature);
+                printf("Setpoint = %.3f K\n", static_cast<double>(temperature));
             }
         } else {
             float value = 0.0F;
@@ -801,6 +1158,224 @@ int main(int argc, char *argv[]) {
                 exit_code = -1;
             } else {
                 printf("Fan = %s\n", ctrl_name(params.fan_ctrl));
+            }
+        }
+    }
+
+    if (supply_settings) {
+        // The three supply fields travel in one protocol message, so the ones
+        // the user did not give have to be sent back as they are.
+        rp_ptcc_params_t current_params;
+        memset(&current_params, 0, sizeof(current_params));
+        bool have_params = false;
+        const rp_ptcc_error read_result = rp_PtccGetParams(RP_PTCC_REG_USER_SET, &current_params);
+        if (read_result != RP_PTCC_OK) {
+            report("Can't read parameters", read_result);
+            exit_code = -1;
+        } else {
+            have_params = true;
+        }
+
+        const bool writes_supply = supply_mode.write || supply_plus.write || supply_minus.write;
+        if (have_params && writes_supply) {
+            const rp_ptcc_ctrl_t mode = supply_mode.write
+                                            ? static_cast<rp_ptcc_ctrl_t>(supply_mode.value)
+                                            : current_params.supply_ctrl;
+            const float u_plus = supply_plus.write ? supply_plus.value : current_params.u_sup_plus;
+            const float u_minus =
+                supply_minus.write ? supply_minus.value : current_params.u_sup_minus;
+
+            const rp_ptcc_error result = rp_PtccSetSupply(mode, u_plus, u_minus);
+            if (result != RP_PTCC_OK) {
+                report("Can't set the module supply", result);
+                exit_code = -1;
+            } else {
+                printf("Supply = %s, %.3f / %.3f V\n", ctrl_name(mode), static_cast<double>(u_plus),
+                       static_cast<double>(u_minus));
+            }
+        } else if (have_params) {
+            if (supply_mode.requested) {
+                printf("Supply control = %s\n", ctrl_name(current_params.supply_ctrl));
+            }
+            if (supply_plus.requested) {
+                printf("Supply voltage + = %.3f V\n", static_cast<double>(current_params.u_sup_plus));
+            }
+            if (supply_minus.requested) {
+                printf("Supply voltage - = %.3f V\n",
+                       static_cast<double>(current_params.u_sup_minus));
+            }
+        }
+
+        if (pwm.requested) {
+            if (pwm.write) {
+                const rp_ptcc_error result = rp_PtccSetPwm(static_cast<uint32_t>(pwm.value));
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the PWM", result);
+                    exit_code = -1;
+                } else {
+                    printf("PWM = %u\n", static_cast<uint32_t>(pwm.value));
+                }
+            } else if (have_params) {
+                printf("PWM = %u\n", current_params.pwm);
+            }
+        }
+    }
+
+    if (labm_params_flag) {
+        if (print_labm_params(labm_register, json_flag) != 0) {
+            exit_code = -1;
+        }
+    }
+
+    if (labm_monitor_flag) {
+        if (print_labm_monitor(json_flag) != 0) {
+            exit_code = -1;
+        }
+    }
+
+    if (gains_flag) {
+        if (print_gain_values(json_flag) != 0) {
+            exit_code = -1;
+        }
+    }
+
+    if (labm_settings) {
+        // One read covers every setting asked for without a value.
+        rp_ptcc_labm_params_t current_params;
+        memset(&current_params, 0, sizeof(current_params));
+        bool have_params = false;
+        const bool needs_read = (bias_voltage.requested && !bias_voltage.write) ||
+                                (bias_current.requested && !bias_current.write) ||
+                                (offset.requested && !offset.write) ||
+                                (gain.requested && !gain.write) ||
+                                (varactor.requested && !varactor.write) ||
+                                (transimpedance.requested && !transimpedance.write) ||
+                                (coupling.requested && !coupling.write) ||
+                                (bandwidth.requested && !bandwidth.write);
+        if (needs_read) {
+            const rp_ptcc_error result = rp_PtccGetLabMParams(RP_PTCC_REG_USER_SET, &current_params);
+            if (result != RP_PTCC_OK) {
+                report("Can't read the detection module parameters", result);
+                exit_code = -1;
+            } else {
+                have_params = true;
+            }
+        }
+
+        if (bias_voltage.requested) {
+            if (bias_voltage.write) {
+                const rp_ptcc_error result = rp_PtccSetLabMDetectorBiasVoltage(bias_voltage.value);
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the detector bias voltage", result);
+                    exit_code = -1;
+                } else {
+                    printf("Detector bias = %.4f V\n", static_cast<double>(bias_voltage.value));
+                }
+            } else if (have_params) {
+                printf("Detector bias = %.4f V\n", static_cast<double>(current_params.det_bias_u));
+            }
+        }
+
+        if (bias_current.requested) {
+            if (bias_current.write) {
+                const rp_ptcc_error result = rp_PtccSetLabMDetectorBiasCurrent(bias_current.value);
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the bias current compensation", result);
+                    exit_code = -1;
+                } else {
+                    printf("Bias current comp. = %.6f A\n", static_cast<double>(bias_current.value));
+                }
+            } else if (have_params) {
+                printf("Bias current comp. = %.6f A\n", static_cast<double>(current_params.det_bias_i));
+            }
+        }
+
+        if (offset.requested) {
+            if (offset.write) {
+                const rp_ptcc_error result = rp_PtccSetLabMOffset(offset.value);
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the output DC offset", result);
+                    exit_code = -1;
+                } else {
+                    printf("Output DC offset = %.4f V\n", static_cast<double>(offset.value));
+                }
+            } else if (have_params) {
+                printf("Output DC offset = %.4f V\n", static_cast<double>(current_params.offset));
+            }
+        }
+
+        if (gain.requested) {
+            if (gain.write) {
+                const rp_ptcc_error result = rp_PtccSetLabMGain(gain.value);
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the preamplifier gain", result);
+                    exit_code = -1;
+                } else {
+                    printf("Preamplifier gain = %g V/V\n", static_cast<double>(gain.value));
+                }
+            } else if (have_params) {
+                printf("Preamplifier gain = %g V/V (code %u)\n",
+                       static_cast<double>(current_params.gain), current_params.gain_code);
+            }
+        }
+
+        if (varactor.requested) {
+            if (varactor.write) {
+                const rp_ptcc_error result =
+                    rp_PtccSetLabMVaractor(static_cast<uint32_t>(varactor.value));
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the varactor compensation", result);
+                    exit_code = -1;
+                } else {
+                    printf("Varactor = %u\n", static_cast<uint32_t>(varactor.value));
+                }
+            } else if (have_params) {
+                printf("Varactor = %u\n", current_params.varactor);
+            }
+        }
+
+        if (transimpedance.requested) {
+            if (transimpedance.write) {
+                const rp_ptcc_trans_t mode = static_cast<rp_ptcc_trans_t>(transimpedance.value);
+                const rp_ptcc_error result = rp_PtccSetLabMTransimpedance(mode);
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the transimpedance", result);
+                    exit_code = -1;
+                } else {
+                    printf("Transimpedance = %s\n", TRANS_NAMES[mode]);
+                }
+            } else if (have_params) {
+                printf("Transimpedance = %s\n", TRANS_NAMES[current_params.transimpedance]);
+            }
+        }
+
+        if (coupling.requested) {
+            if (coupling.write) {
+                const rp_ptcc_coupling_t mode = static_cast<rp_ptcc_coupling_t>(coupling.value);
+                const rp_ptcc_error result = rp_PtccSetLabMCoupling(mode);
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the signal coupling", result);
+                    exit_code = -1;
+                } else {
+                    printf("Signal coupling = %s\n", COUPLING_NAMES[mode]);
+                }
+            } else if (have_params) {
+                printf("Signal coupling = %s\n", COUPLING_NAMES[current_params.coupling]);
+            }
+        }
+
+        if (bandwidth.requested) {
+            if (bandwidth.write) {
+                const rp_ptcc_bw_t mode = static_cast<rp_ptcc_bw_t>(bandwidth.value);
+                const rp_ptcc_error result = rp_PtccSetLabMBandwidth(mode);
+                if (result != RP_PTCC_OK) {
+                    report("Can't set the bandwidth", result);
+                    exit_code = -1;
+                } else {
+                    printf("Bandwidth = %s\n", BANDWIDTH_NAMES[mode]);
+                }
+            } else if (have_params) {
+                printf("Bandwidth = %s\n", BANDWIDTH_NAMES[current_params.bandwidth]);
             }
         }
     }

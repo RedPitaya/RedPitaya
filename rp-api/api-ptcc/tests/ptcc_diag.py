@@ -31,7 +31,7 @@ def dump(title, values):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-d", "--device", default=None)
-    parser.add_argument("-t", "--temperature", type=int, default=230)
+    parser.add_argument("-t", "--temperature", type=float, default=230.0)
     parser.add_argument("--set", action="store_true", help="actually write the setpoint (EEPROM)")
     args = parser.parse_args()
 

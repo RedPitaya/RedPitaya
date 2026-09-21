@@ -22,6 +22,9 @@ PyObject *g_module = nullptr;
 std::mutex g_python_mutex;
 std::string g_last_error;
 
+/** ModuleType.LAB_M upstream, RP_PTCC_MODULE_LAB_M in the public header. */
+constexpr int LAB_M_MODULE = 3;
+
 int64_t nowMs() {
     using namespace std::chrono;
     return duration_cast<milliseconds>(steady_clock::now().time_since_epoch()).count();
@@ -521,6 +524,176 @@ Result Bridge::readLimits(Limits &out) {
     return Result::OK;
 }
 
+Result Bridge::readLabMMonitor(LabMMonitor &out) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+
+    {
+        std::lock_guard<std::mutex> guard(g_python_mutex);
+        Gil gil;
+
+        PyObject *result = call("read_lab_m_monitor", nullptr);
+        if (result == nullptr) {
+            return consumeError(Result::IO_ERROR);
+        }
+
+        Reader reader;
+        reader.take(dictDouble(result, "u_sup_plus", out.u_sup_plus_v));
+        reader.take(dictDouble(result, "u_sup_minus", out.u_sup_minus_v));
+        reader.take(dictDouble(result, "u_fan", out.u_fan_v));
+        reader.take(dictDouble(result, "i_tec_plus", out.i_tec_plus_a));
+        reader.take(dictDouble(result, "i_tec_minus", out.i_tec_minus_a));
+        reader.take(dictDouble(result, "u_th1", out.u_th1_v));
+        reader.take(dictDouble(result, "u_th2", out.u_th2_v));
+        reader.take(dictDouble(result, "u_det", out.u_det_v));
+        reader.take(dictDouble(result, "u_1st", out.u_1st_v));
+        reader.take(dictDouble(result, "u_out", out.u_out_v));
+        reader.take(dictDouble(result, "temperature", out.temperature_c));
+        Py_DECREF(result);
+
+        if (!reader.ok) {
+            out = LabMMonitor();
+            return Result::BAD_RESPONSE;
+        }
+
+        out.timestamp_ms = nowMs();
+        out.valid = true;
+        g_last_error.clear();
+    }
+
+    std::lock_guard<std::mutex> cache_guard(m_cache_mutex);
+    m_labm_cache = out;
+    return Result::OK;
+}
+
+Result Bridge::readLabMParams(LabMParams &out, int reg) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+
+    PyObject *args = Py_BuildValue("(i)", reg);
+    PyObject *result = call("read_lab_m_params", args);
+    Py_XDECREF(args);
+    if (result == nullptr) {
+        return consumeError(Result::IO_ERROR);
+    }
+
+    Reader reader;
+    long gain_code = 0;
+    long varactor = 0;
+    long transimpedance = 0;
+    long coupling = 0;
+    long bandwidth = 0;
+    reader.take(dictDouble(result, "det_bias_u", out.det_bias_u_v));
+    reader.take(dictDouble(result, "det_bias_i", out.det_bias_i_a));
+    reader.take(dictDouble(result, "offset", out.offset_v));
+    reader.take(dictDouble(result, "gain", out.gain));
+    reader.take(dictLong(result, "gain_code", gain_code));
+    reader.take(dictBool(result, "gain_known", out.gain_known));
+    reader.take(dictLong(result, "varactor", varactor));
+    reader.take(dictLong(result, "transimpedance", transimpedance));
+    reader.take(dictLong(result, "coupling", coupling));
+    reader.take(dictLong(result, "bandwidth", bandwidth));
+    Py_DECREF(result);
+
+    if (!reader.ok) {
+        out = LabMParams();
+        return Result::BAD_RESPONSE;
+    }
+
+    out.gain_code = static_cast<uint32_t>(gain_code);
+    out.varactor = static_cast<uint32_t>(varactor);
+    out.transimpedance = static_cast<int>(transimpedance);
+    out.coupling = static_cast<int>(coupling);
+    out.bandwidth = static_cast<int>(bandwidth);
+    out.valid = true;
+    g_last_error.clear();
+    return Result::OK;
+}
+
+Result Bridge::readLabMLimits(LabMLimits &out) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+
+    PyObject *result = call("lab_m_limits", nullptr);
+    if (result == nullptr) {
+        return consumeError(Result::IO_ERROR);
+    }
+
+    Reader reader;
+    long varactor_min = 0;
+    long varactor_max = 0;
+    reader.take(dictDouble(result, "det_bias_u_min", out.det_bias_u_min_v));
+    reader.take(dictDouble(result, "det_bias_u_max", out.det_bias_u_max_v));
+    reader.take(dictDouble(result, "det_bias_i_min", out.det_bias_i_min_a));
+    reader.take(dictDouble(result, "det_bias_i_max", out.det_bias_i_max_a));
+    reader.take(dictDouble(result, "offset_min", out.offset_min_v));
+    reader.take(dictDouble(result, "offset_max", out.offset_max_v));
+    reader.take(dictLong(result, "varactor_min", varactor_min));
+    reader.take(dictLong(result, "varactor_max", varactor_max));
+    Py_DECREF(result);
+
+    if (!reader.ok) {
+        out = LabMLimits();
+        return Result::BAD_RESPONSE;
+    }
+
+    out.varactor_min = static_cast<uint32_t>(varactor_min);
+    out.varactor_max = static_cast<uint32_t>(varactor_max);
+    out.valid = out.varactor_max > out.varactor_min;
+    g_last_error.clear();
+    return Result::OK;
+}
+
+Result Bridge::labMGainValues(std::vector<double> &out) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+
+    PyObject *result = call("lab_m_gain_values", nullptr);
+    if (result == nullptr) {
+        return consumeError(Result::PYTHON_ERROR);
+    }
+
+    const Py_ssize_t count = PySequence_Size(result);
+    if (count < 0) {
+        Py_DECREF(result);
+        g_last_error = "lab_m_gain_values did not return a sequence";
+        return Result::BAD_RESPONSE;
+    }
+
+    out.clear();
+    out.reserve(static_cast<size_t>(count));
+    for (Py_ssize_t index = 0; index < count; ++index) {
+        PyObject *item = PySequence_GetItem(result, index);
+        if (item == nullptr) {
+            continue;
+        }
+        const double value = PyFloat_AsDouble(item);
+        Py_DECREF(item);
+        if (value == -1.0 && PyErr_Occurred()) {
+            PyErr_Clear();
+            continue;
+        }
+        out.push_back(value);
+    }
+    Py_DECREF(result);
+
+    g_last_error.clear();
+    return Result::OK;
+}
+
 Result Bridge::readDeviceIden(DeviceIden &out) {
     if (!m_initialized) {
         return Result::NOT_INITIALIZED;
@@ -590,13 +763,13 @@ Result Bridge::readModuleIden(ModuleIden &out) {
     return Result::OK;
 }
 
-Result Bridge::setTemperature(int32_t kelvin) {
+Result Bridge::setTemperature(double kelvin) {
     if (!m_initialized) {
         return Result::NOT_INITIALIZED;
     }
     std::lock_guard<std::mutex> guard(g_python_mutex);
     Gil gil;
-    return callVoid("set_temperature", Py_BuildValue("(i)", kelvin), Result::IO_ERROR);
+    return callVoid("set_temperature", Py_BuildValue("(d)", kelvin), Result::IO_ERROR);
 }
 
 Result Bridge::setMaxCurrent(double amperes) {
@@ -624,6 +797,111 @@ Result Bridge::setFan(int mode) {
     std::lock_guard<std::mutex> guard(g_python_mutex);
     Gil gil;
     return callVoid("set_fan", Py_BuildValue("(i)", mode), Result::IO_ERROR);
+}
+
+Result Bridge::setSupply(int mode, double u_plus, double u_minus) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_supply", Py_BuildValue("(idd)", mode, u_plus, u_minus),
+                    Result::IO_ERROR);
+}
+
+Result Bridge::setPwm(uint32_t value) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_pwm", Py_BuildValue("(k)", static_cast<unsigned long>(value)),
+                    Result::IO_ERROR);
+}
+
+Result Bridge::setLabMDetectorBiasVoltage(double volts) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_detector_bias_voltage", Py_BuildValue("(d)", volts),
+                    Result::IO_ERROR);
+}
+
+Result Bridge::setLabMDetectorBiasCurrent(double amperes) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_detector_bias_current", Py_BuildValue("(d)", amperes),
+                    Result::IO_ERROR);
+}
+
+Result Bridge::setLabMOffset(double volts) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_offset", Py_BuildValue("(d)", volts), Result::IO_ERROR);
+}
+
+Result Bridge::setLabMGain(double volt_per_volt) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_gain", Py_BuildValue("(d)", volt_per_volt), Result::IO_ERROR);
+}
+
+Result Bridge::setLabMGainCode(uint32_t code) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_gain_code", Py_BuildValue("(k)", static_cast<unsigned long>(code)),
+                    Result::IO_ERROR);
+}
+
+Result Bridge::setLabMVaractor(uint32_t code) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_varactor", Py_BuildValue("(k)", static_cast<unsigned long>(code)),
+                    Result::IO_ERROR);
+}
+
+Result Bridge::setLabMTransimpedance(int mode) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_transimpedance", Py_BuildValue("(i)", mode), Result::IO_ERROR);
+}
+
+Result Bridge::setLabMCoupling(int mode) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_coupling", Py_BuildValue("(i)", mode), Result::IO_ERROR);
+}
+
+Result Bridge::setLabMBandwidth(int mode) {
+    if (!m_initialized) {
+        return Result::NOT_INITIALIZED;
+    }
+    std::lock_guard<std::mutex> guard(g_python_mutex);
+    Gil gil;
+    return callVoid("set_lab_m_bandwidth", Py_BuildValue("(i)", mode), Result::IO_ERROR);
 }
 
 Result Bridge::errorCount(uint64_t &out) const {
@@ -744,6 +1022,11 @@ MonitorData Bridge::cachedMonitor() const {
     return m_cache;
 }
 
+LabMMonitor Bridge::cachedLabMMonitor() const {
+    std::lock_guard<std::mutex> guard(m_cache_mutex);
+    return m_labm_cache;
+}
+
 Result Bridge::startMonitoring(uint32_t period_ms) {
     if (!m_initialized) {
         return Result::NOT_INITIALIZED;
@@ -775,6 +1058,18 @@ void Bridge::pollLoop(uint32_t period_ms) {
         const Result result = readMonitor(sample);
         if (result != Result::OK) {
             TRACE("monitor poll failed: %s", resultText(result));
+        }
+
+        // A LAB_M module has a second monitor container the panel needs. It
+        // costs one more command interval, so it is only polled where it
+        // exists.
+        int module = 0;
+        if (moduleType(module) == Result::OK && module == LAB_M_MODULE) {
+            LabMMonitor labm;
+            const Result labm_result = readLabMMonitor(labm);
+            if (labm_result != Result::OK) {
+                TRACE("LAB_M monitor poll failed: %s", resultText(labm_result));
+            }
         }
 
         std::unique_lock<std::mutex> lock(m_poll_mutex);

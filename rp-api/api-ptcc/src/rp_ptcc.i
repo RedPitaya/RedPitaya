@@ -4,6 +4,7 @@
 %include <cstring.i>
 %include <std_string.i>
 %include <carrays.i>
+%include <std_vector.i>
 %include <cpointer.i>
 
 // Basic type mappings
@@ -30,11 +31,39 @@
 
 // Enumerations are returned by pointer, expose them as plain integers.
 %apply int *OUTPUT { rp_ptcc_module_t *_out_value };
+%apply int *OUTPUT { rp_ptcc_error *_out_status };
+
+// The gain list is a caller allocated array in C. Wrapped as a vector so the
+// Python side gets a list instead of having to manage a buffer.
+%template(FloatVector) std::vector<float>;
+
+%inline %{
+#include <vector>
+
+std::vector<float> rp_PtccGetLabMGainList(rp_ptcc_error *_out_status) {
+    std::vector<float> values;
+    uint32_t count = 0;
+
+    *_out_status = rp_PtccGetLabMGainValues(NULL, 0, &count);
+    if (*_out_status != RP_PTCC_OK || count == 0) {
+        return values;
+    }
+
+    values.resize(count);
+    *_out_status = rp_PtccGetLabMGainValues(values.data(), values.size(), &count);
+    if (*_out_status != RP_PTCC_OK) {
+        values.clear();
+    }
+    return values;
+}
+%}
 
 // Structures are returned through caller allocated pointers. Let SWIG
 // allocate them so the Python side gets a normal object back.
 %pointer_functions(rp_ptcc_monitor_t, p_rp_ptcc_monitor_t);
 %pointer_functions(rp_ptcc_params_t, p_rp_ptcc_params_t);
+%pointer_functions(rp_ptcc_labm_params_t, p_rp_ptcc_labm_params_t);
+%pointer_functions(rp_ptcc_labm_monitor_t, p_rp_ptcc_labm_monitor_t);
 %pointer_functions(rp_ptcc_device_iden_t, p_rp_ptcc_device_iden_t);
 %pointer_functions(rp_ptcc_module_iden_t, p_rp_ptcc_module_iden_t);
 
@@ -100,6 +129,71 @@ def read_params(target=RP_PTCC_REG_USER_SET):
         }
     finally:
         delete_p_rp_ptcc_params_t(holder)
+
+
+def read_lab_m_monitor(cached=False):
+    """Reads the detection module monitor and returns it as a dictionary.
+
+    With cached=True the sample kept by the background poller is returned
+    instead of talking to the device.
+    """
+    holder = new_p_rp_ptcc_labm_monitor_t()
+    try:
+        reader = rp_PtccGetLabMMonitor if cached else rp_PtccReadLabMMonitor
+        status = reader(holder)
+        if status != RP_PTCC_OK:
+            raise RuntimeError(rp_PtccGetErrorText(status))
+        value = p_rp_ptcc_labm_monitor_t_value(holder)
+        return {
+            "u_sup_plus": value.u_sup_plus,
+            "u_sup_minus": value.u_sup_minus,
+            "u_fan": value.u_fan,
+            "i_tec_plus": value.i_tec_plus,
+            "i_tec_minus": value.i_tec_minus,
+            "u_th1": value.u_th1,
+            "u_th2": value.u_th2,
+            "u_det": value.u_det,
+            "u_1st": value.u_1st,
+            "u_out": value.u_out,
+            "temperature": value.temperature,
+            "timestamp": value.timestamp,
+            "valid": value.valid,
+        }
+    finally:
+        delete_p_rp_ptcc_labm_monitor_t(holder)
+
+
+def read_lab_m_params(target=RP_PTCC_REG_USER_SET):
+    """Reads the detection module parameters and returns them as a dictionary."""
+    holder = new_p_rp_ptcc_labm_params_t()
+    try:
+        status = rp_PtccGetLabMParams(target, holder)
+        if status != RP_PTCC_OK:
+            raise RuntimeError(rp_PtccGetErrorText(status))
+        value = p_rp_ptcc_labm_params_t_value(holder)
+        return {
+            "det_bias_u": value.det_bias_u,
+            "det_bias_i": value.det_bias_i,
+            "offset": value.offset,
+            "gain": value.gain,
+            "gain_code": value.gain_code,
+            "gain_known": value.gain_known,
+            "varactor": value.varactor,
+            "transimpedance": value.transimpedance,
+            "coupling": value.coupling,
+            "bandwidth": value.bandwidth,
+            "valid": value.valid,
+        }
+    finally:
+        delete_p_rp_ptcc_labm_params_t(holder)
+
+
+def lab_m_gain_values():
+    """The gains the device accepts, in V/V, ascending."""
+    values, status = rp_PtccGetLabMGainList()
+    if status != RP_PTCC_OK:
+        raise RuntimeError(rp_PtccGetErrorText(status))
+    return list(values)
 
 
 def read_device_iden():

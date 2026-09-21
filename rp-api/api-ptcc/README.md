@@ -37,6 +37,17 @@ Two notes on the upstream package:
   `CommunicationInterface` contract with `termios` from the standard library,
   so pyserial is not needed on the image.
 
+## What it covers
+
+The controller half (`rp_PtccReadMonitor`, `rp_PtccGetParams`,
+`rp_PtccSetSetpoint`, `rp_PtccSetMaxCurrent`, module supply, TEC PWM, cooler
+and fan control) works with every module type. The detection module half (`rp_Ptcc*LabM*`) reads and
+writes the LAB_M amplifier: detector bias voltage and current compensation,
+output DC offset, preamplifier gain, varactor compensation, 1st stage
+transimpedance, signal coupling and bandwidth, plus the LAB_M monitor
+container (supply and TEC rails, both thermistors, detector bias, 1st stage
+and output voltages, enclosure temperature).
+
 ## Build
 
 ```
@@ -113,13 +124,34 @@ rp_PtccGetMonitor(&monitor);
   (`rp_PtccGetLastPythonError()`). `rp_PtccGetLimits()` reads the module's
   USER_MIN / USER_MAX registers so a UI can bound its controls, but it is
   informational only.
-* `rp_PtccSetSetpoint()` takes whole Kelvins, matching the upstream signature.
+* `rp_PtccSetSetpoint()` takes Kelvins as a float. The protocol encodes the
+  setpoint with three decimals, so fractions reach the device; the UI
+  requirement of one decimal is well inside that.
 * A field the device did not report is `RP_PTCC_ERESP`, not a zero. Zeros from
   this API are always measurements.
 * The cooler only cools. Asking for a setpoint above ambient will not be
   reached and the device reports "detector overheat" after 120 s.
 * `LAB_M` modules take the temperature setpoint like any other: the controller
   panel is the same for every module, only the amplifier settings differ.
+* The detection module calls (`rp_Ptcc*LabM*`) need a LAB_M module and answer
+  `RP_PTCC_ENOTSUP` on anything else, checked against the reported module type
+  rather than left to time out.
+* Detector bias, bias current compensation and the output offset are stored by
+  the module as 0..256 codes mapped to 0..1 V, 0..10 mA and +1..-1 V, so a
+  written value comes back quantised to about 3.9 mV, 39 uA and 7.8 mV.
+* The preamplifier gain is one of eleven documented steps
+  (`rp_PtccGetLabMGainValues()`); anything else is `RP_PTCC_ERANGE` rather
+  than a silent nearest match. A device reporting a code outside that set
+  comes back with `gain_known` false and the raw code in `gain_code`, which
+  `rp_PtccSetLabMGainCode()` can write back.
+* `rp_PtccStartMonitoring()` polls the LAB_M monitor as well on a LAB_M
+  module, so the panel costs two command intervals per period there.
+* `rp_PtccSetSupply()` takes the control mode and both rails together: the
+  protocol carries them in one message, so a UI changing one field has to send
+  the other two as they are. The firmware accepts 3 to 15 V on the positive
+  rail and -15 to -3 V on the negative one.
+* `rp_PtccSetPwm()` goes through the generic basic parameter message, since
+  upstream has no dedicated one, and takes the raw 0..65535 setting.
 * The library embeds one interpreter per process. Calls are serialised behind a
   mutex and the GIL, so the API is thread safe but not concurrent.
 
@@ -159,4 +191,29 @@ the web application. It exercises every function of the public API:
 -s            print the status code only
 -j            JSON output
 -v            library version and protocol revision
+
+--supply-mode[=State] module supply control
+--supply-plus[=V]     positive rail, 3 to 15 V
+--supply-minus[=V]    negative rail, -15 to -3 V
+--pwm[=value]         TEC PWM, 0 to 65535
+--labm-monitor        detection module readings
+--labm-params[=Reg]   detection module register: Set, Default, Min, Max
+--gains               the gains the device accepts
+--bias-voltage[=V]    detector bias voltage
+--bias-current[=A]    detector bias current compensation
+--offset[=V]          output DC offset
+--gain[=V/V]          preamplifier gain
+--varactor[=code]     preamp 1st stage frequency compensation
+--transimpedance[=Low|High]
+--coupling[=AC|DC]
+--bandwidth[=Low|Mid|High]
+```
+
+These print the current value when given without one. The supply options are
+sent as one message, so the fields left out keep what the module already holds:
+
+```
+ptcc_control --labm-params
+ptcc_control --gain=10 --coupling=DC
+ptcc_control --supply-mode=On --supply-plus=12 --supply-minus=-12
 ```

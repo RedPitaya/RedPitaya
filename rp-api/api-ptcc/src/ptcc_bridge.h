@@ -16,6 +16,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace ptcc {
 
@@ -47,6 +48,50 @@ struct BasicParams {
     int supply_ctrl = 0;
     int fan_ctrl = 0;
     int tec_ctrl = 0;
+    bool valid = false;
+};
+
+/** LAB_M detection module parameters. DET_U, DET_I and OFFSET arrive in SI
+ *  units; gain is a device code, mapped to V/V by the bridge. */
+struct LabMParams {
+    double det_bias_u_v = 0.0;  ///< Detector bias voltage [V]
+    double det_bias_i_a = 0.0;  ///< Detector bias current compensation [A]
+    double offset_v = 0.0;      ///< Output DC offset [V]
+    double gain = 0.0;          ///< Preamplifier gain [V/V], 0 when the code is unknown
+    uint32_t gain_code = 0;     ///< Raw gain code as stored by the device
+    bool gain_known = false;    ///< Whether gain_code maps to a documented V/V value
+    uint32_t varactor = 0;      ///< 1st stage frequency compensation, 0..4095
+    int transimpedance = 0;     ///< 0 LOW, 1 HIGH
+    int coupling = 0;           ///< 0 AC, 1 DC
+    int bandwidth = 0;          ///< 0 LOW, 1 MID, 2 HIGH
+    bool valid = false;
+};
+
+struct LabMMonitor {
+    double u_sup_plus_v = 0.0;   ///< [V]
+    double u_sup_minus_v = 0.0;  ///< [V]
+    double u_fan_v = 0.0;        ///< [V]
+    double i_tec_plus_a = 0.0;   ///< [A]
+    double i_tec_minus_a = 0.0;  ///< [A]
+    double u_th1_v = 0.0;        ///< [V]
+    double u_th2_v = 0.0;        ///< [V]
+    double u_det_v = 0.0;        ///< Detector bias readback [V]
+    double u_1st_v = 0.0;        ///< Preamplifier 1st stage output [V]
+    double u_out_v = 0.0;        ///< Preamplifier output [V]
+    double temperature_c = 0.0;  ///< Module enclosure temperature [C]
+    int64_t timestamp_ms = 0;
+    bool valid = false;
+};
+
+struct LabMLimits {
+    double det_bias_u_min_v = 0.0;
+    double det_bias_u_max_v = 0.0;
+    double det_bias_i_min_a = 0.0;
+    double det_bias_i_max_a = 0.0;
+    double offset_min_v = 0.0;
+    double offset_max_v = 0.0;
+    uint32_t varactor_min = 0;
+    uint32_t varactor_max = 0;
     bool valid = false;
 };
 
@@ -119,18 +164,37 @@ class Bridge {
     Result readMonitor(MonitorData &out);
     Result readBasicParams(BasicParams &out, int reg);
     Result readLimits(Limits &out);
+    Result readLabMMonitor(LabMMonitor &out);
+    Result readLabMParams(LabMParams &out, int reg);
+    Result readLabMLimits(LabMLimits &out);
+    Result labMGainValues(std::vector<double> &out);
     Result readDeviceIden(DeviceIden &out);
     Result readModuleIden(ModuleIden &out);
 
-    Result setTemperature(int32_t kelvin);
+    Result setTemperature(double kelvin);
     Result setMaxCurrent(double amperes);
     Result setCooler(int mode);
     Result setFan(int mode);
+    Result setSupply(int mode, double u_plus, double u_minus);
+    Result setPwm(uint32_t value);
+
+    Result setLabMDetectorBiasVoltage(double volts);
+    Result setLabMDetectorBiasCurrent(double amperes);
+    Result setLabMOffset(double volts);
+    Result setLabMGain(double volt_per_volt);
+    Result setLabMGainCode(uint32_t code);
+    Result setLabMVaractor(uint32_t code);
+    Result setLabMTransimpedance(int mode);
+    Result setLabMCoupling(int mode);
+    Result setLabMBandwidth(int mode);
 
     Result startMonitoring(uint32_t period_ms);
     void stopMonitoring();
     bool isMonitoring() const { return m_polling.load(); }
     MonitorData cachedMonitor() const;
+
+    /** Cached LAB_M sample, refreshed by the poller on LAB_M modules only. */
+    LabMMonitor cachedLabMMonitor() const;
 
     Result errorCount(uint64_t &out) const;
 
@@ -146,6 +210,7 @@ class Bridge {
 
     mutable std::mutex m_cache_mutex;
     MonitorData m_cache;
+    LabMMonitor m_labm_cache;
 
     std::thread m_poll_thread;
     std::atomic<bool> m_polling{false};

@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "ptcc_bridge.h"
 #include "rp_log.h"
@@ -371,12 +372,12 @@ rp_ptcc_error rp_PtccGetLimits(rp_ptcc_limits_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccSetSetpoint(int32_t kelvin) {
+rp_ptcc_error rp_PtccSetSetpoint(float kelvin) {
     std::lock_guard<std::mutex> guard(g_mutex);
     if (!bridge()) {
         return RP_PTCC_ENOINIT;
     }
-    return toApiError(bridge()->setTemperature(kelvin));
+    return toApiError(bridge()->setTemperature(static_cast<double>(kelvin)));
 }
 
 rp_ptcc_error rp_PtccSetMaxCurrent(float amperes) {
@@ -401,6 +402,223 @@ rp_ptcc_error rp_PtccSetFan(rp_ptcc_ctrl_t mode) {
         return RP_PTCC_ENOINIT;
     }
     return toApiError(bridge()->setFan(static_cast<int>(mode)));
+}
+
+rp_ptcc_error rp_PtccSetSupply(rp_ptcc_ctrl_t mode, float u_plus, float u_minus) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setSupply(static_cast<int>(mode), static_cast<double>(u_plus),
+                                          static_cast<double>(u_minus)));
+}
+
+rp_ptcc_error rp_PtccSetPwm(uint32_t value) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setPwm(value));
+}
+
+/* -- Detection module (LAB_M) --------------------------------------------- */
+
+static void copyLabMMonitor(const ptcc::LabMMonitor &from, rp_ptcc_labm_monitor_t *to) {
+    to->u_sup_plus = static_cast<float>(from.u_sup_plus_v);
+    to->u_sup_minus = static_cast<float>(from.u_sup_minus_v);
+    to->u_fan = static_cast<float>(from.u_fan_v);
+    to->i_tec_plus = static_cast<float>(from.i_tec_plus_a);
+    to->i_tec_minus = static_cast<float>(from.i_tec_minus_a);
+    to->u_th1 = static_cast<float>(from.u_th1_v);
+    to->u_th2 = static_cast<float>(from.u_th2_v);
+    to->u_det = static_cast<float>(from.u_det_v);
+    to->u_1st = static_cast<float>(from.u_1st_v);
+    to->u_out = static_cast<float>(from.u_out_v);
+    to->temperature = static_cast<float>(from.temperature_c);
+    to->timestamp = from.timestamp_ms;
+    to->valid = from.valid;
+}
+
+rp_ptcc_error rp_PtccReadLabMMonitor(rp_ptcc_labm_monitor_t *_out_value) {
+    if (_out_value == nullptr) {
+        return RP_PTCC_EIP;
+    }
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+
+    ptcc::LabMMonitor monitor;
+    const ptcc::Result result = bridge()->readLabMMonitor(monitor);
+    if (result != ptcc::Result::OK) {
+        return toApiError(result);
+    }
+
+    copyLabMMonitor(monitor, _out_value);
+    return RP_PTCC_OK;
+}
+
+rp_ptcc_error rp_PtccGetLabMMonitor(rp_ptcc_labm_monitor_t *_out_value) {
+    if (_out_value == nullptr) {
+        return RP_PTCC_EIP;
+    }
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+
+    copyLabMMonitor(bridge()->cachedLabMMonitor(), _out_value);
+    return RP_PTCC_OK;
+}
+
+rp_ptcc_error rp_PtccGetLabMParams(rp_ptcc_register_t target, rp_ptcc_labm_params_t *_out_value) {
+    if (_out_value == nullptr) {
+        return RP_PTCC_EIP;
+    }
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+
+    ptcc::LabMParams params;
+    const ptcc::Result result = bridge()->readLabMParams(params, static_cast<int>(target));
+    if (result != ptcc::Result::OK) {
+        return toApiError(result);
+    }
+
+    _out_value->det_bias_u = static_cast<float>(params.det_bias_u_v);
+    _out_value->det_bias_i = static_cast<float>(params.det_bias_i_a);
+    _out_value->offset = static_cast<float>(params.offset_v);
+    _out_value->gain = static_cast<float>(params.gain);
+    _out_value->gain_code = params.gain_code;
+    _out_value->gain_known = params.gain_known;
+    _out_value->varactor = params.varactor;
+    _out_value->transimpedance = static_cast<rp_ptcc_trans_t>(params.transimpedance);
+    _out_value->coupling = static_cast<rp_ptcc_coupling_t>(params.coupling);
+    _out_value->bandwidth = static_cast<rp_ptcc_bw_t>(params.bandwidth);
+    _out_value->valid = params.valid;
+    return RP_PTCC_OK;
+}
+
+rp_ptcc_error rp_PtccGetLabMLimits(rp_ptcc_labm_limits_t *_out_value) {
+    if (_out_value == nullptr) {
+        return RP_PTCC_EIP;
+    }
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+
+    ptcc::LabMLimits limits;
+    const ptcc::Result result = bridge()->readLabMLimits(limits);
+    if (result != ptcc::Result::OK) {
+        return toApiError(result);
+    }
+
+    _out_value->det_bias_u_min = static_cast<float>(limits.det_bias_u_min_v);
+    _out_value->det_bias_u_max = static_cast<float>(limits.det_bias_u_max_v);
+    _out_value->det_bias_i_min = static_cast<float>(limits.det_bias_i_min_a);
+    _out_value->det_bias_i_max = static_cast<float>(limits.det_bias_i_max_a);
+    _out_value->offset_min = static_cast<float>(limits.offset_min_v);
+    _out_value->offset_max = static_cast<float>(limits.offset_max_v);
+    _out_value->varactor_min = limits.varactor_min;
+    _out_value->varactor_max = limits.varactor_max;
+    _out_value->valid = limits.valid;
+    return RP_PTCC_OK;
+}
+
+rp_ptcc_error rp_PtccGetLabMGainValues(float *_out_values, size_t size, uint32_t *_out_count) {
+    if (_out_count == nullptr || (_out_values == nullptr && size > 0)) {
+        return RP_PTCC_EIP;
+    }
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+
+    std::vector<double> values;
+    const ptcc::Result result = bridge()->labMGainValues(values);
+    if (result != ptcc::Result::OK) {
+        return toApiError(result);
+    }
+
+    *_out_count = static_cast<uint32_t>(values.size());
+    for (size_t index = 0; index < values.size() && index < size; ++index) {
+        _out_values[index] = static_cast<float>(values[index]);
+    }
+    return RP_PTCC_OK;
+}
+
+rp_ptcc_error rp_PtccSetLabMDetectorBiasVoltage(float volts) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMDetectorBiasVoltage(static_cast<double>(volts)));
+}
+
+rp_ptcc_error rp_PtccSetLabMDetectorBiasCurrent(float amperes) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMDetectorBiasCurrent(static_cast<double>(amperes)));
+}
+
+rp_ptcc_error rp_PtccSetLabMOffset(float volts) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMOffset(static_cast<double>(volts)));
+}
+
+rp_ptcc_error rp_PtccSetLabMGain(float volt_per_volt) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMGain(static_cast<double>(volt_per_volt)));
+}
+
+rp_ptcc_error rp_PtccSetLabMGainCode(uint32_t code) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMGainCode(code));
+}
+
+rp_ptcc_error rp_PtccSetLabMVaractor(uint32_t code) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMVaractor(code));
+}
+
+rp_ptcc_error rp_PtccSetLabMTransimpedance(rp_ptcc_trans_t mode) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMTransimpedance(static_cast<int>(mode)));
+}
+
+rp_ptcc_error rp_PtccSetLabMCoupling(rp_ptcc_coupling_t mode) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMCoupling(static_cast<int>(mode)));
+}
+
+rp_ptcc_error rp_PtccSetLabMBandwidth(rp_ptcc_bw_t mode) {
+    std::lock_guard<std::mutex> guard(g_mutex);
+    if (!bridge()) {
+        return RP_PTCC_ENOINIT;
+    }
+    return toApiError(bridge()->setLabMBandwidth(static_cast<int>(mode)));
 }
 
 rp_ptcc_error rp_PtccGetDeviceIden(rp_ptcc_device_iden_t *_out_value) {

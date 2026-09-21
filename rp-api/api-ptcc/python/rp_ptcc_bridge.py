@@ -16,6 +16,8 @@ import time
 # Requires Python 3.12 or newer: the upstream package uses typing.override.
 from ptcc_library import (
     DeviceRegister,
+    GainVoltPerVolt,
+    PtccObject,
     ModuleType,
     PtccCtrl,
     PtccMessageReceiver,
@@ -24,8 +26,14 @@ from ptcc_library import (
     error_messages,
     status_messages,
 )
+from ptcc_library.ptcc_defines import LOOKUP_VALUE_LISTS
 
 DEFAULT_BAUDRATE = 57600
+
+# The device stores the second stage gain as one of the codes in the upstream
+# GainVoltPerVolt enum; the panel shows it in V/V. X0_5 -> 0.5, X1_5 -> 1.5.
+GAIN_CODE_TO_VOLT_PER_VOLT = {member.value: float(member.name[1:].replace("_", "."))
+                              for member in GainVoltPerVolt}
 
 _BAUDRATES = {
     9600: termios.B9600,
@@ -127,6 +135,7 @@ class Bridge:
         self._captured = {}
         self._registered = set()
         self._limits = None
+        self._lab_m_limits = None
 
     # -- connection ------------------------------------------------------
 
@@ -156,6 +165,7 @@ class Bridge:
                 self._captured = {}
                 self._registered = set()
                 self._limits = None
+                self._lab_m_limits = None
                 return {"port": candidate, "module_type": int(found.module_type.value)}
             except (IOError, ValueError) as error:
                 last_error = error
@@ -170,6 +180,7 @@ class Bridge:
         self.device = None
         self.receiver = None
         self._limits = None
+        self._lab_m_limits = None
 
     def is_open(self):
         return self.device is not None
@@ -321,13 +332,80 @@ class Bridge:
             "cool_time": int(_number(values, PtccObjectID.MODULE_IDEN_COOL_TIME)),
         }
 
+    # -- LAB_M module ----------------------------------------------------
+
+    def _require_lab_m(self):
+        """LAB_M containers exist only on LAB_M modules.
+
+        Checked here rather than left to upstream: a MEM module answers the
+        LAB_M parameter query with a frame of its own, so without this the
+        caller would get a decode failure instead of a plain "not supported".
+        """
+        self._require_device()
+        if self.device.module_type is not ModuleType.LAB_M:
+            raise TypeError("the attached module does not support LAB_M parameters")
+
+    def read_lab_m_monitor(self):
+        self._require_lab_m()
+        values = self._request(self.device.write_msg_get_lab_m_monitor,
+                               PtccObjectID.MODULE_LAB_M_MONITOR.value)
+        return {
+            "u_sup_plus": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_SUP_PLUS),
+            "u_sup_minus": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_SUP_MINUS),
+            "u_fan": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_FAN_PLUS),
+            "i_tec_plus": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_TEC_PLUS),
+            "i_tec_minus": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_TEC_MINUS),
+            "u_th1": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_TH1),
+            "u_th2": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_TH2),
+            "u_det": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_U_DET),
+            "u_1st": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_U_1ST),
+            "u_out": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_U_OUT),
+            "temperature": _number(values, PtccObjectID.MODULE_LAB_M_MONITOR_TEMP),
+            "timestamp": int(time.monotonic() * 1000.0),
+        }
+
+    def read_lab_m_params(self, register=1):
+        self._require_lab_m()
+        values = self._request(self.device.write_msg_get_lab_m_params,
+                               PtccObjectID.MODULE_LAB_M_PARAMS.value,
+                               target=DeviceRegister(register))
+        gain_code = int(_number(values, PtccObjectID.MODULE_LAB_M_PARAMS_GAIN))
+        return {
+            # DET_U, DET_I and OFFSET are linear mapped upstream, so these are
+            # already Volts and Amperes rather than raw codes.
+            "det_bias_u": _number(values, PtccObjectID.MODULE_LAB_M_PARAMS_DET_U),
+            "det_bias_i": _number(values, PtccObjectID.MODULE_LAB_M_PARAMS_DET_I),
+            "offset": _number(values, PtccObjectID.MODULE_LAB_M_PARAMS_OFFSET),
+            "gain_code": gain_code,
+            "gain": GAIN_CODE_TO_VOLT_PER_VOLT.get(gain_code, 0.0),
+            "gain_known": gain_code in GAIN_CODE_TO_VOLT_PER_VOLT,
+            "varactor": int(_number(values, PtccObjectID.MODULE_LAB_M_PARAMS_VARACTOR)),
+            "transimpedance": _lookup(values, PtccObjectID.MODULE_LAB_M_PARAMS_TRANS),
+            "coupling": _lookup(values, PtccObjectID.MODULE_LAB_M_PARAMS_ACDC),
+            "bandwidth": _lookup(values, PtccObjectID.MODULE_LAB_M_PARAMS_BW),
+        }
+
+    def lab_m_limits(self):
+        """Per-module USER_MIN / USER_MAX of the LAB_M parameters, cached.
+
+        Informational only, exactly like limits(): the ranges are enforced by
+        the upstream library and by the device.
+        """
+        if self._lab_m_limits is None:
+            try:
+                self._lab_m_limits = (self.read_lab_m_params(int(DeviceRegister.USER_MIN.value)),
+                                      self.read_lab_m_params(int(DeviceRegister.USER_MAX.value)))
+            except (IOError, TimeoutError, ValueError, TypeError, LookupError):
+                self._lab_m_limits = ({}, {})
+        return self._lab_m_limits
+
     # -- writes ----------------------------------------------------------
 
     def set_temperature(self, kelvin):
         self._require_device()
         return self._request(self.device.write_msg_set_temperature,
                              PtccObjectID.MODULE_BASIC_PARAMS.value,
-                             value_in_kelvins=kelvin)
+                             value_in_kelvins=float(kelvin))
 
     def set_max_current(self, amperes):
         self._require_device()
@@ -351,6 +429,78 @@ class Bridge:
         return self._request(self.device.write_msg_set_fan,
                              PtccObjectID.MODULE_BASIC_PARAMS.value,
                              mode=PtccCtrl(mode))
+
+    def set_supply(self, mode, u_plus, u_minus):
+        """The protocol carries the control mode and both rails in one message,
+        so they are written together rather than one field at a time."""
+        self._require_device()
+        return self._request(self.device.write_msg_set_supply_voltage,
+                             PtccObjectID.MODULE_BASIC_PARAMS.value,
+                             supp_ctrl_mode=PtccCtrl(mode),
+                             supply_voltage_positive=float(u_plus),
+                             supply_voltage_negative=float(u_minus))
+
+    def set_pwm(self, value):
+        """PWM has no dedicated message upstream, so it goes through the
+        generic basic parameter writer. The value is a raw 0..65535 setting."""
+        self._require_device()
+        parameter = PtccObject(obj_id=PtccObjectID.MODULE_BASIC_PARAMS_PWM,
+                               data_value=int(value))
+        return self._request(self.device.write_msg_set_module_param,
+                             PtccObjectID.MODULE_BASIC_PARAMS.value,
+                             ptcc_object=parameter)
+
+    def _lab_m_write(self, writer, *args, **kwargs):
+        self._require_lab_m()
+        return self._request(writer, PtccObjectID.MODULE_LAB_M_PARAMS.value, *args, **kwargs)
+
+    def set_lab_m_detector_bias_voltage(self, volts):
+        return self._lab_m_write(self.device.write_msg_set_module_lab_m_detector_voltage_bias,
+                                 bias_value_in_volts=float(volts))
+
+    def set_lab_m_detector_bias_current(self, amperes):
+        return self._lab_m_write(
+            self.device.write_msg_set_module_lab_m_detector_current_bias_compensation,
+            bias_value_in_ampers=float(amperes))
+
+    def set_lab_m_offset(self, volts):
+        return self._lab_m_write(self.device.write_msg_set_module_lab_m_offset,
+                                 offset_value_in_volts=float(volts))
+
+    def set_lab_m_gain(self, volt_per_volt):
+        """Takes the gain the panel shows, in V/V.
+
+        Only the values the device defines are accepted; picking the nearest
+        one silently would report a gain the amplifier is not running at.
+        """
+        for code, value in GAIN_CODE_TO_VOLT_PER_VOLT.items():
+            if abs(value - float(volt_per_volt)) < 1e-6:
+                return self.set_lab_m_gain_code(code)
+        allowed = ", ".join(f"{value:g}" for value in sorted(GAIN_CODE_TO_VOLT_PER_VOLT.values()))
+        raise ValueError(f"gain {volt_per_volt} V/V is not one of: {allowed}")
+
+    def set_lab_m_gain_code(self, code):
+        return self._lab_m_write(self.device.write_msg_set_module_lab_m_gain, gain=int(code))
+
+    def set_lab_m_varactor(self, code):
+        return self._lab_m_write(self.device.write_msg_set_module_lab_m_varactor,
+                                 compensation=int(code))
+
+    def set_lab_m_transimpedance(self, mode):
+        writers = (self.device.write_msg_set_module_lab_m_transimpedance_low,
+                   self.device.write_msg_set_module_lab_m_transimpedance_high)
+        return self._lab_m_write(_pick(writers, mode, "transimpedance"))
+
+    def set_lab_m_coupling(self, mode):
+        writers = (self.device.write_msg_set_module_lab_m_coupling_ac,
+                   self.device.write_msg_set_module_lab_m_coupling_dc)
+        return self._lab_m_write(_pick(writers, mode, "coupling"))
+
+    def set_lab_m_bandwidth(self, mode):
+        writers = (self.device.write_msg_set_module_lab_m_bandwidth_low,
+                   self.device.write_msg_set_module_lab_m_bandwidth_mid,
+                   self.device.write_msg_set_module_lab_m_bandwidth_high)
+        return self._lab_m_write(_pick(writers, mode, "bandwidth"))
 
 
 def list_ports():
@@ -434,6 +584,36 @@ def _ctrl(values, object_id):
         raise FieldError(f"{object_id.name} is not a control mode: {value!r}") from error
 
 
+def _lookup(values, object_id):
+    """Maps a looked up value back to its index in the upstream value list.
+
+    Upstream decodes these fields to their label ("LOW", "AC", "MID"), while
+    the C API carries the index, which is what the device stores.
+    """
+    value = _require(values, object_id)
+    if isinstance(value, str):
+        labels = LOOKUP_VALUE_LISTS[object_id]
+        for index, label in enumerate(labels):
+            if label.strip().lower() == value.strip().lower():
+                return index
+        raise FieldError(f"{object_id.name} has an unknown value {value!r}")
+    try:
+        return int(value)
+    except (TypeError, ValueError) as error:
+        raise FieldError(f"{object_id.name} is not an index: {value!r}") from error
+
+
+def _pick(writers, mode, name):
+    """Selects the upstream writer for a discrete setting."""
+    try:
+        index = int(mode)
+    except (TypeError, ValueError) as error:
+        raise ValueError(f"invalid {name} mode {mode!r}") from error
+    if not 0 <= index < len(writers):
+        raise ValueError(f"invalid {name} mode {mode}")
+    return writers[index]
+
+
 _BRIDGE = Bridge()
 
 
@@ -514,3 +694,76 @@ def set_cooler(mode):
 
 def set_fan(mode):
     _BRIDGE.set_fan(mode)
+
+
+def set_supply(mode, u_plus, u_minus):
+    _BRIDGE.set_supply(mode, u_plus, u_minus)
+
+
+def set_pwm(value):
+    _BRIDGE.set_pwm(value)
+
+
+def read_lab_m_monitor():
+    return _BRIDGE.read_lab_m_monitor()
+
+
+def read_lab_m_params(register=1):
+    return _BRIDGE.read_lab_m_params(register)
+
+
+def lab_m_limits():
+    low, high = _BRIDGE.lab_m_limits()
+    return {
+        "det_bias_u_min": low.get("det_bias_u", 0.0),
+        "det_bias_u_max": high.get("det_bias_u", 0.0),
+        "det_bias_i_min": low.get("det_bias_i", 0.0),
+        "det_bias_i_max": high.get("det_bias_i", 0.0),
+        # OFFSET maps raw 0..256 to +1..-1 V, so USER_MIN carries the larger
+        # voltage; report them the way a UI needs them.
+        "offset_min": min(low.get("offset", 0.0), high.get("offset", 0.0)),
+        "offset_max": max(low.get("offset", 0.0), high.get("offset", 0.0)),
+        "varactor_min": low.get("varactor", 0),
+        "varactor_max": high.get("varactor", 0),
+    }
+
+
+def lab_m_gain_values():
+    """The gains the device accepts, in V/V, ascending."""
+    return sorted(GAIN_CODE_TO_VOLT_PER_VOLT.values())
+
+
+def set_lab_m_detector_bias_voltage(volts):
+    _BRIDGE.set_lab_m_detector_bias_voltage(volts)
+
+
+def set_lab_m_detector_bias_current(amperes):
+    _BRIDGE.set_lab_m_detector_bias_current(amperes)
+
+
+def set_lab_m_offset(volts):
+    _BRIDGE.set_lab_m_offset(volts)
+
+
+def set_lab_m_gain(volt_per_volt):
+    _BRIDGE.set_lab_m_gain(volt_per_volt)
+
+
+def set_lab_m_gain_code(code):
+    _BRIDGE.set_lab_m_gain_code(code)
+
+
+def set_lab_m_varactor(code):
+    _BRIDGE.set_lab_m_varactor(code)
+
+
+def set_lab_m_transimpedance(mode):
+    _BRIDGE.set_lab_m_transimpedance(mode)
+
+
+def set_lab_m_coupling(mode):
+    _BRIDGE.set_lab_m_coupling(mode)
+
+
+def set_lab_m_bandwidth(mode):
+    _BRIDGE.set_lab_m_bandwidth(mode)

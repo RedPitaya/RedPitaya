@@ -156,5 +156,52 @@ class DeviceTests(unittest.TestCase):
             self.assertEqual(rp_ptcc.rp_PtccStopMonitoring(), rp_ptcc.RP_PTCC_OK)
 
 
+class LabMTests(unittest.TestCase):
+    """The detection module helpers, which need a LAB_M module."""
+
+    def setUp(self):
+        self.device = EmulatedDevice("--module", "LAB_M")
+        self.assertTrue(self.device.port)
+        self.assertEqual(rp_ptcc.rp_PtccInitDevice(self.device.port), rp_ptcc.RP_PTCC_OK)
+        rp_ptcc.rp_PtccSetThrottle(0)
+
+    def tearDown(self):
+        rp_ptcc.rp_PtccRelease()
+        self.device.close()
+
+    def test_params_helper_returns_every_field(self):
+        params = rp_ptcc.read_lab_m_params()
+        self.assertAlmostEqual(params["det_bias_u"], 0.5, places=3)
+        self.assertAlmostEqual(params["gain"], 10.0, places=3)
+        self.assertEqual(params["gain_code"], 85)
+        self.assertTrue(params["gain_known"])
+        self.assertEqual(params["varactor"], 2048)
+        self.assertEqual(params["coupling"], rp_ptcc.RP_PTCC_COUPLING_DC)
+        self.assertEqual(params["bandwidth"], rp_ptcc.RP_PTCC_BW_HIGH)
+        self.assertTrue(params["valid"])
+
+    def test_monitor_helper_returns_si_values(self):
+        monitor = rp_ptcc.read_lab_m_monitor()
+        self.assertAlmostEqual(monitor["u_out"], 1.503, places=3)
+        self.assertAlmostEqual(monitor["temperature"], 29.5, places=1)
+        self.assertTrue(monitor["valid"])
+
+    def test_gain_list_crosses_the_vector_typemap(self):
+        gains = rp_ptcc.lab_m_gain_values()
+        self.assertEqual(len(gains), 11)
+        self.assertAlmostEqual(gains[0], 0.5, places=3)
+        self.assertAlmostEqual(gains[-1], 30.0, places=3)
+
+    def test_settings_round_trip(self):
+        self.assertEqual(rp_ptcc.rp_PtccSetLabMGain(5.0), rp_ptcc.RP_PTCC_OK)
+        self.assertEqual(rp_ptcc.rp_PtccSetLabMGain(4.0), rp_ptcc.RP_PTCC_ERANGE)
+        self.assertEqual(rp_ptcc.rp_PtccSetLabMCoupling(rp_ptcc.RP_PTCC_COUPLING_AC),
+                         rp_ptcc.RP_PTCC_OK)
+
+        params = rp_ptcc.read_lab_m_params()
+        self.assertAlmostEqual(params["gain"], 5.0, places=3)
+        self.assertEqual(params["coupling"], rp_ptcc.RP_PTCC_COUPLING_AC)
+
+
 if __name__ == "__main__":
     unittest.main()

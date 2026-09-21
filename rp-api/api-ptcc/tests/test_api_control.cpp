@@ -39,6 +39,25 @@ TEST_F(PtccControl, SetpointIsAccepted) {
     EXPECT_EQ(rp_PtccSetSetpoint(280), RP_PTCC_OK);
 }
 
+// The protocol carries the setpoint with three decimals, so a tenth of a
+// Kelvin has to survive the round trip. The emulator answers with whatever the
+// driver wrote, which is what makes the read back meaningful.
+TEST_F(PtccControl, FractionalSetpointSurvivesTheRoundTrip) {
+    float value = 0.0F;
+
+    ASSERT_EQ(rp_PtccSetSetpoint(200.1F), RP_PTCC_OK);
+    ASSERT_EQ(rp_PtccGetSetpoint(&value), RP_PTCC_OK);
+    EXPECT_NEAR(value, 200.1F, 1e-3F);
+
+    ASSERT_EQ(rp_PtccSetSetpoint(213.75F), RP_PTCC_OK);
+    ASSERT_EQ(rp_PtccGetSetpoint(&value), RP_PTCC_OK);
+    EXPECT_NEAR(value, 213.75F, 1e-3F);
+
+    ASSERT_EQ(rp_PtccSetSetpoint(230.0F), RP_PTCC_OK);
+    ASSERT_EQ(rp_PtccGetSetpoint(&value), RP_PTCC_OK);
+    EXPECT_NEAR(value, 230.0F, 1e-3F);
+}
+
 // The rejection comes from the upstream value tables, not from a copy of them
 // in the C layer, and it arrives as ERANGE rather than a decode failure.
 TEST_F(PtccControl, OutOfRangeSetpointIsRejectedByTheUpstreamLibrary) {
@@ -52,6 +71,45 @@ TEST_F(PtccControl, OutOfRangeSetpointIsRejectedByTheUpstreamLibrary) {
 TEST_F(PtccControl, OutOfRangeCurrentLimitIsRejectedByTheUpstreamLibrary) {
     EXPECT_EQ(rp_PtccSetMaxCurrent(-1.0F), RP_PTCC_ERANGE);
     EXPECT_EQ(rp_PtccSetMaxCurrent(100.0F), RP_PTCC_ERANGE);
+}
+
+// The supply rails and the control mode travel in one protocol message, so
+// they are checked together, reading back what the emulator stored.
+TEST_F(PtccControl, SupplyIsWrittenAsOneSetting) {
+    ASSERT_EQ(rp_PtccSetSupply(RP_PTCC_CTRL_ON, 12.0F, -12.0F), RP_PTCC_OK);
+
+    rp_ptcc_params_t params;
+    std::memset(&params, 0, sizeof(params));
+    ASSERT_EQ(rp_PtccGetParams(RP_PTCC_REG_USER_SET, &params), RP_PTCC_OK);
+    EXPECT_NEAR(params.u_sup_plus, 12.0F, 1e-3F);
+    EXPECT_NEAR(params.u_sup_minus, -12.0F, 1e-3F);
+    EXPECT_EQ(params.supply_ctrl, RP_PTCC_CTRL_ON);
+}
+
+TEST_F(PtccControl, OutOfRangeSupplyIsRejectedByTheUpstreamLibrary) {
+    EXPECT_EQ(rp_PtccSetSupply(RP_PTCC_CTRL_ON, 20.0F, -12.0F), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetSupply(RP_PTCC_CTRL_ON, 12.0F, 12.0F), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetSupply(RP_PTCC_CTRL_AUTO, 5.0F, -5.0F), RP_PTCC_OK);
+}
+
+TEST_F(PtccControl, PwmIsWrittenThroughTheGenericParameterMessage) {
+    ASSERT_EQ(rp_PtccSetPwm(12800), RP_PTCC_OK);
+
+    rp_ptcc_params_t params;
+    std::memset(&params, 0, sizeof(params));
+    ASSERT_EQ(rp_PtccGetParams(RP_PTCC_REG_USER_SET, &params), RP_PTCC_OK);
+    EXPECT_EQ(params.pwm, 12800U);
+
+    EXPECT_EQ(rp_PtccSetPwm(100000), RP_PTCC_ERANGE);
+}
+
+TEST_F(PtccControl, FanModeIsStoredByTheModule) {
+    ASSERT_EQ(rp_PtccSetFan(RP_PTCC_CTRL_ON), RP_PTCC_OK);
+
+    rp_ptcc_params_t params;
+    std::memset(&params, 0, sizeof(params));
+    ASSERT_EQ(rp_PtccGetParams(RP_PTCC_REG_USER_SET, &params), RP_PTCC_OK);
+    EXPECT_EQ(params.fan_ctrl, RP_PTCC_CTRL_ON);
 }
 
 TEST_F(PtccControl, CurrentLimitIsAccepted) {
