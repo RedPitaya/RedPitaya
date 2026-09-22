@@ -59,18 +59,15 @@ include(FetchContent)
 
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-volatile -Wno-psabi")
 
-FetchContent_Declare(json
-    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp
-    GIT_TAG 1.9.4
-    EXCLUDE_FROM_ALL
-)
-
-if(NOT json_POPULATED)
-    FetchContent_Populate(json)
-    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+# RapidJSON is header only and comes from the image (rapidjson-dev), so there
+# is nothing to fetch or compile for it.
+find_path(RAPIDJSON_INCLUDE_DIR rapidjson/document.h)
+if(NOT RAPIDJSON_INCLUDE_DIR)
+    message(FATAL_ERROR "RapidJSON headers not found, install rapidjson-dev")
 endif()
+message(STATUS "RapidJSON: ${RAPIDJSON_INCLUDE_DIR}")
 
-include_directories(${json_SOURCE_DIR}/include)
+include_directories(${RAPIDJSON_INCLUDE_DIR})
 
 list(APPEND r_paths
     /opt/redpitaya/lib
@@ -101,12 +98,6 @@ list(APPEND src
             ${CMAKE_SOURCE_DIR}/src/decoders/i2c_settings.cpp
             ${CMAKE_SOURCE_DIR}/src/bit_decoder/bit_decoder_one_line_rle.cpp
         )
-
-list(APPEND src
-        ${json_SOURCE_DIR}/src/lib_json/json_reader.cpp
-        ${json_SOURCE_DIR}/src/lib_json/json_writer.cpp
-        ${json_SOURCE_DIR}/src/lib_json/json_value.cpp
-    )
 
 list(APPEND header
     ${CMAKE_SOURCE_DIR}/src/rp_la.h

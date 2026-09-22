@@ -17,12 +17,15 @@
 #include <sys/param.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <iostream>
 #include <vector>
 
 extern "C" {
 #include "rp_ptcc.h"
 }
+
+#include "service.h"
 
 /** Program name */
 const char *g_argv0 = NULL;
@@ -132,6 +135,8 @@ enum {
     OPT_SUPPLY_PLUS,
     OPT_SUPPLY_MINUS,
     OPT_PWM,
+    OPT_SERVICE,
+    OPT_PERIOD,
 };
 
 /** One optional setting: printed when the option carries no value. */
@@ -294,6 +299,12 @@ void usage() {
             "         The three travel in one message: the fields left out keep\n"
             "         the value the module already holds.\n"
             "   --pwm[=value]           TEC PWM setting, 0 to 65535.\n"
+            "\n"
+            "Service:\n"
+            "   --service[=port]        Keep the controller open and serve it over a\n"
+            "                           websocket, 9093 by default. Runs until stopped.\n"
+            "   --period=ms             Monitor poll period in service mode, 1000 by\n"
+            "                           default, never below the command throttle.\n"
             "\n"
             "Detection module, LAB_M modules only:\n"
             "   --labm-monitor          Read the detection module monitor.\n"
@@ -676,6 +687,11 @@ int list_ports(bool json) {
 }
 
 /** Watches the monitor through the background poller. */
+void on_signal(int signal_number) {
+    (void)signal_number;
+    ptcc_service_stop();
+}
+
 int watch_monitor(long period_ms, bool json) {
     const rp_ptcc_error start = rp_PtccStartMonitoring(static_cast<uint32_t>(period_ms));
     if (start != RP_PTCC_OK) {
@@ -780,6 +796,10 @@ int main(int argc, char *argv[]) {
     Setting supply_minus;
     Setting pwm;
 
+    bool service_flag = false;
+    long service_port = PTCC_SERVICE_PORT;
+    long service_period = 1000;
+
     if (argc < MINARGS) {
         usage();
         exit(EXIT_FAILURE);
@@ -803,6 +823,8 @@ int main(int argc, char *argv[]) {
         {"supply-plus", optional_argument, NULL, OPT_SUPPLY_PLUS},
         {"supply-minus", optional_argument, NULL, OPT_SUPPLY_MINUS},
         {"pwm", optional_argument, NULL, OPT_PWM},
+        {"service", optional_argument, NULL, OPT_SERVICE},
+        {"period", required_argument, NULL, OPT_PERIOD},
         {NULL, 0, NULL, 0},
     };
 
@@ -1000,6 +1022,21 @@ int main(int argc, char *argv[]) {
                 take_value(&pwm, optarg);
                 break;
 
+            case OPT_SERVICE:
+                service_flag = true;
+                if (optarg && get_long(&service_port, optarg) != 0) {
+                    usage();
+                    exit(EXIT_FAILURE);
+                }
+                break;
+
+            case OPT_PERIOD:
+                if (get_long(&service_period, optarg) != 0) {
+                    usage();
+                    exit(EXIT_FAILURE);
+                }
+                break;
+
             case 'h':
             default:
                 usage();
@@ -1018,7 +1055,7 @@ int main(int argc, char *argv[]) {
     const bool needs_device = iden_flag || link_flag || monitor_flag || quick_flag || watch_flag ||
                               params_flag || temperature_flag || current_flag || cooler_flag || fan_flag ||
                               status_flag || labm_monitor_flag || labm_params_flag || gains_flag ||
-                              labm_settings || supply_settings;
+                              labm_settings || supply_settings || service_flag;
 
     if (version_flag) {
         printf("ptcc_control, library %s, protocol %s\n", rp_PtccGetVersion(),
@@ -1411,6 +1448,29 @@ int main(int argc, char *argv[]) {
         if (watch_monitor(watch_period, json_flag) != 0) {
             exit_code = -1;
         }
+    }
+
+    if (service_flag && watch_flag) {
+        // -w never returns, so the service would never start.
+        fprintf(stderr, "[Error] -w and --service cannot be combined\n");
+        rp_PtccRelease();
+        return -1;
+    }
+
+    if (service_flag) {
+        signal(SIGINT, on_signal);
+        signal(SIGTERM, on_signal);
+        // The web side may close the socket at any time, which would otherwise
+        // take the process down with SIGPIPE.
+        signal(SIGPIPE, SIG_IGN);
+
+        printf("ptcc_control service on port %ld, poll period %ld ms\n", service_port,
+               service_period);
+        fflush(stdout);
+
+        exit_code = ptcc_service_run(static_cast<uint16_t>(service_port),
+                                     static_cast<uint32_t>(service_period), device_path,
+                                     static_cast<uint32_t>(baudrate));
     }
 
     rp_PtccRelease();

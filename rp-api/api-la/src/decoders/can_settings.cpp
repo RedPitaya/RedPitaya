@@ -1,5 +1,5 @@
 #include "can_settings.h"
-#include "json/json.h"
+#include "settings_json.hpp"
 #include "rp_log.h"
 
 using namespace can;
@@ -136,55 +136,47 @@ auto CANParameters::getDecoderSettingsString(std::string& key, std::string* valu
 }
 
 auto CANParameters::toJson() -> std::string {
-    Json::Value root;
+    la_json::Builder root;
 
-    root["rx"] = m_can_rx.name();
-    root["nominal_bitrate"] = m_nominal_bitrate;
-    root["fast_bitrate"] = m_fast_bitrate;
-    root["sample_point"] = m_sample_point;
-    root["invert_bit"] = m_invert_bit.name();
-    root["acq_speed"] = m_acq_speed;
-    Json::StreamWriterBuilder builder;
-    const std::string json = Json::writeString(builder, root);
-    return json;
+    root.add("rx", m_can_rx.name());
+    root.add("nominal_bitrate", m_nominal_bitrate);
+    root.add("fast_bitrate", m_fast_bitrate);
+    root.add("sample_point", m_sample_point);
+    root.add("invert_bit", m_invert_bit.name());
+    root.add("acq_speed", m_acq_speed);
+    return root.str();
 }
 
 auto CANParameters::fromJson(const std::string& json) -> bool {
-    Json::Value root;
+    rapidjson::Document root;
 
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    JSONCPP_STRING errs;
-    auto is = std::istringstream(json);
-    if (!parseFromStream(builder, is, &root, &errs)) {
-        WARNING("Error parse json %s", errs.c_str())
+    if (!la_json::parse(root, json)) {
+        WARNING("Error parse json %s", json.c_str())
         return false;
     }
 
     try {
 
-        auto parseUInt32 = [&](uint32_t& dest, std::string param) {
-            if (root.isMember(param)) {
-                dest = root[param].asUInt();
-            } else {
-                ERROR_LOG("Missing parameter %s", param.c_str())
+        auto parseUInt32 = [&](uint32_t& dest, const char* param) {
+            if (!la_json::getUInt32(root, param, dest)) {
+                ERROR_LOG("Missing parameter %s", param)
                 return false;
             }
             return true;
         };
 
-        auto parseFloat = [&](float& dest, std::string param) {
-            if (root.isMember(param)) {
-                dest = root[param].asFloat();
-            } else {
-                ERROR_LOG("Missing parameter %s", param.c_str())
+        std::string text;
+
+        auto parseFloat = [&](float& dest, const char* param) {
+            if (!la_json::getFloat(root, param, dest)) {
+                ERROR_LOG("Missing parameter %s", param)
                 return false;
             }
             return true;
         };
 
-        if (root.isMember("rx"))
-            m_can_rx = Lines::from_string(root["rx"].asString());
+        if (la_json::getString(root, "rx", text))
+            m_can_rx = Lines::from_string(text);
         if (!parseUInt32(m_nominal_bitrate, "nominal_bitrate"))
             return false;
         if (!parseUInt32(m_fast_bitrate, "fast_bitrate"))
@@ -193,8 +185,8 @@ auto CANParameters::fromJson(const std::string& json) -> bool {
             return false;
         if (!parseUInt32(m_acq_speed, "acq_speed"))
             return false;
-        if (root.isMember("invert_bit"))
-            m_invert_bit = InvertBit::from_string(root["invert_bit"].asString());
+        if (la_json::getString(root, "invert_bit", text))
+            m_invert_bit = InvertBit::from_string(text);
 
         return true;
     } catch (...) {

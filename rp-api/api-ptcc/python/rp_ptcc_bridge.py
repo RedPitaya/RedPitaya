@@ -294,8 +294,11 @@ class Bridge:
     def limits(self):
         """Per-module USER_MIN / USER_MAX, read once and cached.
 
-        Informational only: the value ranges are enforced by the upstream
-        library and by the device, not here.
+        These are the ranges writes are checked against. The upstream library
+        only knows the protocol range, which is far wider: Vigo confirmed the
+        firmware silently clamps anything outside the module's own USER_MIN /
+        USER_MAX instead of reporting an error, so a write that would be
+        clamped is refused here rather than spent on the EEPROM.
         """
         if self._limits is None:
             try:
@@ -333,6 +336,37 @@ class Bridge:
         }
 
     # -- LAB_M module ----------------------------------------------------
+
+    def _check_range(self, value, low, high, what, unit):
+        """Refuses a value the module would clamp.
+
+        The device accepts such a write and quietly stores its own limit
+        instead, so without this the caller would be told the write succeeded
+        while the module runs at a different value.
+        """
+        if low is None or high is None:
+            return
+
+        bottom, top = min(low, high), max(low, high)
+        if bottom == top and value == bottom:
+            return
+        # A tenth of a millikelvin of slack, so a value read back from the
+        # device and written again is never refused by rounding alone.
+        slack = max(abs(top - bottom), 1.0) * 1e-6
+        if bottom - slack <= value <= top + slack:
+            return
+
+        suffix = f" {unit}" if unit else ""
+        raise ValueError(f"{what} {value}{suffix} is outside the range this module accepts, "
+                         f"{bottom} to {top}{suffix}")
+
+    def _check_basic_range(self, value, field, what, unit):
+        low, high = self.limits()
+        self._check_range(value, low.get(field), high.get(field), what, unit)
+
+    def _check_lab_m_range(self, value, field, what, unit):
+        low, high = self.lab_m_limits()
+        self._check_range(value, low.get(field), high.get(field), what, unit)
 
     def _require_lab_m(self):
         """LAB_M containers exist only on LAB_M modules.
@@ -388,8 +422,7 @@ class Bridge:
     def lab_m_limits(self):
         """Per-module USER_MIN / USER_MAX of the LAB_M parameters, cached.
 
-        Informational only, exactly like limits(): the ranges are enforced by
-        the upstream library and by the device.
+        Writes are checked against these, see limits().
         """
         if self._lab_m_limits is None:
             try:
@@ -403,12 +436,14 @@ class Bridge:
 
     def set_temperature(self, kelvin):
         self._require_device()
+        self._check_basic_range(float(kelvin), "setpoint", "setpoint", "K")
         return self._request(self.device.write_msg_set_temperature,
                              PtccObjectID.MODULE_BASIC_PARAMS.value,
                              value_in_kelvins=float(kelvin))
 
     def set_max_current(self, amperes):
         self._require_device()
+        self._check_basic_range(float(amperes), "i_tec_max", "TEC current limit", "A")
         return self._request(self.device.write_msg_set_max_current,
                              PtccObjectID.MODULE_BASIC_PARAMS.value,
                              value_in_amperes=float(amperes))
@@ -434,6 +469,8 @@ class Bridge:
         """The protocol carries the control mode and both rails in one message,
         so they are written together rather than one field at a time."""
         self._require_device()
+        self._check_basic_range(float(u_plus), "u_sup_plus", "positive supply rail", "V")
+        self._check_basic_range(float(u_minus), "u_sup_minus", "negative supply rail", "V")
         return self._request(self.device.write_msg_set_supply_voltage,
                              PtccObjectID.MODULE_BASIC_PARAMS.value,
                              supp_ctrl_mode=PtccCtrl(mode),
@@ -444,6 +481,7 @@ class Bridge:
         """PWM has no dedicated message upstream, so it goes through the
         generic basic parameter writer. The value is a raw 0..65535 setting."""
         self._require_device()
+        self._check_basic_range(int(value), "pwm", "PWM", "")
         parameter = PtccObject(obj_id=PtccObjectID.MODULE_BASIC_PARAMS_PWM,
                                data_value=int(value))
         return self._request(self.device.write_msg_set_module_param,
@@ -455,15 +493,18 @@ class Bridge:
         return self._request(writer, PtccObjectID.MODULE_LAB_M_PARAMS.value, *args, **kwargs)
 
     def set_lab_m_detector_bias_voltage(self, volts):
+        self._check_lab_m_range(float(volts), "det_bias_u", "detector bias", "V")
         return self._lab_m_write(self.device.write_msg_set_module_lab_m_detector_voltage_bias,
                                  bias_value_in_volts=float(volts))
 
     def set_lab_m_detector_bias_current(self, amperes):
+        self._check_lab_m_range(float(amperes), "det_bias_i", "bias current compensation", "A")
         return self._lab_m_write(
             self.device.write_msg_set_module_lab_m_detector_current_bias_compensation,
             bias_value_in_ampers=float(amperes))
 
     def set_lab_m_offset(self, volts):
+        self._check_lab_m_range(float(volts), "offset", "output DC offset", "V")
         return self._lab_m_write(self.device.write_msg_set_module_lab_m_offset,
                                  offset_value_in_volts=float(volts))
 
@@ -483,6 +524,7 @@ class Bridge:
         return self._lab_m_write(self.device.write_msg_set_module_lab_m_gain, gain=int(code))
 
     def set_lab_m_varactor(self, code):
+        self._check_lab_m_range(int(code), "varactor", "varactor compensation", "")
         return self._lab_m_write(self.device.write_msg_set_module_lab_m_varactor,
                                  compensation=int(code))
 

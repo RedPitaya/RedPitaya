@@ -406,7 +406,7 @@ e3_led_controller: api
 	cmake -B$(abspath $(E3_LED_CON_DIR)/build) -S$(abspath $(E3_LED_CON_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(E3_LED_CON_DIR)/build install -j$(CPU_CORES)
 
-ptcc_control: api
+ptcc_control: api web-api
 	cmake -B$(abspath $(PTCC_CONTROL_DIR)/build) -S$(abspath $(PTCC_CONTROL_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(PTCC_CONTROL_DIR)/build install -j$(CPU_CORES)
 

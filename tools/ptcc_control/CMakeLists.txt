@@ -49,6 +49,8 @@ list(APPEND r_paths
 set(CMAKE_INSTALL_RPATH ${r_paths})
 
 include_directories(${INSTALL_DIR}/include)
+# web/rp_websocket.h, used by the service mode
+include_directories(${INSTALL_DIR}/include/web)
 
 file(GLOB SOURCES "src/*.cpp")
 file(GLOB RP_HEADERS "src/*.h")
@@ -67,9 +69,10 @@ add_compile_options(-Wall -Wpedantic -Wextra -DVERSION=${VERSION} -DREVISION=${R
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib)
+target_link_directories(${PROJECT_NAME} PRIVATE ${INSTALL_DIR}/lib ${INSTALL_DIR}/lib/web)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -lrp-ptcc -lm -lstdc++ -lpthread)
+# Static websocket library, the same way the updater tool links it.
+target_link_libraries(${PROJECT_NAME} PRIVATE -lrp-ptcc -l:librp-websocket.a -lm -lstdc++ -lpthread)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${INSTALL_DIR}/bin)
 

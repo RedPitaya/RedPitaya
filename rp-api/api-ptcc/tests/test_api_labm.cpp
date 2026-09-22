@@ -129,6 +129,17 @@ TEST_F(PtccLabM, SettingsSurviveTheRoundTrip) {
     EXPECT_EQ(params.bandwidth, RP_PTCC_BW_MID);
 }
 
+// Same clamping rule as the controller side: the module stores its own limit
+// instead of the value asked for, so the write is refused first.
+TEST_F(PtccLabM, SettingsOutsideTheModuleRangeAreRejected) {
+    EXPECT_EQ(rp_PtccSetLabMDetectorBiasVoltage(1.5F), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetLabMDetectorBiasCurrent(0.05F), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetLabMOffset(-2.0F), RP_PTCC_ERANGE);
+
+    EXPECT_EQ(rp_PtccSetLabMDetectorBiasVoltage(1.0F), RP_PTCC_OK);
+    EXPECT_EQ(rp_PtccSetLabMOffset(1.0F), RP_PTCC_OK);
+}
+
 // The amplifier runs at one of the documented gains, so a value in between is
 // refused rather than rounded to a neighbour the panel would then misreport.
 TEST_F(PtccLabM, UndefinedGainIsRejected) {

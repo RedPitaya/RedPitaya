@@ -2,9 +2,11 @@
  * @file rp_ptcc.h
  * @brief VIGO Photonics PTCC-01 TEC controller API.
  *
- * The controller enumerates as USB CDC-ACM (/dev/ttyACM*) at 57600 baud. The
- * library is a wrapper: it embeds CPython and delegates all protocol work to
- * the upstream package at https://gitlab.com/vigophotonics/ptcc-library.
+ * The controller appears as a serial port at 57600 baud: /dev/ttyACM* when it
+ * enumerates as USB CDC-ACM, /dev/ttyUSB* on units with an FTDI bridge
+ * (PTCC-01-BAS carries an FT232). Both are probed. The library is a wrapper:
+ * it embeds CPython and delegates all protocol work to the upstream package
+ * at https://gitlab.com/vigophotonics/ptcc-library.
  *
  * @warning The firmware needs ~0.55 s between commands. Every call here is
  *          synchronous and may block for that long. Use a worker thread.

@@ -3,8 +3,10 @@
 C++ driver for the VIGO Photonics PTCC-01 TEC controller, built as
 `librp-ptcc.so` / `librp-ptcc.a` with a C API in `include/rp_ptcc.h`.
 
-The controller enumerates as USB CDC-ACM, so it appears as `/dev/ttyACM0` on
-Red Pitaya OS with no extra kernel driver.
+The controller appears as a serial port with no extra kernel driver: units that
+enumerate as USB CDC-ACM show up as `/dev/ttyACM0`, while those with an FTDI
+bridge show up as `/dev/ttyUSB0` (a PTCC-01-BAS on the bench carries an FT232).
+Both are probed, in that order.
 
 ## Architecture
 
@@ -118,12 +120,20 @@ rp_PtccGetMonitor(&monitor);
 * `rp_PtccSetSetpoint()` and `rp_PtccSetMaxCurrent()` write to the module
   EEPROM. Debounce them in the UI and issue one write per confirmed user
   action.
-* Value ranges are enforced by the upstream library and by the device, never
-  by a copy of their tables in this driver. An out of range setpoint comes back
-  as `RP_PTCC_ERANGE` with the upstream message attached
-  (`rp_PtccGetLastPythonError()`). `rp_PtccGetLimits()` reads the module's
-  USER_MIN / USER_MAX registers so a UI can bound its controls, but it is
-  informational only.
+* Value ranges come from two places, both of them the device's own. The
+  upstream library knows the protocol range (100 to 400 K for the setpoint),
+  and the module carries its own USER_MIN / USER_MAX, which is much narrower
+  (180 to 300 K on the bench module). Vigo confirmed the firmware **silently
+  clamps** a value outside the module range: the write is accepted, nothing is
+  reported, and the module stores its own limit instead. So a write that would
+  be clamped is refused here, as `RP_PTCC_ERANGE`, rather than spent on the
+  EEPROM and reported as a success. `rp_PtccGetLimits()` and
+  `rp_PtccGetLabMLimits()` expose the same ranges for a UI to bound its
+  controls with.
+* A module that reports the same USER_MIN and USER_MAX for a field does not
+  let that field be changed at all: the bench module fixes its supply rails at
+  9 V and its writable PWM at 0. A panel should read the range and disable the
+  control rather than assume a setting is editable.
 * `rp_PtccSetSetpoint()` takes Kelvins as a float. The protocol encodes the
   setpoint with three decimals, so fractions reach the device; the UI
   requirement of one decimal is well inside that.
@@ -131,6 +141,10 @@ rp_PtccGetMonitor(&monitor);
   this API are always measurements.
 * The cooler only cools. Asking for a setpoint above ambient will not be
   reached and the device reports "detector overheat" after 120 s.
+* Errors cannot be cleared from software. Vigo confirmed that only a power
+  cycle clears the state in `PTCC_MONITOR_STATUS`, and the device does not work
+  properly until it is cleared, so an application should show the error and ask
+  the user to power cycle the module.
 * `LAB_M` modules take the temperature setpoint like any other: the controller
   panel is the same for every module, only the amplifier settings differ.
 * The detection module calls (`rp_Ptcc*LabM*`) need a LAB_M module and answer
@@ -217,3 +231,90 @@ ptcc_control --labm-params
 ptcc_control --gain=10 --coupling=DC
 ptcc_control --supply-mode=On --supply-plus=12 --supply-minus=-12
 ```
+
+## Service mode
+
+`ptcc_control --service[=port]` keeps the controller open and exposes it over a
+websocket built on `librp-websocket`, the same one the other Red Pitaya tools
+use. The client is the **application**, not the browser: `main.cpp` connects
+with `rp_websocket::CWEBClient` and republishes what it needs as ordinary
+application parameters, so the page never talks to this service directly.
+
+The controller lives in its own process because the driver embeds CPython,
+while an application `.so` is loaded and unloaded by the nginx worker with
+`dlopen`/`dlclose`, which an embedded interpreter does not survive. It also
+keeps the 0.55 s command throttle out of the request path and survives a
+restart of the application.
+
+```
+ptcc_control --service            # port 9093, monitor polled once per second
+ptcc_control --service=9093 --period=600 -d /dev/ttyUSB0
+```
+
+Messages are the `{"KEY": {"type": ..., "value": ...}}` objects `librp-websocket`
+encodes, batched: everything that changed in one round goes out as a single
+message, and a full snapshot is one message of about eighty-five keys. The
+service publishes a value only when it changes, so a client that has just
+connected sends `PTCC_REFRESH` and gets the whole state back from memory,
+answered on the websocket thread in a few milliseconds rather than behind a
+device read.
+
+```cpp
+auto ptcc = std::make_shared<rp_websocket::CWEBClient>();
+ptcc->receiveDouble.connect([](auto key, auto value) { /* PTCC_T_DET, ... */ });
+ptcc->connected.connect([&]() { ptcc->send("PTCC_REFRESH", 1); });
+ptcc->start("127.0.0.1", PTCC_SERVICE_PORT);
+...
+ptcc->send("PTCC_SET_SETPOINT", 230.5F);
+```
+
+`PTCC_UPTIME` arrives every poll period. It is the sign of a live service, and
+it is the only traffic when nothing else changes.
+
+Published by the service:
+
+| Group | Keys |
+| --- | --- |
+| Link | `PTCC_CONNECTED`, `PTCC_PORT`, `PTCC_PERIOD`, `PTCC_UPTIME`, `PTCC_VERSION`, `PTCC_PROTOCOL`, `PTCC_LAST_ERROR`, `PTCC_LAST_ERROR_CODE` |
+| Identification | `PTCC_MODULE_TYPE`, `PTCC_LABM_PRESENT`, `PTCC_DEV_*`, `PTCC_MOD_*`, `PTCC_DET_*`, `PTCC_COOL_TIME` |
+| Controller monitor | `PTCC_T_DET`, `PTCC_T_INT`, `PTCC_I_TEC`, `PTCC_U_TEC`, `PTCC_I_SUP_P/N`, `PTCC_U_SUP_P/N`, `PTCC_I_FAN`, `PTCC_TH_RES`, `PTCC_PWM`, `PTCC_SUPPLY_ON`, `PTCC_FAN_ON`, `PTCC_STATUS`, `PTCC_STATUS_TEXT`, `PTCC_STATUS_IS_ERROR` |
+| Controller settings | `PTCC_SETPOINT`, `PTCC_I_TEC_MAX`, `PTCC_SUP_U_P/N`, `PTCC_PWM_SET`, `PTCC_SUP_CTRL`, `PTCC_FAN_CTRL`, `PTCC_TEC_CTRL` |
+| Ranges | `PTCC_SETPOINT_MIN/MAX`, `PTCC_I_TEC_MAX_MIN/MAX`, `PTCC_SUP_U_P_MIN/MAX`, `PTCC_SUP_U_N_MIN/MAX`, `PTCC_PWM_MIN/MAX` |
+| Detection module | `PTCC_LABM_BIAS_U`, `PTCC_LABM_BIAS_I`, `PTCC_LABM_OFFSET`, `PTCC_LABM_GAIN`, `PTCC_LABM_GAIN_CODE`, `PTCC_LABM_GAIN_KNOWN`, `PTCC_LABM_GAINS`, `PTCC_LABM_VARACTOR`, `PTCC_LABM_TRANS`, `PTCC_LABM_COUPLING`, `PTCC_LABM_BW`, plus `_MIN`/`_MAX` for the analog ones |
+| Detection module monitor | `PTCC_LABM_U_SUP_P/N`, `PTCC_LABM_U_FAN`, `PTCC_LABM_I_TEC_P/N`, `PTCC_LABM_TH1/TH2`, `PTCC_LABM_U_DET`, `PTCC_LABM_U_1ST`, `PTCC_LABM_U_OUT`, `PTCC_LABM_TEMP` |
+
+Accepted from the page:
+
+| Key | Type | Meaning |
+| --- | --- | --- |
+| `PTCC_SET_SETPOINT` | double | Detector temperature [K] |
+| `PTCC_SET_I_TEC_MAX` | double | TEC current limit [A] |
+| `PTCC_SET_COOLER`, `PTCC_SET_FAN`, `PTCC_SET_SUP_CTRL` | int | 0 Auto, 1 Off, 2 On |
+| `PTCC_SET_SUP_U_P`, `PTCC_SET_SUP_U_N` | double | Supply rails [V]; the other fields of the same protocol message are filled in from the module |
+| `PTCC_SET_PWM` | int | TEC PWM |
+| `PTCC_SET_LABM_BIAS_U`, `_BIAS_I`, `_OFFSET`, `_GAIN` | double | Detection module analog settings; gain must be one of `PTCC_LABM_GAINS` |
+| `PTCC_SET_LABM_GAIN_CODE`, `_VARACTOR` | int | Raw device codes |
+| `PTCC_SET_LABM_TRANS`, `_COUPLING`, `_BW` | int | Index into Low/High, AC/DC, Low/Mid/High |
+| `PTCC_REFRESH` | int | Resend the whole state from memory |
+| `PTCC_RELOAD` | int | Re-read every register from the device, which takes seconds |
+| `PTCC_RECONNECT` | int | Reopen the serial port |
+| `PTCC_STOP` | int | Stop the service |
+
+Every write is answered with `PTCC_LAST_ERROR_CODE` (an `rp_ptcc_error`) and
+`PTCC_LAST_ERROR`, then with the values that actually changed, read back from
+the device. That answer takes about 1.2 s: the write and the read back each wait
+out the throttle. Writes go to the module EEPROM, so the page has to send them
+on a confirmed user action and never on a slider drag.
+
+The poll period is raised to `RP_PTCC_THROTTLE_MS` per monitor container plus
+400 ms if the requested one is shorter, which is 1.5 s on a LAB_M module: two
+containers at 550 ms each leave nothing for the panel's own commands otherwise.
+The whole state is read once before the poller starts, so the first snapshot is
+complete.
+
+The service is not reachable from a browser and needs no nginx entry: it is
+addressed on the loopback by the application.
+
+The service keeps going after the controller disappears: the link state is
+published as `PTCC_CONNECTED` and the port is reopened every five seconds until
+it comes back, which is what happens when the USB cable is pulled.

@@ -58,6 +58,19 @@ TEST_F(PtccControl, FractionalSetpointSurvivesTheRoundTrip) {
     EXPECT_NEAR(value, 230.0F, 1e-3F);
 }
 
+// Vigo confirmed the firmware clamps a value outside the module's own
+// USER_MIN/USER_MAX without reporting anything, so a write that would be
+// clamped is refused before it reaches the EEPROM. 350 K is inside the
+// protocol range of 100 to 400 K and outside the emulated module's 180 to 300.
+TEST_F(PtccControl, SetpointOutsideTheModuleRangeIsRejected) {
+    EXPECT_EQ(rp_PtccSetSetpoint(350.0F), RP_PTCC_ERANGE);
+    EXPECT_EQ(rp_PtccSetSetpoint(150.0F), RP_PTCC_ERANGE);
+
+    // The limits themselves stay writable.
+    EXPECT_EQ(rp_PtccSetSetpoint(300.0F), RP_PTCC_OK);
+    EXPECT_EQ(rp_PtccSetSetpoint(180.0F), RP_PTCC_OK);
+}
+
 // The rejection comes from the upstream value tables, not from a copy of them
 // in the C layer, and it arrives as ERANGE rather than a decode failure.
 TEST_F(PtccControl, OutOfRangeSetpointIsRejectedByTheUpstreamLibrary) {

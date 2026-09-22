@@ -1,7 +1,7 @@
 #include "i2c_settings.h"
 #include <algorithm>
 #include <array>
-#include "json/json.h"
+#include "settings_json.hpp"
 #include "rp_log.h"
 
 using namespace i2c;
@@ -123,53 +123,47 @@ auto I2CParameters::getDecoderSettingsString(std::string& key, std::string* valu
 }
 
 auto I2CParameters::toJson() -> std::string {
-    Json::Value root;
+    la_json::Builder root;
 
-    root["scl"] = m_scl.name();
-    root["sda"] = m_sda.name();
-    root["acq_speed"] = m_acq_speed;
-    root["address_format"] = m_address_format.name();
-    root["invert_bit"] = m_invert_bit.name();
+    root.add("scl", m_scl.name());
+    root.add("sda", m_sda.name());
+    root.add("acq_speed", m_acq_speed);
+    root.add("address_format", m_address_format.name());
+    root.add("invert_bit", m_invert_bit.name());
 
-    Json::StreamWriterBuilder builder;
-    const std::string json = Json::writeString(builder, root);
-    return json;
+    return root.str();
 }
 
 auto I2CParameters::fromJson(const std::string& json) -> bool {
-    Json::Value root;
+    rapidjson::Document root;
 
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    JSONCPP_STRING errs;
-    auto is = std::istringstream(json);
-    if (!parseFromStream(builder, is, &root, &errs)) {
-        WARNING("Error parse json %s", errs.c_str())
+    if (!la_json::parse(root, json)) {
+        WARNING("Error parse json %s", json.c_str())
         return false;
     }
 
     try {
 
-        auto parseUInt32 = [&](uint32_t& dest, std::string param) {
-            if (root.isMember(param)) {
-                dest = root[param].asUInt();
-            } else {
-                ERROR_LOG("Missing parameter %s", param.c_str())
+        auto parseUInt32 = [&](uint32_t& dest, const char* param) {
+            if (!la_json::getUInt32(root, param, dest)) {
+                ERROR_LOG("Missing parameter %s", param)
                 return false;
             }
             return true;
         };
 
-        if (root.isMember("scl"))
-            m_scl = Lines::from_string(root["scl"].asString());
-        if (root.isMember("sda"))
-            m_sda = Lines::from_string(root["sda"].asString());
+        std::string text;
+
+        if (la_json::getString(root, "scl", text))
+            m_scl = Lines::from_string(text);
+        if (la_json::getString(root, "sda", text))
+            m_sda = Lines::from_string(text);
         if (!parseUInt32(m_acq_speed, "acq_speed"))
             return false;
-        if (root.isMember("address_format"))
-            m_address_format = AddressFormat::from_string(root["address_format"].asString());
-        if (root.isMember("invert_bit"))
-            m_invert_bit = InvertBit::from_string(root["invert_bit"].asString());
+        if (la_json::getString(root, "address_format", text))
+            m_address_format = AddressFormat::from_string(text);
+        if (la_json::getString(root, "invert_bit", text))
+            m_invert_bit = InvertBit::from_string(text);
         return true;
     } catch (...) {
         ERROR_LOG("Error parse json. Invalid data")

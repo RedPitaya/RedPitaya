@@ -64,19 +64,16 @@ endif()
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations -Wno-psabi")
 
 
-FetchContent_Declare(json
-    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp
-    GIT_TAG 1.9.4
-    EXCLUDE_FROM_ALL
-)
-
-if(NOT json_POPULATED)
-    FetchContent_Populate(json)
-    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+# RapidJSON is header only and comes from the image (rapidjson-dev), so there
+# is nothing to fetch or compile for it.
+find_path(RAPIDJSON_INCLUDE_DIR rapidjson/document.h)
+if(NOT RAPIDJSON_INCLUDE_DIR)
+    message(FATAL_ERROR "RapidJSON headers not found, install rapidjson-dev")
 endif()
+message(STATUS "RapidJSON: ${RAPIDJSON_INCLUDE_DIR}")
 
 include_directories(${websocketpp_SOURCE_DIR})
-include_directories(${json_SOURCE_DIR}/include)
+include_directories(${RAPIDJSON_INCLUDE_DIR})
 
 list(APPEND r_paths
     /opt/redpitaya/lib
@@ -88,9 +85,8 @@ set(CMAKE_INSTALL_RPATH ${r_paths})
 list(APPEND src
     ${CMAKE_SOURCE_DIR}/src/rp_websocket.cpp
     ${CMAKE_SOURCE_DIR}/src/websocket_server.cpp
-    ${json_SOURCE_DIR}/src/lib_json/json_reader.cpp
-    ${json_SOURCE_DIR}/src/lib_json/json_writer.cpp
-    ${json_SOURCE_DIR}/src/lib_json/json_value.cpp
+    ${CMAKE_SOURCE_DIR}/src/rp_websocket_client.cpp
+    ${CMAKE_SOURCE_DIR}/src/websocket_client.cpp
 )
 
 list(APPEND header

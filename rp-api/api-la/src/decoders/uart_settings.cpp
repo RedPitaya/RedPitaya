@@ -1,7 +1,7 @@
 #include "uart_settings.h"
 #include <algorithm>
 #include <array>
-#include "json/json.h"
+#include "settings_json.hpp"
 #include "rp_log.h"
 
 using namespace uart;
@@ -183,69 +183,63 @@ auto UARTParameters::getDecoderSettingsString(std::string& key, std::string* val
 }
 
 auto UARTParameters::toJson() -> std::string {
-    Json::Value root;
+    la_json::Builder root;
 
-    root["rx"] = m_rx.name();
-    root["tx"] = m_tx.name();
-    root["baudrate"] = m_baudrate;
-    root["invert"] = m_invert.name();
-    root["bitOrder"] = m_bitOrder.name();
-    root["num_data_bits"] = m_num_data_bits.name();
-    root["parity"] = m_parity.name();
-    root["num_stop_bits"] = m_num_stop_bits.name();
-    root["acq_speed"] = m_samplerate;
+    root.add("rx", m_rx.name());
+    root.add("tx", m_tx.name());
+    root.add("baudrate", m_baudrate);
+    root.add("invert", m_invert.name());
+    root.add("bitOrder", m_bitOrder.name());
+    root.add("num_data_bits", m_num_data_bits.name());
+    root.add("parity", m_parity.name());
+    root.add("num_stop_bits", m_num_stop_bits.name());
+    root.add("acq_speed", m_samplerate);
 
-    Json::StreamWriterBuilder builder;
-    const std::string json = Json::writeString(builder, root);
-    return json;
+    return root.str();
 }
 
 auto UARTParameters::fromJson(const std::string& json) -> bool {
-    Json::Value root;
+    rapidjson::Document root;
 
-    Json::CharReaderBuilder builder;
-    builder["collectComments"] = false;
-    JSONCPP_STRING errs;
-    auto is = std::istringstream(json);
-    if (!parseFromStream(builder, is, &root, &errs)) {
-        WARNING("Error parse json %s", errs.c_str())
+    if (!la_json::parse(root, json)) {
+        WARNING("Error parse json %s", json.c_str())
         return false;
     }
 
     try {
 
-        auto parseUInt32 = [&](uint32_t& dest, std::string param) {
-            if (root.isMember(param)) {
-                dest = root[param].asUInt();
-            } else {
-                ERROR_LOG("Missing parameter %s", param.c_str())
+        auto parseUInt32 = [&](uint32_t& dest, const char* param) {
+            if (!la_json::getUInt32(root, param, dest)) {
+                ERROR_LOG("Missing parameter %s", param)
                 return false;
             }
             return true;
         };
 
-        if (root.isMember("rx"))
-            m_rx = Lines::from_string(root["rx"].asString());
-        if (root.isMember("tx"))
-            m_tx = Lines::from_string(root["tx"].asString());
+        std::string text;
+
+        if (la_json::getString(root, "rx", text))
+            m_rx = Lines::from_string(text);
+        if (la_json::getString(root, "tx", text))
+            m_tx = Lines::from_string(text);
 
         if (!parseUInt32(m_baudrate, "baudrate"))
             return false;
 
-        if (root.isMember("invert"))
-            m_invert = InvertBit::from_string(root["invert"].asString());
+        if (la_json::getString(root, "invert", text))
+            m_invert = InvertBit::from_string(text);
 
-        if (root.isMember("bitOrder"))
-            m_bitOrder = UartBitOrder::from_string(root["bitOrder"].asString());
+        if (la_json::getString(root, "bitOrder", text))
+            m_bitOrder = UartBitOrder::from_string(text);
 
-        if (root.isMember("num_data_bits"))
-            m_num_data_bits = NumDataBits::from_string(root["num_data_bits"].asString());
+        if (la_json::getString(root, "num_data_bits", text))
+            m_num_data_bits = NumDataBits::from_string(text);
 
-        if (root.isMember("parity"))
-            m_parity = Parity::from_string(root["parity"].asString());
+        if (la_json::getString(root, "parity", text))
+            m_parity = Parity::from_string(text);
 
-        if (root.isMember("num_stop_bits"))
-            m_num_stop_bits = NumStopBits::from_string(root["num_stop_bits"].asString());
+        if (la_json::getString(root, "num_stop_bits", text))
+            m_num_stop_bits = NumStopBits::from_string(text);
 
         if (!parseUInt32(m_samplerate, "acq_speed"))
             return false;
