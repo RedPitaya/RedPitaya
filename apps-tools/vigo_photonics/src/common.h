@@ -1,0 +1,29 @@
+#ifndef COMMON_H
+#define COMMON_H
+
+#include <string>
+#include "rp.h"
+#include "rpApp.h"
+#include "rp_hw-profiles.h"
+
+#define MAX_ADC_CHANNELS 4
+#define MAX_DAC_CHANNELS 2
+
+auto getADCChannels() -> uint8_t;
+auto getDACChannels() -> uint8_t;
+auto getDACRate() -> uint32_t;
+auto getADCRate() -> uint32_t;
+
+auto getModel() -> rp_HPeModels_t;
+auto isZModePresent() -> bool;
+auto getModelName() -> std::string;
+
+auto inFilterDef() -> int;
+
+auto outAmpDef() -> float;
+auto outAmpMax() -> float;
+auto outFreqMin() -> int;
+auto outFreqMax() -> int;
+
+auto getMeasureValue(int measure) -> float;
+#endif

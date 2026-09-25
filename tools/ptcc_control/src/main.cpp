@@ -302,7 +302,7 @@ void usage() {
             "\n"
             "Service:\n"
             "   --service[=port]        Keep the controller open and serve it over a\n"
-            "                           websocket, 9093 by default. Runs until stopped.\n"
+            "                           websocket, 50001 by default. Runs until stopped.\n"
             "   --period=ms             Monitor poll period in service mode, 1000 by\n"
             "                           default, never below the command throttle.\n"
             "\n"
@@ -1084,7 +1084,12 @@ int main(int argc, char *argv[]) {
 
     if (init_result != RP_PTCC_OK) {
         report("Can't open PTCC controller", init_result);
-        return -1;
+        // The service keeps going without a controller: it is started with the
+        // application, publishes the link state and reopens the port when the
+        // device appears. Every other mode has nothing to do and gives up.
+        if (!service_flag) {
+            return -1;
+        }
     }
 
     if (throttle_ms > 0) {

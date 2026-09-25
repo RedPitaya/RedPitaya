@@ -761,11 +761,12 @@ auto updateOscParams(bool force) -> void {
     }
 
     if (requestSendTriggerLevel) {
+        // Only the source is pushed again: it makes the page recompute the
+        // trigger geometry even when the source itself did not change. The
+        // scale and the offset of every channel used to be pushed with it,
+        // although neither changes here, and the page throws away the traces
+        // it has accumulated whenever a scale arrives.
         inTrigSource.SendValue(inTrigSource.Value());
-        for (int i = 0; i < g_adc_channels; i++) {
-            inOffset[i].SendValue(inOffset[i].Value());
-            inScale[i].SendValue(inScale[i].Value());
-        }
     }
 
     updateTraceModeParams(force);

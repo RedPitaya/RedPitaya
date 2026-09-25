@@ -14,7 +14,7 @@
 
 #include <stdint.h>
 
-#define PTCC_SERVICE_PORT 9093
+#define PTCC_SERVICE_PORT 50001
 
 /**
  * Runs until SIGINT/SIGTERM or a PTCC_STOP command. The controller has to be

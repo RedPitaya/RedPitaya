@@ -89,18 +89,6 @@ input {
     text-align: center;
 }
 
-#triginfo {
-    width: 100%;
-    text-align: center;
-    padding-right: 222px;
-}
-
-#buffer_selector_info {
-    width: 100%;
-    text-align: center;
-    padding-right: 222px;
-}
-
 button:focus,
 button:active,
 select:focus,
@@ -228,12 +216,10 @@ area:hover {
 }
 
 #main {
-    float: left;
     padding-left: 20px;
 }
 
 #xy_main {
-    float: left;
     padding-top: 34px;
     padding-left: 30px;
     padding-right: 30px;
@@ -326,7 +312,6 @@ area:hover {
 
 .menu-content {
     width: 200px;
-    float: right;
 }
 
 .right-menu-option {
@@ -351,53 +336,6 @@ area:hover {
 .dialog {
     margin-right: 0px;
     display: none;
-}
-
-#info {
-    margin-top: 10px;
-    min-height: 100px;
-}
-
-#xy_info {
-    margin-top: 10px;
-    min-height: 100px;
-}
-
-.left-info {
-    width: 160px;
-    float: left;
-}
-
-.info-title {
-    float: left;
-    width: 60px;
-}
-
-.xy_info-title {
-    float: left;
-    width: 60px;
-}
-
-.info-value {
-    float: left;
-    width: 90px;
-}
-
-.xy_info-value {
-    float: left;
-    width: 90px;
-}
-
-.info-title>div,
-.info-value>div {
-    display: none;
-}
-
-#info-meas {
-    width: 195px;
-    float: left;
-    max-height: 82px;
-    overflow: hidden;
 }
 
 .ch1,
@@ -703,19 +641,11 @@ btn:active {
 
 
 #buffer_selector {
-    position: absolute;
-    margin-left: 8px;
-    right: 10px;
-    top: 500px;
     width: 150px;
     height: 40px;
 }
 
 #joystick {
-    position: absolute;
-    margin-left: 8px;
-    right: 10px;
-    top: 500px;
     width: 150px;
     height: auto;
 }
@@ -1143,4 +1073,168 @@ a.list-group-item:hover:visited {
 
 .saved_settings>a>img:hover {
     transform: scale(1.3);
+}
+
+
+/* ---------------------------------------------------------------------------
+   Layout regions
+
+   The page is divided before it is filled: the container takes the height the
+   header leaves, the body splits into the plots and the menu, and the
+   information row sits under the plots. Each piece is bounded by its region
+   instead of being sized from the window or from its neighbours.
+   ------------------------------------------------------------------------ */
+#global_container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Two columns and two rows: the plots with the menu beside them, and under
+   the plots the information row. The menu column ends where the plots end,
+   which is what the joystick hangs from. */
+#layout_body {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    grid-template-rows: 1fr auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#plots_area {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    /* The gap to the menu column; on the left the plot column has its own. */
+    padding-right: 20px;
+}
+
+#main,
+#xy_main {
+    flex: 1 1 0;
+    min-width: 0;
+    height: auto;
+    /* Equal share of the region, paddings included, so the two plots come out
+       the same width. */
+    box-sizing: border-box;
+}
+
+/* The X-Y column carries its axis labels in its own padding, and its plot is
+   as tall as its content box. The lower padding is what the oscilloscope
+   column spends below its plot, so the two plots end on the same line. */
+#xy_main {
+    padding-bottom: 71px;
+}
+
+#menu-root.menu-content {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: auto;
+}
+
+#info_under {
+    grid-column: 1;
+    grid-row: 2;
+    box-sizing: border-box;
+    /* Left edge in line with the plot; the right one is set from the grid
+       above, which the two modes end at different places. */
+    padding: 0 0 12px 20px;
+}
+
+/* Last in the menu column and pushed to its lower edge, which is the lower
+   edge of the plots. The two sit in a block of their own, so the joystick
+   keeps its place when the buffer buttons are hidden during a capture. */
+#menu_bottom {
+    flex: 0 0 auto;
+    margin-top: auto;
+}
+
+#joystick,
+#buffer_selector {
+    margin: 0 auto;
+}
+
+#buffer_selector {
+    margin-top: 8px;
+}
+
+/* One row of boxes: channels, timebase, measurements, and the two blocks the
+   menu switches on. They keep their width; what is left of the row stays
+   free. */
+#osc_info_row {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #555;
+    background: #2b2b2b;
+}
+
+.info-group {
+    width: 215px;
+    flex: none;
+    padding: 8px 12px 10px 12px;
+    border-left: 1px solid #555;
+    overflow: hidden;
+}
+
+.info-group:first-child {
+    border-left: none;
+}
+
+.info-group h2 {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #8a8a8a;
+    margin: 0 0 6px 0;
+    font-weight: normal;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px 14px;
+}
+
+.info-grid.single {
+    grid-template-columns: 1fr;
+}
+
+.info-grid > div {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.info-grid .k {
+    color: #8a8a8a;
+}
+
+.info-grid .v {
+    color: #eee;
+}
+
+/* A channel row is coloured as the channel, name and value alike, the way the
+   oscilloscope has always shown it. */
+.info-grid.channels .k,
+.info-grid.channels .v {
+    color: inherit;
+}
+
+.info-grid img {
+    vertical-align: baseline;
+}
+
+/* A measurement label is wider than a reading name, so the value is given
+   whatever room is left rather than a fixed share. */
+#info-meas .k {
+    white-space: nowrap;
+}
+
+#info-meas .v {
+    padding-left: 8px;
 }

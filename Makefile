@@ -486,14 +486,21 @@ APP_LCRMETER_DIR    = apps-tools/lcr_meter
 APP_LA_PRO_DIR 		= apps-tools/la_pro
 APP_BA_PRO_DIR 		= apps-tools/ba_pro
 APP_IMP_ANAL_DIR 	= apps-tools/impedance_analyzer
+APP_VIGO_DIR        = apps-tools/vigo_photonics
 
-.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter impedance_analyzer
+.PHONY: apps-pro scopegenpro spectrumpro lcr_meter la_pro ba_pro lcr_meter impedance_analyzer vigo_photonics
 
-apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter impedance_analyzer
+apps-tools: scopegenpro spectrumpro la_pro ba_pro lcr_meter impedance_analyzer vigo_photonics
 
 scopegenpro: web-api api $(NGINX)
 	cmake -B$(abspath $(APP_SCOPEGENPRO_DIR)/build) -S$(abspath $(APP_SCOPEGENPRO_DIR)) $(CMAKEVAR)
 	$(MAKE) -C $(APP_SCOPEGENPRO_DIR)/build install -j$(CPU_CORES)
+
+# Detector read-out for VIGO Photonics. Starts ptcc_control --service, so it
+# needs the tool installed as well.
+vigo_photonics: web-api api ptcc_control $(NGINX)
+	cmake -B$(abspath $(APP_VIGO_DIR)/build) -S$(abspath $(APP_VIGO_DIR)) $(CMAKEVAR)
+	$(MAKE) -C $(APP_VIGO_DIR)/build install -j$(CPU_CORES)
 
 spectrumpro: web-api api $(NGINX)
 	cmake -B$(abspath $(APP_SPECTRUMPRO_DIR)/build) -S$(abspath $(APP_SPECTRUMPRO_DIR)) $(CMAKEVAR)

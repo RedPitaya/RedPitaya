@@ -1,0 +1,14 @@
+(function(OSC, $, undefined) {
+    OSC.updateInterfaceForZ20 = function(model) {
+        if (model !== undefined) {
+            if (model === "Z20") {               
+                var nodes = document.getElementsByClassName("122_16_block_remove");
+                [...nodes].forEach((element, index, array) => {
+                        element.parentNode.removeChild(element);
+                    });
+
+                $(".out_phase").switchClass("col-xs-6", "col-xs-12");
+            }
+        }
+    };
+}(window.OSC = window.OSC || {}, jQuery));

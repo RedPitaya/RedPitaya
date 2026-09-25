@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>VIGO photonics - controller UI proposal</title>
+
+    <!-- The real stylesheets of the application, so the panels below are the
+         same widgets the oscilloscope already draws, not a lookalike. -->
+    <link rel="stylesheet" href="../../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        /* Only what a static mockup needs: the page frame, a stand-in for the
+           plot, and both panels shown at once. In the application one panel is
+           shown at a time, in place of the menu. */
+        body {
+            background: #333;
+            padding: 20px;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        h1 {
+            font-size: 15px;
+            color: #999;
+            letter-spacing: 0.08em;
+            margin: 0 0 4px 0;
+        }
+
+        .caption {
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 16px;
+        }
+
+        /* Header stand-in, with the MENU dropdown held open: the trend is
+           switched on from there rather than from a button over the plot. */
+        .topbar {
+            display: flex;
+            align-items: flex-start;
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+
+        .topbar .item {
+            background: #cdcccc;
+            color: #333;
+            padding: 8px 16px;
+            font-size: 12px;
+            letter-spacing: 0.06em;
+        }
+
+        .topbar .open {
+            position: relative;
+        }
+
+        .topbar .menu {
+            position: absolute;
+            left: 0;
+            top: 100%;
+            background: #cdcccc;
+            min-width: 100%;
+            border-top: 1px solid #b5b4b4;
+        }
+
+        .topbar .menu div {
+            padding: 6px 16px;
+            white-space: nowrap;
+            color: #333;
+            font-size: 12px;
+        }
+
+        .topbar .menu div.on {
+            background: #b8b7b7;
+        }
+
+        /* The time axis and the channel information the oscilloscope already
+           draws, shown here only to place the status line between them. */
+        .timeaxis {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 6px;
+            color: #999;
+            font-size: 11px;
+            border-bottom: 1px solid #444;
+        }
+
+        /* Channel scales and timebase, in the same frame as the controller
+           readings. The channel list grows with the channels that are on. */
+        #osc_info_row {
+            display: flex;
+            align-items: stretch;
+            border: 1px solid #555;
+            background: #2b2b2b;
+            margin-top: 10px;
+        }
+
+        #osc_info_row .ptcc-group:first-child {
+            border-left: none;
+        }
+
+        .ptcc-grid.single {
+            grid-template-columns: 1fr;
+        }
+
+        .ptcc-grid .in1 {
+            color: #f3ec1a;
+        }
+
+        .ptcc-grid .out1 {
+            color: #8a8a45;
+        }
+
+        .ptcc-grid .out2 {
+            color: #b06060;
+        }
+
+        .ptcc-grid .trigger {
+            color: #3c3;
+        }
+
+        /* Numbers for talking about the pieces; they are part of the mockup
+           only and never reach the application. */
+        .num {
+            position: absolute;
+            z-index: 20;
+            background: #e64980;
+            color: #fff;
+            font-size: 11px;
+            line-height: 17px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            text-align: center;
+            margin: -9px 0 0 -9px;
+            font-weight: bold;
+        }
+
+        .numbered {
+            position: relative;
+        }
+
+        .stage {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .stage-left {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .plot-stub {
+            position: relative;
+            height: 300px;
+            background: #000;
+            border: 1px solid #555;
+        }
+
+        .plot-stub svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .plot-stub .tag {
+            position: absolute;
+            top: 8px;
+            left: 10px;
+            color: #555;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+        }
+
+        .menu-stub {
+            width: 200px;
+            flex: none;
+        }
+
+        .panels {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            margin-top: 24px;
+        }
+
+        /* A dialog is hidden until its menu entry is clicked; here both are
+           pinned open, at the width the menu column gives them. */
+        .panels .dialog {
+            display: block;
+            width: 200px;
+            flex: none;
+        }
+
+        .stage .dialog {
+            display: block;
+        }
+
+        /* Under the plot: the state of the controller on one line, then the
+           trend with the readings beside it rather than stretched across the
+           whole width. */
+        #ptcc_status {
+            border: 1px solid #555;
+            background: #2b2b2b;
+        }
+
+        #ptcc_monitor {
+            border: 1px solid #555;
+            background: #2b2b2b;
+        }
+
+        #ptcc_status .ptcc-head {
+            border-bottom: none;
+        }
+
+        .ptcc-head {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+            flex-wrap: wrap;
+            padding: 7px 12px;
+            border-bottom: 1px solid #555;
+        }
+
+        .ptcc-head .state {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #ccc;
+        }
+
+        .ptcc-key {
+            display: flex;
+            align-items: baseline;
+            gap: 7px;
+        }
+
+        .ptcc-key .k {
+            color: #8a8a8a;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+        }
+
+        .ptcc-key .v {
+            color: #f3ec1a;
+            font-weight: bold;
+        }
+
+        .ptcc-head .right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ptcc-body {
+            display: flex;
+            align-items: stretch;
+        }
+
+        .ptcc-trend-cell {
+            flex: 1;
+            min-width: 220px;
+            padding: 8px 12px 4px 12px;
+            border-left: 1px solid #555;
+        }
+
+        /* The trend keeps its own frame in the application; inside this cell
+           the surrounding block already provides one. */
+        .ptcc-trend-cell #ptcc_trend {
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: none;
+        }
+
+        .ptcc-group {
+            width: 215px;
+            flex: none;
+            padding: 8px 12px 10px 12px;
+            border-left: 1px solid #555;
+        }
+
+        .ptcc-group h2 {
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            color: #8a8a8a;
+            margin: 0 0 6px 0;
+            font-weight: normal;
+        }
+
+        .ptcc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px 14px;
+        }
+
+        .ptcc-grid div {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+
+        .ptcc-grid .k {
+            color: #8a8a8a;
+        }
+
+        .ptcc-grid .v {
+            color: #eee;
+        }
+
+        /* The same line under the plot, in the states it can take. */
+        .states {
+            margin-top: 26px;
+        }
+
+        .states h2 {
+            font-size: 12px;
+            color: #999;
+            font-weight: normal;
+            letter-spacing: 0.08em;
+            margin: 0 0 8px 0;
+        }
+
+        .states .ptcc-head {
+            border: 1px solid #555;
+            border-bottom: 1px solid #555;
+            background: #2b2b2b;
+            margin-bottom: 8px;
+        }
+
+        .states .why {
+            color: #777;
+            font-size: 11px;
+            margin: -4px 0 14px 2px;
+        }
+
+        .ptcc-head .state.error {
+            color: #e03131;
+        }
+
+        .ptcc-head .hint {
+            color: #999;
+            font-size: 11px;
+        }
+
+        .legend {
+            color: #999;
+            font-size: 12px;
+            line-height: 1.6;
+            max-width: 340px;
+        }
+
+        .legend b {
+            color: #ccc;
+            font-weight: normal;
+        }
+
+        .legend p {
+            margin: 0 0 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>VIGO photonics &mdash; controller interface</h1>
+    <div class="caption">TEC and DETECT are two new entries in the right hand menu. Their panels are built from the
+        same widgets as the IN and OUT dialogs. <span style="color: #e64980;">The pink numbers are for talking about
+        the pieces and are not part of the design.</span></div>
+
+    <div class="topbar">
+        <div class="item">SETTINGS &#9662;</div>
+        <div class="item">MENU &#9662;
+            <div class="menu">
+                <div>ARB Manager</div>
+                <div>SYS INFO</div>
+                <div>IN/E2</div>
+                <div>EXT. CLOCK</div>
+                <div class="on" style="position: relative;"><span class="num">1</span>MONITOR PLOT</div>
+            </div>
+        </div>
+        <div class="item">EXPORT &#9662;</div>
+        <div class="item">AUTO SCALE</div>
+        <div class="item" style="color: #c0392b;">STOP</div>
+    </div>
+
+    <div class="stage">
+        <div class="stage-left">
+            <div class="plot-stub numbered">
+                <span class="num">2</span>
+                <div class="tag">OSCILLOSCOPE</div>
+                <svg viewBox="0 0 800 300" preserveAspectRatio="none">
+                    <g stroke="#1b1b1b" stroke-width="1">
+                        <path d="M0 37H800M0 75H800M0 112H800M0 150H800M0 187H800M0 225H800M0 262H800" />
+                        <path d="M80 0V300M160 0V300M240 0V300M320 0V300M400 0V300M480 0V300M560 0V300M640 0V300M720 0V300" />
+                    </g>
+                    <path d="M0 150 Q 50 55 100 150 T 200 150 T 300 150 T 400 150 T 500 150 T 600 150 T 700 150 T 800 150"
+                        fill="none" stroke="#f3ec1a" stroke-width="2" />
+                </svg>
+            </div>
+
+            <div class="timeaxis">
+                <span>2.5 &micro;s</span><span>2 &micro;s</span><span>1.5 &micro;s</span><span>1 &micro;s</span>
+                <span>500 ns</span><span>0</span><span>-500 ns</span><span>-1 &micro;s</span>
+                <span>-1.5 &micro;s</span><span>-2 &micro;s</span><span>-2.5 &micro;s</span>
+            </div>
+
+            <div id="ptcc_status">
+                <div class="ptcc-head numbered">
+                    <span class="num">3</span>
+                    <div class="state"><span class="ptcc-led ptcc-led-ok"></span> TEC on, temperature reached</div>
+                    <div class="ptcc-key"><span class="k">T_DET</span><span class="v">195.021 K</span></div>
+                    <div class="ptcc-key"><span class="k">SETPOINT</span><span class="v">195.000 K</span></div>
+                    <div class="ptcc-key"><span class="k">U_OUT</span><span class="v">1.235 V</span></div>
+                    <div class="right">
+                        <span class="ptcc-led ptcc-led-ok"></span><span class="ptcc-bar-text">service running</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="osc_info_row">
+                <div class="ptcc-group numbered">
+                    <span class="num">11</span>
+                    <h2>CHANNELS</h2>
+                    <div class="ptcc-grid single">
+                        <div><span class="k in1">IN1</span><span class="v in1">1 V/div</span></div>
+                        <div><span class="k out1">OUT1</span><span class="v out1">1 V/div</span></div>
+                        <div><span class="k out2">OUT2</span><span class="v out2">1 V/div</span></div>
+                    </div>
+                </div>
+                <div class="ptcc-group numbered">
+                    <span class="num">12</span>
+                    <h2>TIMEBASE</h2>
+                    <div class="ptcc-grid single">
+                        <div><span class="k">Trigger</span><span class="v trigger">AUTO</span></div>
+                        <div><span class="k">Time</span><span class="v">500 ns/div</span></div>
+                        <div><span class="k">Trig</span><span class="v">IN1 0 V</span></div>
+                        <div><span class="k">Offset</span><span class="v">-133 ns</span></div>
+                        <div><span class="k">Rate</span><span class="v">125.000 MS/s</span></div>
+                    </div>
+                </div>
+                <div class="ptcc-group numbered">
+                    <span class="num">13</span>
+                    <h2>MEASUREMENTS</h2>
+                    <div class="ptcc-grid single">
+                        <div><span class="k">P2P <span class="in1">(IN1)</span></span><span class="v">3.4 mV</span></div>
+                        <div><span class="k">MEAN <span class="in1">(IN1)</span></span><span class="v">2.3 mV</span></div>
+                        <div><span class="k">MAX <span class="in1">(IN1)</span></span><span class="v">4.0 mV</span></div>
+                        <div><span class="k">MIN <span class="in1">(IN1)</span></span><span class="v">0.6 mV</span></div>
+                    </div>
+                </div>
+                <div class="ptcc-group numbered">
+                    <span class="num">5</span>
+                    <h2>TEC CONTROLLER</h2>
+                    <div class="ptcc-grid">
+                        <div><span class="k">T_INT</span><span class="v">31.4 C</span></div>
+                        <div><span class="k">I_TEC</span><span class="v">0.421 A</span></div>
+                        <div><span class="k">U_TEC</span><span class="v">1.104 V</span></div>
+                        <div><span class="k">U_SUP+</span><span class="v">12.01 V</span></div>
+                        <div><span class="k">U_SUP-</span><span class="v">-11.98 V</span></div>
+                        <div><span class="k">I_SUP+</span><span class="v">0.512 A</span></div>
+                        <div><span class="k">I_SUP-</span><span class="v">0.045 A</span></div>
+                        <div><span class="k">I_FAN</span><span class="v">0.093 A</span></div>
+                        <div><span class="k">R_TH</span><span class="v">9840</span></div>
+                        <div><span class="k">PWM</span><span class="v">128</span></div>
+                    </div>
+                </div>
+                <div class="ptcc-group numbered">
+                    <span class="num">6</span>
+                    <h2>DETECTION MODULE</h2>
+                    <div class="ptcc-grid">
+                        <div><span class="k">U_DET</span><span class="v">0.501 V</span></div>
+                        <div><span class="k">U_1ST</span><span class="v">0.123 V</span></div>
+                        <div><span class="k">U_OUT</span><span class="v">1.235 V</span></div>
+                        <div><span class="k">T_MOD</span><span class="v">31.4 C</span></div>
+                        <div><span class="k">U_SUP+</span><span class="v">12.00 V</span></div>
+                        <div><span class="k">U_SUP-</span><span class="v">-12.00 V</span></div>
+                        <div><span class="k">I_TEC+</span><span class="v">0.420 A</span></div>
+                        <div><span class="k">I_TEC-</span><span class="v">0.418 A</span></div>
+                        <div><span class="k">U_FAN</span><span class="v">5.02 V</span></div>
+                        <div><span class="k">U_TH1</span><span class="v">1.204 V</span></div>
+                        <div><span class="k">U_TH2</span><span class="v">1.198 V</span></div>
+                    </div>
+                </div>
+                <div class="ptcc-trend-cell numbered">
+                    <span class="num">4</span>
+                    <div id="ptcc_trend">
+                        <svg viewBox="0 0 400 110" preserveAspectRatio="none" style="width: 100%; height: 110px; display: block;">
+                            <path d="M0 95 C 60 92 90 40 130 26 C 180 12 250 18 400 16" fill="none" stroke="#f3ec1a"
+                                stroke-width="2" />
+                            <path d="M0 70 C 50 68 100 62 150 58 C 225 52 300 55 400 50" fill="none" stroke="#3bb0ff"
+                                stroke-width="2" />
+                        </svg>
+                        <div class="ptcc-trend-legend">
+                            <span class="ptcc-trend-tdet">T_DET / K</span>
+                            <span class="ptcc-trend-uout">U_OUT / V</span>
+                            <span class="ptcc-trend-span">300 s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- The menu as it is today, with the two new entries at the bottom. -->
+        <div class="menu-stub numbered">
+            <span class="num">7</span>
+            <div class="row right-menu-cont">
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">
+                        <button type="button" class="btn menu-btn ch1 active">IN1</button>
+                    </div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode"><img src="../img/gear.png"></div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">
+                        <button type="button" class="btn menu-btn ch2">IN2</button>
+                    </div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode"><img src="../img/gear.png"></div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">
+                        <button type="button" class="btn menu-btn output1">OUT1</button>
+                    </div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode"><img src="../img/gear.png"></div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">
+                        <button type="button" class="btn menu-btn output2">OUT2</button>
+                    </div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode"><img src="../img/gear.png"></div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">
+                        <button type="button" class="not_btn menu-btn trig not-signal">TRIG</button>
+                    </div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode"><img src="../img/gear.png"></div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">
+                        <button type="button" class="btn menu-btn math">MATH</button>
+                    </div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode"><img src="../img/gear.png"></div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">CURSOR</div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option">MEAS</div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode">TEC</div>
+                </div>
+                <div class="col-xs-6 option-content">
+                    <div class="right-menu-option edit-mode">DETECT</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panels">
+
+        <!-- TEC controller, built like the IN / OUT dialogs. -->
+        <div class="dialog row right-menu-cont numbered">
+            <span class="num">8</span>
+            <div class="col-xs-12 option-content">
+                <div class="right-menu-option close-dialog">
+                    <img src="../../assets/images/navigation_arrow_left.png"> TEC controller
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="right-menu-option ptcc-note">PTCC-01 &middot; s/n 210534</div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="col-info" style="margin-top: -11px;">Setpoint / K</div>
+                <div class="right-menu-option" style="margin-top: 10px;">
+                    <input class="setfield input-number" type="text" value="195.000">
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="col-info" style="margin-top: -11px;">TEC current limit / A</div>
+                <div class="right-menu-option" style="margin-top: 10px;">
+                    <input class="setfield input-number" type="text" value="1.20">
+                </div>
+            </div>
+        </div>
+
+        <!-- Detection module, same construction. -->
+        <div class="dialog row right-menu-cont numbered">
+            <span class="num">9</span>
+            <div class="col-xs-12 option-content">
+                <div class="right-menu-option close-dialog">
+                    <img src="../../assets/images/navigation_arrow_left.png"> Detection module
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="right-menu-option ptcc-note">PVI-4TE-10.6 &middot; s/n 118207</div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="col-info" style="margin-top: -11px;">Detector bias / V</div>
+                <div class="right-menu-option" style="margin-top: 10px;">
+                    <input class="setfield input-number" type="text" value="0.500">
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="col-info" style="margin-top: -11px;">Bias current / mA</div>
+                <div class="right-menu-option" style="margin-top: 10px;">
+                    <input class="setfield input-number" type="text" value="2.00">
+                </div>
+            </div>
+            <div class="col-xs-6 option-content">
+                <span class="col-info" style="margin-top: -11px;">Gain / (V/V)</span>
+                <div class="right-menu-option" style="margin-top: 10px;">
+                    <select class="form-control styled-select">
+                        <option>5.0</option>
+                        <option>10.0</option>
+                        <option>20.0</option>
+                        <option>30.0</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-xs-6 option-content">
+                <div class="col-info" style="margin-top: -11px;">Offset / V</div>
+                <div class="right-menu-option" style="margin-top: 10px;">
+                    <input class="setfield input-number" type="text" value="0.000">
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="col-info" style="margin-top: -11px;">Varactor</div>
+                <div class="right-menu-option" style="margin-top: 10px;">
+                    <input class="setfield input-number" type="text" value="2048">
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="right-menu-option">
+                    <span class="col-info" style="margin-top: -21px;">Transimpedance</span>
+                    <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                        <label class="btn active"><input type="radio" autocomplete="off" checked>
+                            <div>LOW</div>
+                        </label>
+                        <label class="btn"><input type="radio" autocomplete="off">
+                            <div>HIGH</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="right-menu-option">
+                    <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                    <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                        <label class="btn"><input type="radio" autocomplete="off">
+                            <div>AC</div>
+                        </label>
+                        <label class="btn active"><input type="radio" autocomplete="off" checked>
+                            <div>DC</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xs-12 option-content">
+                <div class="right-menu-option">
+                    <span class="col-info" style="margin-top: -21px;">Bandwidth</span>
+                    <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                        <label class="btn"><input type="radio" autocomplete="off">
+                            <div>LOW</div>
+                        </label>
+                        <label class="btn active"><input type="radio" autocomplete="off" checked>
+                            <div>MID</div>
+                        </label>
+                        <label class="btn"><input type="radio" autocomplete="off">
+                            <div>HIGH</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="legend">
+            <p><b>Panels.</b> Same construction as the IN and OUT dialogs: a back arrow with the title, fields as
+                <i>setfield</i> inputs, choices as justified button groups, the gain list as a styled select.</p>
+            <p><b>Menu.</b> TEC and DETECT sit at the bottom, next to CURSOR and MEAS, and open in place of the menu.
+            </p>
+            <p><b>Bar.</b> Spans the plot and never overlaps the menu: detector temperature, setpoint, preamplifier
+                output, controller state, and on the right the trend button with the state of the ptcc_control
+                service.</p>
+            <p><b>Trend.</b> Folded away by default. T_DET and U_OUT share the time axis, each scaled on its own,
+                five minutes kept by the page.</p>
+            <p><b>Ranges.</b> Each input is bounded by the USER_MIN / USER_MAX the attached module reports, so a
+                value the firmware would silently clamp is refused before it is sent. Gain is a list because the
+                module accepts a fixed set and answers ERANGE for anything else.</p>
+            <p><b>A module without the programmable detection part</b> keeps the DETECT entry, with the controls
+                replaced by one line saying so.</p>
+        </div>
+    </div>
+
+
+    <div class="states numbered">
+        <span class="num">10</span>
+        <h2>STATUS LINE &mdash; STATES</h2>
+
+        <div class="ptcc-head">
+            <div class="state"><span class="ptcc-led ptcc-led-ok"></span> TEC on, temperature reached</div>
+            <div class="ptcc-key"><span class="k">T_DET</span><span class="v">195.021 K</span></div>
+            <div class="ptcc-key"><span class="k">SETPOINT</span><span class="v">195.000 K</span></div>
+            <div class="ptcc-key"><span class="k">U_OUT</span><span class="v">1.235 V</span></div>
+            <div class="right">
+                <span class="ptcc-led ptcc-led-ok"></span><span class="ptcc-bar-text">service running</span>
+            </div>
+        </div>
+        <div class="why">Normal operation: the state text is what the controller reports.</div>
+
+        <div class="ptcc-head">
+            <div class="state error"><span class="ptcc-led ptcc-led-err"></span> Error: TEC overcurrent</div>
+            <div class="hint">clears only on a power cycle</div>
+            <div class="ptcc-key"><span class="k">T_DET</span><span class="v">241.508 K</span></div>
+            <div class="ptcc-key"><span class="k">SETPOINT</span><span class="v">195.000 K</span></div>
+            <div class="right">
+                <span class="ptcc-led ptcc-led-ok"></span><span class="ptcc-bar-text">service running</span>
+            </div>
+        </div>
+        <div class="why">Controller error: red lamp, the error text in place of the state, and the note that the
+            firmware only clears it on a power cycle. The panels stay usable.</div>
+
+        <div class="ptcc-head">
+            <div class="state error"><span class="ptcc-led ptcc-led-err"></span> Setpoint 150.000 K is outside
+                180.000 - 300.000 K</div>
+            <div class="right">
+                <span class="ptcc-led ptcc-led-ok"></span><span class="ptcc-bar-text">service running</span>
+            </div>
+        </div>
+        <div class="why">Rejected setting: the value the module would silently clamp is refused before it is sent,
+            and the line says so until the next reading arrives.</div>
+
+        <div class="ptcc-head">
+            <div class="state"><span class="ptcc-led"></span> no controller</div>
+            <div class="hint">check the USB cable to the PTCC-01</div>
+            <div class="right">
+                <span class="ptcc-led ptcc-led-ok"></span><span class="ptcc-bar-text">service running</span>
+            </div>
+        </div>
+        <div class="why">No controller on the port: grey lamp, readings blanked, service still running.</div>
+
+        <div class="ptcc-head">
+            <div class="state"><span class="ptcc-led"></span> no controller</div>
+            <div class="right">
+                <span class="ptcc-led ptcc-led-err"></span><span class="ptcc-bar-text">service stopped</span>
+            </div>
+        </div>
+        <div class="why">The ptcc_control service itself is down: the right hand lamp turns red. The application
+            restarts it on its own, so this should only be visible for a moment.</div>
+    </div>
+
+</body>
+
+</html>

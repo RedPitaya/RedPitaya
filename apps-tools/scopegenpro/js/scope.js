@@ -307,6 +307,42 @@
         }
     }
 
+    /** Height of the plot: the region it lives in, less the buffer bar above
+     *  it and the time axis labels below, which are drawn over the region
+     *  rather than in its flow. The region itself is sized by the layout. */
+    OSC.layoutCanvasHeight = function() {
+        var area = $('#plots_area');
+        var height = area.length ? Math.round(area.height()) : 0;
+        if (height <= 0) {
+            height = Math.max(200, window.innerHeight - 330);
+        }
+        return Math.max(160, height - 105);
+    };
+
+    /** Lines the information row up with the plot grids above it: the left
+     *  edge with the first grid, the right edge with the last one, which in
+     *  X-Y mode is the second plot. The grids carry paddings of their own, so
+     *  the edges are measured rather than assumed. */
+    OSC.alignInfoRow = function() {
+        var under = $('#info_under');
+        var first = $('#graph_grid');
+        if (under.length === 0 || first.length === 0 || first.width() === 0) {
+            return;
+        }
+
+        // In X-Y the right hand edge belongs to the frame around the plot,
+        // which is one pixel wider than the canvas inside it.
+        var xy = $('#xy_graphs_holder');
+        var last = (xy.length && xy.is(':visible') && xy.width() > 0) ? xy : first;
+
+        var box = under.offset().left;
+        var width = under.outerWidth();
+        var left = Math.max(0, Math.round(first.offset().left - box));
+        var right = Math.max(0, Math.round(box + width - (last.offset().left + last.outerWidth())));
+
+        under.css({'padding-left': left, 'padding-right': right});
+    };
+
     var performanceHandler = function() {
 
         let x = OSC.refresh_times + (OSC.pack_per_sec_show ? '/' + g_PacketsRecv : '')
@@ -379,6 +415,20 @@
                 OSC.createAxisTicksXY();
                 SW_TM.initSubWindow()
                 OSC.resize();
+
+                // The information row grows and shrinks on its own: a
+                // measurement is added, a block is switched on from the menu.
+                // The plot has to give up exactly that much height, so the
+                // layout is redone whenever the row's height really changes.
+                var under_height = 0;
+                new ResizeObserver(function() {
+                    var height = Math.round($('#info_under').outerHeight(true));
+                    if (height !== under_height) {
+                        under_height = height;
+                        OSC.resize();
+                    }
+                }).observe(document.querySelector('#info_under'));
+
                 OSC.is_webpage_loaded = true;
             });
             return false
@@ -387,13 +437,9 @@
     };
 
     OSC.updateJoystickPosition = function(){
-        let height = $("#menu-root").height();
-        let g_height = $("#graphs").height() - 150;
-        let limit = Math.min(g_height,400)
-        height = Math.max(height,g_height);
-        height = height > limit ? height : limit;
-        $("#joystick").css('top',height + 10);
-        $("#buffer_selector").css('top',height + 20 + 160);
+        // The joystick and the buffer buttons sit at the bottom of the menu
+        // column and are placed by the layout, so there is nothing to compute.
+        // Kept because the rest of the application calls it.
     };
 
     // Creates a WebSocket connection with the web server
@@ -472,11 +518,16 @@
         if (new_params['OSC_RUN'].value === true) {
             $('#OSC_RUN').hide();
             $('#OSC_STOP').css('display', 'block');
-            $('#buffer_selector, #buffer_selector_info').hide()
+            // Hidden without giving up its place, so the joystick above it
+            // does not move when a capture starts or stops. The row in the
+            // timebase block stays and says the view is the newest capture.
+            $('#buffer_selector').css('visibility', 'hidden')
+            $('#OSC_BUFFER_CURRENT_INFO').text('latest')
         } else {
             $('#OSC_STOP').hide();
             $('#OSC_RUN').show();
-            $('#buffer_selector, #buffer_selector_info').show()
+            $('#buffer_selector').css('visibility', 'visible')
+            OSC.setCurrentBuffer()
         }
     }
 
@@ -1195,14 +1246,9 @@
         visible_plots.push(OSC.graphs["ch1"].elem[0]);
         visible_info += (visible_info.length ? ',' : '') + '.' + "ch1";
 
-        var arr_show = ["CH1_SHOW", "CH2_SHOW", "CH3_SHOW", "CH4_SHOW", "MATH_SHOW", "OUTPUT1_SHOW", "OUTPUT2_SHOW"];
-        var arr_show2 = ["ch1", "ch2", "ch3", "ch4", "math", "output1", "output2"];
-        for (var i = 0; i < 7; i++) {
-            if (OSC.params.orig[arr_show[i]] && OSC.params.orig[arr_show[i]].value)
-                $('#info').find("." + arr_show2[i]).show();
-            else
-                $('#info').find("." + arr_show2[i]).hide();
-        }
+        // The channel block lists every channel, switched on or not: a row
+        // that comes and goes would make the block change height and drag the
+        // whole layout with it.
 
         // Hide plots without signal
         $('#graphs').find('.plot').not(visible_plots).hide();
@@ -1528,7 +1574,7 @@
         if (graph_grid.length  === 0) return;
 
         var canvas_width = $('#graphs').width() - 2;
-        var canvas_height = window.innerHeight - 330; // Math.round(canvas_width / 2.5);
+        var canvas_height = OSC.layoutCanvasHeight();
 
         var center_x = canvas_width / 2;
         var center_y = canvas_height / 2;
@@ -1605,7 +1651,7 @@
         if (graph_grid.length  === 0) return;
 
         var canvas_width = $('#xy_graphs').width() - 2;
-        var canvas_height = window.innerHeight - 330; // Math.round(canvas_width / 2.5);
+        var canvas_height = OSC.layoutCanvasHeight();
 
         var center_x = canvas_width / 2;
         var center_y = canvas_height / 2;
@@ -1869,27 +1915,19 @@
         if ($('#global_container').length === 0) return
         if ($('#main').length === 0) return
 
-        var window_width = window.innerWidth;
-        var window_height = window.innerHeight;
-
-        var global_width = window_width - 30,
-            global_height = window_height - 200;
-
-
-        $('#global_container').css('width', global_width);
-        $('#global_container').css('height', global_height);
+        // Only the outer region is given a size: it takes the height the
+        // header leaves. Everything inside is laid out by the regions
+        // themselves, and the plots are drawn to the space they end up with.
+        var container = $('#global_container');
+        var top = container.offset().top - $(window).scrollTop();
+        container.css('height', Math.max(320, window.innerHeight - top - 4));
 
         var xymode = OSC.params.orig["X_Y_SHOW"] ? OSC.params.orig["X_Y_SHOW"].value : false
-        var devider = xymode ? 2.0 : 1.0;
-        console.log("Resize "+ xymode)
-        $('#main').css('width', (global_width - 250) / devider);
-        $('#main').css('height', global_height);
-
-        $('#xy_main').css('width', (global_width - 250) / 2.0);
-        $('#xy_main').css('height', global_height);
+        $('#xy_main').toggle(xymode);
 
         OSC.drawGraphGrid();
         OSC.drawGraphGridXY();
+        OSC.alignInfoRow();
 
         $(window).on('focus', function() {
             OSC.drawGraphGrid();
@@ -1904,8 +1942,6 @@
         $(window).on('blur', function() {
         });
 
-
-        $('#global_container').offset({ left: (window_width - $('#global_container').width()) / 2 });
 
         if ($('.plot').length !== 0){
             // Resize the graph holders

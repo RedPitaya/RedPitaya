@@ -207,7 +207,7 @@ class Service {
     std::deque<std::function<void()>> m_queue;
 
     bool m_is_labm = false;
-    bool m_connected = true;
+    bool m_connected = false;
     int64_t m_last_sample = 0;
     int64_t m_last_alive = 0;
     int64_t m_started = 0;
@@ -644,6 +644,15 @@ void Service::handleInt(const std::string &name, int value) {
         queue([this, value] {
             afterLabMWrite("Gain code", rp_PtccSetLabMGainCode(static_cast<uint32_t>(value)));
         });
+    } else if (name == "PTCC_PING") {
+        // Answered straight back with the same number, without touching the
+        // device: it tells an application the service is alive even when no
+        // controller is attached, and it costs no command interval.
+        // Sent from the websocket thread and flushed here: the loop can be
+        // waiting on the driver, and a ping that answers a second later would
+        // say nothing about the service being responsive.
+        m_out->sendAlways("PTCC_PONG", std::to_string(value));
+        m_out->flush();
     } else if (name == "PTCC_REFRESH") {
         // Answered here rather than through the queue: the loop can be sitting
         // on the driver mutex behind a device read, and a page waiting for its
@@ -694,7 +703,14 @@ void Service::connectSignals() {
 
 int Service::run(uint16_t port) {
     m_started = nowMs();
-    m_last_alive = m_started;
+
+    // Whether a controller is there is known from the driver, not assumed:
+    // saying yes and taking it back a few seconds later makes a panel show
+    // readings that stand for nothing.
+    bool open = false;
+    rp_PtccIsConnected(&open);
+    m_connected = open;
+    m_last_alive = open ? m_started : 0;
     m_server = std::make_shared<rp_websocket::CWEBServer>();
     m_out = std::make_unique<Publisher>(m_server);
 

@@ -1,0 +1,1402 @@
+body {
+    color: #cdcccc;
+    overflow: auto;
+    padding-right: 0 !important;
+}
+
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.clear:before,
+.clear:after {
+    content: "";
+    display: table;
+}
+
+.clear:after {
+    clear: both;
+}
+
+.calib-button {
+    display: inline-block;
+    border: 1px solid gray;
+    margin: 0 29px;
+}
+
+.modal {}
+
+#ext_con_but {
+    float: left;
+    width: 5%;
+    text-align: left;
+    cursor: pointer;
+}
+
+input,
+#info div,
+#info span,
+.selectable {
+    -webkit-touch-callout: text;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+input {
+    -webkit-user-modify: read-write-plaintext-only;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.input-number-box {
+    display: inline-block;
+    position: relative;
+}
+
+.input-number {
+    line-height: 35px;
+    height: 35px;
+    padding-right: 25px;
+}
+
+.input-number-more,
+.input-number-less {
+    position: absolute;
+    right: 8px;
+    border-width: 7px;
+    border-style: solid;
+    cursor: pointer;
+}
+
+.input-number-more {
+    top: 0px;
+    border-color: transparent transparent gray transparent;
+}
+
+.input-number-less {
+    bottom: 0px;
+    border-color: gray transparent transparent transparent;
+}
+
+#myModal {
+    text-align: center;
+}
+
+button:focus,
+button:active,
+select:focus,
+input:focus,
+option:focus {
+    outline: 0 !important;
+    -webkit-appearance: none !important;
+}
+
+/* Links too: a clicked link must not keep a focus frame around it.
+   -webkit-appearance is deliberately left alone here - on a checkbox it
+   removes the control itself. */
+a:focus,
+a:active {
+    outline: 0 !important;
+}
+
+area:hover {
+    cursor: pointer;
+}
+
+.full-content {
+    /*min-width: 1024px;*/
+    margin: 0 auto;
+    position: relative;
+}
+
+.container-fluid {
+    margin-top: 1px;
+}
+
+.container {
+    width: 100%;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.row {
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.navbar-collapse {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.navbar-collapse {
+    float: right;
+}
+
+.navbar-nav li {
+    width: 131px;
+    text-align: center;
+}
+
+.nav>li>a {
+    position: relative;
+    display: block;
+    padding: 10px 30px;
+    border-left: 1px solid #999;
+}
+
+.navbar-inverse .navbar-nav>li>a {
+    color: #cdcccc;
+    outline: none;
+}
+
+.nav>li>a:hover {
+    background-color: #444 !important;
+    color: #E5D5D5;
+}
+
+#OSC_RUN,
+#OSC_RUN:hover {
+    color: #31b44b;
+}
+
+#OSC_STOP,
+#OSC_STOP:hover {
+    display: none;
+    color: #ee3739;
+}
+
+.navbar {
+    border-radius: 0px;
+    background-color: #343433;
+    background-image: linear-gradient(to bottom, #343433 0, #343433 100%);
+    border: 1px solid #999;
+    min-height: 42px;
+    border-left: 1px solid #999;
+}
+
+.back-btn {
+    height: 22px;
+    float: left;
+    margin: -6px 0px 0px 11px;
+}
+
+.logo {
+    margin: 7px 0px 0px 15px;
+    float: left;
+}
+
+.navbar-collapse collapse in {
+    width: 100%;
+    overflow: hidden;
+}
+
+.navbar-brand {
+    height: 40px;
+}
+
+.close {
+    color: #CAB7B7;
+    opacity: 1;
+    text-shadow: 0 0 0 !important;
+}
+
+.modal-content {
+    background-color: #343433;
+    border: 1px solid #999;
+    border-radius: 0px;
+    outline: 0;
+}
+
+#main {
+    padding-left: 20px;
+}
+
+#xy_main {
+    padding-top: 34px;
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-bottom: 94px;
+    position: relative;
+}
+
+#xy_graphs_holder {
+    border: 1px solid #5d5d5c;
+    /* margin-bottom: 2px; */
+    width: 100%;
+    height: 100%;
+    margin-left: 20px;
+    /* padding-bottom: 20px; */
+}
+
+#xy_graphs {
+    position: relative
+}
+
+#buffer {
+    border: 1px solid #999;
+    position: relative;
+    height: 14px;
+    overflow: hidden;
+}
+
+.buf-main-line {
+    margin: 5px 1px 5px 1px;
+    background-color: #cdcccc;
+    height: 2px;
+}
+
+.buf-red-line-holder {
+    height: 12px;
+    border-left: 1px solid #999;
+    border-right: 1px solid #999;
+    position: absolute;
+    top: 0;
+    left: 100px;
+}
+
+.buf-red-line {
+    width: 100px;
+    height: 2px;
+    background-color: #ce3234;
+    margin-top: 5px;
+    display: none;
+}
+
+#buf_time_offset {
+    height: 12px;
+    width: 8px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #75cede;
+    display: none;
+}
+
+.right-menu-cont {
+    margin-right: 0px;
+    border-left: 1px solid #999;
+    border-top: 1px solid #999;
+}
+
+.col-xs-6.option-content {
+    border-bottom: 1px solid #999;
+    border-right: 1px solid #999;
+    text-align: center;
+    line-height: 31px;
+    float: left;
+    font-size: 14px;
+    padding: 0px;
+}
+
+.col-xs-12.option-content {
+    border-bottom: 1px solid #999;
+    border-right: 1px solid #999;
+    text-align: center;
+    line-height: 31px;
+    float: left;
+    font-size: 14px;
+    padding: 0px;
+}
+
+.col-xs-2 {
+    padding-right: 15px;
+}
+
+.menu-content {
+    width: 200px;
+}
+
+.right-menu-option {
+    margin: 1px 1px 2px 1px;
+    height: 31px;
+}
+
+.right-menu-option:hover {
+    background-color: #444;
+    cursor: pointer;
+    margin: 1px 1px 1px 1px;
+    height: 32px;
+}
+
+.btn:active,
+.btn.active {
+    background-image: none;
+    background-color: #999;
+    color: #111 !important;
+}
+
+.dialog {
+    margin-right: 0px;
+    display: none;
+}
+
+.ch1,
+.btn.ch1,
+.ch1.focus {
+    color: #f3ec1a !important;
+}
+
+.ch2,
+.btn.ch2,
+.ch2.focus {
+    color: #31b44b !important;
+}
+
+.ch3,
+.btn.ch3,
+.ch3.focus {
+    color: #ee3739 !important;
+}
+
+.ch4,
+.btn.ch4,
+.ch4.focus {
+    color: #3af7f7 !important;
+}
+
+.output1,
+.btn.output1,
+.output1.focus {
+    color: #9595ca !important;
+}
+
+.output2,
+.btn.output2,
+.output2.focus {
+    color: #ee3739 !important;
+}
+
+.math,
+.btn.math,
+.math.focus {
+    color: #ab4d9d !important;
+}
+
+.x_y,
+.not_btn.x_y,
+.x_y.focus {
+    color: #faa200 !important;
+}
+
+.trig,
+.not_btn.trig,
+.trig.focus {
+    color: #75cede !important;
+}
+
+.out_e2,
+.not_btn.out_e2,
+.out_e2.focus {
+    color: #c911b9 !important;
+}
+
+.ch1.active,
+.ch2.active,
+.output1.active,
+.output2.active,
+.math.active,
+.x_y.active,
+.trig.active {
+    color: #111 !important;
+}
+
+.menu-btn:disabled {
+    opacity: 0.3;
+}
+
+.menu-btn.state-on {
+    opacity: 1.0;
+}
+
+.menu-btn img {
+    height: 20px;
+    width: 20px;
+    display: none;
+    margin: 0px -2px 0px -22px;
+}
+
+.out_led {
+    height: 20px;
+    width: 20px;
+    position: absolute;
+    left: 10px;
+    top: 6px;
+}
+
+#slow_adc_in1,
+#slow_adc_in2,
+#slow_adc_in3,
+#slow_adc_in4 {
+    font-weight: bold;
+    color: rgb(23, 151, 11);
+}
+
+
+#edge1 img,
+#edge2 img {
+    height: 18px;
+}
+
+.form-control[disabled] {
+    color: #fff;
+    background-color: #343433;
+    background-image: none;
+    border: 0px none;
+    box-shadow: none;
+    border-radius: 0px;
+    height: 33px;
+    cursor: pointer;
+}
+
+.form-control {
+    color: #fff;
+    background-color: #343433;
+    background-image: none;
+    border: 0px none;
+    box-shadow: none;
+    border-radius: 0px;
+    height: 33px;
+    cursor: pointer;
+}
+
+.form-control:hover {
+    color: #fff;
+    background-color: #444;
+}
+
+.close:hover,
+.close:focus {
+    color: #fff !important;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.col-info {
+    margin-top: -11px;
+    font-size: 10px;
+    margin: -11px 0px -25px 0px;
+    padding: 0px;
+    float: left;
+    color: #cdcccc;
+    height: 10px;
+}
+
+.col-info-activ {
+    font-size: 10px;
+    margin: -8px 0px -2px -11px;
+    padding: 0px;
+    float: left;
+    color: #cdcccc;
+    height: 10px;
+    text-shadow: 0px 1px 1px #111;
+}
+
+.calib-info {
+    font-size: 20px;
+    margin-left: 115px;
+    margin-top: -30px;
+    padding: 0px;
+    float: left;
+    color: #cdcccc;
+    height: 10px;
+    text-shadow: 0px 1px 1px #111;
+}
+
+.not_btn {
+    background-image: none;
+    border: 0 solid transparent;
+    white-space: nowrap;
+    padding: 6px 12px;
+    line-height: 1.42857143;
+    border-radius: 0;
+    width: 100%;
+    background-color: transparent;
+    text-shadow: 0px 0px;
+    /*  box-shadow: 0 0 0 1px #777; */
+    color: #cdcccc !important;
+}
+
+.btn {
+    background-image: none;
+    border: 0 solid transparent;
+    white-space: nowrap;
+    padding: 6px 12px;
+    line-height: 1.42857143;
+    border-radius: 0;
+    width: 100%;
+    background-color: transparent;
+    text-shadow: 0px 0px;
+    /*  box-shadow: 0 0 0 1px #777; */
+    color: #cdcccc !important;
+}
+
+.btn:hover,
+btn:active {
+    color: #fff !important;
+    background-image: none;
+}
+
+.math-radio-btn:disabled,
+.math-radio-btn.disabled {
+    background-image: none;
+    background-color: transparent;
+    color: #cdcccc !important;
+}
+
+.x_y-radio-btn:disabled,
+.x_y-radio-btn.disabled {
+    background-image: none;
+    background-color: transparent;
+    color: #cdcccc !important;
+}
+
+#meas_list {
+    margin-top: 10px;
+    /* margin-bottom: 2px; */
+    min-height: 30px;
+    max-height: 128px;
+    overflow: hidden;
+}
+
+.meas-item {
+    margin: 0px 1px 1px 1px;
+    height: 31px;
+    border: 1px solid #999;
+    cursor: pointer;
+}
+
+.meas-item:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+.input_name {
+    color: #999;
+    background-color: transparent;
+    border: 0px;
+    width: 100%;
+    text-align: center;
+    height: 31px;
+}
+
+.setfield {
+    color: #999;
+    background-color: transparent;
+    border: 0px;
+    width: 100%;
+    text-align: center;
+    height: 31px;
+}
+
+.close-dialog {
+    cursor: pointer;
+}
+
+.close-dialog img {
+    height: 19px;
+    float: left;
+    margin: 7px -19px 0px 7px;
+    cursor: pointer;
+}
+
+.close-sweep-dialog img {
+    height: 19px;
+    float: left;
+    margin: 7px -19px 0px 7px;
+    cursor: pointer;
+}
+
+.close-burst-dialog img {
+    height: 19px;
+    float: left;
+    margin: 7px -19px 0px 7px;
+    cursor: pointer;
+}
+
+.close-trig-dialog img {
+    height: 19px;
+    float: left;
+    margin: 7px -19px 0px 7px;
+    cursor: pointer;
+}
+
+#meas:hover,
+#cursor:hover {
+    color: #fff;
+}
+
+.btn.focus {
+    color: #777;
+    border: 0px solid transparent;
+}
+
+
+#buffer_selector {
+    width: 150px;
+    height: 40px;
+}
+
+#joystick {
+    width: 150px;
+    height: auto;
+}
+
+#jtk_btns {
+    height: auto;
+    border: 0 none;
+    width: 150px;
+}
+
+#jtk_fine {
+    height: 64px;
+    position: absolute;
+    margin: 44px 0px 0px 42px;
+    cursor: pointer;
+}
+
+#graphs_holder {
+    margin-top: 12px;
+    padding-top: 8px;
+    overflow: hidden;
+    padding-bottom: 20px;
+}
+
+#graphs {
+    position: relative;
+    overflow: hidden;
+}
+
+#graph_grid {
+    border: 1px solid #5d5d5c;
+    margin-bottom: 2px;
+}
+
+.plot {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+.xy_plot {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+}
+
+.y-offset-arrow,
+#time_offset_arrow {
+    position: absolute;
+    left: 0;
+    top: 0;
+    margin-top: -8px;
+    display: none;
+    z-index: 10;
+}
+
+.y-offset-arrow {
+    width: 44px;
+    height: 16px;
+}
+
+.y-offset-arrow div {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.y-offset-arrow div img {
+    position: absolute;
+}
+
+.y-offset-arrow div div {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    color: #000;
+    font-size: 9px;
+    line-height: 16px;
+    padding-left: 2px;
+    padding-right: 6px;
+    text-align: center;
+}
+
+
+#time_offset_arrow {
+    margin-top: 0;
+    display: inline;
+}
+
+#osc_trig_edge_img {
+    margin: -2px 0 0;
+}
+
+.x_axis_ticks {
+    position: absolute;
+    color: #ccc;
+    font-size: 12px;
+}
+
+.y_axis_ticks {
+    position: absolute;
+    color: #ccc;
+    font-size: 12px;
+}
+
+.rotate {
+    writing-mode: vertical-lr;
+    /* transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* Safari */
+    /* -webkit-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* Firefox */
+    /* -moz-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* IE */
+    /* -ms-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+    /* Opera */
+    /* -o-transform: translateX(-50%) translateY(-50%) rotate(180deg); */
+}
+
+.hline {
+    height: 2px;
+    border-top: 2px dashed #ccc;
+    position: absolute;
+    left: 1px;
+    right: 1px;
+    top: 0;
+    opacity: 0.8;
+    display: none;
+    z-index: 9;
+}
+
+.vline {
+    width: 2px;
+    border-right: 2px dashed #ccc;
+    position: absolute;
+    top: 1px;
+    bottom: 9px;
+    left: 0;
+    opacity: 0.8;
+    display: none;
+    z-index: 9;
+}
+
+#trigger_level.hline {
+    border-top-style: solid;
+}
+
+.harrow {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin-top: -7px;
+    display: none;
+    z-index: 12;
+}
+
+.xy_harrow {
+    position: absolute;
+    right: 0;
+    top: 0;
+    margin-top: -7px;
+    display: none;
+    z-index: 12;
+}
+
+.varrow {
+    position: absolute;
+    left: 0;
+    bottom: 8px;
+    margin-left: -7px;
+    margin-right: -7px;
+    display: none;
+    z-index: 12;
+}
+
+.xy_varrow {
+    position: absolute;
+    left: 0;
+    bottom: 5px;
+    margin-left: -7px;
+    margin-right: -7px;
+    display: none;
+    z-index: 12;
+}
+
+.cur_info {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 10px;
+    color: #fff;
+    background-color: #000;
+    line-height: 12px;
+    padding: 1px 3px;
+    white-space: nowrap;
+    display: none;
+    z-index: 14;
+}
+
+#kostyl_footer {
+    position: absolute;
+    bottom: -4px;
+    width: 100%;
+    background: #343433;
+    height: 10px;
+    z-index: 15;
+}
+
+#cur_x1_info.cur_info,
+#cur_x2_info.cur_info {
+    top: 2px;
+    margin-left: 3px;
+}
+
+#cur_y1_info.cur_info,
+#cur_y2_info.cur_info {
+    left: 2px;
+    margin-top: -15px;
+}
+
+#xy_cur_x_diff,
+#cur_x_diff {
+    font-family: "Glyphicons Halflings";
+    font-size: 11px;
+    line-height: 1;
+    border-bottom: 2px solid #ccc;
+    margin: 0 5px;
+    width: 100px;
+    height: 7px;
+    position: absolute;
+    left: 0;
+    top: 40px;
+    display: none;
+    z-index: 13;
+}
+
+#xy_cur_x_diff:before,
+#cur_x_diff:before {
+    content: "\e079";
+    margin-left: -5px;
+}
+
+#xy_cur_x_diff:after,
+#cur_x_diff:after {
+    content: "\e080";
+    margin-right: -5px;
+    float: right;
+}
+
+#xy_cur_y_diff,
+#cur_y_diff {
+    font-family: "Glyphicons Halflings";
+    font-size: 11px;
+    border-right: 2px solid #ccc;
+    height: 100px;
+    width: 7px;
+    position: absolute;
+    left: 50px;
+    top: 0;
+    display: none;
+    z-index: 13;
+}
+
+#xy_cur_y_diff:before,
+#cur_y_diff:before {
+    content: "\e113";
+    position: absolute;
+    top: -5px;
+    left: 1px;
+    line-height: 1;
+}
+
+#xy_cur_y_diff:after,
+#cur_y_diff:after {
+    content: "\e114";
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    line-height: 1;
+}
+
+#xy_cur_y_diff_info.cur_info,
+#cur_y_diff_info.cur_info {
+    left: 59px;
+}
+
+#xy_cur_x_diff_info.cur_info,
+#cur_x_diff_info.cur_info {
+    top: 30px;
+}
+
+
+#info_box {
+    position: absolute;
+    left: 15px;
+    top: 8px;
+    z-index: 15;
+}
+
+.img-container {
+    text-align: center;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: none;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+
+/*
+.centerer {
+  display: inline-block;
+  vertical-align: middle;
+}*/
+
+.centerer {
+    display: inline-block;
+    vertical-align: middle;
+    height: 80%;
+}
+
+#header {
+    background-color: black;
+    color: #CCC;
+    text-align: center;
+    padding: 6px;
+    overflow: hidden;
+    height: 30px;
+    width: 100%;
+    white-space: nowrap;
+}
+
+#connection_meter {
+    right: 100px;
+    width: 200px;
+    float: right;
+    text-align: left;
+}
+
+#throughput_view2 {
+    text-align: right;
+    width: 150px;
+}
+
+.no-lr-padding {
+    padding-right: 0px;
+    padding-left: 0px;
+    text-align: center;
+}
+
+#ext_clock_enable_view {
+    width: 100%;
+    margin: 10px 0px 0px 20px;
+}
+
+#ext_clock_enable_view img {
+    height: 20px;
+    width: 20px;
+    display: inline;
+    float: right;
+    margin: 0px 40px 0px 0px;
+}
+
+.list-group-item {
+    background-color: #323232;
+    font-family: sans-serif;
+    color: blue;
+}
+
+a.list-group-item {
+    color: silver;
+}
+
+a.list-group-item:hover:visited {
+    color: black;
+}
+
+.list-group-item.more {
+    font-size: 18px;
+}
+
+.list-group-item.exp_but {
+    font-weight: bold;
+    text-align: center;
+}
+
+.checkbox_export {
+    position: relative;
+    display: inline-block;
+    height: 15px;
+    width: 15px;
+    border: 1px solid;
+    cursor: pointer;
+}
+
+.checkbox_export:after {
+    position: absolute;
+    width: 100%;
+    line-height: 100%;
+    text-align: center;
+}
+
+.checkbox_export[data-checked="true"]:after {
+    content: "✓";
+}
+
+.saved_settings {
+    display: flex;
+}
+
+.saved_settings>a {
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: left;
+    width: 100%;
+    /* max-width: 100px; */
+    /* min-width: 100px; */
+}
+
+.saved_settings>a>img {
+    width: 14px;
+    height: 14px;
+    margin: 3px;
+    float: right;
+}
+
+.saved_settings>a>img:hover {
+    transform: scale(1.3);
+}
+
+
+/* ---------------------------------------------------------------------------
+   VIGO controller
+   ------------------------------------------------------------------------ */
+
+/* ---------------------------------------------------------------------------
+   Layout regions
+   The page is divided first and filled afterwards: the container takes the
+   height left by the header, the body splits into the plots and the menu, and
+   the controller blocks take whatever they need at the bottom. Components are
+   bounded by their region instead of pushing each other around.
+   ------------------------------------------------------------------------ */
+#global_container {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Two columns and two rows: the plots with the menu beside them, and under
+   the plots the controller blocks. The menu column ends where the plots end,
+   which is what the joystick hangs from. */
+#layout_body {
+    display: grid;
+    grid-template-columns: 1fr 200px;
+    grid-template-rows: 1fr auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#plots_area {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    /* The gap to the menu column; on the left the plot column has its own. */
+    padding-right: 20px;
+}
+
+#main,
+#xy_main {
+    flex: 1 1 0;
+    min-width: 0;
+    height: auto;
+    /* Equal share of the region, paddings included, so the two plots come out
+       the same width. */
+    box-sizing: border-box;
+}
+
+/* The X-Y column carries its axis labels in its own padding, and its plot is
+   as tall as its content box. The lower padding is what the oscilloscope
+   column spends below its plot, so the two plots end on the same line. */
+#xy_main {
+    padding-bottom: 71px;
+}
+
+#menu-root.menu-content {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: auto;
+}
+
+/* The controller blocks stay under the plots and never reach under the menu.
+   Their side paddings are set from the grids above them, so the block lines
+   up with the plot in both modes. */
+#ptcc_under {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+/* The joystick and the buffer buttons live at the top of the menu column and
+   are laid out by the page itself. Nothing measures or places them, so they
+   are in the right place from the first paint. */
+/* Last in the menu column and pushed to its lower edge, which is the lower
+   edge of the plots. The two sit in a block of their own, so the joystick
+   keeps its place when the buffer buttons are hidden during a capture. */
+#menu_bottom {
+    flex: 0 0 auto;
+    margin-top: auto;
+}
+
+#joystick,
+#buffer_selector {
+    margin: 0 auto;
+}
+
+#buffer_selector {
+    margin-top: 8px;
+}
+
+/* The controller blocks sit under both plots: in X-Y mode the oscilloscope
+   column is only half the width, and these belong under the whole page. */
+#ptcc_under {
+    box-sizing: border-box;
+    padding: 0 0 12px 20px;
+}
+
+/* State of the controller, between the time axis and the channel information.
+   The margin clears the axis labels, which are drawn over this area. */
+#ptcc_status {
+    margin: 8px 0 0 0;
+    border: 1px solid #555;
+    background: #2b2b2b;
+}
+
+.ptcc-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 22px;
+    padding: 7px 12px;
+    font-size: 12px;
+}
+
+/* Nothing about the controller is shown until the service has reported on
+   it, and its readings only once there is a controller to read. The page must
+   not flash zeroes on the way there, so this is the state it starts in. */
+#ptcc_status .ptcc-state,
+#ptcc_status .ptcc-key,
+#ptcc_status .ptcc-error {
+    display: none;
+}
+
+#ptcc_status.ptcc-known .ptcc-state {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #ccc;
+}
+
+#ptcc_status.ptcc-live .ptcc-key {
+    display: flex;
+}
+
+#ptcc_status.ptcc-live .ptcc-error {
+    display: block;
+}
+
+.ptcc-key {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+}
+
+.ptcc-key .k {
+    color: #8a8a8a;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+}
+
+.ptcc-key .v {
+    color: #f3ec1a;
+    font-weight: bold;
+}
+
+.ptcc-error {
+    color: #e03131;
+}
+
+.ptcc-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #999;
+}
+
+/* Grey until the service or the controller says otherwise. */
+.ptcc-led {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #666;
+    display: inline-block;
+}
+
+.ptcc-led-ok {
+    background: #40c057;
+}
+
+.ptcc-led-error {
+    background: #e03131;
+}
+
+/* One row of boxes: channels, timebase, measurements, the two sets of
+   controller readings, and the trend taking whatever width is left. */
+#osc_info_row {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid #555;
+    background: #2b2b2b;
+}
+
+.info-group {
+    width: 215px;
+    flex: none;
+    padding: 8px 12px 10px 12px;
+    border-left: 1px solid #555;
+}
+
+.info-group:first-child {
+    border-left: none;
+}
+
+.info-group h2 {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: #8a8a8a;
+    margin: 0 0 6px 0;
+    font-weight: normal;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px 14px;
+}
+
+.info-grid.single {
+    grid-template-columns: 1fr;
+}
+
+.info-grid > div {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.info-grid .k {
+    color: #8a8a8a;
+}
+
+.info-grid .v {
+    color: #eee;
+}
+
+/* A channel row is coloured as the channel, name and value alike, the way the
+   oscilloscope has always shown it. */
+.info-grid.channels .k,
+.info-grid.channels .v {
+    color: inherit;
+}
+
+.info-grid img {
+    vertical-align: baseline;
+}
+
+/* Nothing reaches past the edge of its box. */
+.info-group {
+    overflow: hidden;
+}
+
+/* A measurement label is wider than a reading name, so the value is given
+   whatever room is left rather than a fixed share. */
+#info-meas .k {
+    white-space: nowrap;
+}
+
+#info-meas .v {
+    padding-left: 8px;
+}
+
+/* The plot fills the block, which is as tall as the blocks beside it. Both
+   the canvas and the legend are taken out of the flow: their size follows the
+   block, and the block never follows theirs. */
+.info-trend {
+    flex: 1;
+    width: auto;
+    min-width: 220px;
+    position: relative;
+}
+
+/* A canvas is a replaced element: with width and height left to auto it keeps
+   its own 300 by 150 and ignores the right and bottom offsets, so the size is
+   stated outright. */
+#ptcc_trend_canvas {
+    position: absolute;
+    left: 12px;
+    top: 8px;
+    width: calc(100% - 24px);
+    height: calc(100% - 32px);
+    display: block;
+}
+
+.ptcc-trend-legend {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 6px;
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: #999;
+}
+
+.ptcc-trend-tdet {
+    color: #f3ec1a;
+}
+
+.ptcc-trend-uout {
+    color: #3bb0ff;
+}
+
+.ptcc-trend-span {
+    margin-left: auto;
+}
+
+/* Readings that are running hot. */
+.level-warn {
+    color: #f3ec1a;
+}
+
+.level-alarm {
+    color: #e03131;
+}
+
+/* Inside the two controller panels. */
+.ptcc-note {
+    color: #999;
+    font-size: 11px;
+}

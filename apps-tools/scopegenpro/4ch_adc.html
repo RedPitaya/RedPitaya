@@ -109,1253 +109,1275 @@
             </div>
         </div>
         <div id="global_container" style="position: relative;">
-            <div id="menu-root" class="menu-content">
-                <div id="right_menu" class="row right-menu-cont">
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch1 in1_channel_name" data-signal="ch1"
-                                data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH1"
-                                disabled>IN1</button>
+            <div id="layout_body">
+                <div id="plots_area">
+                    <div id="main">
+                        <div id="buffer">
+                            <div class="buf-red-line-holder">
+                                <div class="buf-red-line"></div>
+                            </div>
+                            <div id="buf_time_offset"></div>
+                            <div class="buf-main-line"></div>
                         </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="in1" class="right-menu-option edit-mode" data-signal="ch1"><img src="img/gear.png">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch2 in2_channel_name" data-signal="ch2"
-                                data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH2"
-                                disabled>IN2</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="in2" class="right-menu-option edit-mode" data-signal="ch2"><img src="img/gear.png">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch3 in3_channel_name" data-signal="ch3"
-                                data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH3"
-                                disabled>IN3</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="in3" class="right-menu-option edit-mode" data-signal="ch3"><img src="img/gear.png">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn ch4 in4_channel_name" data-signal="ch4"
-                                data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH4"
-                                disabled>IN4</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="in4" class="right-menu-option edit-mode" data-signal="ch4"><img src="img/gear.png">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="not_btn menu-btn trig not-signal dbl" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">TRIG</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="trig" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="btn menu-btn math math_channel_name" data-signal="math"
-                                data-toggle="button" aria-pressed="false" autocomplete="off" channel="MATH"
-                                disabled>MATH</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="math" class="right-menu-option edit-mode" data-signal="math"><img src="img/gear.png">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="not_btn menu-btn x_y not-signal dbl" data-toggle="button"
-                                aria-pressed="false" autocomplete="off" disabled>X-Y</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="x_y" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button type="button" class="not_btn menu-btn out_e2 not-signal dbl" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">OUT/E2</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="slow_dac" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div id="meas" class="right-menu-option edit-mode">MEAS</div>
-                    </div>
-                    <div class="col-xs-12 option-content sweep_button" hidden>
-                        <div id="SWEEP_RESET" class="right-menu-option sweep_reset">SWEEP RESET</div>
-                    </div>
-                </div>
-                <div id="in1_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content">
-                        <div class="ch1 right-menu-option close-dialog">
-                            <img src="../assets/images/navigation_arrow_left.png"> Input 1
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="CH1_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                                autocomplete="off">SHOW</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="GPOS_INVERTED_CH1" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">INVERT</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Name</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="IN1_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Probe attenuation</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <select id="OSC_CH1_PROBE" class="form-control styled-select">
-                                <option>1</option>
-                                <option>10</option>
-                                <option>50</option>
-                                <option>100</option>
-                                <option>500</option>
-                                <option>1000</option>
-                                <option>2000</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Center offset / <span
-                                id="GPOS_OFFSET_CH1_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_CH1" class="setfield input-number" type="text" value="0.0000"
-                                step_direct="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
-                                id="GPOS_OFFSET_ZERO_CH1_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_ZERO_CH1" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content hv_lv_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch1_lvhv_btn1" class="btn">
-                                    <input type="radio" value="0" name="OSC_CH1_IN_GAIN" id="OSC_CH1_IN_GAIN"
-                                        autocomplete="off">
-                                    <div id="OSC_CH1_IN_GAIN_L">LV</div>
-                                </label>
-                                <label id="ch1_lvhv_btn2" class="btn">
-                                    <input type="radio" value="1" name="OSC_CH1_IN_GAIN" id="OSC_CH1_IN_GAIN1"
-                                        autocomplete="off">
-                                    <div id="OSC_CH1_IN_GAIN2_L">HV</div>
-                                </label>
+                        <div id="graphs_holder">
+                            <div id="graphs">
+                                <!-- <div id="trig_out_right" style="margin-top: 15px; float: right; display: none;"><img src="img/trig_out_right.png" /></div>
+                                <div id="trig_out_left" style="margin-top: 15px; float: left; display: none;"><img src="img/trig_out_left.png" /></div> -->
+                                <canvas id="graph_grid"></canvas>
+                                <div id="info_box"></div>
+                                <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up-x1.png">
+                                <div id="cur_x1" class="vline"></div>
+                                <div id="cur_x1_info" class="cur_info"></div>
+                                <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up-x2.png">
+                                <div id="cur_x2" class="vline"></div>
+                                <div id="cur_x2_info" class="cur_info"></div>
+                                <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left-y1.png">
+                                <div id="cur_y1" class="hline"></div>
+                                <div id="cur_y1_info" class="cur_info"></div>
+                                <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left-y2.png">
+                                <div id="cur_y2" class="hline"></div>
+                                <div id="cur_y2_info" class="cur_info"></div>
+                                <div id="cur_y_diff"></div>
+                                <div id="cur_y_diff_info" class="cur_info"></div>
+                                <div id="cur_x_diff"></div>
+                                <div id="cur_x_diff_info" class="cur_info"></div>
+                                <img id="time_offset_arrow" src="img/time-offset-arrow.png">
+                                <div id="trig_out_left" style="top: 45px; position: absolute;left: 0px;z-index: 10;"><img
+                                        src="img/trig_out_left.png" /></div>
+                                <div id="trig_out_right" style="top: 45px; position: absolute;right: 0px;z-index: 10"><img
+                                        src="img/trig_out_right.png" /></div>
+                                <div id="ch1_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
+                                    <div style="position: relative;">
+                                        <img src="img/ch1-offset-arrow-empty.png">
+                                        <div class="in1_channel_name">IN1</div>
+                                    </div>
+                                </div>
+                                <div id="ch2_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
+                                    <div style="position: relative;">
+                                        <img src="img/ch2-offset-arrow-empty.png">
+                                        <div class="in2_channel_name">IN2</div>
+                                    </div>
+                                </div>
+                                <div id="ch3_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
+                                    <div style="position: relative;">
+                                        <img src="img/ch3-offset-arrow-empty.png">
+                                        <div class="in3_channel_name">IN3</div>
+                                    </div>
+                                </div>
+                                <div id="ch4_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
+                                    <div style="position: relative;">
+                                        <img src="img/ch4-offset-arrow-empty.png">
+                                        <div class="in4_channel_name">IN4</div>
+                                    </div>
+                                </div>
+                                <div id="math_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
+                                    <div style="position: relative;">
+                                        <img src="img/math-offset-arrow-empty.png">
+                                        <div class="math_channel_name">MATH</div>
+                                    </div>
+                                </div>
+                                <img id="trig_level_arrow" class="harrow dbl" src="img/trigger-arrow.png">
+                                <div id="trigger_level" class="hline"></div>
+                                <div id="kostyl_footer"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xs-12 option-content ac_dc_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Coupling</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" id="OSC_CH1_IN_AC_DC" name="OSC_CH1_IN_AC_DC"
-                                        autocomplete="off">DC
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" id="OSC_CH1_IN_AC_DC1" name="OSC_CH1_IN_AC_DC"
-                                        autocomplete="off">AC
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content filter_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Filter</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch1_filter_btn1" class="btn">
-                                    <input type="radio" value="0" name="OSC_CH1_IN_FILTER" id="OSC_CH1_IN_FILTER"
-                                        autocomplete="off">
-                                    <div id="OSC_CH1_IN_FILTER_B">OFF</div>
-                                </label>
-                                <label id="ch1_filter_btn2" class="btn">
-                                    <input type="radio" value="1" name="OSC_CH1_IN_FILTER" id="OSC_CH1_IN_FILTER1"
-                                        autocomplete="off">
-                                    <div id="OSC_CH1_IN_FILTER2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Interpolation</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <select id="OSC_CH1_SMOOTH" class="form-control styled-select">
-                                <option value="0">DISABLED</option>
-                                <option value="1">LINEAR</option>
-                                <option value="2">B-SPLINE</option>
-                                <option value="3">CATMULL-ROM</option>
-                                <option value="4">LANCZOS</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Trace mode</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch1_trace_mode_btn1" class="btn">
-                                    <input type="radio" value="0" name="CH1_SHOW_TRACE" id="CH1_SHOW_TRACE"
-                                        autocomplete="off">
-                                    <div id="CH1_SHOW_TRACE_B">OFF</div>
-                                </label>
-                                <label id="ch1_trace_mode_btn2" class="btn">
-                                    <input type="radio" value="1" name="CH1_SHOW_TRACE" id="CH1_SHOW_TRACE1"
-                                        autocomplete="off">
-                                    <div id="CH1_SHOW_TRACE2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH1_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
-                                RESET</div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH1_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
-                                SETTINGS</div>
-                        </div>
-                    </div>
-                </div>
-                <div id="in2_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content">
-                        <div class="ch2 right-menu-option close-dialog">
-                            <img src="../assets/images/navigation_arrow_left.png"> Input 2
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="CH2_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                                autocomplete="off">SHOW</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="GPOS_INVERTED_CH2" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">INVERT</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Name</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="IN2_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
-                            <select id="OSC_CH2_PROBE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option>1</option>
-                                <option>10</option>
-                                <option>50</option>
-                                <option>100</option>
-                                <option>500</option>
-                                <option>1000</option>
-                                <option>2000</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH2_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_CH2" class="setfield input-number" type="text" value="0.0000"
-                                step_direct="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
-                                id="GPOS_OFFSET_ZERO_CH2_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_ZERO_CH2" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content hv_lv_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" id="OSC_CH2_IN_GAIN" name="OSC_CH2_IN_GAIN"
-                                        autocomplete="off">
-                                    <div id="OSC_CH2_IN_GAIN_L">LV</div>
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" id="OSC_CH2_IN_GAIN1" name="OSC_CH2_IN_GAIN"
-                                        autocomplete="off">
-                                    <div id="OSC_CH2_IN_GAIN2_L">HV</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content ac_dc_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Coupling</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" id="OSC_CH2_IN_AC_DC" name="OSC_CH2_IN_AC_DC"
-                                        autocomplete="off">DC
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" id="OSC_CH2_IN_AC_DC1" name="OSC_CH2_IN_AC_DC"
-                                        autocomplete="off">AC
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content filter_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Filter</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch2_filter_btn2" class="btn">
-                                    <input type="radio" value="0" name="OSC_CH2_IN_FILTER" id="OSC_CH2_IN_FILTER"
-                                        autocomplete="off">
-                                    <div id="OSC_CH2_IN_FILTER_B">OFF</div>
-                                </label>
-                                <label id="ch2_filter_btn2" class="btn">
-                                    <input type="radio" value="1" name="OSC_CH2_IN_FILTER" id="OSC_CH2_IN_FILTER1"
-                                        autocomplete="off">
-                                    <div id="OSC_CH2_IN_FILTER2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Interpolation</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <select id="OSC_CH2_SMOOTH" class="form-control styled-select">
-                                <option value="0">DISABLED</option>
-                                <option value="1">LINEAR</option>
-                                <option value="2">B-SPLINE</option>
-                                <option value="3">CATMULL-ROM</option>
-                                <option value="4">LANCZOS</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Trace mode</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch2_trace_mode_btn1" class="btn">
-                                    <input type="radio" value="0" name="CH2_SHOW_TRACE" id="CH2_SHOW_TRACE"
-                                        autocomplete="off">
-                                    <div id="CH2_SHOW_TRACE_B">OFF</div>
-                                </label>
-                                <label id="ch2_trace_mode_btn2" class="btn">
-                                    <input type="radio" value="1" name="CH2_SHOW_TRACE" id="CH2_SHOW_TRACE1"
-                                        autocomplete="off">
-                                    <div id="CH2_SHOW_TRACE2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH2_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
-                                RESET</div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH2_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
-                                SETTINGS</div>
-                        </div>
-                    </div>
-                </div>
-                <div id="in3_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content">
-                        <div class="ch3 right-menu-option close-dialog">
-                            <img src="../assets/images/navigation_arrow_left.png"> Input 3
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="CH3_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                                autocomplete="off">SHOW</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="GPOS_INVERTED_CH3" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">INVERT</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Name</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="IN3_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
-                            <select id="OSC_CH3_PROBE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option>1</option>
-                                <option>10</option>
-                                <option>50</option>
-                                <option>100</option>
-                                <option>500</option>
-                                <option>1000</option>
-                                <option>2000</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH3_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_CH3" class="setfield input-number" type="text" value="0.0000"
-                                step_direct="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
-                                id="GPOS_OFFSET_ZERO_CH3_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_ZERO_CH3" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content hv_lv_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" id="OSC_CH3_IN_GAIN" name="OSC_CH3_IN_GAIN"
-                                        autocomplete="off">
-                                    <div id="OSC_CH3_IN_GAIN_L">LV</div>
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" id="OSC_CH3_IN_GAIN1" name="OSC_CH3_IN_GAIN"
-                                        autocomplete="off">
-                                    <div id="OSC_CH3_IN_GAIN2_L">HV</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content ac_dc_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Coupling</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" id="OSC_CH3_IN_AC_DC" name="OSC_CH3_IN_AC_DC"
-                                        autocomplete="off">DC
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" id="OSC_CH3_IN_AC_DC1" name="OSC_CH3_IN_AC_DC"
-                                        autocomplete="off">AC
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content filter_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Filter</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch3_filter_btn1" class="btn">
-                                    <input type="radio" value="0" name="OSC_CH3_IN_FILTER" id="OSC_CH3_IN_FILTER"
-                                        autocomplete="off">
-                                    <div id="OSC_CH3_IN_FILTER_B">OFF</div>
-                                </label>
-                                <label id="ch3_filter_btn2" class="btn">
-                                    <input type="radio" value="1" name="OSC_CH3_IN_FILTER" id="OSC_CH3_IN_FILTER1"
-                                        autocomplete="off">
-                                    <div id="OSC_CH3_IN_FILTER2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Interpolation</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <select id="OSC_CH3_SMOOTH" class="form-control styled-select">
-                                <option value="0">DISABLED</option>
-                                <option value="1">LINEAR</option>
-                                <option value="2">B-SPLINE</option>
-                                <option value="3">CATMULL-ROM</option>
-                                <option value="4">LANCZOS</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Trace mode</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch3_trace_mode_btn1" class="btn">
-                                    <input type="radio" value="0" name="CH3_SHOW_TRACE" id="CH3_SHOW_TRACE"
-                                        autocomplete="off">
-                                    <div id="CH3_SHOW_TRACE_B">OFF</div>
-                                </label>
-                                <label id="ch3_trace_mode_btn2" class="btn">
-                                    <input type="radio" value="1" name="CH3_SHOW_TRACE" id="CH3_SHOW_TRACE1"
-                                        autocomplete="off">
-                                    <div id="CH3_SHOW_TRACE2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH3_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
-                                RESET</div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH3_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
-                                SETTINGS</div>
-                        </div>
-                    </div>
-                </div>
-                <div id="in4_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content">
-                        <div class="ch4 right-menu-option close-dialog">
-                            <img src="../assets/images/navigation_arrow_left.png"> Input 4
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="CH4_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                                autocomplete="off">SHOW</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="GPOS_INVERTED_CH4" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">INVERT</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Name</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="IN4_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
-                            <select id="OSC_CH4_PROBE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option>1</option>
-                                <option>10</option>
-                                <option>50</option>
-                                <option>100</option>
-                                <option>500</option>
-                                <option>1000</option>
-                                <option>2000</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH4_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_CH4" class="setfield input-number" type="text" value="0.0000"
-                                step_direct="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-info" style="margin-top: -11px;">Zero reference / <span
-                                id="GPOS_OFFSET_ZERO_CH4_UNIT">V</span></div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="GPOS_OFFSET_ZERO_CH4" class="setfield input-number" type="text" value="0.0000"
-                                step="0.0010" min="-40.0000" max="40.0000">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content hv_lv_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" id="OSC_CH4_IN_GAIN" name="OSC_CH4_IN_GAIN"
-                                        autocomplete="off">
-                                    <div id="OSC_CH4_IN_GAIN_L">LV</div>
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" id="OSC_CH4_IN_GAIN1" name="OSC_CH4_IN_GAIN"
-                                        autocomplete="off">
-                                    <div id="OSC_CH4_IN_GAIN2_L">HV</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content ac_dc_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Coupling</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" id="OSC_CH4_IN_AC_DC" name="OSC_CH4_IN_AC_DC"
-                                        autocomplete="off">DC
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" id="OSC_CH4_IN_AC_DC1" name="OSC_CH4_IN_AC_DC"
-                                        autocomplete="off">AC
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content filter_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Filter</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch4_filter_btn1" class="btn">
-                                    <input type="radio" value="0" name="OSC_CH4_IN_FILTER" id="OSC_CH4_IN_FILTER"
-                                        autocomplete="off">
-                                    <div id="OSC_CH4_IN_FILTER_B">OFF</div>
-                                </label>
-                                <label id="ch4_filter_btn2" class="btn">
-                                    <input type="radio" value="1" name="OSC_CH4_IN_FILTER" id="OSC_CH4_IN_FILTER1"
-                                        autocomplete="off">
-                                    <div id="OSC_CH4_IN_FILTER2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Interpolation</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <select id="OSC_CH4_SMOOTH" class="form-control styled-select">
-                                <option value="0">DISABLED</option>
-                                <option value="1">LINEAR</option>
-                                <option value="2">B-SPLINE</option>
-                                <option value="3">CATMULL-ROM</option>
-                                <option value="4">LANCZOS</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Trace mode</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="ch4_trace_mode_btn1" class="btn">
-                                    <input type="radio" value="0" name="CH4_SHOW_TRACE" id="CH4_SHOW_TRACE"
-                                        autocomplete="off">
-                                    <div id="CH4_SHOW_TRACE_B">OFF</div>
-                                </label>
-                                <label id="ch4_trace_mode_btn2" class="btn">
-                                    <input type="radio" value="1" name="CH4_SHOW_TRACE" id="CH4_SHOW_TRACE1"
-                                        autocomplete="off">
-                                    <div id="CH4_SHOW_TRACE2_B">ON</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH4_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
-                                RESET</div>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content trace_block">
-                        <div class="right-menu-option">
-                            <div id="CH4_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
-                                SETTINGS</div>
-                        </div>
-                    </div>
-                </div>
-                <div id="math_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content close-dialog">
-                        <div class="right-menu-option math">
-                            <img src="../assets/images/navigation_arrow_left.png"> MATH
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="MATH_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                                autocomplete="off">ENABLE</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="GPOS_INVERTED_MATH" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">INVERT</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <span class="col-info" style="margin-top: -11px;">Name</span>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="MATH_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Signal1</span>
-                            <select id="OSC_MATH_SRC1" class="form-control styled-select" style="margin-top: 10px;">
-                                <option id="OSC_MATH_SRC11" name="OSC_MATH_SRC1" value="0" class="in1_channel_name">IN1
-                                </option>
-                                <option id="OSC_MATH_SRC12" name="OSC_MATH_SRC1" value="1" class="in2_channel_name">IN2
-                                </option>
-                                <option id="OSC_MATH_SRC13" name="OSC_MATH_SRC1" value="2" class="in3_channel_name">IN3
-                                </option>
-                                <option id="OSC_MATH_SRC14" name="OSC_MATH_SRC1" value="3" class="in4_channel_name">IN4
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Signal1</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn">
-                                    <input type="radio" value="0" name="OSC_MATH_SRC1" id="OSC_MATH_SRC1" autocomplete="off"><caps class="in1_channel_name">IN1</caps>
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="1" name="OSC_MATH_SRC1" id="OSC_MATH_SRC12" autocomplete="off"><caps class="in2_channel_name">IN2</caps>
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="2" name="OSC_MATH_SRC1" id="OSC_MATH_SRC13" autocomplete="off"><caps class="in3_channel_name">IN3</caps>
-                                </label>
-                                <label class="btn">
-                                    <input type="radio" value="3" name="OSC_MATH_SRC1" id="OSC_MATH_SRC14" autocomplete="off"><caps class="in4_channel_name">IN4</caps>
-                                </label>
-                            </div>
-                        </div>
-                    </div> -->
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Operator</span>
-                            <select class="form-control styled-select" id="OSC_MATH_OP" style="margin-top: 10px;">
-                                <option value="1">+</option>
-                                <option value="2">-</option>
-                                <option value="3">*</option>
-                                <option value="5">abs</option>
-                                <option value="6">dy/dt</option>
-                                <option value="7">ydt</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Signal2</span>
-                            <select id="OSC_MATH_SRC2" class="form-control styled-select" style="margin-top: 10px;">
-                                <option id="OSC_MATH_SRC21" name="OSC_MATH_SRC2" value="0" class="in1_channel_name">IN1
-                                </option>
-                                <option id="OSC_MATH_SRC22" name="OSC_MATH_SRC2" value="1" class="in2_channel_name">IN2
-                                </option>
-                                <option id="OSC_MATH_SRC23" name="OSC_MATH_SRC2" value="2" class="in3_channel_name">IN3
-                                </option>
-                                <option id="OSC_MATH_SRC24" name="OSC_MATH_SRC2" value="3" class="in4_channel_name">IN4
-                                </option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Signal2</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label class="btn math-radio-btn">
-                                    <input type="radio" value="0" name="OSC_MATH_SRC2" id="OSC_MATH_SRC2" autocomplete="off"><caps class="in1_channel_name">IN1</caps>
-                                </label>
-                                <label class="btn math-radio-btn">
-                                    <input type="radio" value="1" name="OSC_MATH_SRC2" id="OSC_MATH_SRC22" autocomplete="off"><caps class="in2_channel_name">IN2</caps>
-                                </label>
-                                <label class="btn math-radio-btn">
-                                    <input type="radio" value="2" name="OSC_MATH_SRC2" id="OSC_MATH_SRC23" autocomplete="off"><caps class="in3_channel_name">IN3</caps>
-                                </label>
-                                <label class="btn math-radio-btn">
-                                    <input type="radio" value="3" name="OSC_MATH_SRC2" id="OSC_MATH_SRC24" autocomplete="off"><caps class="in4_channel_name">IN4</caps>
-                                </label>
-                            </div>
-                        </div>
-                    </div> -->
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <div class="col-info" style="margin-top: -21px;">Center offset / <span
-                                    id="GPOS_OFFSET_MATH_UNIT">V</span></div>
-                            <div style="margin-top: 10px;">
-                                <input class="setfield input-number" id="GPOS_OFFSET_MATH" type="text" value="0.000"
-                                    step_direct="0.001">
+                    <div id="xy_main" style="display: none;">
+                        <div id="xy_graphs_holder">
+                            <div id="xy_graphs">
+                                <canvas id="xy_graph_grid"></canvas>
+                                <img id="xy_cur_x1_arrow" class="xy_varrow" src="img/cursor-arrow-up-x1.png">
+                                <div id="xy_cur_x1" class="vline"></div>
+                                <div id="xy_cur_x1_info" class="cur_info"></div>
+                                <img id="xy_cur_x2_arrow" class="xy_varrow" src="img/cursor-arrow-up-x2.png">
+                                <div id="xy_cur_x2" class="vline"></div>
+                                <div id="xy_cur_x2_info" class="cur_info"></div>
+                                <img id="xy_cur_y1_arrow" class="xy_harrow" src="img/cursor-arrow-left-y1.png">
+                                <div id="xy_cur_y1" class="hline"></div>
+                                <div id="xy_cur_y1_info" class="cur_info"></div>
+                                <img id="xy_cur_y2_arrow" class="xy_harrow" src="img/cursor-arrow-left-y2.png">
+                                <div id="xy_cur_y2" class="hline"></div>
+                                <div id="xy_cur_y2_info" class="cur_info"></div>
+                                <div id="xy_cur_y_diff"></div>
+                                <div id="xy_cur_y_diff_info" class="cur_info"></div>
+                                <div id="xy_cur_x_diff"></div>
+                                <div id="xy_cur_x_diff_info" class="cur_info"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div id="x_y_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-6 option-content close-dialog">
-                        <div class="right-menu-option x_y">
-                            <img src="../assets/images/navigation_arrow_left.png"> X-Y
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="X_Y_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
-                                autocomplete="off">ON</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">X-axis</span>
-                            <select id="X_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="0" class="in1_channel_name">IN1</option>
-                                <option value="1" class="in2_channel_name">IN2</option>
-                                <option value="2" class="in3_channel_name">IN3</option>
-                                <option value="3" class="in4_channel_name">IN4</option>
-                                <option value="4" class="math_channel_name">MATH</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Y-axis</span>
-                            <select id="Y_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="0" class="in1_channel_name">IN1</option>
-                                <option value="1" class="in2_channel_name">IN2</option>
-                                <option value="2" class="in3_channel_name">IN3</option>
-                                <option value="3" class="in4_channel_name">IN4</option>
-                                <option value="4" class="math_channel_name">MATH</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_XY_CURSOR_X1" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">X1</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_XY_CURSOR_X2" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">X2</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_XY_CURSOR_Y1" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">Y1</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_XY_CURSOR_Y2" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">Y2</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="trig_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content close-dialog">
-                        <div class="right-menu-option trig">
-                            <img src="../assets/images/navigation_arrow_left.png"> TRIGGER
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Source</span>
-                            <select id="OSC_TRIG_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="0" class="in1_channel_name">IN1</option>
-                                <option value="1" class="in2_channel_name">IN2</option>
-                                <option value="2" class="in3_channel_name">IN3</option>
-                                <option value="3" class="in4_channel_name">IN4</option>
-                                <option value="4">EXT</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Edge</span>
-                            <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
-                                <label id="edge1" class="btn active">
-                                    <input type="radio" value="1" name="OSC_TRIG_SLOPE" id="OSC_TRIG_SLOPE"
-                                        autocomplete="off" checked>
-                                    <img src="img/edge1_active.png">
-                                </label>
-                                <label id="edge2" class="btn">
-                                    <input type="radio" value="0" name="OSC_TRIG_SLOPE" id="OSC_TRIG_SLOPE1"
-                                        autocomplete="off">
-                                    <img src="img/edge2.png">
-                                </label>
+                <div id="info_under">
+                    <div id="info" class="clear">
+                        <div id="osc_info_row">
+                            <div class="info-group">
+                                <h2>CHANNELS</h2>
+                                <div class="info-grid single channels">
+                                <div class="ch1"><span class="k in1_channel_name">IN1</span><span class="v"><span id="GPOS_SCALE_CH1">-</span>/div</span></div>
+                                <div class="ch2"><span class="k in2_channel_name">IN2</span><span class="v"><span id="GPOS_SCALE_CH2">-</span>/div</span></div>
+                                <div class="ch3"><span class="k in3_channel_name">IN3</span><span class="v"><span id="GPOS_SCALE_CH3">-</span>/div</span></div>
+                                <div class="ch4"><span class="k in4_channel_name">IN4</span><span class="v"><span id="GPOS_SCALE_CH4">-</span>/div</span></div>
+                                <div class="math"><span class="k math_channel_name">MATH</span><span class="v"><span id="GPOS_SCALE_MATH">1</span> <span id="munit">/div</span></span></div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content in_trigger_settings">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Level / V</span>
-                            <div style="margin-top: 10px;">
-                                <input id="OSC_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000"
-                                    step="0.001" min="-1" max="1">
+                            <div class="info-group">
+                                <h2>TIMEBASE</h2>
+                                <div class="info-grid single">
+                                    <div><span class="k">Trigger</span><span class="v"><span id="triginfo"
+                                                style="display:none;">-</span></span></div>
+                                    <div><span class="k">Time</span><span class="v"><span
+                                                id="OSC_TIME_SCALE">-</span>/div</span></div>
+                                    <div><span class="k">Trig</span><span class="v"><img id="osc_trig_edge_img"
+                                                src="img/dummy.png"><span id="osc_trig_source_ch"></span> <span
+                                                id="osc_trig_level_info">-</span></span></div>
+                                    <div><span class="k">Time offset</span><span class="v"><span
+                                                id="OSC_TIME_OFFSET">-</span></span></div>
+                                    <div><span class="k">Rate</span><span class="v"><span
+                                                id="OSC_SAMPL_RATE"></span></span></div>
+                                    <div id="buffer_selector_info"><span class="k">Buffer</span><span class="v"><span
+                                                id="OSC_BUFFER_CURRENT_INFO">-</span></span></div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content in_trigger_settings">
-                        <div class="col-info">Hysteresis</span>
-                        </div>
-                        <div class="right-menu-option" style="margin-top: 10px;">
-                            <input id="OSC_TRIG_HYST" class="setfield input-number" type="text" value="0.005"
-                                step="0.001" min="0" max="1">
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <span class="col-info">Mode</span>
-                        <div class="btn-group btn-group-vertical" data-toggle="buttons">
-                            <label class="btn active" style="box-shadow: 0px 0px 0px;">
-                                <input type="radio" value="0" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP"
-                                    autocomplete="off" checked>AUTO
-                            </label>
-                            <label class="btn" style="box-shadow: 0px 0px 0px;">
-                                <input type="radio" value="1" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP1"
-                                    autocomplete="off">NORMAL
-                            </label>
-                            <label class="btn" style="border-radius: 0px;box-shadow: 0px 0px 0px;">
-                                <input type="radio" value="2" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP2"
-                                    autocomplete="off">SINGLE
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="col-xs-6 option-content">
-                            <div class="right-menu-option">
-                                <span class="col-info" style="margin-top: -21px;">Time offset / ms</span>
-                                <!-- <input type="number" class="form-control no-up-down" maxlength="4" placeholder="DIN0" id=""> -->
-                                <!-- <input type="number" class="form-control no-up-down" min="1" maxlength="20" placeholder="1" value="1" id="time_offset_additional_label"> -->
-                                <div style="margin-top: 10px;">
-                                    <input type="number" class="form-control no-up-down input-number no-lr-padding"
-                                        step="0.001" id="time_offset_additional_label">
+                            <div id="meas_group" class="info-group">
+                                <h2>MEASUREMENTS</h2>
+                                <div id="info-meas" class="info-grid single"></div>
+                            </div>
+                            <div id="sys_info_group" class="info-group" hidden>
+                                <h2>SYSTEM</h2>
+                                <div class="info-grid single">
+                                    <div><span class="k">FPS</span><span class="v"><span id="fps_view">0</span></span></div>
+                                    <div><span class="k">OPS</span><span class="v"><span id="ops_view">0</span></span></div>
+                                    <div><span class="k">Throughput</span><span class="v"><span
+                                                id="throughput_view">0</span></span></div>
+                                    <div><span class="k">CPU load</span><span class="v"><span id="cpu_load">0</span></span>
+                                    </div>
+                                    <div><span class="k">CPU temp</span><span class="v"><span id="cpu_temp">0</span>
+                                            C</span></div>
+                                    <div><span class="k">RAM</span><span class="v"><span id="usagemem_view">0</span> /
+                                            <span id="totalmem_view">0</span></span></div>
+                                </div>
+                            </div>
+                            <div id="slow_adc_group" class="info-group" hidden>
+                                <h2>IN / E2</h2>
+                                <div class="info-grid single">
+                                    <div><span class="k">IN 1</span><span class="v"><span
+                                                id="slow_adc_in1">0</span></span></div>
+                                    <div><span class="k">IN 2</span><span class="v"><span
+                                                id="slow_adc_in2">0</span></span></div>
+                                    <div><span class="k">IN 3</span><span class="v"><span
+                                                id="slow_adc_in3">0</span></span></div>
+                                    <div><span class="k">IN 4</span><span class="v"><span
+                                                id="slow_adc_in4">0</span></span></div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+                <div id="menu-root" class="menu-content">
+                    <div id="right_menu" class="row right-menu-cont">
                         <div class="col-xs-6 option-content">
                             <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn ch1 in1_channel_name" data-signal="ch1"
+                                    data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH1"
+                                    disabled>IN1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="in1" class="right-menu-option edit-mode" data-signal="ch1"><img src="img/gear.png">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn ch2 in2_channel_name" data-signal="ch2"
+                                    data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH2"
+                                    disabled>IN2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="in2" class="right-menu-option edit-mode" data-signal="ch2"><img src="img/gear.png">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn ch3 in3_channel_name" data-signal="ch3"
+                                    data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH3"
+                                    disabled>IN3</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="in3" class="right-menu-option edit-mode" data-signal="ch3"><img src="img/gear.png">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn ch4 in4_channel_name" data-signal="ch4"
+                                    data-toggle="button" aria-pressed="false" autocomplete="off" channel="CH4"
+                                    disabled>IN4</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="in4" class="right-menu-option edit-mode" data-signal="ch4"><img src="img/gear.png">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="not_btn menu-btn trig not-signal dbl" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">TRIG</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="trig" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="btn menu-btn math math_channel_name" data-signal="math"
+                                    data-toggle="button" aria-pressed="false" autocomplete="off" channel="MATH"
+                                    disabled>MATH</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="math" class="right-menu-option edit-mode" data-signal="math"><img src="img/gear.png">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="not_btn menu-btn x_y not-signal dbl" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off" disabled>X-Y</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="x_y" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button type="button" class="not_btn menu-btn out_e2 not-signal dbl" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">OUT/E2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="slow_dac" class="right-menu-option edit-mode"><img src="img/gear.png"></div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="cursor" class="right-menu-option edit-mode">CURSOR</div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div id="meas" class="right-menu-option edit-mode">MEAS</div>
+                        </div>
+                        <div class="col-xs-12 option-content sweep_button" hidden>
+                            <div id="SWEEP_RESET" class="right-menu-option sweep_reset">SWEEP RESET</div>
+                        </div>
+                    </div>
+                    <div id="in1_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="ch1 right-menu-option close-dialog">
+                                <img src="../assets/images/navigation_arrow_left.png"> Input 1
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH1_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
+                                    autocomplete="off">SHOW</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="GPOS_INVERTED_CH1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">INVERT</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Name</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="IN1_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Probe attenuation</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <select id="OSC_CH1_PROBE" class="form-control styled-select">
+                                    <option>1</option>
+                                    <option>10</option>
+                                    <option>50</option>
+                                    <option>100</option>
+                                    <option>500</option>
+                                    <option>1000</option>
+                                    <option>2000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info" style="margin-top: -11px;">Center offset / <span
+                                    id="GPOS_OFFSET_CH1_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_CH1" class="setfield input-number" type="text" value="0.0000"
+                                    step_direct="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info" style="margin-top: -11px;">Zero reference / <span
+                                    id="GPOS_OFFSET_ZERO_CH1_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_ZERO_CH1" class="setfield input-number" type="text" value="0.0000"
+                                    step="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content hv_lv_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch1_lvhv_btn1" class="btn">
+                                        <input type="radio" value="0" name="OSC_CH1_IN_GAIN" id="OSC_CH1_IN_GAIN"
+                                            autocomplete="off">
+                                        <div id="OSC_CH1_IN_GAIN_L">LV</div>
+                                    </label>
+                                    <label id="ch1_lvhv_btn2" class="btn">
+                                        <input type="radio" value="1" name="OSC_CH1_IN_GAIN" id="OSC_CH1_IN_GAIN1"
+                                            autocomplete="off">
+                                        <div id="OSC_CH1_IN_GAIN2_L">HV</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content ac_dc_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" id="OSC_CH1_IN_AC_DC" name="OSC_CH1_IN_AC_DC"
+                                            autocomplete="off">DC
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" id="OSC_CH1_IN_AC_DC1" name="OSC_CH1_IN_AC_DC"
+                                            autocomplete="off">AC
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content filter_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Filter</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch1_filter_btn1" class="btn">
+                                        <input type="radio" value="0" name="OSC_CH1_IN_FILTER" id="OSC_CH1_IN_FILTER"
+                                            autocomplete="off">
+                                        <div id="OSC_CH1_IN_FILTER_B">OFF</div>
+                                    </label>
+                                    <label id="ch1_filter_btn2" class="btn">
+                                        <input type="radio" value="1" name="OSC_CH1_IN_FILTER" id="OSC_CH1_IN_FILTER1"
+                                            autocomplete="off">
+                                        <div id="OSC_CH1_IN_FILTER2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Interpolation</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <select id="OSC_CH1_SMOOTH" class="form-control styled-select">
+                                    <option value="0">DISABLED</option>
+                                    <option value="1">LINEAR</option>
+                                    <option value="2">B-SPLINE</option>
+                                    <option value="3">CATMULL-ROM</option>
+                                    <option value="4">LANCZOS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Trace mode</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch1_trace_mode_btn1" class="btn">
+                                        <input type="radio" value="0" name="CH1_SHOW_TRACE" id="CH1_SHOW_TRACE"
+                                            autocomplete="off">
+                                        <div id="CH1_SHOW_TRACE_B">OFF</div>
+                                    </label>
+                                    <label id="ch1_trace_mode_btn2" class="btn">
+                                        <input type="radio" value="1" name="CH1_SHOW_TRACE" id="CH1_SHOW_TRACE1"
+                                            autocomplete="off">
+                                        <div id="CH1_SHOW_TRACE2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH1_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
+                                    RESET</div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH1_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
+                                    SETTINGS</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="in2_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="ch2 right-menu-option close-dialog">
+                                <img src="../assets/images/navigation_arrow_left.png"> Input 2
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH2_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
+                                    autocomplete="off">SHOW</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="GPOS_INVERTED_CH2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">INVERT</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Name</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="IN2_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
+                                <select id="OSC_CH2_PROBE" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option>1</option>
+                                    <option>10</option>
+                                    <option>50</option>
+                                    <option>100</option>
+                                    <option>500</option>
+                                    <option>1000</option>
+                                    <option>2000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH2_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_CH2" class="setfield input-number" type="text" value="0.0000"
+                                    step_direct="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info" style="margin-top: -11px;">Zero reference / <span
+                                    id="GPOS_OFFSET_ZERO_CH2_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_ZERO_CH2" class="setfield input-number" type="text" value="0.0000"
+                                    step="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content hv_lv_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" id="OSC_CH2_IN_GAIN" name="OSC_CH2_IN_GAIN"
+                                            autocomplete="off">
+                                        <div id="OSC_CH2_IN_GAIN_L">LV</div>
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" id="OSC_CH2_IN_GAIN1" name="OSC_CH2_IN_GAIN"
+                                            autocomplete="off">
+                                        <div id="OSC_CH2_IN_GAIN2_L">HV</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content ac_dc_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" id="OSC_CH2_IN_AC_DC" name="OSC_CH2_IN_AC_DC"
+                                            autocomplete="off">DC
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" id="OSC_CH2_IN_AC_DC1" name="OSC_CH2_IN_AC_DC"
+                                            autocomplete="off">AC
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content filter_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Filter</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch2_filter_btn2" class="btn">
+                                        <input type="radio" value="0" name="OSC_CH2_IN_FILTER" id="OSC_CH2_IN_FILTER"
+                                            autocomplete="off">
+                                        <div id="OSC_CH2_IN_FILTER_B">OFF</div>
+                                    </label>
+                                    <label id="ch2_filter_btn2" class="btn">
+                                        <input type="radio" value="1" name="OSC_CH2_IN_FILTER" id="OSC_CH2_IN_FILTER1"
+                                            autocomplete="off">
+                                        <div id="OSC_CH2_IN_FILTER2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Interpolation</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <select id="OSC_CH2_SMOOTH" class="form-control styled-select">
+                                    <option value="0">DISABLED</option>
+                                    <option value="1">LINEAR</option>
+                                    <option value="2">B-SPLINE</option>
+                                    <option value="3">CATMULL-ROM</option>
+                                    <option value="4">LANCZOS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Trace mode</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch2_trace_mode_btn1" class="btn">
+                                        <input type="radio" value="0" name="CH2_SHOW_TRACE" id="CH2_SHOW_TRACE"
+                                            autocomplete="off">
+                                        <div id="CH2_SHOW_TRACE_B">OFF</div>
+                                    </label>
+                                    <label id="ch2_trace_mode_btn2" class="btn">
+                                        <input type="radio" value="1" name="CH2_SHOW_TRACE" id="CH2_SHOW_TRACE1"
+                                            autocomplete="off">
+                                        <div id="CH2_SHOW_TRACE2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH2_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
+                                    RESET</div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH2_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
+                                    SETTINGS</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="in3_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="ch3 right-menu-option close-dialog">
+                                <img src="../assets/images/navigation_arrow_left.png"> Input 3
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH3_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
+                                    autocomplete="off">SHOW</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="GPOS_INVERTED_CH3" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">INVERT</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Name</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="IN3_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
+                                <select id="OSC_CH3_PROBE" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option>1</option>
+                                    <option>10</option>
+                                    <option>50</option>
+                                    <option>100</option>
+                                    <option>500</option>
+                                    <option>1000</option>
+                                    <option>2000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH3_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_CH3" class="setfield input-number" type="text" value="0.0000"
+                                    step_direct="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info" style="margin-top: -11px;">Zero reference / <span
+                                    id="GPOS_OFFSET_ZERO_CH3_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_ZERO_CH3" class="setfield input-number" type="text" value="0.0000"
+                                    step="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content hv_lv_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" id="OSC_CH3_IN_GAIN" name="OSC_CH3_IN_GAIN"
+                                            autocomplete="off">
+                                        <div id="OSC_CH3_IN_GAIN_L">LV</div>
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" id="OSC_CH3_IN_GAIN1" name="OSC_CH3_IN_GAIN"
+                                            autocomplete="off">
+                                        <div id="OSC_CH3_IN_GAIN2_L">HV</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content ac_dc_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" id="OSC_CH3_IN_AC_DC" name="OSC_CH3_IN_AC_DC"
+                                            autocomplete="off">DC
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" id="OSC_CH3_IN_AC_DC1" name="OSC_CH3_IN_AC_DC"
+                                            autocomplete="off">AC
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content filter_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Filter</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch3_filter_btn1" class="btn">
+                                        <input type="radio" value="0" name="OSC_CH3_IN_FILTER" id="OSC_CH3_IN_FILTER"
+                                            autocomplete="off">
+                                        <div id="OSC_CH3_IN_FILTER_B">OFF</div>
+                                    </label>
+                                    <label id="ch3_filter_btn2" class="btn">
+                                        <input type="radio" value="1" name="OSC_CH3_IN_FILTER" id="OSC_CH3_IN_FILTER1"
+                                            autocomplete="off">
+                                        <div id="OSC_CH3_IN_FILTER2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Interpolation</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <select id="OSC_CH3_SMOOTH" class="form-control styled-select">
+                                    <option value="0">DISABLED</option>
+                                    <option value="1">LINEAR</option>
+                                    <option value="2">B-SPLINE</option>
+                                    <option value="3">CATMULL-ROM</option>
+                                    <option value="4">LANCZOS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Trace mode</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch3_trace_mode_btn1" class="btn">
+                                        <input type="radio" value="0" name="CH3_SHOW_TRACE" id="CH3_SHOW_TRACE"
+                                            autocomplete="off">
+                                        <div id="CH3_SHOW_TRACE_B">OFF</div>
+                                    </label>
+                                    <label id="ch3_trace_mode_btn2" class="btn">
+                                        <input type="radio" value="1" name="CH3_SHOW_TRACE" id="CH3_SHOW_TRACE1"
+                                            autocomplete="off">
+                                        <div id="CH3_SHOW_TRACE2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH3_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
+                                    RESET</div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH3_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
+                                    SETTINGS</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="in4_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content">
+                            <div class="ch4 right-menu-option close-dialog">
+                                <img src="../assets/images/navigation_arrow_left.png"> Input 4
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="CH4_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
+                                    autocomplete="off">SHOW</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="GPOS_INVERTED_CH4" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">INVERT</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Name</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="IN4_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Probe attenuation</span>
+                                <select id="OSC_CH4_PROBE" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option>1</option>
+                                    <option>10</option>
+                                    <option>50</option>
+                                    <option>100</option>
+                                    <option>500</option>
+                                    <option>1000</option>
+                                    <option>2000</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info">Center offset / <span id="GPOS_OFFSET_CH4_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_CH4" class="setfield input-number" type="text" value="0.0000"
+                                    step_direct="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-info" style="margin-top: -11px;">Zero reference / <span
+                                    id="GPOS_OFFSET_ZERO_CH4_UNIT">V</span></div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="GPOS_OFFSET_ZERO_CH4" class="setfield input-number" type="text" value="0.0000"
+                                    step="0.0010" min="-40.0000" max="40.0000">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content hv_lv_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Input attenuation</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" id="OSC_CH4_IN_GAIN" name="OSC_CH4_IN_GAIN"
+                                            autocomplete="off">
+                                        <div id="OSC_CH4_IN_GAIN_L">LV</div>
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" id="OSC_CH4_IN_GAIN1" name="OSC_CH4_IN_GAIN"
+                                            autocomplete="off">
+                                        <div id="OSC_CH4_IN_GAIN2_L">HV</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content ac_dc_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Coupling</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" id="OSC_CH4_IN_AC_DC" name="OSC_CH4_IN_AC_DC"
+                                            autocomplete="off">DC
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" id="OSC_CH4_IN_AC_DC1" name="OSC_CH4_IN_AC_DC"
+                                            autocomplete="off">AC
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content filter_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Filter</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch4_filter_btn1" class="btn">
+                                        <input type="radio" value="0" name="OSC_CH4_IN_FILTER" id="OSC_CH4_IN_FILTER"
+                                            autocomplete="off">
+                                        <div id="OSC_CH4_IN_FILTER_B">OFF</div>
+                                    </label>
+                                    <label id="ch4_filter_btn2" class="btn">
+                                        <input type="radio" value="1" name="OSC_CH4_IN_FILTER" id="OSC_CH4_IN_FILTER1"
+                                            autocomplete="off">
+                                        <div id="OSC_CH4_IN_FILTER2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Interpolation</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <select id="OSC_CH4_SMOOTH" class="form-control styled-select">
+                                    <option value="0">DISABLED</option>
+                                    <option value="1">LINEAR</option>
+                                    <option value="2">B-SPLINE</option>
+                                    <option value="3">CATMULL-ROM</option>
+                                    <option value="4">LANCZOS</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Trace mode</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="ch4_trace_mode_btn1" class="btn">
+                                        <input type="radio" value="0" name="CH4_SHOW_TRACE" id="CH4_SHOW_TRACE"
+                                            autocomplete="off">
+                                        <div id="CH4_SHOW_TRACE_B">OFF</div>
+                                    </label>
+                                    <label id="ch4_trace_mode_btn2" class="btn">
+                                        <input type="radio" value="1" name="CH4_SHOW_TRACE" id="CH4_SHOW_TRACE1"
+                                            autocomplete="off">
+                                        <div id="CH4_SHOW_TRACE2_B">ON</div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH4_TRACE_SETTINGS" class="right-menu-option trace_reset">TRACE
+                                    RESET</div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content trace_block">
+                            <div class="right-menu-option">
+                                <div id="CH4_SHOW_TRACE_SETTINGS" class="right-menu-option show_trace_settings">TRACE
+                                    SETTINGS</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="math_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option math">
+                                <img src="../assets/images/navigation_arrow_left.png"> MATH
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="MATH_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
+                                    autocomplete="off">ENABLE</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="GPOS_INVERTED_MATH" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">INVERT</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info" style="margin-top: -11px;">Name</span>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="MATH_CHANNEL_NAME_INPUT" maxlength="4" class="input_name">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Signal1</span>
+                                <select id="OSC_MATH_SRC1" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option id="OSC_MATH_SRC11" name="OSC_MATH_SRC1" value="0" class="in1_channel_name">IN1
+                                    </option>
+                                    <option id="OSC_MATH_SRC12" name="OSC_MATH_SRC1" value="1" class="in2_channel_name">IN2
+                                    </option>
+                                    <option id="OSC_MATH_SRC13" name="OSC_MATH_SRC1" value="2" class="in3_channel_name">IN3
+                                    </option>
+                                    <option id="OSC_MATH_SRC14" name="OSC_MATH_SRC1" value="3" class="in4_channel_name">IN4
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Signal1</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn">
+                                        <input type="radio" value="0" name="OSC_MATH_SRC1" id="OSC_MATH_SRC1" autocomplete="off"><caps class="in1_channel_name">IN1</caps>
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="1" name="OSC_MATH_SRC1" id="OSC_MATH_SRC12" autocomplete="off"><caps class="in2_channel_name">IN2</caps>
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="2" name="OSC_MATH_SRC1" id="OSC_MATH_SRC13" autocomplete="off"><caps class="in3_channel_name">IN3</caps>
+                                    </label>
+                                    <label class="btn">
+                                        <input type="radio" value="3" name="OSC_MATH_SRC1" id="OSC_MATH_SRC14" autocomplete="off"><caps class="in4_channel_name">IN4</caps>
+                                    </label>
+                                </div>
+                            </div>
+                        </div> -->
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Operator</span>
+                                <select class="form-control styled-select" id="OSC_MATH_OP" style="margin-top: 10px;">
+                                    <option value="1">+</option>
+                                    <option value="2">-</option>
+                                    <option value="3">*</option>
+                                    <option value="5">abs</option>
+                                    <option value="6">dy/dt</option>
+                                    <option value="7">ydt</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Signal2</span>
+                                <select id="OSC_MATH_SRC2" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option id="OSC_MATH_SRC21" name="OSC_MATH_SRC2" value="0" class="in1_channel_name">IN1
+                                    </option>
+                                    <option id="OSC_MATH_SRC22" name="OSC_MATH_SRC2" value="1" class="in2_channel_name">IN2
+                                    </option>
+                                    <option id="OSC_MATH_SRC23" name="OSC_MATH_SRC2" value="2" class="in3_channel_name">IN3
+                                    </option>
+                                    <option id="OSC_MATH_SRC24" name="OSC_MATH_SRC2" value="3" class="in4_channel_name">IN4
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Signal2</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label class="btn math-radio-btn">
+                                        <input type="radio" value="0" name="OSC_MATH_SRC2" id="OSC_MATH_SRC2" autocomplete="off"><caps class="in1_channel_name">IN1</caps>
+                                    </label>
+                                    <label class="btn math-radio-btn">
+                                        <input type="radio" value="1" name="OSC_MATH_SRC2" id="OSC_MATH_SRC22" autocomplete="off"><caps class="in2_channel_name">IN2</caps>
+                                    </label>
+                                    <label class="btn math-radio-btn">
+                                        <input type="radio" value="2" name="OSC_MATH_SRC2" id="OSC_MATH_SRC23" autocomplete="off"><caps class="in3_channel_name">IN3</caps>
+                                    </label>
+                                    <label class="btn math-radio-btn">
+                                        <input type="radio" value="3" name="OSC_MATH_SRC2" id="OSC_MATH_SRC24" autocomplete="off"><caps class="in4_channel_name">IN4</caps>
+                                    </label>
+                                </div>
+                            </div>
+                        </div> -->
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <div class="col-info" style="margin-top: -21px;">Center offset / <span
+                                        id="GPOS_OFFSET_MATH_UNIT">V</span></div>
                                 <div style="margin-top: 10px;">
-                                    <div id="reset_time_offset_button" class="right-menu-option no-lr-padding">RESET
+                                    <input class="setfield input-number" id="GPOS_OFFSET_MATH" type="text" value="0.000"
+                                        step_direct="0.001">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="x_y_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-6 option-content close-dialog">
+                            <div class="right-menu-option x_y">
+                                <img src="../assets/images/navigation_arrow_left.png"> X-Y
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="X_Y_SHOW" type="button" class="btn" data-toggle="button" aria-pressed="false"
+                                    autocomplete="off">ON</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">X-axis</span>
+                                <select id="X_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option value="0" class="in1_channel_name">IN1</option>
+                                    <option value="1" class="in2_channel_name">IN2</option>
+                                    <option value="2" class="in3_channel_name">IN3</option>
+                                    <option value="3" class="in4_channel_name">IN4</option>
+                                    <option value="4" class="math_channel_name">MATH</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Y-axis</span>
+                                <select id="Y_AXIS_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option value="0" class="in1_channel_name">IN1</option>
+                                    <option value="1" class="in2_channel_name">IN2</option>
+                                    <option value="2" class="in3_channel_name">IN3</option>
+                                    <option value="3" class="in4_channel_name">IN4</option>
+                                    <option value="4" class="math_channel_name">MATH</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_XY_CURSOR_X1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">X1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_XY_CURSOR_X2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">X2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_XY_CURSOR_Y1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">Y1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_XY_CURSOR_Y2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">Y2</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="trig_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option trig">
+                                <img src="../assets/images/navigation_arrow_left.png"> TRIGGER
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Source</span>
+                                <select id="OSC_TRIG_SOURCE" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option value="0" class="in1_channel_name">IN1</option>
+                                    <option value="1" class="in2_channel_name">IN2</option>
+                                    <option value="2" class="in3_channel_name">IN3</option>
+                                    <option value="3" class="in4_channel_name">IN4</option>
+                                    <option value="4">EXT</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Edge</span>
+                                <div class="btn-group btn-group-justified" data-toggle="buttons" style="margin-top: 10px;">
+                                    <label id="edge1" class="btn active">
+                                        <input type="radio" value="1" name="OSC_TRIG_SLOPE" id="OSC_TRIG_SLOPE"
+                                            autocomplete="off" checked>
+                                        <img src="img/edge1_active.png">
+                                    </label>
+                                    <label id="edge2" class="btn">
+                                        <input type="radio" value="0" name="OSC_TRIG_SLOPE" id="OSC_TRIG_SLOPE1"
+                                            autocomplete="off">
+                                        <img src="img/edge2.png">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content in_trigger_settings">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Level / V</span>
+                                <div style="margin-top: 10px;">
+                                    <input id="OSC_TRIG_LEVEL" class="setfield input-number" type="text" value="0.000"
+                                        step="0.001" min="-1" max="1">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content in_trigger_settings">
+                            <div class="col-info">Hysteresis</span>
+                            </div>
+                            <div class="right-menu-option" style="margin-top: 10px;">
+                                <input id="OSC_TRIG_HYST" class="setfield input-number" type="text" value="0.005"
+                                    step="0.001" min="0" max="1">
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">Mode</span>
+                            <div class="btn-group btn-group-vertical" data-toggle="buttons">
+                                <label class="btn active" style="box-shadow: 0px 0px 0px;">
+                                    <input type="radio" value="0" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP"
+                                        autocomplete="off" checked>AUTO
+                                </label>
+                                <label class="btn" style="box-shadow: 0px 0px 0px;">
+                                    <input type="radio" value="1" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP1"
+                                        autocomplete="off">NORMAL
+                                </label>
+                                <label class="btn" style="border-radius: 0px;box-shadow: 0px 0px 0px;">
+                                    <input type="radio" value="2" name="OSC_TRIG_SWEEP" id="OSC_TRIG_SWEEP2"
+                                        autocomplete="off">SINGLE
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="col-xs-6 option-content">
+                                <div class="right-menu-option">
+                                    <span class="col-info" style="margin-top: -21px;">Time offset / ms</span>
+                                    <!-- <input type="number" class="form-control no-up-down" maxlength="4" placeholder="DIN0" id=""> -->
+                                    <!-- <input type="number" class="form-control no-up-down" min="1" maxlength="20" placeholder="1" value="1" id="time_offset_additional_label"> -->
+                                    <div style="margin-top: 10px;">
+                                        <input type="number" class="form-control no-up-down input-number no-lr-padding"
+                                            step="0.001" id="time_offset_additional_label">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-6 option-content">
+                                <div class="right-menu-option">
+                                    <div style="margin-top: 10px;">
+                                        <div id="reset_time_offset_button" class="right-menu-option no-lr-padding">RESET
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div id="slow_dac_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content close-dialog">
-                        <div class="right-menu-option out_e2">
-                            <img src="../assets/images/navigation_arrow_left.png"> SLOW OUT (E2)
+                    <div id="slow_dac_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option out_e2">
+                                <img src="../assets/images/navigation_arrow_left.png"> SLOW OUT (E2)
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Out 1 / V</span>
-                            <div style="margin-top: 10px;">
-                                <input id="OSC_SLOW_OUT_1" class="setfield input-number" type="text" value="0.000"
-                                    step="0.007" min="0" max="1.8">
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Out 1 / V</span>
+                                <div style="margin-top: 10px;">
+                                    <input id="OSC_SLOW_OUT_1" class="setfield input-number" type="text" value="0.000"
+                                        step="0.007" min="0" max="1.8">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Out 2 / V</span>
+                                <div style="margin-top: 10px;">
+                                    <input id="OSC_SLOW_OUT_2" class="setfield input-number" type="text" value="0.000"
+                                        step="0.007" min="0" max="1.8">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Out 3 / V</span>
+                                <div style="margin-top: 10px;">
+                                    <input id="OSC_SLOW_OUT_3" class="setfield input-number" type="text" value="0.000"
+                                        step="0.007" min="0" max="1.8">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Out 4 / V</span>
+                                <div style="margin-top: 10px;">
+                                    <input id="OSC_SLOW_OUT_4" class="setfield input-number" type="text" value="0.000"
+                                        step="0.007" min="0" max="1.8">
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Out 2 / V</span>
-                            <div style="margin-top: 10px;">
-                                <input id="OSC_SLOW_OUT_2" class="setfield input-number" type="text" value="0.000"
-                                    step="0.007" min="0" max="1.8">
+                    <div id="meas_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option">
+                                <img src="../assets/images/navigation_arrow_left.png"> Measurement
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Operator</span>
+                                <select id="meas_operator" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option value="0">P2P</option>
+                                    <option value="1">MEAN</option>
+                                    <option value="2">MAX</option>
+                                    <option value="3">MIN</option>
+                                    <option value="4">RMS</option>
+                                    <option value="5">DUTY CYCLE</option>
+                                    <option value="6">PERIOD</option>
+                                    <option value="7">FREQ</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="right-menu-option">
+                                <span class="col-info" style="margin-top: -21px;">Signal</span>
+                                <select id="meas_signal" class="form-control styled-select" style="margin-top: 10px;">
+                                    <option name="meas_signal" value="CH1" class="in1_channel_name">IN1</option>
+                                    <option name="meas_signal" value="CH2" class="in2_channel_name">IN2</option>
+                                    <option name="meas_signal" value="CH3" class="in3_channel_name">IN3</option>
+                                    <option name="meas_signal" value="CH4" class="in4_channel_name">IN4</option>
+                                    <option name="meas_signal" value="MATH" class="math_channel_name">MATH</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- <div class="col-xs-12 option-content">
+                            <span class="col-info">Signal</span>
+                            <div class="btn-group btn-group-vertical" data-toggle="buttons">
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="CH1" autocomplete="off">IN1
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="CH2" autocomplete="off">IN2
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="CH3" autocomplete="off">IN3
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="CH4" autocomplete="off">IN4
+                                </label>
+                                <label class="btn">
+                                    <input type="radio" name="meas_signal" value="MATH" autocomplete="off">MATH
+                                </label>
+                            </div>
+                        </div> -->
+                        <div class="col-xs-12 option-content">
+                            <button id="meas_done" type="button" class="btn">DONE</button>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <span class="col-info">List (click to clear meas.)</span>
+                            <div id="meas_list"></div>
+                        </div>
+                    </div>
+                    <div id="cursor_dialog" class="dialog row right-menu-cont">
+                        <div class="col-xs-12 option-content close-dialog">
+                            <div class="right-menu-option">
+                                <img src="../assets/images/navigation_arrow_left.png"> Cursor
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_CURSOR_X1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">X1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_CURSOR_X2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">X2</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_CURSOR_Y1" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">Y1</button>
+                            </div>
+                        </div>
+                        <div class="col-xs-6 option-content">
+                            <div class="right-menu-option">
+                                <button id="OSC_CURSOR_Y2" type="button" class="btn" data-toggle="button"
+                                    aria-pressed="false" autocomplete="off">Y2</button>
                             </div>
                         </div>
                     </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Out 3 / V</span>
-                            <div style="margin-top: 10px;">
-                                <input id="OSC_SLOW_OUT_3" class="setfield input-number" type="text" value="0.000"
-                                    step="0.007" min="0" max="1.8">
+                    <div id="ext_clock_enable_view" style="display:none">
+                        REF CLOCK <img id="EXT_CLOCK" src="img/green_led.png">
+                    </div>
+                    <div id="menu_bottom">
+                        <div id="joystick">
+                            <img id="jtk_fine" src="img/fine.png" />
+                            <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
+                            <map name="jtk_btns_map">
+                                <area id="jtk_left" shape="poly"
+                                    coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
+                                <area id="jtk_up" shape="poly"
+                                    coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
+                                <area id="jtk_right" shape="poly"
+                                    coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
+                                <area id="jtk_down" shape="poly"
+                                    coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
+                            </map>
+                        </div>
+                        <div id="buffer_selector">
+                            <div class="col-xs-6 option-content" style="border: 1px solid #999;">
+                                <div class="right-menu-option">
+                                    <button id="OSC_PREV_BUFFER" type="button" class="btn" aria-pressed="false"
+                                        autocomplete="off">&lt;&lt;</button>
+                                </div>
+                            </div>
+                            <div class="col-xs-6 option-content" style="border: 1px solid #999;">
+                                <div class="right-menu-option">
+                                    <button id="OSC_NEXT_BUFFER" type="button" class="btn" aria-pressed="false"
+                                        autocomplete="off">&gt;&gt;</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Out 4 / V</span>
-                            <div style="margin-top: 10px;">
-                                <input id="OSC_SLOW_OUT_4" class="setfield input-number" type="text" value="0.000"
-                                    step="0.007" min="0" max="1.8">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="meas_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content close-dialog">
-                        <div class="right-menu-option">
-                            <img src="../assets/images/navigation_arrow_left.png"> Measurement
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Operator</span>
-                            <select id="meas_operator" class="form-control styled-select" style="margin-top: 10px;">
-                                <option value="0">P2P</option>
-                                <option value="1">MEAN</option>
-                                <option value="2">MAX</option>
-                                <option value="3">MIN</option>
-                                <option value="4">RMS</option>
-                                <option value="5">DUTY CYCLE</option>
-                                <option value="6">PERIOD</option>
-                                <option value="7">FREQ</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <div class="right-menu-option">
-                            <span class="col-info" style="margin-top: -21px;">Signal</span>
-                            <select id="meas_signal" class="form-control styled-select" style="margin-top: 10px;">
-                                <option name="meas_signal" value="CH1" class="in1_channel_name">IN1</option>
-                                <option name="meas_signal" value="CH2" class="in2_channel_name">IN2</option>
-                                <option name="meas_signal" value="CH3" class="in3_channel_name">IN3</option>
-                                <option name="meas_signal" value="CH4" class="in4_channel_name">IN4</option>
-                                <option name="meas_signal" value="MATH" class="math_channel_name">MATH</option>
-                            </select>
-                        </div>
-                    </div>
-                    <!-- <div class="col-xs-12 option-content">
-                        <span class="col-info">Signal</span>
-                        <div class="btn-group btn-group-vertical" data-toggle="buttons">
-                            <label class="btn">
-                                <input type="radio" name="meas_signal" value="CH1" autocomplete="off">IN1
-                            </label>
-                            <label class="btn">
-                                <input type="radio" name="meas_signal" value="CH2" autocomplete="off">IN2
-                            </label>
-                            <label class="btn">
-                                <input type="radio" name="meas_signal" value="CH3" autocomplete="off">IN3
-                            </label>
-                            <label class="btn">
-                                <input type="radio" name="meas_signal" value="CH4" autocomplete="off">IN4
-                            </label>
-                            <label class="btn">
-                                <input type="radio" name="meas_signal" value="MATH" autocomplete="off">MATH
-                            </label>
-                        </div>
-                    </div> -->
-                    <div class="col-xs-12 option-content">
-                        <button id="meas_done" type="button" class="btn">DONE</button>
-                    </div>
-                    <div class="col-xs-12 option-content">
-                        <span class="col-info">List (click to clear meas.)</span>
-                        <div id="meas_list"></div>
-                    </div>
-                </div>
-                <div id="cursor_dialog" class="dialog row right-menu-cont">
-                    <div class="col-xs-12 option-content close-dialog">
-                        <div class="right-menu-option">
-                            <img src="../assets/images/navigation_arrow_left.png"> Cursor
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_CURSOR_X1" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">X1</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_CURSOR_X2" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">X2</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_CURSOR_Y1" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">Y1</button>
-                        </div>
-                    </div>
-                    <div class="col-xs-6 option-content">
-                        <div class="right-menu-option">
-                            <button id="OSC_CURSOR_Y2" type="button" class="btn" data-toggle="button"
-                                aria-pressed="false" autocomplete="off">Y2</button>
-                        </div>
-                    </div>
-                </div>
-                <div id="ext_clock_enable_view" style="display:none">
-                    REF CLOCK <img id="EXT_CLOCK" src="img/green_led.png">
-                </div>
-            </div>
-            <div id="main">
-                <div id="buffer">
-                    <div class="buf-red-line-holder">
-                        <div class="buf-red-line"></div>
-                    </div>
-                    <div id="buf_time_offset"></div>
-                    <div class="buf-main-line"></div>
-                </div>
-                <div id="graphs_holder">
-                    <div id="graphs">
-                        <!-- <div id="trig_out_right" style="margin-top: 15px; float: right; display: none;"><img src="img/trig_out_right.png" /></div>
-                        <div id="trig_out_left" style="margin-top: 15px; float: left; display: none;"><img src="img/trig_out_left.png" /></div> -->
-                        <canvas id="graph_grid"></canvas>
-                        <div id="info_box"></div>
-                        <img id="cur_x1_arrow" class="varrow" src="img/cursor-arrow-up-x1.png">
-                        <div id="cur_x1" class="vline"></div>
-                        <div id="cur_x1_info" class="cur_info"></div>
-                        <img id="cur_x2_arrow" class="varrow" src="img/cursor-arrow-up-x2.png">
-                        <div id="cur_x2" class="vline"></div>
-                        <div id="cur_x2_info" class="cur_info"></div>
-                        <img id="cur_y1_arrow" class="harrow" src="img/cursor-arrow-left-y1.png">
-                        <div id="cur_y1" class="hline"></div>
-                        <div id="cur_y1_info" class="cur_info"></div>
-                        <img id="cur_y2_arrow" class="harrow" src="img/cursor-arrow-left-y2.png">
-                        <div id="cur_y2" class="hline"></div>
-                        <div id="cur_y2_info" class="cur_info"></div>
-                        <div id="cur_y_diff"></div>
-                        <div id="cur_y_diff_info" class="cur_info"></div>
-                        <div id="cur_x_diff"></div>
-                        <div id="cur_x_diff_info" class="cur_info"></div>
-                        <img id="time_offset_arrow" src="img/time-offset-arrow.png">
-                        <div id="trig_out_left" style="top: 45px; position: absolute;left: 0px;z-index: 10;"><img
-                                src="img/trig_out_left.png" /></div>
-                        <div id="trig_out_right" style="top: 45px; position: absolute;right: 0px;z-index: 10"><img
-                                src="img/trig_out_right.png" /></div>
-                        <div id="ch1_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
-                            <div style="position: relative;">
-                                <img src="img/ch1-offset-arrow-empty.png">
-                                <div class="in1_channel_name">IN1</div>
-                            </div>
-                        </div>
-                        <div id="ch2_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
-                            <div style="position: relative;">
-                                <img src="img/ch2-offset-arrow-empty.png">
-                                <div class="in2_channel_name">IN2</div>
-                            </div>
-                        </div>
-                        <div id="ch3_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
-                            <div style="position: relative;">
-                                <img src="img/ch3-offset-arrow-empty.png">
-                                <div class="in3_channel_name">IN3</div>
-                            </div>
-                        </div>
-                        <div id="ch4_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
-                            <div style="position: relative;">
-                                <img src="img/ch4-offset-arrow-empty.png">
-                                <div class="in4_channel_name">IN4</div>
-                            </div>
-                        </div>
-                        <div id="math_offset_arrow" class="y-offset-arrow dbl channels_arrow_class">
-                            <div style="position: relative;">
-                                <img src="img/math-offset-arrow-empty.png">
-                                <div class="math_channel_name">MATH</div>
-                            </div>
-                        </div>
-                        <img id="trig_level_arrow" class="harrow dbl" src="img/trigger-arrow.png">
-                        <div id="trigger_level" class="hline"></div>
-                        <div id="kostyl_footer"></div>
-                    </div>
-                </div>
-                <div id="info" class="clear">
-                    <div class="left-info">
-                        <div class="info-title">
-                            <div class="ch1 in1_channel_name">IN1</div>
-                            <div class="ch2 in2_channel_name">IN2</div>
-                            <div class="ch3 in3_channel_name">IN3</div>
-                            <div class="ch4 in4_channel_name">IN4</div>
-                            <div class="math math_channel_name">MATH</div>
-                        </div>
-                        <div class="info-value">
-                            <div class="ch1"><span id="GPOS_SCALE_CH1">-</span>/div</div>
-                            <div class="ch2"><span id="GPOS_SCALE_CH2">-</span>/div</div>
-                            <div class="ch3"><span id="GPOS_SCALE_CH3">-</span>/div</div>
-                            <div class="ch4"><span id="GPOS_SCALE_CH4">-</span>/div</div>
-                            <div class="math">
-                                <span id="GPOS_SCALE_MATH">1</span>
-                                <span id="munit">/div</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="info-meas" style="position: absolute; left: 200px;"></div>
-                    <div class="pull-right">
-                        Time <span id="OSC_TIME_SCALE">-</span>/div
-                        <br /> Trig
-                        <img id="osc_trig_edge_img" src="img/dummy.png">
-                        <span id="osc_trig_source_ch"></span>
-                        <span id="osc_trig_level_info">-</span>
-                        <br />
-                        <img id="time_offset_static_img" src="img/time-offset-info.png"> <span
-                            id="OSC_TIME_OFFSET">-</span>
-                        <br />
-                        <span id="OSC_SAMPL_RATE"></span>
-                    </div>
-                    <div id="triginfo" style="color: green; display:none;">TEXT</div>
-                    <div id="buffer_selector_info">TEXT</div>
-                </div>
-            </div>
-            <div id="xy_main" style="display: none;">
-                <div id="xy_graphs_holder">
-                    <div id="xy_graphs">
-                        <canvas id="xy_graph_grid"></canvas>
-                        <img id="xy_cur_x1_arrow" class="xy_varrow" src="img/cursor-arrow-up-x1.png">
-                        <div id="xy_cur_x1" class="vline"></div>
-                        <div id="xy_cur_x1_info" class="cur_info"></div>
-                        <img id="xy_cur_x2_arrow" class="xy_varrow" src="img/cursor-arrow-up-x2.png">
-                        <div id="xy_cur_x2" class="vline"></div>
-                        <div id="xy_cur_x2_info" class="cur_info"></div>
-                        <img id="xy_cur_y1_arrow" class="xy_harrow" src="img/cursor-arrow-left-y1.png">
-                        <div id="xy_cur_y1" class="hline"></div>
-                        <div id="xy_cur_y1_info" class="cur_info"></div>
-                        <img id="xy_cur_y2_arrow" class="xy_harrow" src="img/cursor-arrow-left-y2.png">
-                        <div id="xy_cur_y2" class="hline"></div>
-                        <div id="xy_cur_y2_info" class="cur_info"></div>
-                        <div id="xy_cur_y_diff"></div>
-                        <div id="xy_cur_y_diff_info" class="cur_info"></div>
-                        <div id="xy_cur_x_diff"></div>
-                        <div id="xy_cur_x_diff_info" class="cur_info"></div>
-                    </div>
-                </div>
-                <div id="xy_info" class="clear">
-                    <div class="left-info" style="margin-left: 20px; margin-top: 26px;">
-                        <div class="xy_info-title">
-                            <div id="OSC_XY_X_AXIS_NAME">X-AXIS</div>
-                            <div id="OSC_XY_Y_AXIS_NAME">Y-AXIS</div>
-                        </div>
-                        <div class="xy_info-value">
-                            <div><span id="OSC_XY_X_AXIS_SCALE">-</span><span id="OSC_XY_X_AXIS_SCALE_UNIT">/div</span>
-                            </div>
-                            <div><span id="OSC_XY_Y_AXIS_SCALE">-</span><span id="OSC_XY_Y_AXIS_SCALE_UNIT">/div</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="joystick">
-                <img id="jtk_fine" src="img/fine.png" />
-                <img id="jtk_btns" src="img/node_fine.png" usemap="#jtk_btns_map" />
-                <map name="jtk_btns_map">
-                    <area id="jtk_left" shape="poly"
-                        coords="19,28,37,45,32,56,28,69,29,84,36,101,30,112,18,122,11,114,8,104,4,91,1,77,3,59,9,41,19,27" />
-                    <area id="jtk_up" shape="poly"
-                        coords="27,17,42,7,61,3,78,3,89,4,102,7,116,13,124,20,105,37,87,29,64,29,56,33,46,37" />
-                    <area id="jtk_right" shape="poly"
-                        coords="111,44,132,27,143,42,147,56,149,76,148,93,141,107,132,123,112,104,119,94,122,76,119,58" />
-                    <area id="jtk_down" shape="poly"
-                        coords="46,112,27,130,38,141,51,145,72,148,92,148,106,142,126,132,104,111,90,118,79,120,71,121,62,119,57,117" />
-                </map>
-            </div>
-            <div id="buffer_selector">
-                <div class="col-xs-6 option-content" style="border: 1px solid #999;">
-                    <div class="right-menu-option">
-                        <button id="OSC_PREV_BUFFER" type="button" class="btn" aria-pressed="false"
-                            autocomplete="off">&lt;&lt;</button>
-                    </div>
-                </div>
-                <div class="col-xs-6 option-content" style="border: 1px solid #999;">
-                    <div class="right-menu-option">
-                        <button id="OSC_NEXT_BUFFER" type="button" class="btn" aria-pressed="false"
-                            autocomplete="off">&gt;&gt;</button>
                     </div>
                 </div>
             </div>
@@ -1389,18 +1411,6 @@
     </div>
 </div>
 <div>
-    <div id="sys_info_view"
-        style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
-        FPS:<span id="fps_view">0</span> OPS:<span id="ops_view">0</span> Throughput:<span id="throughput_view">0</span>
-        CPU Load:<span id="cpu_load">0</span>
-        <br /> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span
-            id="usagemem_view">0</span>
-    </div>
-    <div id="slow_adc_info_view"
-        style="display:none; position:fixed; bottom:0; right: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
-        IN 1: <span id="slow_adc_in1">0</span> IN 2: <span id="slow_adc_in2">0</span> IN 3: <span
-            id="slow_adc_in3">0</span> IN 4: <span id="slow_adc_in4">0</span>
-    </div>
     <div id="weak_conn_msg"
         style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white;">
         <span id="delay">Performance problem has occurred</span>
@@ -1411,13 +1421,6 @@
     </div>
 </div>
 <div>
-    <div id="sys_info_view"
-        style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(0, 0, 0, 0.2); text-align:left; padding: 5px; font-size:12px; color:white;">
-        FPS:<span id="fps_view">0</span> Throughput:<span id="throughput_view">0</span> CPU Load:<span
-            id="cpu_load">0</span>
-        <br /> Memory total:<span id="totalmem_view">0</span> Free:<span id="freemem_view">0</span> Usage:<span
-            id="usagemem_view">0</span>
-    </div>
     <div id="weak_conn_msg"
         style="display:none; position:fixed; bottom:0; left: 0; background-color: rgba(34, 34, 34, 1); text-align:center; padding: 10px; font-size:18px; color:white;">
         <span id="delay">Performance problem has occurred</span>

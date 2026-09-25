@@ -247,8 +247,8 @@ keeps the 0.55 s command throttle out of the request path and survives a
 restart of the application.
 
 ```
-ptcc_control --service            # port 9093, monitor polled once per second
-ptcc_control --service=9093 --period=600 -d /dev/ttyUSB0
+ptcc_control --service            # port 50001, monitor polled once per second
+ptcc_control --service=50001 --period=600 -d /dev/ttyUSB0
 ```
 
 Messages are the `{"KEY": {"type": ..., "value": ...}}` objects `librp-websocket`

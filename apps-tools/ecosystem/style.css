@@ -141,6 +141,9 @@ a:visited {
     height: 100px;
     text-align: center;
     vertical-align: middle;
+    /* Keeps the caption off the icon. The name is a table-row, which ignores
+       margins, so the gap is added here. */
+    padding-bottom: 5px;
 }
 
 .app-icon {

@@ -14,6 +14,12 @@
 #define PTCC_PYTHON_DIR "/opt/redpitaya/lib/python"
 #endif
 
+/* Where the bridge ends up on a board. PTCC_PYTHON_DIR is baked in at build
+ * time and points at the staging tree when the image is built elsewhere
+ * (/workspace/build/... on the build host), which does not exist on the
+ * target, so the installed location is always tried as well. */
+#define PTCC_RUNTIME_PYTHON_DIR "/opt/redpitaya/lib/python"
+
 namespace ptcc {
 
 namespace {
@@ -253,7 +259,9 @@ Result Bridge::initialize() {
 
     PyObject *sys_path = PySys_GetObject("path");
     if (sys_path != nullptr) {
-        const char *directories[] = {PTCC_PYTHON_DIR, PTCC_PYTHON_DIR "/ptcc_library"};
+        const char *directories[] = {PTCC_PYTHON_DIR, PTCC_PYTHON_DIR "/ptcc_library",
+                                    PTCC_RUNTIME_PYTHON_DIR,
+                                    PTCC_RUNTIME_PYTHON_DIR "/ptcc_library"};
         for (const char *directory : directories) {
             PyObject *entry = PyUnicode_FromString(directory);
             if (entry != nullptr) {
