@@ -16,6 +16,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <thread>
 #include <vector>
 
@@ -171,7 +172,11 @@ class Service {
     void connectSignals();
     void handleInt(const std::string &key, int value);
     void handleDouble(const std::string &key, float value);
-    void queue(std::function<void()> action);
+    /** Queues a command under its name. A command that sets a value is
+     *  idempotent, so a new one replaces the one still waiting under the same
+     *  name instead of queueing behind it: holding an arrow on the panel would
+     *  otherwise make the controller work through every value on the way. */
+    void queue(std::string name, std::function<void()> action);
     void drainQueue();
 
     void publishIdentification();
@@ -204,7 +209,12 @@ class Service {
     std::unique_ptr<Publisher> m_out;
 
     std::mutex m_queue_mutex;
-    std::deque<std::function<void()>> m_queue;
+    std::deque<std::pair<std::string, std::function<void()>>> m_queue;
+
+    /** A write changed something the panel should see; the container is read
+     *  back once in the next cycle rather than after every write. */
+    bool m_params_stale = false;
+    bool m_labm_params_stale = false;
 
     bool m_is_labm = false;
     bool m_connected = false;
@@ -215,9 +225,15 @@ class Service {
     std::chrono::steady_clock::time_point m_last_reconnect{};
 };
 
-void Service::queue(std::function<void()> action) {
+void Service::queue(std::string name, std::function<void()> action) {
     std::lock_guard<std::mutex> guard(m_queue_mutex);
-    m_queue.push_back(std::move(action));
+    for (auto &entry : m_queue) {
+        if (entry.first == name) {
+            entry.second = std::move(action);
+            return;
+        }
+    }
+    m_queue.emplace_back(std::move(name), std::move(action));
 }
 
 void Service::drainQueue() {
@@ -228,7 +244,7 @@ void Service::drainQueue() {
             if (m_queue.empty()) {
                 return;
             }
-            action = m_queue.front();
+            action = m_queue.front().second;
             m_queue.pop_front();
         }
         action();
@@ -255,12 +271,14 @@ void Service::report(const char *what, rp_ptcc_error result) {
 
 void Service::afterParamWrite(const char *what, rp_ptcc_error result) {
     report(what, result);
-    publishParams();
+    // Reading the container back costs another command interval; it is done
+    // once in the next cycle, where it shares the one the poller takes.
+    m_params_stale = true;
 }
 
 void Service::afterLabMWrite(const char *what, rp_ptcc_error result) {
     report(what, result);
-    publishLabMParams();
+    m_labm_params_stale = true;
 }
 
 rp_ptcc_error Service::writeSupply(bool set_mode, rp_ptcc_ctrl_t mode, bool set_plus, float u_plus,
@@ -575,73 +593,73 @@ void Service::reconnect() {
 
 void Service::handleDouble(const std::string &name, float number) {
     if (name == "PTCC_SET_SETPOINT") {
-        queue([this, number] { afterParamWrite("Setpoint", rp_PtccSetSetpoint(number)); });
+        queue(name, [this, number] { afterParamWrite("Setpoint", rp_PtccSetSetpoint(number)); });
     } else if (name == "PTCC_SET_I_TEC_MAX") {
-        queue([this, number] { afterParamWrite("Current limit", rp_PtccSetMaxCurrent(number)); });
+        queue(name, [this, number] { afterParamWrite("Current limit", rp_PtccSetMaxCurrent(number)); });
     } else if (name == "PTCC_SET_SUP_U_P") {
-        queue([this, number] {
+        queue(name, [this, number] {
             afterParamWrite("Supply",
                             writeSupply(false, RP_PTCC_CTRL_AUTO, true, number, false, 0.0F));
         });
     } else if (name == "PTCC_SET_SUP_U_N") {
-        queue([this, number] {
+        queue(name, [this, number] {
             afterParamWrite("Supply",
                             writeSupply(false, RP_PTCC_CTRL_AUTO, false, 0.0F, true, number));
         });
     } else if (name == "PTCC_SET_LABM_BIAS_U") {
-        queue([this, number] {
+        queue(name, [this, number] {
             afterLabMWrite("Detector bias", rp_PtccSetLabMDetectorBiasVoltage(number));
         });
     } else if (name == "PTCC_SET_LABM_BIAS_I") {
-        queue([this, number] {
+        queue(name, [this, number] {
             afterLabMWrite("Bias current compensation", rp_PtccSetLabMDetectorBiasCurrent(number));
         });
     } else if (name == "PTCC_SET_LABM_OFFSET") {
-        queue([this, number] { afterLabMWrite("Offset", rp_PtccSetLabMOffset(number)); });
+        queue(name, [this, number] { afterLabMWrite("Offset", rp_PtccSetLabMOffset(number)); });
     } else if (name == "PTCC_SET_LABM_GAIN") {
-        queue([this, number] { afterLabMWrite("Gain", rp_PtccSetLabMGain(number)); });
+        queue(name, [this, number] { afterLabMWrite("Gain", rp_PtccSetLabMGain(number)); });
     }
 }
 
 void Service::handleInt(const std::string &name, int value) {
     if (name == "PTCC_SET_COOLER") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterParamWrite("Cooler", rp_PtccSetCooler(static_cast<rp_ptcc_ctrl_t>(value)));
         });
     } else if (name == "PTCC_SET_FAN") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterParamWrite("Fan", rp_PtccSetFan(static_cast<rp_ptcc_ctrl_t>(value)));
         });
     } else if (name == "PTCC_SET_SUP_CTRL") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterParamWrite("Supply", writeSupply(true, static_cast<rp_ptcc_ctrl_t>(value), false,
                                                   0.0F, false, 0.0F));
         });
     } else if (name == "PTCC_SET_PWM") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterParamWrite("PWM", rp_PtccSetPwm(static_cast<uint32_t>(value)));
         });
     } else if (name == "PTCC_SET_LABM_TRANS") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterLabMWrite("Transimpedance",
                            rp_PtccSetLabMTransimpedance(static_cast<rp_ptcc_trans_t>(value)));
         });
     } else if (name == "PTCC_SET_LABM_COUPLING") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterLabMWrite("Coupling",
                            rp_PtccSetLabMCoupling(static_cast<rp_ptcc_coupling_t>(value)));
         });
     } else if (name == "PTCC_SET_LABM_BW") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterLabMWrite("Bandwidth",
                            rp_PtccSetLabMBandwidth(static_cast<rp_ptcc_bw_t>(value)));
         });
     } else if (name == "PTCC_SET_LABM_VARACTOR") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterLabMWrite("Varactor", rp_PtccSetLabMVaractor(static_cast<uint32_t>(value)));
         });
     } else if (name == "PTCC_SET_LABM_GAIN_CODE") {
-        queue([this, value] {
+        queue(name, [this, value] {
             afterLabMWrite("Gain code", rp_PtccSetLabMGainCode(static_cast<uint32_t>(value)));
         });
     } else if (name == "PTCC_PING") {
@@ -659,9 +677,9 @@ void Service::handleInt(const std::string &name, int value) {
         // first state would see that as a stall.
         m_out->resendAll();
     } else if (name == "PTCC_RELOAD") {
-        queue([this] { publishEverything(); });
+        queue(name, [this] { publishEverything(); });
     } else if (name == "PTCC_RECONNECT") {
-        queue([this] {
+        queue(name, [this] {
             m_last_reconnect = std::chrono::steady_clock::time_point{};
             reconnect();
         });
@@ -694,7 +712,7 @@ void Service::connectSignals() {
         if (name == "PTCC_REFRESH" && value) {
             m_out->resendAll();
         } else if (name == "PTCC_RELOAD" && value) {
-            queue([this] { publishEverything(); });
+            queue(name, [this] { publishEverything(); });
         } else if (name == "PTCC_STOP" && value) {
             g_stop = true;
         }
@@ -754,6 +772,14 @@ int Service::run(uint16_t port) {
             if (m_connected) {
                 publishMonitor(false);
                 publishLabMMonitor(false);
+                if (m_params_stale) {
+                    m_params_stale = false;
+                    publishParams();
+                }
+                if (m_labm_params_stale) {
+                    m_labm_params_stale = false;
+                    publishLabMParams();
+                }
             } else {
                 reconnect();
             }

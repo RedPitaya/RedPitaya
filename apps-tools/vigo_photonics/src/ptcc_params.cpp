@@ -5,6 +5,7 @@
 
 #include "ptcc_params.h"
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <vector>
@@ -38,6 +39,10 @@ std::vector<IntSetting> g_int_settings;
 
 /** Page unit per protocol unit, for the few values where they differ. */
 std::map<std::string, float, std::less<>> g_scales;
+
+/** The value a field is settling on, and when it last moved. */
+std::map<std::string, float> g_pending;
+std::map<std::string, std::chrono::steady_clock::time_point> g_pending_since;
 
 /** Names of the readings that stop meaning anything once the link is gone. */
 std::vector<std::string> g_volatile_floats;
@@ -243,16 +248,40 @@ auto ptccParamsOnString(std::string_view key, std::string_view value) -> void {
 }
 
 auto ptccParamsSendChanges() -> void {
+    // An arrow held down on a field sends a value per click, and each one
+    // costs the controller a command interval. Only the value a field has
+    // settled on is sent: a change is held back until it stops moving.
+    const auto now = std::chrono::steady_clock::now();
+    const auto quiet = std::chrono::milliseconds(200);
+
     for (const auto &setting : g_float_settings) {
         if (setting.param->IsNewValue()) {
-            ptccServiceSend(setting.command, setting.param->NewValue() / setting.scale);
+            const float value = setting.param->NewValue();
+            if (g_pending[setting.command] != value) {
+                g_pending[setting.command] = value;
+                g_pending_since[setting.command] = now;
+                continue;
+            }
+            if (now - g_pending_since[setting.command] < quiet) {
+                continue;
+            }
+            ptccServiceSend(setting.command, value / setting.scale);
             setting.param->Update();
         }
     }
 
     for (const auto &setting : g_int_settings) {
         if (setting.param->IsNewValue()) {
-            ptccServiceSend(setting.command, setting.param->NewValue());
+            const int value = setting.param->NewValue();
+            if (g_pending[setting.command] != static_cast<float>(value)) {
+                g_pending[setting.command] = static_cast<float>(value);
+                g_pending_since[setting.command] = now;
+                continue;
+            }
+            if (now - g_pending_since[setting.command] < quiet) {
+                continue;
+            }
+            ptccServiceSend(setting.command, value);
             setting.param->Update();
         }
     }
