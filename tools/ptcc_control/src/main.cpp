@@ -303,8 +303,9 @@ void usage() {
             "Service:\n"
             "   --service[=port]        Keep the controller open and serve it over a\n"
             "                           websocket, 50001 by default. Runs until stopped.\n"
-            "   --period=ms             Monitor poll period in service mode, 1000 by\n"
-            "                           default, never below the command throttle.\n"
+            "   --period=ms             Monitor poll period in service mode. As fast as\n"
+            "                           the controller allows by default, never below\n"
+            "                           one command interval per monitor container.\n"
             "\n"
             "Detection module, LAB_M modules only:\n"
             "   --labm-monitor          Read the detection module monitor.\n"
@@ -798,7 +799,9 @@ int main(int argc, char *argv[]) {
 
     bool service_flag = false;
     long service_port = PTCC_SERVICE_PORT;
-    long service_period = 1000;
+    // Zero asks the service for the fastest the controller allows: it raises
+    // it to one command interval per monitor container.
+    long service_period = 0;
 
     if (argc < MINARGS) {
         usage();

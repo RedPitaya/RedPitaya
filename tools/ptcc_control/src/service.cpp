@@ -724,10 +724,13 @@ int Service::run(uint16_t port) {
     m_out->flush();
 
     const uint32_t containers = m_is_labm ? 2 : 1;
-    const uint32_t floor_ms = RP_PTCC_THROTTLE_MS * containers + 400;
+    // One command per container, each waiting out the firmware throttle. This
+    // is as fast as the controller allows; a command a panel sends takes the
+    // next slot and delays one sample by that much.
+    const uint32_t floor_ms = RP_PTCC_THROTTLE_MS * containers;
     if (m_period_ms < floor_ms) {
         fprintf(stderr, "[Warning] poll period raised from %u to %u ms: %u command(s) per "
-                        "period at %u ms each, plus room for the panel\n",
+                        "period at %u ms each\n",
                 m_period_ms, floor_ms, containers, RP_PTCC_THROTTLE_MS);
         fflush(stderr);
         m_period_ms = floor_ms;

@@ -56,11 +56,50 @@
         PTCC_PWM_SET: ['PTCC_PWM_MIN', 'PTCC_PWM_MAX']
     };
 
-    var TREND_SECONDS = 300;
+    // What a field may be set to. A value the module stores as one of 256
+    // codes moves in steps of its own range, which the module reports; the
+    // others carry the resolution the protocol gives them.
+    var FIELDS = {
+        PTCC_SETPOINT: { step: 0.001 },
+        PTCC_I_TEC_MAX: { step: 0.01 },
+        PTCC_SUP_U_P: { step: 0.1 },
+        PTCC_SUP_U_N: { step: 0.1 },
+        PTCC_PWM_SET: { step: 1 },
+        PTCC_LABM_VARACTOR: { step: 1 },
+        PTCC_LABM_BIAS_U: { coded: true },
+        PTCC_LABM_BIAS_I: { coded: true },
+        PTCC_LABM_OFFSET: { coded: true }
+    };
+
+    // Nothing is shown or stepped finer than this: a millivolt, a milliamp,
+    // a millikelvin. The module codes its values in 256 steps of its range,
+    // which is coarser than that for every quantity it has.
+    var FINEST_STEP = 0.001;
+
+    /** Decimals a step itself is written with, so a reading is shown on the
+     *  grid it moves on: a step of 0.039 needs three, not the two its
+     *  magnitude alone would suggest. */
+    function digitsFor(step) {
+        var digits = 0;
+        var value = step;
+        while (digits < 3 && Math.abs(value - Math.round(value)) > 1e-9) {
+            value *= 10;
+            digits++;
+        }
+        return digits;
+    }
+
+    // A strip chart, the way the calibration application draws its own: a
+    // fixed number of slots, a sample per slot, the newest at the right edge.
+    // The trace slides left as samples arrive instead of being stretched over
+    // whatever time it happens to cover. At the pace a controller with a
+    // detection module manages, these slots hold about ten minutes.
+    var TREND_SLOTS = 550;
 
     OSC.ptcc = {
         trend: [],
         gains: [],
+        steps: {},
         known: false,
         connected: false,
         module: false
@@ -148,10 +187,20 @@
         var field = $('#' + name);
         var value = new_params[name].value;
 
+        // A choice is a group of buttons, one of which carries the value.
+        var radios = $('input[name="' + name + '"]');
+        if (radios.length > 0) {
+            radios.closest('.btn-group').children('.btn.active').removeClass('active');
+            radios.eq(Number(value)).prop('checked', true).parent().addClass('active');
+            return;
+        }
+
         if (field.is('select')) {
             field.val(String(value));
         } else if (field.is('input')) {
-            field.val(value);
+            var entry = FIELDS[name];
+            var step = entry ? (entry.step || OSC.ptcc.steps[name]) : undefined;
+            field.val(step ? Number(value).toFixed(digitsFor(step)) : value);
         }
 
         if (name === 'PTCC_SETPOINT') {
@@ -168,6 +217,38 @@
             } else if (bounds[1] === name) {
                 field.attr('max', new_params[name].value);
             }
+            applyStep(target, field);
+        }
+    }
+
+    /** The step of a field, and with it the number of decimals it is shown
+     *  with. A coded value moves by a 256th of the range the module reports,
+     *  so its step is only known once both limits have arrived. */
+    function applyStep(target, field) {
+        var entry = FIELDS[target];
+        if (entry === undefined || field.length === 0) {
+            return;
+        }
+
+        var step = entry.step;
+        if (entry.coded) {
+            var low = OSC.params.orig[LIMITS[target][0]];
+            var high = OSC.params.orig[LIMITS[target][1]];
+            if (low === undefined || high === undefined) {
+                return;
+            }
+            // The module codes its range in 256 steps, which lands on a
+            // binary fraction like 0.00390625. The field is shown to three
+            // decimals, so the step is put on that same grid: otherwise an
+            // arrow moves the value by less than the field can show and the
+            // reading jumps back and forth as the device echoes it.
+            step = Math.max(FINEST_STEP,
+                            Math.round((high.value - low.value) / 256 * 1000) / 1000);
+            OSC.ptcc.steps[target] = step;
+        }
+
+        if (step > 0) {
+            field.attr('step', step);
         }
     }
 
@@ -260,8 +341,7 @@
         }
         last[name === 'PTCC_T_DET' ? 'tdet' : 'uout'] = value;
 
-        var cutoff = now - TREND_SECONDS * 1000;
-        while (OSC.ptcc.trend.length > 0 && OSC.ptcc.trend[0].t < cutoff) {
+        while (OSC.ptcc.trend.length > TREND_SLOTS) {
             OSC.ptcc.trend.shift();
         }
 
@@ -283,30 +363,37 @@
         if (min === null) {
             return null;
         }
-        if (max - min < 1e-6) {
-            // A value that does not move still needs a box to be drawn in.
-            min -= 0.5;
-            max += 0.5;
-        }
-        var margin = (max - min) * 0.1;
-        return { min: min - margin, max: max + margin };
+
+        // The axis is at least a tenth of the value wide, so a reading that
+        // only trembles is drawn as a flat line instead of being blown up to
+        // the full height of the block. A span that is wider than that keeps
+        // its own scale, with a tenth of it as headroom.
+        var centre = (min + max) / 2;
+        var half = Math.max(Math.abs(centre) * 0.1, (max - min) / 2 * 1.1, 1e-6);
+        return { min: centre - half, max: centre + half };
     }
 
-    function drawSeries(context, key, range, color, width, height, first, last) {
-        if (range === null || last === first) {
+    function drawSeries(context, key, range, color, width, height) {
+        if (range === null) {
             return;
         }
+
+        // Every sample owns a slot of its own, and the slots left empty are
+        // the ones in front: a fresh plot draws at the right and walks left.
+        var slot = width / (TREND_SLOTS - 1);
+        var offset = TREND_SLOTS - OSC.ptcc.trend.length;
 
         context.strokeStyle = color;
         context.lineWidth = 1.5;
         context.beginPath();
 
         var started = false;
-        OSC.ptcc.trend.forEach(function(point) {
+        OSC.ptcc.trend.forEach(function(point, index) {
             if (point[key] === null) {
+                started = false;
                 return;
             }
-            var x = ((point.t - first) / (last - first)) * width;
+            var x = (offset + index) * slot;
             var y = height - ((point[key] - range.min) / (range.max - range.min)) * height;
             if (started) {
                 context.lineTo(x, y);
@@ -350,13 +437,17 @@
             return;
         }
 
+        drawSeries(context, 'tdet', trendRange('tdet'), '#f3ec1a', width, height);
+        drawSeries(context, 'uout', trendRange('uout'), '#3bb0ff', width, height);
+
+        // How much time the whole strip holds, from the pace samples arrive at.
         var first = OSC.ptcc.trend[0].t;
         var last = OSC.ptcc.trend[OSC.ptcc.trend.length - 1].t;
-
-        drawSeries(context, 'tdet', trendRange('tdet'), '#f3ec1a', canvas.width, height, first, last);
-        drawSeries(context, 'uout', trendRange('uout'), '#3bb0ff', canvas.width, height, first, last);
-
-        $('#ptcc_trend_span').text(Math.round((last - first) / 1000) + ' s');
+        var pace = (last - first) / (OSC.ptcc.trend.length - 1);
+        var span = Math.round(pace * TREND_SLOTS / 1000);
+        $('#ptcc_trend_span').text(span < 60 ? span + ' s'
+                                             : Math.floor(span / 60) + ':' +
+                                               ('0' + (span % 60)).slice(-2));
     }
 
     OSC.ptccInit = function() {
@@ -398,6 +489,25 @@
             // The plot gives up the height the trend takes, and the other way
             // round when it is folded away again.
             OSC.resize();
+            drawTrend();
+        });
+
+        // The arrows of a field move it by one device code, and the input
+        // widget then writes the value out with as many decimals as that step
+        // has - eight for a 256th of a volt. The text is put back on the grid
+        // the panel shows; the device is sent what was typed and snaps it to
+        // its own code anyway.
+        $('#PTCC_LABM_BIAS_U, #PTCC_LABM_BIAS_I, #PTCC_LABM_OFFSET').on('change', function() {
+            var step = OSC.ptcc.steps[this.id];
+            var value = Number($(this).val());
+            if (step && !isNaN(value)) {
+                $(this).val(value.toFixed(digitsFor(step)));
+            }
+        });
+
+        // Starts the strip over, for when the interesting part begins now.
+        $('#ptcc_trend_reset').on('click', function() {
+            OSC.ptcc.trend = [];
             drawTrend();
         });
 

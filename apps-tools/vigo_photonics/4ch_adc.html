@@ -210,16 +210,16 @@
                 <div id="ptcc_under">
                 <div id="ptcc_status">
                     <div class="ptcc-head">
-                        <div class="ptcc-state">
-                            <span id="ptcc_status_led" class="ptcc-led"></span>
-                            <span data-ptcc-text="PTCC_STATUS_TEXT">no controller</span>
-                        </div>
                         <div class="ptcc-key"><span class="k">T_DET</span><span class="v" data-ptcc="PTCC_T_DET"
                                 data-unit="K">-</span></div>
                         <div class="ptcc-key"><span class="k">SETPOINT</span><span class="v" data-ptcc="PTCC_SETPOINT"
                                 data-unit="K">-</span></div>
                         <div class="ptcc-key"><span class="k">U_OUT</span><span class="v" data-ptcc="PTCC_LABM_U_OUT"
                                 data-unit="V">-</span></div>
+                        <div class="ptcc-state">
+                            <span id="ptcc_status_led" class="ptcc-led"></span>
+                            <span data-ptcc-text="PTCC_STATUS_TEXT">no controller</span>
+                        </div>
                         <div class="ptcc-error" data-ptcc-text="PTCC_LAST_ERROR"></div>
                         <div class="ptcc-right">
                             <span id="ptcc_service_led" class="ptcc-led"></span>
@@ -327,6 +327,7 @@
                                 <span class="ptcc-trend-tdet">T_DET / K</span>
                                 <span class="ptcc-trend-uout">U_OUT / V</span>
                                 <span id="ptcc_trend_span" class="ptcc-trend-span"></span>
+                                <span id="ptcc_trend_reset" class="ptcc-trend-reset">RESET</span>
                             </div>
                         </div>
                     </div>

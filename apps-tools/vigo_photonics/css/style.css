@@ -1386,6 +1386,19 @@ a.list-group-item:hover:visited {
     margin-left: auto;
 }
 
+.ptcc-trend-reset {
+    padding: 0 6px;
+    border: 1px solid #555;
+    border-radius: 2px;
+    color: #999;
+    cursor: pointer;
+}
+
+.ptcc-trend-reset:hover {
+    border-color: #888;
+    color: #fff;
+}
+
 /* Readings that are running hot. */
 .level-warn {
     color: #f3ec1a;

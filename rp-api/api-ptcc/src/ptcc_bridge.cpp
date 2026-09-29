@@ -1062,6 +1062,7 @@ void Bridge::stopMonitoring() {
 
 void Bridge::pollLoop(uint32_t period_ms) {
     while (m_polling.load()) {
+        const auto cycle_start = std::chrono::steady_clock::now();
         MonitorData sample;
         const Result result = readMonitor(sample);
         if (result != Result::OK) {
@@ -1080,9 +1081,18 @@ void Bridge::pollLoop(uint32_t period_ms) {
             }
         }
 
+        // The period is how often a sample appears, not how long to rest
+        // after taking one: every command already waits out the firmware
+        // throttle, and sleeping the whole period on top of that made the
+        // panel update at half the rate it was asked for.
+        const auto spent = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - cycle_start);
+        const auto rest = std::chrono::milliseconds(period_ms) - spent;
+
         std::unique_lock<std::mutex> lock(m_poll_mutex);
-        m_poll_cv.wait_for(lock, std::chrono::milliseconds(period_ms),
-                           [this] { return !m_polling.load(); });
+        if (rest.count() > 0) {
+            m_poll_cv.wait_for(lock, rest, [this] { return !m_polling.load(); });
+        }
     }
 }
 
