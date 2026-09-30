@@ -10,6 +10,7 @@ auto generate(rp_channel_t channel, float tscale) -> void;
 
 auto checkBurstDelayChanged(rp_channel_t ch) -> void;
 
+auto createSweepController() -> void;
 auto deleteSweepController() -> void;
 auto resumeSweepController(bool pause) -> void;
 

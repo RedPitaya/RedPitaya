@@ -15,7 +15,7 @@ websocket_server::websocket_server() {
     m_endpoint.set_close_handler(bind(&websocket_server::on_close, this, ::_1));
     m_endpoint.set_message_handler(bind(&websocket_server::on_message, this, ::_1, ::_2));
     m_isRun = false;
-    sem_init(&m_runSem, 0, 1);
+    sem_init(&m_runSem, 0, 0);
 }
 
 websocket_server::~websocket_server() {
@@ -25,27 +25,31 @@ websocket_server::~websocket_server() {
 
 void websocket_server::run(uint16_t port) {
     TRACE_SHORT("run websocket server")
-    m_endpoint.set_reuse_addr(true);
-    m_endpoint.listen(boost::asio::ip::tcp::v4(), port);
+    /* Listening is part of the thread: an exception leaving it (a busy port,
+       for one) would call std::terminate instead of reaching the caller. */
     try {
+        m_endpoint.set_reuse_addr(true);
+        m_endpoint.listen(boost::asio::ip::tcp::v4(), port);
         m_endpoint.start_accept();
         m_isRun = true;
         sem_post(&m_runSem);
         m_endpoint.run();
-        m_isRun = false;
-    } catch (websocketpp::exception const& e) {
+    } catch (std::exception const& e) {
         ERROR_LOG("%s", e.what())
     }
+    m_isRun = false;
     sem_post(&m_runSem);
 }
 
 void websocket_server::on_open(connection_hdl hdl) {
     TRACE_SHORT("Client connected")
+    std::lock_guard lock(m_connectionsMutex);
     m_connections.insert(hdl);
 }
 
 void websocket_server::on_close(connection_hdl hdl) {
     TRACE_SHORT("Client disconnected")
+    std::lock_guard lock(m_connectionsMutex);
     m_connections.erase(hdl);
 }
 
@@ -54,24 +58,31 @@ void websocket_server::on_message(connection_hdl hdl, server::message_ptr msg) {
 }
 
 auto websocket_server::send(const char* buffer, size_t size) -> bool {
-    if (!m_isRun)
+    if (!m_isRun || size == 0)
         return false;
-    try {
-        if (size) {
-            for (auto it = m_connections.begin(); it != m_connections.end(); ++it) {
-                m_endpoint.send(*it, buffer, size, websocketpp::frame::opcode::binary);
-            }
-            return true;
-        }
-    } catch (websocketpp::lib::error_code ec) {
-        ERROR_LOG("%s", ec.message().c_str())
+    /* The list is copied: the server thread adds and removes connections
+       while the data is on its way out. */
+    con_list connections;
+    {
+        std::lock_guard lock(m_connectionsMutex);
+        connections = m_connections;
     }
-    return false;
+    websocketpp::lib::error_code ec;
+    for (auto it = connections.begin(); it != connections.end(); ++it) {
+        m_endpoint.send(*it, buffer, size, websocketpp::frame::opcode::binary, ec);
+        if (ec) {
+            ERROR_LOG("%s", ec.message().c_str())
+        }
+    }
+    return true;
 }
 
 auto websocket_server::start(uint16_t port) -> void {
     stop();
     std::lock_guard lock(m_mutex);
+    /* Counted from zero, so the caller waits for the thread to be listening. */
+    sem_destroy(&m_runSem);
+    sem_init(&m_runSem, 0, 0);
     m_thread = std::thread(&websocket_server::run, this, port);
     if (sem_wait(&m_runSem)) {
         FATAL("Can't lock semaphore")
@@ -80,27 +91,34 @@ auto websocket_server::start(uint16_t port) -> void {
 
 auto websocket_server::stop() -> void {
     std::lock_guard lock(m_mutex);
-    if (!m_isRun)
-        return;
-    try {
-        m_endpoint.stop_listening();
-    } catch (websocketpp::exception const& e) {
-        ERROR_LOG("%s", e.what())
-    }
-    for (auto it = m_connections.begin(); it != m_connections.end(); ++it) {
-        connection_hdl hdl = *it;
-        try {
-            m_endpoint.close(hdl, websocketpp::close::status::normal, "shutdown");
-        } catch (websocketpp::lib::error_code ec) {
+    /* Called from the destructor as well, so nothing here may throw. */
+    if (m_isRun) {
+        websocketpp::lib::error_code ec;
+        m_endpoint.stop_listening(ec);
+        if (ec) {
             ERROR_LOG("%s", ec.message().c_str())
         }
+        /* The handles are taken out first: closing them runs the close handler
+           on the server thread, which asks for the same lock. */
+        con_list connections;
+        {
+            std::lock_guard connectionsLock(m_connectionsMutex);
+            connections.swap(m_connections);
+        }
+        for (auto it = connections.begin(); it != connections.end(); ++it) {
+            m_endpoint.close(*it, websocketpp::close::status::normal, "shutdown", ec);
+            if (ec) {
+                ERROR_LOG("%s", ec.message().c_str())
+            }
+        }
+        try {
+            m_endpoint.stop();
+        } catch (std::exception const& e) {
+            ERROR_LOG("%s", e.what())
+        }
     }
-    try {
-        m_connections.clear();
-        m_endpoint.stop();
-    } catch (websocketpp::exception const& e) {
-        ERROR_LOG("%s", e.what())
-    }
+    /* Joined even when the thread never reached the listening state, otherwise
+       the next start would assign over a running thread. */
     if (m_thread.joinable())
         m_thread.join();
 }

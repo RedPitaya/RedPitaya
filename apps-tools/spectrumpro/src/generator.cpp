@@ -48,7 +48,7 @@ CBooleanParameter outSweepReset("SWEEP_RESET", CBaseParameter::RW, false, 0);
 
 CBooleanParameter outX5Gain("SOUR_X5_GAIN", CBaseParameter::RO, isX5Gain, 0);
 
-rp_sweep_api::CSweepController* g_sweepController;
+rp_sweep_api::CSweepController* g_sweepController = nullptr;
 
 void appGenInit() {
     g_sweepController = new rp_sweep_api::CSweepController();
@@ -66,6 +66,7 @@ void appGenExit() {
         }
     }
     delete g_sweepController;
+    g_sweepController = nullptr;
 }
 
 void setSweepRun(bool run) {

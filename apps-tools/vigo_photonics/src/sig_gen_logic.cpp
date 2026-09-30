@@ -29,7 +29,7 @@ CIntParameter outFrequency[MAX_DAC_CHANNELS] = INIT2("SOUR", "_FREQ_FIX", CBaseP
 CFloatParameter outShowOffset[MAX_DAC_CHANNELS] = INIT2("GPOS_OFFSET_OUTPUT", "", CBaseParameter::RW, 0, 0, -5000, 5000, CONFIG_VAR);
 CFloatParameter outScale[MAX_DAC_CHANNELS] = INIT2("GPOS_SCALE_OUTPUT", "", CBaseParameter::RW, 1, 0, 0.00005, 1000, CONFIG_VAR);
 
-rp_sweep_api::CSweepController* g_sweepController = new rp_sweep_api::CSweepController();
+rp_sweep_api::CSweepController* g_sweepController = nullptr;
 
 CIntParameter outSweepStartFrequency[MAX_DAC_CHANNELS] =
     INIT2("SOUR", "_SWEEP_FREQ_START", CBaseParameter::RW, std::max<int>(1000, outFreqMin()), 0, outFreqMin(), outFreqMax(), CONFIG_VAR);
@@ -84,8 +84,16 @@ CBooleanParameter outX5Gain("SOUR_X5_GAIN", CBaseParameter::RO, isX5Gain, 0);
 static const uint8_t g_dac_channels = getDACChannels();
 
 auto resumeSweepController(bool pause) -> void {
-    if (rp_HPIsFastDAC_PresentOrDefault()) {
+    if (g_sweepController && rp_HPIsFastDAC_PresentOrDefault()) {
         g_sweepController->pause(pause);
+    }
+}
+
+/* The module exports GNU-unique symbols, so dlclose keeps it mapped and the
+   globals survive an unload: the controller has to be built on every init. */
+auto createSweepController() -> void {
+    if (g_sweepController == nullptr) {
+        g_sweepController = new rp_sweep_api::CSweepController();
     }
 }
 

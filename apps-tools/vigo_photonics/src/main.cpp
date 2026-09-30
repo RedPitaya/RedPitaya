@@ -93,6 +93,7 @@ const char* rp_app_desc(void) {
 
 int rp_app_init(void) {
     fprintf(stderr, "Loading VIGO photonics version %s-%s.\n", VERSION_STR, REVISION_STR);
+    createSweepController();
 #ifdef ZIP_DISABLED
     CDataManager::GetInstance()->SetEnableParamsGZip(false);
     CDataManager::GetInstance()->SetEnableSignalsGZip(false);
@@ -147,6 +148,10 @@ void UpdateParams(void) {
 
     rp_WS_UpdateParameters(false);
     updatePtccService();
+    // A field that has settled is sent from here: OnNewParams only runs when
+    // the page has something to say, and a value held back to let the field
+    // settle would wait there for the next thing the person touched.
+    ptccParamsSendChanges();
 
     if (g_config_changed && (g_save_counter++ % 40 == 0)) {
         g_config_changed = false;

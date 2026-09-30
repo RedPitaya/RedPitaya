@@ -1,10 +1,10 @@
 #pragma once
 #include <websocketpp/config/asio_no_tls.hpp>
 #include <websocketpp/server.hpp>
+#include <atomic>
 #include <set>
 #include <mutex>
 #include <thread>
-#include <mutex>
 #include <semaphore.h>
 #include "signal.hpp"
 
@@ -35,8 +35,9 @@ private:
 
     server m_endpoint;
     con_list m_connections;
+    std::mutex m_connectionsMutex;
     std::thread m_thread;
     std::mutex m_mutex;
     sem_t m_runSem;
-    bool m_isRun;
+    std::atomic_bool m_isRun;
 };

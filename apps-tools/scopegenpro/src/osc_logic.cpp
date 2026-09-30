@@ -168,6 +168,9 @@ auto initOscBeforeLoadConfig() -> void {
 
 auto releaseOsc() -> void {
     rpApp_OscSetUpdateViewCallback(nullptr);
+    /* The module stays mapped after unload, so the data server has to give the
+       port back here: another application would fail to take it. */
+    data_server.stopServer();
 }
 
 auto updateTriggerLimit(bool force) -> void {

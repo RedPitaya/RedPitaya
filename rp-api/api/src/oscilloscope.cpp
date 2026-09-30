@@ -54,6 +54,17 @@ static volatile uint32_t* osc_chc = NULL;
 // The FPGA input signal buffer pointer for channel D
 static volatile uint32_t* osc_chd = NULL;
 
+/** True while the oscilloscope registers are mapped.
+ *
+ *  A thread that is still winding down reaches these functions after the
+ *  release - the acquisition thread of an application stops its channel on the
+ *  way out - and a write through an unmapped pointer takes the whole process
+ *  with it. Every function that touches the registers asks first and answers
+ *  with an error instead. */
+static bool osc_IsMapped() {
+    return osc_reg != NULL;
+}
+
 static int_mask_t g_int_mask;
 static int_mask_t g_current_int_mask;
 
@@ -142,6 +153,10 @@ int osc_Release() {
 }
 
 int osc_printRegset() {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
 
     auto is_calib_fpga = rp_HPGetIsCalibInFPGAOrDefault();
 
@@ -474,6 +489,10 @@ int osc_GetIntMaskCh(rp_channel_t channel, rp_int_mode_t mode, bool* enable) {
 }
 
 int osc_IntUnmask() {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     acquisition_irq_mask_t config;
     config.value = osc_reg->irq_mask;
     config.bits.trigger_en = (g_int_mask.common_mask & 0x1) ? 1 : 0;
@@ -491,6 +510,10 @@ int osc_IntUnmask() {
 }
 
 int osc_IntUnmaskCh(rp_channel_t channel) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (channel <= RP_CH_2) {
         split_irq_mask_t config;
         config.value = osc_reg->irq_split_mask;
@@ -545,6 +568,10 @@ int osc_ClearInt(rp_channel_t channel) {
 }
 
 int osc_IntTriggerRead(int timeout) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t mask = 0x1;
 
     if (!(g_current_int_mask.common_mask & mask)) {
@@ -576,6 +603,10 @@ int osc_IntTriggerRead(int timeout) {
 }
 
 int osc_IntFullRead(int timeout) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t mask = 0x2;
 
     if (!(g_current_int_mask.common_mask & mask)) {
@@ -607,6 +638,10 @@ int osc_IntFullRead(int timeout) {
 }
 
 int osc_IntTriggerReadCh(rp_channel_t channel, int timeout) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (channel >= MAX_FD_OSC)
         return RP_EOOR;
     int fd = fd_osc[channel];
@@ -635,6 +670,10 @@ int osc_IntTriggerReadCh(rp_channel_t channel, int timeout) {
 }
 
 int osc_IntFullReadCh(rp_channel_t channel, int timeout) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (channel >= MAX_FD_OSC)
         return RP_EOOR;
     int fd = fd_osc[channel];
@@ -663,6 +702,10 @@ int osc_IntFullReadCh(rp_channel_t channel, int timeout) {
 }
 
 int osc_IntClearTrigger() {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     acquisition_irq_status_t config;
     config.value = 0x0;
     config.bits.trigger_pending = 0x1;
@@ -676,6 +719,10 @@ int osc_IntClearTrigger() {
 }
 
 int osc_IntClearBufferFull() {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     acquisition_irq_status_t config;
     config.value = 0x0;
     config.bits.buffer_full_pending = 0x1;
@@ -689,6 +736,10 @@ int osc_IntClearBufferFull() {
 }
 
 int osc_IntClearAll() {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     acquisition_irq_status_t config;
     config.value = 0x0;
     config.bits.trigger_pending = 0x1;
@@ -703,6 +754,10 @@ int osc_IntClearAll() {
 }
 
 int osc_IntClearTriggerCh(rp_channel_t channel) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (channel == RP_CH_1 || channel == RP_CH_2) {
         split_irq_status_t config;
         config.value = 0x0;
@@ -725,6 +780,10 @@ int osc_IntClearTriggerCh(rp_channel_t channel) {
 }
 
 int osc_IntClearBufferFullCh(rp_channel_t channel) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (channel == RP_CH_1 || channel == RP_CH_2) {
         split_irq_status_t config;
         config.value = 0x0;
@@ -747,6 +806,10 @@ int osc_IntClearBufferFullCh(rp_channel_t channel) {
 }
 
 int osc_IntClearAllCh(rp_channel_t channel) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (channel == RP_CH_1 || channel == RP_CH_2) {
         split_irq_status_t config;
         config.value = 0x0;
@@ -777,6 +840,10 @@ int osc_IntClearAllCh(rp_channel_t channel) {
  */
 
 int osc_SetDecimation(rp_channel_t channel, uint32_t decimation) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValue = 0;
     switch (channel) {
         case RP_CH_1:
@@ -815,6 +882,10 @@ int osc_SetDecimation(rp_channel_t channel, uint32_t decimation) {
 }
 
 int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     switch (channel) {
         case RP_CH_1:
             return cmn_GetValue(&osc_reg->data_dec, decimation, DATA_DEC_MASK);
@@ -844,6 +915,10 @@ int osc_GetDecimation(rp_channel_t channel, uint32_t* decimation) {
 }
 
 int osc_SetAveraging(rp_channel_t channel, bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     int value = enable ? 0x1 : 0x0;
     trig_average_u_t config;
     switch (channel) {
@@ -865,6 +940,10 @@ int osc_SetAveraging(rp_channel_t channel, bool enable) {
 }
 
 int osc_GetAveraging(rp_channel_t channel, bool* enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     trig_average_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -902,6 +981,10 @@ int osc_GetAveraging(rp_channel_t channel, bool* enable) {
  */
 
 int osc_SetTriggerSource(rp_channel_t channel, uint32_t source) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     trig_source_u_t control;
     switch (channel) {
         case RP_CH_1:
@@ -926,6 +1009,10 @@ int osc_SetTriggerSource(rp_channel_t channel, uint32_t source) {
 }
 
 int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     trig_source_u_t control;
     switch (channel) {
         case RP_CH_1:
@@ -943,6 +1030,10 @@ int osc_GetTriggerSource(rp_channel_t channel, uint32_t* source) {
 }
 
 int osc_SetSplitTriggerMode(bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     config.reg_full = osc_reg->config;
     config.reg.config_ch[0].enable_split_trigger = enable ? 0x1 : 0x0;
@@ -955,6 +1046,10 @@ int osc_SetSplitTriggerMode(bool enable) {
 }
 
 int osc_GetSplitTriggerMode(bool* enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     config.reg_full = osc_reg->config;
     *enable = config.reg.config_ch[0].enable_split_trigger;
@@ -963,6 +1058,10 @@ int osc_GetSplitTriggerMode(bool* enable) {
 }
 
 int osc_SetUnlockTrigger(rp_channel_t channel) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     trig_lock_control_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -982,6 +1081,10 @@ int osc_SetUnlockTrigger(rp_channel_t channel) {
 }
 
 int osc_GetUnlockTrigger(rp_channel_t channel, bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     trig_source_u_t control;
     switch (channel) {
         case RP_CH_1:
@@ -999,6 +1102,10 @@ int osc_GetUnlockTrigger(rp_channel_t channel, bool* state) {
 }
 
 int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1018,6 +1125,10 @@ int osc_WriteDataIntoMemory(rp_channel_t channel, bool enable) {
 }
 
 int osc_ResetWriteStateMachine(rp_channel_t channel) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1037,6 +1148,10 @@ int osc_ResetWriteStateMachine(rp_channel_t channel) {
 }
 
 int osc_SetArmKeep(rp_channel_t channel, bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1056,6 +1171,10 @@ int osc_SetArmKeep(rp_channel_t channel, bool enable) {
 }
 
 int osc_GetArmKeep(rp_channel_t channel, bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1074,6 +1193,10 @@ int osc_GetArmKeep(rp_channel_t channel, bool* state) {
 }
 
 int osc_Set16BitMode(rp_channel_t channel, bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     trig_average_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1094,6 +1217,10 @@ int osc_Set16BitMode(rp_channel_t channel, bool enable) {
 }
 
 int osc_Get16BitMode(rp_channel_t channel, bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     trig_average_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1128,26 +1255,46 @@ int osc_Get16BitMode(rp_channel_t channel, bool* state) {
 }
 
 int osc_axi_GetBufferFillStateChA(bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_AreBitsSet(osc_reg->axi_state, AXI_CHA_FILL_STATE, AXI_CHA_FILL_STATE, state);
 }
 
 int osc_axi_GetBufferFillStateChB(bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_AreBitsSet(osc_reg->axi_state, AXI_CHB_FILL_STATE, AXI_CHB_FILL_STATE, state);
 }
 
 int osc_axi_GetBufferFillStateChC(bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_AreBitsSet(osc_reg_4ch->axi_state, AXI_CHA_FILL_STATE, AXI_CHA_FILL_STATE, state);
 }
 
 int osc_axi_GetBufferFillStateChD(bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_AreBitsSet(osc_reg_4ch->axi_state, AXI_CHB_FILL_STATE, AXI_CHB_FILL_STATE, state);
 }
 
 int osc_GetBufferFillState(rp_channel_t channel, bool* state) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1166,6 +1313,10 @@ int osc_GetBufferFillState(rp_channel_t channel, bool* state) {
 }
 
 int osc_GetTriggerState(rp_channel_t channel, bool* received) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     config_u_t config;
     switch (channel) {
         case RP_CH_1:
@@ -1184,6 +1335,10 @@ int osc_GetTriggerState(rp_channel_t channel, bool* received) {
 }
 
 int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t* value) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     switch (channel) {
         case RP_CH_1:
             return cmn_GetValue(&osc_reg->pre_trigger_counter, value, PRE_TRIGGER_COUNTER);
@@ -1217,6 +1372,10 @@ int osc_GetPreTriggerCounter(rp_channel_t channel, uint32_t* value) {
  */
 
 int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (decimated_data_num == 0) {
         ERROR_LOG("The delay should not be equal to 0")
         return RP_EOOR;
@@ -1259,6 +1418,10 @@ int osc_SetTriggerDelay(rp_channel_t channel, uint32_t decimated_data_num) {
 }
 
 int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     switch (channel) {
         case RP_CH_1:
             return cmn_GetValue(&osc_reg->trigger_delay, decimated_data_num, TRIG_DELAY_MASK);
@@ -1292,26 +1455,46 @@ int osc_GetTriggerDelay(rp_channel_t channel, uint32_t* decimated_data_num) {
  */
 
 int osc_SetThresholdChA(uint32_t threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValue = 0;
     cmn_Debug("cmn_SetValue(&osc_reg->cha_thr) mask 0xFFFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
 int osc_GetThresholdChA(uint32_t* threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->cha_thr, threshold, THRESHOLD_MASK);
 }
 
 int osc_SetThresholdChB(uint32_t threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValue = 0;
     cmn_Debug("cmn_SetValue(&osc_reg->chb_thr) mask 0xFFFF <- 0x%X", threshold);
     return cmn_SetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK, &currentValue);
 }
 
 int osc_GetThresholdChB(uint32_t* threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->chb_thr, threshold, THRESHOLD_MASK);
 }
 
 int osc_SetThresholdChC(uint32_t threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
@@ -1320,12 +1503,20 @@ int osc_SetThresholdChC(uint32_t threshold) {
 }
 
 int osc_GetThresholdChC(uint32_t* threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->cha_thr, threshold, THRESHOLD_MASK);
 }
 
 int osc_SetThresholdChD(uint32_t threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
@@ -1334,6 +1525,10 @@ int osc_SetThresholdChD(uint32_t threshold) {
 }
 
 int osc_GetThresholdChD(uint32_t* threshold) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->chb_thr, threshold, THRESHOLD_MASK);
@@ -1343,26 +1538,46 @@ int osc_GetThresholdChD(uint32_t* threshold) {
  * Hysteresis
  */
 int osc_SetHysteresisChA(uint32_t hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValue = 0;
     cmn_Debug("cmn_SetValue(&osc_reg->cha_hysteresis) mask 0x3FFF <- 0x%X", hysteresis);
     return cmn_SetValue(&osc_reg->cha_hysteresis, hysteresis, HYSTERESIS_MASK, &currentValue);
 }
 
 int osc_GetHysteresisChA(uint32_t* hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->cha_hysteresis, hysteresis, HYSTERESIS_MASK);
 }
 
 int osc_SetHysteresisChB(uint32_t hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValue = 0;
     cmn_Debug("cmn_SetValue(&osc_reg->chb_hysteresis) mask 0x3FFF <- 0x%X", hysteresis);
     return cmn_SetValue(&osc_reg->chb_hysteresis, hysteresis, HYSTERESIS_MASK, &currentValue);
 }
 
 int osc_GetHysteresisChB(uint32_t* hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->chb_hysteresis, hysteresis, HYSTERESIS_MASK);
 }
 
 int osc_SetHysteresisChC(uint32_t hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
@@ -1371,12 +1586,20 @@ int osc_SetHysteresisChC(uint32_t hysteresis) {
 }
 
 int osc_GetHysteresisChC(uint32_t* hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->cha_hysteresis, hysteresis, HYSTERESIS_MASK);
 }
 
 int osc_SetHysteresisChD(uint32_t hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
@@ -1385,12 +1608,20 @@ int osc_SetHysteresisChD(uint32_t hysteresis) {
 }
 
 int osc_GetHysteresisChD(uint32_t* hysteresis) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->chb_hysteresis, hysteresis, HYSTERESIS_MASK);
 }
 
 int osc_SetEqFilterBypass(rp_channel_t channel, bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     rec_filter_bypass_u_t bypass;
     switch (channel) {
         case RP_CH_1:
@@ -1437,6 +1668,10 @@ int osc_SetEqFilterBypass(rp_channel_t channel, bool enable) {
 }
 
 int osc_GetEqFilterBypass(rp_channel_t channel, bool* enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     rec_filter_bypass_u_t bypass;
     switch (channel) {
         case RP_CH_1:
@@ -1475,6 +1710,10 @@ int osc_GetEqFilterBypass(rp_channel_t channel, bool* enable) {
 }
 
 int osc_SetCalibOffsetInFPGA(rp_channel_t channel, int32_t offset) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
 
     int16_t offsetCalc = offset;
 
@@ -1515,6 +1754,10 @@ int osc_SetCalibOffsetInFPGA(rp_channel_t channel, int32_t offset) {
 }
 
 int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (gain >= 2) {
         ERROR_LOG("The gain for channel %d is very large %f. Will be limited to 1.999999", channel + 1, gain)
         gain = 1.999999;
@@ -1561,6 +1804,10 @@ int osc_SetCalibGainInFPGA(rp_channel_t channel, double gain) {
 }
 
 int osc_GetCalibOffsetInFPGA(rp_channel_t channel, int32_t* offset) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t offset_fpga = 0;
     switch (channel) {
         case RP_CH_1: {
@@ -1603,6 +1850,10 @@ int osc_GetCalibOffsetInFPGA(rp_channel_t channel, int32_t* offset) {
 }
 
 int osc_GetCalibGainInFPGA(rp_channel_t channel, double* gain) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     switch (channel) {
         case RP_CH_1:
             *gain = (double)osc_reg->calib_gain_ch1 / 32768.0;
@@ -1639,6 +1890,10 @@ int osc_GetCalibGainInFPGA(rp_channel_t channel, double* gain) {
  * Equalization filters
  */
 int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValueAA = 0;
     uint32_t currentValueBB = 0;
     uint32_t currentValueKK = 0;
@@ -1656,6 +1911,10 @@ int osc_SetEqFiltersChA(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 }
 
 int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     cmn_GetValue(&osc_reg->cha_filt_aa, coef_aa, EQ_FILTER_AA);
     cmn_GetValue(&osc_reg->cha_filt_bb, coef_bb, EQ_FILTER);
     cmn_GetValue(&osc_reg->cha_filt_kk, coef_kk, EQ_FILTER);
@@ -1664,6 +1923,10 @@ int osc_GetEqFiltersChA(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 }
 
 int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValueAA = 0;
     uint32_t currentValueBB = 0;
     uint32_t currentValueKK = 0;
@@ -1680,6 +1943,10 @@ int osc_SetEqFiltersChB(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 }
 
 int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     cmn_GetValue(&osc_reg->chb_filt_aa, coef_aa, EQ_FILTER_AA);
     cmn_GetValue(&osc_reg->chb_filt_bb, coef_bb, EQ_FILTER);
     cmn_GetValue(&osc_reg->chb_filt_kk, coef_kk, EQ_FILTER);
@@ -1688,6 +1955,10 @@ int osc_GetEqFiltersChB(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 }
 
 int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
 
@@ -1708,6 +1979,10 @@ int osc_SetEqFiltersChC(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 }
 
 int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
 
@@ -1719,6 +1994,10 @@ int osc_GetEqFiltersChC(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
 }
 
 int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, uint32_t coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValueAA = 0;
@@ -1737,6 +2016,10 @@ int osc_SetEqFiltersChD(uint32_t coef_aa, uint32_t coef_bb, uint32_t coef_kk, ui
 }
 
 int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk, uint32_t* coef_pp) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
 
@@ -1751,6 +2034,10 @@ int osc_GetEqFiltersChD(uint32_t* coef_aa, uint32_t* coef_bb, uint32_t* coef_kk,
  * Write pointer
  */
 int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     switch (channel) {
         case RP_CH_1:
             return cmn_GetValue(&osc_reg->wr_ptr_cur, pos, WRITE_POINTER_MASK);
@@ -1778,6 +2065,10 @@ int osc_GetWritePointer(rp_channel_t channel, uint32_t* pos) {
 }
 
 int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
 
     switch (channel) {
         case RP_CH_1:
@@ -1806,6 +2097,10 @@ int osc_GetWritePointerAtTrig(rp_channel_t channel, uint32_t* pos) {
 }
 
 int osc_SetExtTriggerDebouncer(uint32_t value) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (DEBAUNCER_MASK < value) {
         ERROR_LOG("Error value 0x%X very big", value)
         return RP_EIPV;
@@ -1821,11 +2116,19 @@ int osc_SetExtTriggerDebouncer(uint32_t value) {
 }
 
 int osc_GetExtTriggerDebouncer(uint32_t* value) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     *value = osc_reg->ext_trig_dbc;
     return RP_OK;
 }
 
 int osc_SetInitTimestamp(uint64_t value) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t hi = value >> 32;
     uint32_t low = value;
     cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_lo <- 0x%X", low);
@@ -1849,6 +2152,10 @@ int osc_SetInitTimestamp(uint64_t value) {
 }
 
 int osc_GetTimestamp(rp_channel_t channel, uint64_t* value) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     switch (channel) {
         case RP_CH_1:
             *value = osc_reg->trig_timestamp_hi_ch1;
@@ -1891,18 +2198,34 @@ int osc_GetTimestamp(rp_channel_t channel, uint64_t* value) {
  * Raw buffers
  */
 const volatile uint32_t* osc_GetDataBufferChA() {
+    if (!osc_IsMapped()) {
+        return NULL;
+    }
+
     return osc_cha;
 }
 
 const volatile uint32_t* osc_GetDataBufferChB() {
+    if (!osc_IsMapped()) {
+        return NULL;
+    }
+
     return osc_chb;
 }
 
 const volatile uint32_t* osc_GetDataBufferChC() {
+    if (!osc_IsMapped()) {
+        return NULL;
+    }
+
     return osc_chc;
 }
 
 const volatile uint32_t* osc_GetDataBufferChD() {
+    if (!osc_IsMapped()) {
+        return NULL;
+    }
+
     return osc_chd;
 }
 
@@ -1911,6 +2234,10 @@ const volatile uint32_t* osc_GetDataBufferChD() {
  */
 
 int osc_axi_EnableChA(bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t tmp;
     uint32_t ch_addr_end, ch_addr_start;
     ECHECK(cmn_GetValue(&osc_reg->cha_axi_addr_high, &ch_addr_end, FULL_MASK))
@@ -1935,6 +2262,10 @@ int osc_axi_EnableChA(bool enable) {
 }
 
 int osc_axi_EnableChB(bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t tmp;
     uint32_t ch_addr_end, ch_addr_start;
     ECHECK(cmn_GetValue(&osc_reg->chb_axi_addr_high, &ch_addr_end, FULL_MASK))
@@ -1959,6 +2290,10 @@ int osc_axi_EnableChB(bool enable) {
 }
 
 int osc_axi_EnableChC(bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
@@ -1985,6 +2320,10 @@ int osc_axi_EnableChC(bool enable) {
 }
 
 int osc_axi_EnableChD(bool enable) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
@@ -2011,18 +2350,30 @@ int osc_axi_EnableChD(bool enable) {
 }
 
 int osc_axi_SetAddressStartChA(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t tmp;
     cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_addr_low) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg->cha_axi_addr_low, address, FULL_MASK, &tmp);
 }
 
 int osc_axi_SetAddressStartChB(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t tmp;
     cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_addr_low) mask 0xFFFFFFFF <- 0x%X", address);
     return cmn_SetValue(&osc_reg->chb_axi_addr_low, address, FULL_MASK, &tmp);
 }
 
 int osc_axi_SetAddressStartChC(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
@@ -2031,6 +2382,10 @@ int osc_axi_SetAddressStartChC(uint32_t address) {
 }
 
 int osc_axi_SetAddressStartChD(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t tmp;
@@ -2039,6 +2394,10 @@ int osc_axi_SetAddressStartChD(uint32_t address) {
 }
 
 int osc_axi_SetAddressEndChA(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     address -= RESERV_DMA_BYTES;
     uint32_t tmp;
     cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_addr_high) mask 0xFFFFFFFF <- 0x%X", address);
@@ -2046,6 +2405,10 @@ int osc_axi_SetAddressEndChA(uint32_t address) {
 }
 
 int osc_axi_SetAddressEndChB(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     address -= RESERV_DMA_BYTES;
     uint32_t tmp;
     cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_addr_high) mask 0xFFFFFFFF <- 0x%X", address);
@@ -2053,6 +2416,10 @@ int osc_axi_SetAddressEndChB(uint32_t address) {
 }
 
 int osc_axi_SetAddressEndChC(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     address -= RESERV_DMA_BYTES;
     if (!osc_reg_4ch)
         return RP_NOTS;
@@ -2062,6 +2429,10 @@ int osc_axi_SetAddressEndChC(uint32_t address) {
 }
 
 int osc_axi_SetAddressEndChD(uint32_t address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     address -= RESERV_DMA_BYTES;
     if (!osc_reg_4ch)
         return RP_NOTS;
@@ -2071,38 +2442,66 @@ int osc_axi_SetAddressEndChD(uint32_t address) {
 }
 
 int osc_axi_GetAddressStartChA(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->cha_axi_addr_low, address, FULL_MASK);
 }
 
 int osc_axi_GetAddressStartChB(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->chb_axi_addr_low, address, FULL_MASK);
 }
 
 int osc_axi_GetAddressStartChC(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->cha_axi_addr_low, address, FULL_MASK);
 }
 
 int osc_axi_GetAddressStartChD(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->chb_axi_addr_low, address, FULL_MASK);
 }
 
 int osc_axi_GetAddressEndChA(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     int ret = cmn_GetValue(&osc_reg->cha_axi_addr_high, address, FULL_MASK);
     *address += RESERV_DMA_BYTES;
     return ret;
 }
 
 int osc_axi_GetAddressEndChB(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     int ret = cmn_GetValue(&osc_reg->chb_axi_addr_high, address, FULL_MASK);
     *address += RESERV_DMA_BYTES;
     return ret;
 }
 
 int osc_axi_GetAddressEndChC(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     int ret = cmn_GetValue(&osc_reg_4ch->cha_axi_addr_high, address, FULL_MASK);
@@ -2111,6 +2510,10 @@ int osc_axi_GetAddressEndChC(uint32_t* address) {
 }
 
 int osc_axi_GetAddressEndChD(uint32_t* address) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     int ret = cmn_GetValue(&osc_reg_4ch->chb_axi_addr_high, address, FULL_MASK);
@@ -2119,6 +2522,10 @@ int osc_axi_GetAddressEndChD(uint32_t* address) {
 }
 
 int osc_axi_GetWritePointerChA(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t addr;
     osc_axi_GetAddressStartChA(&addr);
     cmn_GetValue(&osc_reg->cha_axi_wr_ptr_cur, pos, FULL_MASK);
@@ -2127,6 +2534,10 @@ int osc_axi_GetWritePointerChA(uint32_t* pos) {
 }
 
 int osc_axi_GetWritePointerChB(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t addr;
     osc_axi_GetAddressStartChB(&addr);
     cmn_GetValue(&osc_reg->chb_axi_wr_ptr_cur, pos, FULL_MASK);
@@ -2135,6 +2546,10 @@ int osc_axi_GetWritePointerChB(uint32_t* pos) {
 }
 
 int osc_axi_GetWritePointerChC(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t addr;
@@ -2145,6 +2560,10 @@ int osc_axi_GetWritePointerChC(uint32_t* pos) {
 }
 
 int osc_axi_GetWritePointerChD(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t addr;
@@ -2155,6 +2574,10 @@ int osc_axi_GetWritePointerChD(uint32_t* pos) {
 }
 
 int osc_axi_GetWritePointerAtTrigChA(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t addr;
     osc_axi_GetAddressStartChA(&addr);
     cmn_GetValue(&osc_reg->cha_axi_wr_ptr_trigger, pos, FULL_MASK);
@@ -2163,6 +2586,10 @@ int osc_axi_GetWritePointerAtTrigChA(uint32_t* pos) {
 }
 
 int osc_axi_GetWritePointerAtTrigChB(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t addr;
     osc_axi_GetAddressStartChB(&addr);
     cmn_GetValue(&osc_reg->chb_axi_wr_ptr_trigger, pos, FULL_MASK);
@@ -2171,6 +2598,10 @@ int osc_axi_GetWritePointerAtTrigChB(uint32_t* pos) {
 }
 
 int osc_axi_GetWritePointerAtTrigChC(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t addr;
@@ -2181,6 +2612,10 @@ int osc_axi_GetWritePointerAtTrigChC(uint32_t* pos) {
 }
 
 int osc_axi_GetWritePointerAtTrigChD(uint32_t* pos) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t addr;
@@ -2191,18 +2626,30 @@ int osc_axi_GetWritePointerAtTrigChD(uint32_t* pos) {
 }
 
 int osc_axi_SetTriggerDelayChA(uint32_t decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValue = 0;
     cmn_Debug("cmn_SetValue(&osc_reg->cha_axi_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
     return cmn_SetValue(&osc_reg->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
 }
 
 int osc_axi_SetTriggerDelayChB(uint32_t decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     uint32_t currentValue = 0;
     cmn_Debug("cmn_SetValue(&osc_reg->chb_axi_delay) mask 0xFFFFFFFF <- 0x%X", decimated_data_num);
     return cmn_SetValue(&osc_reg->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK, &currentValue);
 }
 
 int osc_axi_SetTriggerDelayChC(uint32_t decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
@@ -2211,6 +2658,10 @@ int osc_axi_SetTriggerDelayChC(uint32_t decimated_data_num) {
 }
 
 int osc_axi_SetTriggerDelayChD(uint32_t decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     uint32_t currentValue = 0;
@@ -2219,20 +2670,36 @@ int osc_axi_SetTriggerDelayChD(uint32_t decimated_data_num) {
 }
 
 int osc_axi_GetTriggerDelayChA(uint32_t* decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
 }
 
 int osc_axi_GetTriggerDelayChB(uint32_t* decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     return cmn_GetValue(&osc_reg->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
 }
 
 int osc_axi_GetTriggerDelayChC(uint32_t* decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->cha_axi_delay, decimated_data_num, TRIG_DELAY_MASK);
 }
 
 int osc_axi_GetTriggerDelayChD(uint32_t* decimated_data_num) {
+    if (!osc_IsMapped()) {
+        return RP_EMMD;
+    }
+
     if (!osc_reg_4ch)
         return RP_NOTS;
     return cmn_GetValue(&osc_reg_4ch->chb_axi_delay, decimated_data_num, TRIG_DELAY_MASK);

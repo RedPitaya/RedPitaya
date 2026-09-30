@@ -23,6 +23,7 @@ class CWEBServer {
 
     auto startServer(uint16_t port) -> void;
     auto startServerBinaray(uint16_t port) -> void;
+    auto stopServer() -> void;
 
     auto send(std::string_view key, bool value) -> bool;
     auto send(std::string_view key, int value) -> bool;

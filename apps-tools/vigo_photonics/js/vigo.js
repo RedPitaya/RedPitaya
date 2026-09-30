@@ -351,19 +351,24 @@
     }
 
     function trendRange(key) {
-        var min = null;
-        var max = null;
+        // The range is taken from the bulk of the samples rather than from
+        // their extremes: the preamplifier output is a live signal, and a
+        // single excursion would otherwise squash everything else into a line.
+        var values = [];
         OSC.ptcc.trend.forEach(function(point) {
-            if (point[key] === null) {
-                return;
+            if (point[key] !== null) {
+                values.push(point[key]);
             }
-            min = min === null ? point[key] : Math.min(min, point[key]);
-            max = max === null ? point[key] : Math.max(max, point[key]);
         });
-        if (min === null) {
+        if (values.length === 0) {
             return null;
         }
+        values.sort(function(a, b) { return a - b; });
 
+        var low = Math.floor((values.length - 1) * 0.05);
+        var high = Math.ceil((values.length - 1) * 0.95);
+        var min = values[low];
+        var max = values[high];
         // The axis is at least a tenth of the value wide, so a reading that
         // only trembles is drawn as a flat line instead of being blown up to
         // the full height of the block. A span that is wider than that keeps
@@ -377,6 +382,12 @@
         if (range === null) {
             return;
         }
+
+        // What falls outside the range is drawn at the edge, not past it.
+        context.save();
+        context.beginPath();
+        context.rect(0, 0, width, height);
+        context.clip();
 
         // Every sample owns a slot of its own, and the slots left empty are
         // the ones in front: a fresh plot draws at the right and walks left.
@@ -403,6 +414,7 @@
             }
         });
         context.stroke();
+        context.restore();
     }
 
     function drawTrend() {

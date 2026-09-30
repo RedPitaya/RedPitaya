@@ -21,6 +21,7 @@ CWEBServer::CWEBServer() {
 }
 
 CWEBServer::~CWEBServer() {
+    stopServer();
     receiveBool.disconnect_all();
     receiveInt.disconnect_all();
     receiveUInt.disconnect_all();
@@ -30,14 +31,24 @@ CWEBServer::~CWEBServer() {
 }
 
 auto CWEBServer::startServer(uint16_t port) -> void {
+    stopServer();
     m_pimpl->m_server = std::make_shared<websocket_server>();
     m_pimpl->m_server->receiveHandle.connect([&](auto msg) { dispatch(*this, msg); });
     m_pimpl->m_server->start(port);
 }
 
 auto CWEBServer::startServerBinaray(uint16_t port) -> void {
+    stopServer();
     m_pimpl->m_server = std::make_shared<websocket_server>();
     m_pimpl->m_server->start(port);
+}
+
+auto CWEBServer::stopServer() -> void {
+    /* The port has to be free before the next server takes it. */
+    if (m_pimpl->m_server) {
+        m_pimpl->m_server->stop();
+        m_pimpl->m_server = nullptr;
+    }
 }
 
 auto CWEBServer::send(std::string_view key, bool value) -> bool {
