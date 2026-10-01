@@ -11,6 +11,7 @@
 
 #include "rp_ptcc.h"
 
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <mutex>
@@ -21,7 +22,7 @@
 #include "rp_log.h"
 
 #ifndef VERSION
-#define VERSION 0.00-0000
+#define VERSION 0.00 - 0000
 #endif
 
 #ifndef REVISION
@@ -38,7 +39,7 @@ std::mutex g_mutex;
 // Deliberately leaked: the bridge owns PyObject references, and destroying it
 // during static destruction would touch an already finalized interpreter. It
 // is created once and only closed, never deleted.
-ptcc::Bridge *g_bridge = nullptr;
+ptcc::Bridge* g_bridge = nullptr;
 bool g_device_open = false;
 
 rp_ptcc_error toApiError(ptcc::Result result) {
@@ -71,9 +72,9 @@ rp_ptcc_error toApiError(ptcc::Result result) {
 }
 
 /** Bridge for lookups that need no device; creates it on first use. */
-ptcc::Bridge *lookupBridge() {
+ptcc::Bridge* lookupBridge() {
     if (g_bridge == nullptr) {
-        auto *instance = new ptcc::Bridge();
+        auto* instance = new ptcc::Bridge();
         if (instance->initialize() != ptcc::Result::OK) {
             delete instance;
             return nullptr;
@@ -86,9 +87,11 @@ ptcc::Bridge *lookupBridge() {
 /** Bridge for device operations, null unless a controller is open.
  *  The lookup helpers above keep g_bridge alive after a release, so the open
  *  state has to be tracked separately. */
-ptcc::Bridge *bridge() { return g_device_open ? g_bridge : nullptr; }
+ptcc::Bridge* bridge() {
+    return g_device_open ? g_bridge : nullptr;
+}
 
-void copyString(char *destination, size_t size, const std::string &source) {
+void copyString(char* destination, size_t size, const std::string& source) {
     if (destination == nullptr || size == 0) {
         return;
     }
@@ -97,7 +100,7 @@ void copyString(char *destination, size_t size, const std::string &source) {
     destination[length] = '\0';
 }
 
-void fillMonitor(rp_ptcc_monitor_t *out, const ptcc::MonitorData &data) {
+void fillMonitor(rp_ptcc_monitor_t* out, const ptcc::MonitorData& data) {
     out->t_det = static_cast<float>(data.t_det_k);
     out->t_int = static_cast<float>(data.t_int_c);
     out->i_tec = static_cast<float>(data.i_tec_a);
@@ -118,14 +121,18 @@ void fillMonitor(rp_ptcc_monitor_t *out, const ptcc::MonitorData &data) {
 
 }  // namespace
 
-rp_ptcc_error rp_PtccInit() { return rp_PtccInitEx(nullptr, RP_PTCC_DEFAULT_BAUDRATE); }
+rp_ptcc_error rp_PtccInit() {
+    return rp_PtccInitEx(nullptr, RP_PTCC_DEFAULT_BAUDRATE);
+}
 
-rp_ptcc_error rp_PtccInitDevice(const char *dev) { return rp_PtccInitEx(dev, RP_PTCC_DEFAULT_BAUDRATE); }
+rp_ptcc_error rp_PtccInitDevice(const char* dev) {
+    return rp_PtccInitEx(dev, RP_PTCC_DEFAULT_BAUDRATE);
+}
 
-rp_ptcc_error rp_PtccInitEx(const char *dev, uint32_t baudrate) {
+rp_ptcc_error rp_PtccInitEx(const char* dev, uint32_t baudrate) {
     std::lock_guard<std::mutex> guard(g_mutex);
 
-    ptcc::Bridge *instance = lookupBridge();
+    ptcc::Bridge* instance = lookupBridge();
     if (instance == nullptr) {
         return RP_PTCC_EPYTHON;
     }
@@ -155,7 +162,7 @@ rp_ptcc_error rp_PtccRelease() {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccIsConnected(bool *_out_value) {
+rp_ptcc_error rp_PtccIsConnected(bool* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -164,7 +171,7 @@ rp_ptcc_error rp_PtccIsConnected(bool *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetDevicePath(char *_out_value, size_t size) {
+rp_ptcc_error rp_PtccGetDevicePath(char* _out_value, size_t size) {
     if (_out_value == nullptr || size == 0) {
         return RP_PTCC_EIP;
     }
@@ -176,7 +183,7 @@ rp_ptcc_error rp_PtccGetDevicePath(char *_out_value, size_t size) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetModuleType(rp_ptcc_module_t *_out_value) {
+rp_ptcc_error rp_PtccGetModuleType(rp_ptcc_module_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -193,13 +200,13 @@ rp_ptcc_error rp_PtccGetModuleType(rp_ptcc_module_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccListPorts(char *_out_value, size_t size, uint32_t *_out_count) {
+rp_ptcc_error rp_PtccListPorts(char* _out_value, size_t size, uint32_t* _out_count) {
     if (_out_value == nullptr || size == 0 || _out_count == nullptr) {
         return RP_PTCC_EIP;
     }
 
     std::lock_guard<std::mutex> guard(g_mutex);
-    ptcc::Bridge *instance = lookupBridge();
+    ptcc::Bridge* instance = lookupBridge();
     if (instance == nullptr) {
         return RP_PTCC_EPYTHON;
     }
@@ -223,8 +230,7 @@ rp_ptcc_error rp_PtccSetThrottle(uint32_t milliseconds) {
         return RP_PTCC_ENOINIT;
     }
     if (milliseconds < RP_PTCC_THROTTLE_MS) {
-        WARNING("throttle %u ms is below the firmware limit of %d ms, commands may be lost", milliseconds,
-                RP_PTCC_THROTTLE_MS);
+        WARNING("throttle %u ms is below the firmware limit of %d ms, commands may be lost", milliseconds, RP_PTCC_THROTTLE_MS);
     }
     return toApiError(bridge()->setThrottleMs(milliseconds));
 }
@@ -237,7 +243,7 @@ rp_ptcc_error rp_PtccSetTimeout(uint32_t milliseconds) {
     return toApiError(bridge()->setTimeoutMs(milliseconds));
 }
 
-rp_ptcc_error rp_PtccReadMonitor(rp_ptcc_monitor_t *_out_value) {
+rp_ptcc_error rp_PtccReadMonitor(rp_ptcc_monitor_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -256,7 +262,7 @@ rp_ptcc_error rp_PtccReadMonitor(rp_ptcc_monitor_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetMonitor(rp_ptcc_monitor_t *_out_value) {
+rp_ptcc_error rp_PtccGetMonitor(rp_ptcc_monitor_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -275,8 +281,7 @@ rp_ptcc_error rp_PtccStartMonitoring(uint32_t period_ms) {
         return RP_PTCC_ENOINIT;
     }
     if (period_ms < RP_PTCC_THROTTLE_MS) {
-        WARNING("polling period %u ms is shorter than the throttle interval %d ms", period_ms,
-                RP_PTCC_THROTTLE_MS);
+        WARNING("polling period %u ms is shorter than the throttle interval %d ms", period_ms, RP_PTCC_THROTTLE_MS);
     }
     return toApiError(bridge()->startMonitoring(period_ms));
 }
@@ -290,7 +295,7 @@ rp_ptcc_error rp_PtccStopMonitoring() {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetTemperature(float *_out_value) {
+rp_ptcc_error rp_PtccGetTemperature(float* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -306,7 +311,7 @@ rp_ptcc_error rp_PtccGetTemperature(float *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetParams(rp_ptcc_register_t target, rp_ptcc_params_t *_out_value) {
+rp_ptcc_error rp_PtccGetParams(rp_ptcc_register_t target, rp_ptcc_params_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -333,7 +338,7 @@ rp_ptcc_error rp_PtccGetParams(rp_ptcc_register_t target, rp_ptcc_params_t *_out
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetSetpoint(float *_out_value) {
+rp_ptcc_error rp_PtccGetSetpoint(float* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -349,7 +354,7 @@ rp_ptcc_error rp_PtccGetSetpoint(float *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetLimits(rp_ptcc_limits_t *_out_value) {
+rp_ptcc_error rp_PtccGetLimits(rp_ptcc_limits_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -409,8 +414,7 @@ rp_ptcc_error rp_PtccSetSupply(rp_ptcc_ctrl_t mode, float u_plus, float u_minus)
     if (!bridge()) {
         return RP_PTCC_ENOINIT;
     }
-    return toApiError(bridge()->setSupply(static_cast<int>(mode), static_cast<double>(u_plus),
-                                          static_cast<double>(u_minus)));
+    return toApiError(bridge()->setSupply(static_cast<int>(mode), static_cast<double>(u_plus), static_cast<double>(u_minus)));
 }
 
 rp_ptcc_error rp_PtccSetPwm(uint32_t value) {
@@ -423,7 +427,7 @@ rp_ptcc_error rp_PtccSetPwm(uint32_t value) {
 
 /* -- Detection module (LAB_M) --------------------------------------------- */
 
-static void copyLabMMonitor(const ptcc::LabMMonitor &from, rp_ptcc_labm_monitor_t *to) {
+static void copyLabMMonitor(const ptcc::LabMMonitor& from, rp_ptcc_labm_monitor_t* to) {
     to->u_sup_plus = static_cast<float>(from.u_sup_plus_v);
     to->u_sup_minus = static_cast<float>(from.u_sup_minus_v);
     to->u_fan = static_cast<float>(from.u_fan_v);
@@ -439,7 +443,7 @@ static void copyLabMMonitor(const ptcc::LabMMonitor &from, rp_ptcc_labm_monitor_
     to->valid = from.valid;
 }
 
-rp_ptcc_error rp_PtccReadLabMMonitor(rp_ptcc_labm_monitor_t *_out_value) {
+rp_ptcc_error rp_PtccReadLabMMonitor(rp_ptcc_labm_monitor_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -458,7 +462,7 @@ rp_ptcc_error rp_PtccReadLabMMonitor(rp_ptcc_labm_monitor_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetLabMMonitor(rp_ptcc_labm_monitor_t *_out_value) {
+rp_ptcc_error rp_PtccGetLabMMonitor(rp_ptcc_labm_monitor_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -471,7 +475,7 @@ rp_ptcc_error rp_PtccGetLabMMonitor(rp_ptcc_labm_monitor_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetLabMParams(rp_ptcc_register_t target, rp_ptcc_labm_params_t *_out_value) {
+rp_ptcc_error rp_PtccGetLabMParams(rp_ptcc_register_t target, rp_ptcc_labm_params_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -500,7 +504,7 @@ rp_ptcc_error rp_PtccGetLabMParams(rp_ptcc_register_t target, rp_ptcc_labm_param
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetLabMLimits(rp_ptcc_labm_limits_t *_out_value) {
+rp_ptcc_error rp_PtccGetLabMLimits(rp_ptcc_labm_limits_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -527,7 +531,7 @@ rp_ptcc_error rp_PtccGetLabMLimits(rp_ptcc_labm_limits_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetLabMGainValues(float *_out_values, size_t size, uint32_t *_out_count) {
+rp_ptcc_error rp_PtccGetLabMGainValues(float* _out_values, size_t size, uint32_t* _out_count) {
     if (_out_count == nullptr || (_out_values == nullptr && size > 0)) {
         return RP_PTCC_EIP;
     }
@@ -621,7 +625,7 @@ rp_ptcc_error rp_PtccSetLabMBandwidth(rp_ptcc_bw_t mode) {
     return toApiError(bridge()->setLabMBandwidth(static_cast<int>(mode)));
 }
 
-rp_ptcc_error rp_PtccGetDeviceIden(rp_ptcc_device_iden_t *_out_value) {
+rp_ptcc_error rp_PtccGetDeviceIden(rp_ptcc_device_iden_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -645,7 +649,7 @@ rp_ptcc_error rp_PtccGetDeviceIden(rp_ptcc_device_iden_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetModuleIden(rp_ptcc_module_iden_t *_out_value) {
+rp_ptcc_error rp_PtccGetModuleIden(rp_ptcc_module_iden_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -670,7 +674,7 @@ rp_ptcc_error rp_PtccGetModuleIden(rp_ptcc_module_iden_t *_out_value) {
     return RP_PTCC_OK;
 }
 
-rp_ptcc_error rp_PtccGetErrorCount(uint64_t *_out_value) {
+rp_ptcc_error rp_PtccGetErrorCount(uint64_t* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
@@ -681,26 +685,30 @@ rp_ptcc_error rp_PtccGetErrorCount(uint64_t *_out_value) {
     return toApiError(bridge()->errorCount(*_out_value));
 }
 
-const char *rp_PtccGetStatusText(uint8_t status) {
+const char* rp_PtccGetStatusText(uint8_t status) {
     static thread_local std::string text;
 
     std::lock_guard<std::mutex> guard(g_mutex);
-    ptcc::Bridge *instance = lookupBridge();
+    ptcc::Bridge* instance = lookupBridge();
     if (instance == nullptr) {
         return "unknown status code";
     }
 
     text = instance->statusText(static_cast<int>(status));
+
+    static const std::string quotes = "\"'`\u00B4\u2018\u2019\u201C\u201D\u00AB\u00BB";
+    text.erase(std::remove_if(text.begin(), text.end(), [](char c) { return quotes.find(c) != std::string::npos; }), text.end());
+
     return text.c_str();
 }
 
-rp_ptcc_error rp_PtccIsErrorStatus(uint8_t status, bool *_out_value) {
+rp_ptcc_error rp_PtccIsErrorStatus(uint8_t status, bool* _out_value) {
     if (_out_value == nullptr) {
         return RP_PTCC_EIP;
     }
 
     std::lock_guard<std::mutex> guard(g_mutex);
-    ptcc::Bridge *instance = lookupBridge();
+    ptcc::Bridge* instance = lookupBridge();
     if (instance == nullptr) {
         return RP_PTCC_EPYTHON;
     }
@@ -708,7 +716,7 @@ rp_ptcc_error rp_PtccIsErrorStatus(uint8_t status, bool *_out_value) {
     return toApiError(instance->isErrorStatus(static_cast<int>(status), *_out_value));
 }
 
-const char *rp_PtccGetErrorText(rp_ptcc_error error) {
+const char* rp_PtccGetErrorText(rp_ptcc_error error) {
     switch (error) {
         case RP_PTCC_OK:
             return "OK";
@@ -737,19 +745,21 @@ const char *rp_PtccGetErrorText(rp_ptcc_error error) {
     }
 }
 
-const char *rp_PtccGetLastPythonError() {
+const char* rp_PtccGetLastPythonError() {
     static thread_local std::string text;
     text = ptcc::lastPythonError();
     return text.c_str();
 }
 
-const char *rp_PtccGetVersion() { return STRINGIFY(VERSION) "-" STRINGIFY(REVISION); }
+const char* rp_PtccGetVersion() {
+    return STRINGIFY(VERSION) "-" STRINGIFY(REVISION);
+}
 
-const char *rp_PtccGetProtocolRevision() {
+const char* rp_PtccGetProtocolRevision() {
     static thread_local std::string text;
 
     std::lock_guard<std::mutex> guard(g_mutex);
-    ptcc::Bridge *instance = lookupBridge();
+    ptcc::Bridge* instance = lookupBridge();
     if (instance == nullptr) {
         return "unknown";
     }
