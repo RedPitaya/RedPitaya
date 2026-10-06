@@ -118,6 +118,8 @@ int rp_spectr_worker_exit(void) {
     int ret_val = 0;
 
     if (rp_spectr_thread_handler) {
+        // the worker only leaves its loop on QUIT_STATE
+        rp_spectr_worker_change_state(QUIT_STATE);
         if (rp_spectr_thread_handler->joinable()) {
             try {
                 rp_spectr_thread_handler->join();
@@ -127,6 +129,7 @@ int rp_spectr_worker_exit(void) {
             }
         }
         delete rp_spectr_thread_handler;
+        rp_spectr_thread_handler = nullptr;
     }
     rp_spectr_worker_clean();
     return ret_val;
