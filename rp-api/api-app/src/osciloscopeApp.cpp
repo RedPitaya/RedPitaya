@@ -1264,7 +1264,8 @@ int waitToFillPreTriggerBuffer(float _timescale, bool* _isresetted, uint32_t* pr
     bool needMoreSamples = true;
 
     do {
-        if (g_adcController.isNeedResetWaitTrigger()) {
+        // leave the wait on unload too, osc_Release joins this thread
+        if (g_adcController.isNeedResetWaitTrigger() || !g_threadRun) {
             *_isresetted = true;
             break;
         }
@@ -1309,7 +1310,8 @@ int waitTrigger(float _timescale, bool _disableTimeout, bool* _isresetted, bool*
 
     g_viewController.setTriggerState(false);
     do {
-        if (g_adcController.isNeedResetWaitTrigger()) {
+        // leave the wait on unload too, osc_Release joins this thread
+        if (g_adcController.isNeedResetWaitTrigger() || !g_threadRun) {
             *_isresetted = true;
             break;
         }
@@ -1336,7 +1338,8 @@ int waitToFillAfterTriggerBuffer(float _timescale, bool* _isresetted) {
     bool bufferIsFill = false;
     *_isresetted = false;
     do {
-        if (g_adcController.isNeedResetWaitTrigger()) {
+        // leave the wait on unload too, osc_Release joins this thread
+        if (g_adcController.isNeedResetWaitTrigger() || !g_threadRun) {
             *_isresetted = true;
             break;
         }
