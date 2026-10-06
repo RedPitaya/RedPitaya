@@ -55,6 +55,7 @@ int write_spi_configuration(int fd, spi_config_t *config)
     }
 
 	uint8_t  u8;
+	uint8_t  mode;
 	uint32_t u32;
 	u8 = config->raw_value;
 	u8 = (u8 & ~SPI_MODE_X_MASK) | (uint8_t)config->spi_mode;
@@ -65,6 +66,7 @@ int write_spi_configuration(int fd, spi_config_t *config)
 		ERROR_LOG("SPI_IOC_WR_MODE failed: %s", strerror(errno));
 		return RP_HW_ESSS;
 	}
+	mode = u8;
 
 	u8 = (config->lsb_first == RP_SPI_ORDER_BIT_LSB ? SPI_LSB_FIRST : 0);
 	if (ioctl(fd, SPI_IOC_WR_LSB_FIRST, &u8) < 0) {
@@ -84,7 +86,7 @@ int write_spi_configuration(int fd, spi_config_t *config)
 		return RP_HW_ESSS;
 	}
 
-	config->raw_value = u8;
+	config->raw_value = mode;
 	TRACE_SHORT("SPI config written: mode=%d, speed=%u Hz, bits=%d",
               config->spi_mode, config->spi_speed, config->bits_per_word);
 	return RP_HW_OK;
