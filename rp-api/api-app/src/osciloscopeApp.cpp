@@ -1723,6 +1723,10 @@ void mainThreadFun() {
             }
             waitTrigger(tScaleAcq, disableTimeout, &isReset, &exitByTimeout);
             if (isReset) {
+                // The trigger source stays armed in FPGA (writing DISABLED is ignored) and would fire
+                // right after the next arm, freezing the pre-trigger counter. Only reset clears it.
+                ECHECK_APP_NO_RET(threadSafe_acqStop());
+                ECHECK_APP_NO_RET(rp_AcqResetFpga());
                 continue;
             }
             bool dataHasTrigger = false;
