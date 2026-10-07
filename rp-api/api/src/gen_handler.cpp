@@ -1163,33 +1163,37 @@ int synthesis_square_Z20_250(float scale, float frequency, float* data_out, uint
 
 int synthesis_sweep(float scale, float frequency, float frequency_start, float frequency_end, float phaseRad, rp_gen_sweep_mode_t mode, rp_gen_sweep_dir_t dir, float* data_out,
                     uint16_t buffSize) {
-
-    bool inverDir = false;
-    float sign = 1;
-    if (frequency_end < frequency_start) {
-        inverDir = true;
+    if (frequency <= 0 || frequency_start <= 0 || frequency_end <= 0) {
+        // the caller ignores the result: leave a defined (silent) buffer
+        for (unsigned int i = 0; i < buffSize; i++)
+            data_out[i] = 0;
+        return RP_EOOR;
     }
-    for (int unsigned i = 0; i < buffSize; i++) {
-        double x = (double)i / (double)buffSize;
-        if (dir == RP_GEN_SWEEP_DIR_UP_DOWN) {
-            x = x * 2;
-            if (x > 1) {
-                x = 2 - x;
-                sign = -1;
-            }
-        }
 
-        double freq = 0;
-        if (mode == RP_GEN_SWEEP_MODE_LINEAR) {
-            freq = ((frequency_end - frequency_start) * x + frequency_start) * 2;
+    // The buffer holds one sweep and is played `frequency` times per second. The phase is the
+    // integral of the instantaneous frequency f(u), u = 0..1 from start to end frequency:
+    //   linear: f(u) = fs + (fe - fs) * u,  F(u) = fs * u + (fe - fs) * u^2 / 2
+    //   log:    f(u) = fs * exp(k * u),     F(u) = fs * (exp(k * u) - 1) / k,  k = ln(fe / fs)
+    const double fs = frequency_start;
+    const double fe = frequency_end;
+    const double k = log(fe / fs);
+    auto integral = [&](double u) -> double {
+        if (mode == RP_GEN_SWEEP_MODE_LOG && fabs(k) > 1e-12)
+            return fs * (exp(k * u) - 1) / k;
+        return fs * u + (fe - fs) * u * u / 2;
+    };
+
+    const double window = 1.0 / frequency;
+    for (unsigned int i = 0; i < buffSize; i++) {
+        const double x = (double)i / (double)buffSize;
+        double cycles;
+        if (dir == RP_GEN_SWEEP_DIR_UP_DOWN) {
+            // half the window up (u = 2x), half down (u = 2 - 2x); the phase keeps running
+            cycles = x <= 0.5 ? integral(2 * x) / 2 : integral(1) - integral(2 - 2 * x) / 2;
+        } else {
+            cycles = integral(x);
         }
-        if (mode == RP_GEN_SWEEP_MODE_LOG) {
-            freq = frequency_start * exp(x * log(frequency_end / frequency_start));
-        }
-        if (inverDir)
-            x = 1 - x;
-        data_out[i] = sin(freq * 2 * M_PI * (x) / frequency + phaseRad) * sign;
-        data_out[i] *= scale;
+        data_out[i] = sin(2 * M_PI * cycles * window + phaseRad) * scale;
     }
     return RP_OK;
 }
