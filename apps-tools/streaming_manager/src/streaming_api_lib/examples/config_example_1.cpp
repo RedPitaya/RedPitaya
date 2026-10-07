@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <string>
 #include "callbacks.h"
@@ -18,8 +19,12 @@ class ConfigCallbackImpl : public ConfigCallback {
         std::cout << "Memory block size configured on " << host << ": " << blockSize << " bytes" << std::endl;
     }
 
-    void configActiveChannels(ConfigStreamClient* client, std::string host, size_t channels) override {
-        std::cout << "Active channels configured on " << host << ": " << channels << std::endl;
+    void configActiveChannels(ConfigStreamClient* client, std::string host, std::array<bool, 4> channels) override {
+        std::cout << "Active channels configured on " << host << ":";
+        for (size_t ch = 0; ch < channels.size(); ch++)
+            if (channels[ch])
+                std::cout << " CH" << ch + 1;
+        std::cout << std::endl;
     }
 
     void configSuccessSend(ConfigStreamClient* client, std::string host) override { std::cout << "Configuration sent successfully to " << host << std::endl; }
