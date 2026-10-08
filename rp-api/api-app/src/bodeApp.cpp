@@ -479,32 +479,32 @@ int rpApp_BaDataAnalysis(const rp_ba_buffer_t& buffer, uint32_t size, float samp
     return ret_value;
 }
 
-float rpApp_BaCalibGain(float _freq, float _ampl) {
-    for (size_t i = 3; i < calib_data.size(); i += 3)  // 3 - freq, ampl, phase
-    {
+/* Correction at _freq; outside the calibrated range the nearest edge point is used. */
+static float calibCorrection(float _freq, size_t _offset) {
+    const size_t points = calib_data.size() / 3;  // 3 - freq, ampl, phase
+    if (points == 0) {
+        return 0;
+    }
+    if (_freq <= calib_data[0]) {
+        return calib_data[_offset];
+    }
+    for (size_t i = 3; i < points * 3; i += 3) {
         if (calib_data[i] >= _freq) {
             float f0 = calib_data[i - 3];
             float f1 = calib_data[i];
             float t = (f1 - f0) != 0 ? (_freq - f0) / (f1 - f0) : 0;
-            return _ampl - l_inter(calib_data[i - 3 + 1], calib_data[i + 1], t);
+            return l_inter(calib_data[i - 3 + _offset], calib_data[i + _offset], t);
         }
     }
+    return calib_data[(points - 1) * 3 + _offset];
+}
 
-    return _ampl;
+float rpApp_BaCalibGain(float _freq, float _ampl) {
+    return _ampl - calibCorrection(_freq, 1);
 }
 
 float rpApp_BaCalibPhase(float _freq, float _phase) {
-    for (size_t i = 3; i < calib_data.size(); i += 3)  // 3 - freq, ampl, phase
-    {
-        if (calib_data[i] >= _freq) {
-            float f0 = calib_data[i - 3];
-            float f1 = calib_data[i];
-            float t = (f1 - f0) != 0 ? (_freq - f0) / (f1 - f0) : 0;
-            return _phase - l_inter(calib_data[i - 3 + 2], calib_data[i + 2], t);
-        }
-    }
-
-    return _phase;
+    return _phase - calibCorrection(_freq, 2);
 }
 
 int rpApp_BaResetCalibration() {
