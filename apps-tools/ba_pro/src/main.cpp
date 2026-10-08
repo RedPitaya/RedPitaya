@@ -788,7 +788,8 @@ void threadLoop() {
                 cur_step = 0;
 
                 avaraging = 1;
-                start_freq = 100;
+                // Points below the generator minimum are never measured, so they only slow calibration down
+                start_freq = std::max<float>(100, outFreqMin());
                 end_freq = getMaxADC();
                 steps = 500;
                 threshold = P().ba_input_threshold.Value();
@@ -818,7 +819,6 @@ void threadLoop() {
                 float amplitude = 0, phase_out = 0;
                 float current_freq = 0.;
                 float freq_step = 0;
-                float next_freq = 0.;
                 bool low_signal = false;
 
                 if (P().ba_scale.NewValue()) {
@@ -828,12 +828,10 @@ void threadLoop() {
                     auto c = (b - a) / (steps - 1);
 
                     current_freq = pow(10.f, c * cur_step + a);
-                    next_freq = pow(10.f, c * (cur_step + 1) + a);
                 } else {
                     // Linear
                     freq_step = (end_freq - start_freq) / (steps - 1);
                     current_freq = start_freq + freq_step * cur_step;
-                    next_freq = start_freq + freq_step * (cur_step - 1);
                 }
 
                 for (int i = 0; i < avaraging; ++i) {
@@ -863,8 +861,8 @@ void threadLoop() {
 
                 std::lock_guard lock(g_signalMutex);
                 rpApp_BaWriteCalib(current_freq, amplitude, phase_out);
-                signal.push_back(rpApp_BaCalibGain(next_freq, amplitude));
-                phase.push_back(rpApp_BaCalibPhase(next_freq, phase_out));
+                signal.push_back(rpApp_BaCalibGain(current_freq, amplitude));
+                phase.push_back(rpApp_BaCalibPhase(current_freq, phase_out));
 
                 if (low_signal) {
                     bad_signal.push_back(1);
@@ -925,7 +923,6 @@ void threadLoop() {
                 float amplitude = 0, phase_out = 0;
                 float current_freq = 0.;
                 float freq_step = 0;
-                float next_freq = 0.;
                 bool low_signal = false;
 
                 if (P().ba_scale.NewValue()) {
@@ -935,12 +932,10 @@ void threadLoop() {
                     auto c = (b - a) / (steps - 1);
 
                     current_freq = pow(10.f, c * cur_step + a);
-                    next_freq = pow(10.f, c * (cur_step + 1) + a);
                 } else {
                     // Linear
                     freq_step = (end_freq - start_freq) / (steps - 1);
                     current_freq = start_freq + freq_step * cur_step;
-                    next_freq = start_freq + freq_step * (cur_step - 1);
                 }
 
                 for (int i = 0; i < avaraging; ++i) {
@@ -971,8 +966,8 @@ void threadLoop() {
 
                 std::lock_guard lock(g_signalMutex);
 
-                signal.push_back(rpApp_BaCalibGain(next_freq, amplitude));
-                phase.push_back(rpApp_BaCalibPhase(next_freq, phase_out));
+                signal.push_back(rpApp_BaCalibGain(current_freq, amplitude));
+                phase.push_back(rpApp_BaCalibPhase(current_freq, phase_out));
 
                 if (low_signal) {
                     bad_signal.push_back(1);
