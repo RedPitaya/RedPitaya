@@ -94,7 +94,13 @@ auto websocket_server::stop() -> void {
     /* Called from the destructor as well, so nothing here may throw. */
     if (m_isRun) {
         websocketpp::lib::error_code ec;
-        m_endpoint.stop_listening(ec);
+        /* websocketpp closes the acceptor with the throwing overload, so even the
+           error_code variant throws (a destructor calling stop() then aborts) */
+        try {
+            m_endpoint.stop_listening(ec);
+        } catch (std::exception const& e) {
+            ERROR_LOG("%s", e.what())
+        }
         if (ec) {
             ERROR_LOG("%s", ec.message().c_str())
         }
