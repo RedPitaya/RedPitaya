@@ -2136,23 +2136,20 @@ int osc_SetInitTimestamp(uint64_t value) {
 
     uint32_t hi = value >> 32;
     uint32_t low = value;
-    cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_lo <- 0x%X", low);
-    osc_reg->timestamp_init_lo = low;
-
+    // The high word write loads the counter. On the 4-input board the FPGA mirrors the
+    // timestamp writes of the first scope core into the second one, so the second core is
+    // written first and the last write (first core, high word) starts both counters on the
+    // same edge; with an older bitstream the cores still get the value, as before.
     if (osc_reg_4ch) {
         cmn_Debug("[osc_SetInitTimestamp] osc_reg_4ch.timestamp_init_lo <- 0x%X", low);
         osc_reg_4ch->timestamp_init_lo = low;
-    }
-
-    if (osc_reg_4ch) {
-        cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_hi <- 0x%X", hi);
         cmn_Debug("[osc_SetInitTimestamp] osc_reg_4ch.timestamp_init_hi <- 0x%X", hi);
-        osc_reg->timestamp_init_hi = hi;
         osc_reg_4ch->timestamp_init_hi = hi;
-    } else {
-        cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_hi <- 0x%X", hi);
-        osc_reg->timestamp_init_hi = hi;
     }
+    cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_lo <- 0x%X", low);
+    osc_reg->timestamp_init_lo = low;
+    cmn_Debug("[osc_SetInitTimestamp] osc_reg.timestamp_init_hi <- 0x%X", hi);
+    osc_reg->timestamp_init_hi = hi;
     return RP_OK;
 }
 
