@@ -133,23 +133,28 @@ int osc_Release() {
     osc_chc = NULL;
     osc_chd = NULL;
 
+    // Every descriptor is marked closed right away: a stale number would be closed again by
+    // the next release (by then it belongs to someone else in the process, e.g. the event
+    // loop of a websocket server) and would stop the next init from reopening the device.
+    int ret = RP_OK;
     if (fd_osc_common != -1) {
         if (close(fd_osc_common) < 0) {
             WARNING("Error close UIO device")
-            return RP_ECMD;
+            ret = RP_ECMD;
         }
+        fd_osc_common = -1;
     }
-    fd_osc_common = -1;
 
-    for (auto i = 0u; i < 4u; i++) {
+    for (auto i = 0u; i < MAX_FD_OSC; i++) {
         if (fd_osc[i] != -1) {
             if (close(fd_osc[i]) < 0) {
                 WARNING("Error close UIO device")
-                return RP_ECMD;
+                ret = RP_ECMD;
             }
+            fd_osc[i] = -1;
         }
     }
-    return RP_OK;
+    return ret;
 }
 
 int osc_printRegset() {
