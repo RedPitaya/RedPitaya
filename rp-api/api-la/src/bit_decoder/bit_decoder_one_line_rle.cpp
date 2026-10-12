@@ -26,6 +26,8 @@ class BitDecoderOneLine::Impl {
     uint64_t m_boundRate = 0;
     double m_bitWidth = 0;
     double m_samplePointWidth = 0;
+    double m_switchBitWidth = 0;  // one-shot width of the next bit when it reads 1, 0 = off
+    double m_curBitWidth = 0;     // width the current bit ends with
     float m_samplePoint = 0.5;
     BitDecoderOneLineMode m_mode = LOW;
     uint8_t m_index = 0;
@@ -72,6 +74,7 @@ auto BitDecoderOneLine::Impl::reset() -> void {
     m_samplePointValue = false;
     m_skipActiveStateAtFirst = true;
     m_reqBitChangeState = false;
+    m_switchBitWidth = 0;
     m_i = 0;
     m_j = 0;
 }
@@ -127,6 +130,10 @@ auto BitDecoderOneLine::setIdle() -> void {
     m_impl->m_detectBit = false;
 }
 
+auto BitDecoderOneLine::setSwitchBitWidth(double width) -> void {
+    m_impl->m_switchBitWidth = width;
+}
+
 auto BitDecoderOneLine::detectBitChange() -> void {
     m_impl->m_reqBitChangeState = true;
 }
@@ -147,7 +154,8 @@ auto BitDecoderOneLine::Impl::handleBit(bool bit) -> bool {
     if (m_detectEdge && !bit && m_oldSampleBit) {
         return true;
     }
-    auto f = floor(m_startSample + m_bitWidth);
+    m_curBitWidth = m_switchBitWidth > 0 && m_foundSamplePointValue && m_samplePointValue ? m_switchBitWidth : m_bitWidth;
+    auto f = floor(m_startSample + m_curBitWidth);
     // auto c = ceil(m_startSample + m_bitWidth);
     if (m_sampleBit >= f /* && m_sampleBit < c */) {
         return true;
@@ -206,10 +214,11 @@ auto BitDecoderOneLine::Impl::findBit(const uint8_t* _input, size_t _size, Bit* 
             if (detectBit) {
                 m_j++;
                 value->bitSampleStart = m_startSample;
-                value->bitSampleEnd = !m_detectEdge ? m_startSample + m_bitWidth : m_sampleBit - 1;
+                value->bitSampleEnd = !m_detectEdge ? m_startSample + m_curBitWidth : m_sampleBit - 1;
                 value->bitValue = m_samplePointValue;
                 value->valid = true;
-                m_startSample += !m_detectEdge ? m_bitWidth : m_sampleBit - 1 - m_startSample;  //m_bitWidth;
+                m_startSample += !m_detectEdge ? m_curBitWidth : m_sampleBit - 1 - m_startSample;  //m_bitWidth;
+                m_switchBitWidth = 0;
                 m_foundSamplePointValue = false;
                 m_oldSampleBitEnd = value->bitSampleEnd;
                 m_detectEdge = false;

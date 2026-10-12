@@ -54,6 +54,7 @@ class CANDecoder::Impl {
 
     OutputPacket m_ssBit12;  // RTR or SRR bit
     bool m_isFlexibleData;   // Bit 14: FDF (Flexible data format)
+    bool m_rtr;              // remote frame: no data field whatever the DLC
 
     uint32_t m_id;
     uint32_t m_crc;
@@ -82,6 +83,7 @@ class CANDecoder::Impl {
     auto decode(const uint8_t* _input, uint32_t _size) -> void;
     auto setNominalBitrate() -> void;
     auto setFastBitrate() -> void;
+    auto setBrsBitWidth() -> void;
     auto getMemoryUsage() -> uint64_t;
     auto handleBit(bit_decoder::Bit& bit) -> bool;
     auto decodeStandardFrame(bit_decoder::Bit& bit) -> bool;
@@ -131,6 +133,7 @@ auto CANDecoder::Impl::resetDecoder() -> void {
 
 auto CANDecoder::Impl::resetState() -> void {
     m_isFlexibleData = false;
+    m_rtr = false;
     m_frameType = FrameFormat::None;
     m_crc = 0;
     m_id = 0;
@@ -258,6 +261,19 @@ auto CANDecoder::Impl::setFastBitrate() -> void {
     m_bitDecoder.setBoundRate(m_options.m_fast_bitrate);
 }
 
+// A recessive BRS switches to the data bit rate at its sample point, so it lasts
+// sp * Tnominal + (1 - sp) * Tdata. The data phase sample point is not configured,
+// the nominal one is used. Without this BRS ends only at a falling edge, and a
+// recessive ESI right after it would be read at the wrong place.
+auto CANDecoder::Impl::setBrsBitWidth() -> void {
+    if (m_options.m_nominal_bitrate == 0 || m_options.m_fast_bitrate == 0)
+        return;
+    double sp = m_options.m_sample_point / 100.0;
+    double nominal = (double)m_options.m_acq_speed / m_options.m_nominal_bitrate;
+    double fast = (double)m_options.m_acq_speed / m_options.m_fast_bitrate;
+    m_bitDecoder.setSwitchBitWidth(sp * nominal + (1 - sp) * fast);
+}
+
 auto CANDecoder::Impl::handleBit(bit_decoder::Bit& bit) -> bool {
 
     // Check stuff bit
@@ -267,7 +283,11 @@ auto CANDecoder::Impl::handleBit(bit_decoder::Bit& bit) -> bool {
     m_bitsArrayWithStuff |= bit.bitValue;
     m_bitsArrayCountWithStuff++;
 
-    if (isStuff && m_state != S_END) {
+    // Dynamic stuffing covers SOF..CRC sequence in classic frames (a stuff bit may still
+    // follow the last CRC bit) and SOF..data field in FD frames, whose CRC field has
+    // fixed stuff bits. Delimiters, ACK and EOF are never stuffed.
+    const bool stuffed = m_isFlexibleData ? m_state <= S_DATA : (m_state <= S_CRC_15 || m_state == S_CRC_DEL);
+    if (isStuff && stuffed) {
         if (isStuffError) {
             m_result.push_back(OutputPacket{"rx", STUFF_BIT_ERROR, 0, 1, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart});
             resetState();
@@ -321,6 +341,7 @@ auto CANDecoder::Impl::handleBit(bit_decoder::Bit& bit) -> bool {
     }
 
     if (m_state == S_RR_12_BIT) {
+        m_rtr = bit.bitValue;
         m_ssBit12 = OutputPacket{"rx", RTR, bit.bitValue, 1, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart};
         m_state = S_IDE_BIT;
         return true;
@@ -371,6 +392,7 @@ auto CANDecoder::Impl::decodeStandardFrame(bit_decoder::Bit& bit) -> bool {
         m_result.push_back(OutputPacket{"rx", RESERV_BIT, bit.bitValue, 1, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart});
         m_state = S_BRS;
         m_bitDecoder.syncLastBit();
+        setBrsBitWidth();
         return true;
     }
 
@@ -406,7 +428,8 @@ auto CANDecoder::Impl::decodeStandardFrame(bit_decoder::Bit& bit) -> bool {
 
             m_result.push_back(OutputPacket{
                 "rx", DLC, m_dlc, (float)(m_bitsArrayCount - m_bitsArrayCountSaved) + m_stuffBitCounter, m_startBlockSamplePoint, bit.bitSampleEnd - m_startBlockSamplePoint});
-            m_state = m_dlc != 0 ? S_DATA : S_CRC;
+            // FD frames have no remote frames, the bit in the RTR position is RRS there
+            m_state = m_dlc != 0 && (m_isFlexibleData || !m_rtr) ? S_DATA : S_CRC;
             m_curByte = 0;
             m_startBlockSamplePoint = -1;
         }
@@ -467,6 +490,7 @@ auto CANDecoder::Impl::decodeExtendedFrame(bit_decoder::Bit& bit) -> bool {
     }
 
     if (m_state == S_RR_32_BIT) {
+        m_rtr = bit.bitValue;
         m_result.push_back(OutputPacket{"rx", RTR, bit.bitValue, 1, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart});
         m_state = S_R0;
         return true;
@@ -498,6 +522,7 @@ auto CANDecoder::Impl::decodeExtendedFrame(bit_decoder::Bit& bit) -> bool {
         m_result.push_back(OutputPacket{"rx", RESERV_BIT, bit.bitValue, 1, bit.bitSampleStart, bit.bitSampleEnd - bit.bitSampleStart});
         m_state = S_BRS;
         m_bitDecoder.syncLastBit();
+        setBrsBitWidth();
         return true;
     }
 
@@ -533,7 +558,8 @@ auto CANDecoder::Impl::decodeExtendedFrame(bit_decoder::Bit& bit) -> bool {
 
             m_result.push_back(OutputPacket{
                 "rx", DLC, m_dlc, (float)(m_bitsArrayCount - m_bitsArrayCountSaved) + m_stuffBitCounter, m_startBlockSamplePoint, bit.bitSampleEnd - m_startBlockSamplePoint});
-            m_state = m_dlc != 0 ? S_DATA : S_CRC;
+            // FD frames have no remote frames, the bit in the RTR position is RRS there
+            m_state = m_dlc != 0 && (m_isFlexibleData || !m_rtr) ? S_DATA : S_CRC;
             m_curByte = 0;
             m_startBlockSamplePoint = -1;
         }
@@ -619,7 +645,7 @@ auto CANDecoder::Impl::decodeEndFrame(bit_decoder::Bit& bit) -> bool {
             auto sb = m_bitsArray & 0xF;
             m_result.push_back(OutputPacket{
                 "rx", SBC, sb, (float)(m_bitsArrayCount - m_bitsArrayCountSaved) + m_stuffBitCounter, m_startBlockSamplePoint, bit.bitSampleEnd - m_startBlockSamplePoint});
-            m_state = m_dlc < 16 ? S_CRC_17 : S_CRC_21;
+            m_state = m_dlc <= 16 ? S_CRC_17 : S_CRC_21;
             m_startBlockSamplePoint = -1;
         }
         return true;

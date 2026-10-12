@@ -187,7 +187,7 @@ void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
         data_line = m_options.m_mosi;
     }
 
-    if (data_line == 0 || data_line > 7) {
+    if (data_line == 0 || data_line > 8) {
         ERROR_LOG("MISO or MOSI not specified. Valid values from 1 to 8")
         return;
     }
@@ -195,7 +195,8 @@ void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
     resetDecoderState();
     m_have_cs = m_options.m_cs != 0;
     uint8_t clk_line = m_options.m_clk - 1;
-    uint8_t cs_line = m_options.m_cs - 1;
+    // without CS the line index is never used; keep it in range for the shift below
+    uint8_t cs_line = m_have_cs ? m_options.m_cs - 1 : 0;
     data_line--;
     bool initCLK_CS = false;
     for (size_t i = 0; i < _size; i += 2) {

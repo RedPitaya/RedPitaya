@@ -17,6 +17,8 @@ class BitDecoderOneLine {
     auto reset() -> void;
     auto setIdle() -> void;
     auto syncLastBit() -> void;
+    // The next bit lasts `width` samples instead of a full bit if it reads 1 (CAN FD BRS)
+    auto setSwitchBitWidth(double width) -> void;
     auto detectBitChange() -> void;
     auto getNextBit(Bit* value) -> bool;
     auto setSampleRate(uint64_t rate) -> void;
