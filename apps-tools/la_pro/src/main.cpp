@@ -2,13 +2,14 @@
 #include <unistd.h>
 
 #include <atomic>
+#include <cmath>
+#include <cstring>
 #include <list>
 #include <map>
 #include <memory>
 #include <string>
 #include <thread>
 
-#include "decoder.h"
 #include "rp.h"
 #include "rp_log.h"
 #include "web/rp_client.h"
@@ -17,6 +18,9 @@
 #include "common.h"
 #include "main.h"
 #include "settings.h"
+#include "rp_la.h"
+
+using namespace rp_la;
 
 #define FILE_NAME "/tmp/logic/rle_logic_data.bin"
 #define FILE_NAME_TRIGGER "/tmp/logic/trig.bin"
@@ -25,6 +29,8 @@ CIntParameter rp_model("LA_RP_MODEL", CBaseParameter::RO, (int)getModel(), 0, 0,
 
 CIntParameter inRun("LA_RUN", CBaseParameter::RW, 0, 0, 0, 3);
 CIntParameter measureState("LA_MEASURE_STATE", CBaseParameter::RW, 1, 0, 1, 4);
+// percent of the running decode, -1 when no decode runs
+CIntParameter decodeProgress("LA_DECODE_PROGRESS", CBaseParameter::RO, -1, 0, -1, 100);
 CIntParameter measureSelect("LA_MEASURE_MODE", CBaseParameter::RW, 1, 0, 1, 2, CONFIG_VAR);
 CIntParameter controlSettings("CONTROL_CONFIG_SETTINGS", CBaseParameter::RW, 0, 0, 0, 10);
 CStringParameter fileSettings("FILE_SATTINGS", CBaseParameter::RW, "", 0);
@@ -42,8 +48,11 @@ CFloatParameter dins_position[8] = INIT8("LA_DIN_", "_POS", CBaseParameter::RW, 
 
 CIntParameter decimate("LA_DECIMATE", CBaseParameter::RW, 1, 0, 0, 1024, CONFIG_VAR);
 CDoubleParameter timeScale("LA_SCALE", CBaseParameter::RW, 1, 0, 0.005, 1000, CONFIG_VAR);
-CIntParameter preSampleBufMs("LA_PRE_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
-CIntParameter postSampleBufMs("LA_POST_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 1, 360000, CONFIG_VAR);
+// milliseconds with a microsecond step; the maximum follows the capture limit, see maxSamplesPerSide()
+CDoubleParameter preSampleBufMs("LA_PRE_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 0.001, 360000, CONFIG_VAR);
+CDoubleParameter postSampleBufMs("LA_POST_TRIGGER_BUFFER_MS", CBaseParameter::RW, 1, 0, 0.001, 360000, CONFIG_VAR);
+// samples allowed before and after the trigger
+CIntParameter maxSamples("LA_MAX_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2147483647);
 
 CIntParameter preSampleCount("LA_PRE_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
 CIntParameter postSampleCount("LA_POST_TRIGGER_SAMPLES", CBaseParameter::RO, 0, 0, 0, 2000000000);
@@ -68,7 +77,10 @@ CFloatParameter cursorx_pos[2] = INIT2("LA_CURSOR_X", "_POS", CBaseParameter::RW
 
 CIntParameter display_radix("LA_DISPLAY_RADIX", CBaseParameter::RW, 16, 0, 1, 20, CONFIG_VAR);
 
-CDecodedSignal decoder_signal[4] = INIT4("DECODER_SIGNAL_", "", CBaseParameter::RO, 0, rp_la::OutputPacket());
+// decoded packets of each bus, DECODED_RECORD bytes per packet (see packDecoded)
+CUInt8BinarySignal decoder_data[4] = INIT4("DECODER_DATA_", "", CBaseParameter::RO, 0, 0);
+// some decoded packets were not sent: they would not fit into the free memory
+CBooleanParameter decodedTruncated("LA_DECODED_TRUNCATED", CBaseParameter::RO, false, 0);
 
 CBooleanParameter decoded_window_show("LA_WIN_SHOW", CBaseParameter::RW, false, 0, CONFIG_VAR);
 CIntParameter decoded_window_x("LA_WIN_X", CBaseParameter::RW, 300, 0, 0, 65536, CONFIG_VAR);
@@ -231,6 +243,12 @@ int rp_app_exit(void) {
 void UpdateParams(void) {
     rp_WS_UpdateParameters(false);
 
+    float progress = g_la_controller->getDecodeProgress();
+    int percent = progress < 0 ? -1 : (int)(progress * 100);
+    if (percent != decodeProgress.Value()) {
+        decodeProgress.SendValue(percent);
+    }
+
     if (g_config_changed && (g_save_counter++ % 40 == 0)) {
         g_config_changed = false;
         // Save the configuration file
@@ -247,17 +265,81 @@ void UpdateSignals(void) {
         data_rle.ForceSend();
     }
 
-    if (g_needUpdateDecoders) {
-        for (int i = 0; i < 4; i++) {
-            auto vec = g_la_controller->getDecodedData(std::to_string(i));
-            decoder_signal[i].Value() = vec;
-            decoder_signal[i].ForceSend();
+}
+
+/*
+ * One decoded packet in DECODER_DATA_x, little endian:
+ * 0 sample start (double), 8 length in samples (double), 16 data (uint32),
+ * 20 bits in the packet (float), 24 annotation (uint8), 25 line (uint8, index into
+ * g_decodedLines), 26 padding. A JSON object per packet took hundreds of bytes on
+ * the board and ran it out of memory on large captures.
+ */
+static const char* g_decodedLines[] = {"miso", "mosi", "rx", "tx", "sda"};
+#define DECODED_RECORD 28
+
+static auto packDecoded(const std::vector<rp_la::OutputPacket>& packets, size_t count, std::vector<uint8_t>* out) -> void {
+    out->resize(count * DECODED_RECORD);
+    uint8_t* p = out->data();
+    for (size_t i = 0; i < count; i++, p += DECODED_RECORD) {
+        const auto& pk = packets[i];
+        float bits = pk.bitsInPack;
+        uint8_t line = 0;
+        for (uint8_t k = 0; k < sizeof(g_decodedLines) / sizeof(g_decodedLines[0]); k++) {
+            if (pk.line_name == g_decodedLines[k]) {
+                line = k;
+            }
         }
-        g_needUpdateDecoders = false;
+        memcpy(p, &pk.sampleStart, 8);
+        memcpy(p + 8, &pk.length, 8);
+        memcpy(p + 16, &pk.data, 4);
+        memcpy(p + 20, &bits, 4);
+        p[24] = pk.control;
+        p[25] = line;
+        p[26] = p[27] = 0;
     }
 }
 
+void UpdateBinarySignals(void) {
+    // after the last decoder: packing the results takes long and would hold back
+    // the decode progress of the decoders still running
+    if (g_needUpdateDecoders && g_la_controller->getDecodeProgress() < 0) {
+        g_needUpdateDecoders = false;
+        bool truncated = false;
+        for (int i = 0; i < 4; i++) {
+            auto packets = g_la_controller->getDecodedData(std::to_string(i));
+            // the packed copy and the outgoing message must fit into half of the free memory
+            size_t count = packets.size();
+            uint64_t usable = g_la_controller->getUsableMemory();
+            if (usable != 0 && (uint64_t)count * DECODED_RECORD * 2 > usable / 2) {
+                count = usable / 2 / 2 / DECODED_RECORD;
+                truncated = true;
+                WARNING("Decoder %d: %zu of %zu packets are sent, the rest does not fit into the free memory", i, count, packets.size())
+            }
+            packDecoded(packets, count, decoder_data[i].GetDataPtr());
+            decoder_data[i].ForceSend();
+        }
+        decodedTruncated.SendValue(truncated);
+    }
+}
+
+void PostUpdateBinarySignals(void) {}
+
 void PostUpdateSignals(void) {}
+
+/*
+ * Samples allowed on each side of the trigger. The FPGA counters hold 2^26 - 1. A busy
+ * signal takes one 2-byte RLE word per sample in the DMA ring (the reserved region)
+ * and three times on the heap (the API copy, data_rle and the outgoing message), so
+ * the worst case must fit both.
+ */
+static auto maxSamplesPerSide() -> double {
+    const double counter = (1 << 26) - 1;
+    uint64_t region = g_la_controller->getReservedMemorySize();
+    uint64_t memory = g_la_controller->getUsableMemory() / 3;
+    uint64_t bytes = region != 0 && region < memory ? region : memory;
+    double perSide = (double)bytes / 2 / 2;
+    return perSide < counter ? perSide : counter;
+}
 
 void updateFromFront(bool force) {
 
@@ -366,27 +448,17 @@ void updateFromFront(bool force) {
         auto freq = max_freq.Value() / decimate.Value();
         preSampleBufMs.Update();
         postSampleBufMs.Update();
-        double val = preSampleBufMs.Value() / 1000.0;  // to sec convert
-        double maxValue = (MAX_SAMPLES * 1000.0) / (double)freq;
+        double limit = maxSamplesPerSide();
+        double maxValue = limit * 1000.0 / (double)freq;
+        maxSamples.SendValue(limit);
+        // SetMax clamps the value silently: send both so the page gets the new maximum too
         preSampleBufMs.SetMax(maxValue);
         postSampleBufMs.SetMax(maxValue);
-        val *= freq;
-        if (val > MAX_SAMPLES) {
-            val = MAX_SAMPLES;
-            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)freq;
-            preSampleBufMs.SendValue(newVal);
-        }
+        preSampleBufMs.SendValue(preSampleBufMs.Value());
+        postSampleBufMs.SendValue(postSampleBufMs.Value());
 
-        double valPost = postSampleBufMs.Value() / 1000.0;  // to sec convert
-        valPost *= freq;
-        if (valPost > MAX_SAMPLES) {
-            valPost = MAX_SAMPLES;
-            uint32_t newVal = (MAX_SAMPLES * 1000.0) / (double)freq;
-            postSampleBufMs.SendValue(newVal);
-        }
-
-        g_la_controller->setPreTriggerSamples(val);
-        g_la_controller->setPostTriggerSamples(valPost);
+        g_la_controller->setPreTriggerSamples(std::llround(preSampleBufMs.Value() / 1000.0 * freq));
+        g_la_controller->setPostTriggerSamples(std::llround(postSampleBufMs.Value() / 1000.0 * freq));
     }
 
     for (size_t i = 0; i < 8; i++) {
@@ -490,8 +562,12 @@ void updateFromFront(bool force) {
     if (IS_NEW(inRun)) {
         inRun.Update();
         if (inRun.Value() == 3) {
+            // loadFromFileAndDecode decodes by itself; a redecode on top would join its
+            // thread here, in the parameter thread (no progress sent), and decode twice
+            for (int i = 0; i < 4; i++) {
+                g_la_controller->setDecoderSettingsUInt(std::to_string(i), "acq_speed", cur_freq.Value());
+            }
             g_la_controller->loadFromFileAndDecode(FILE_NAME, true, 0);
-            needRedecode = true;
         }
         if (inRun.Value() == 2) {
             needRedecode = true;

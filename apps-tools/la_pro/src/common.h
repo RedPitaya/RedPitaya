@@ -25,4 +25,3 @@ auto annoToJSON(std::map<uint8_t, std::string> map) -> std::string;
 #define DEBUG_SIGNAL_PERIOD 50
 #define DEBUG_PARAM_PERIOD 50
 #define BUFFER_MAX_SIZE 1024 * 1024 * 2
-#define MAX_SAMPLES 750000.0
