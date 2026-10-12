@@ -237,6 +237,15 @@ class CLAController {
     // Shows whether data capture is running or not.
     auto isCaptureRun() -> bool;
 
+    // Progress of the running decode over all enabled decoders, 0..1; -1 when no decode runs
+    auto getDecodeProgress() -> float;
+
+    // Size of the reserved memory region for the DMA ring (device tree), bytes
+    auto getReservedMemorySize() -> uint64_t;
+
+    // Memory a capture copy may still take: MemAvailable less a quarter of it (at least 8 MB)
+    auto getUsableMemory() -> uint64_t;
+
     // Starts asynchronously capturing data from the FPGA, and also decodes this data.
     auto runAsync(uint32_t timeoutMs) -> void;
 

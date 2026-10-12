@@ -12,6 +12,7 @@
 #define __DECODER_API_H
 
 #include <stdint.h>
+#include <atomic>
 #include <string>
 #include <vector>
 
@@ -46,8 +47,16 @@ class Decoder {
     auto getDecoderType() -> int { return m_decoderType; };
     auto getEnabled() -> bool { return m_enabled; };
     auto setEnabled(bool enabled) -> void { m_enabled = enabled; };
+    // Share of the input decoded by the running decode(), 0..1
+    auto getProgress() -> float { return m_progress.load(std::memory_order_relaxed); };
 
    protected:
+    // Called by decode() with the part done of the input; base and scale map
+    // one of several passes over the input (e.g. MISO then MOSI) into 0..1
+    auto setProgress(float base, float scale, size_t done, size_t total) -> void {
+        m_progress.store(total ? base + scale * (float)done / (float)total : base + scale, std::memory_order_relaxed);
+    };
+    std::atomic<float> m_progress = 0;
     int m_decoderType = 0;
     std::string m_name = "";
     bool m_enabled = true;

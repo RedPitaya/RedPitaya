@@ -89,8 +89,9 @@ int rp_SetTriggerDigitalPortProperties(RP_DIGITAL_CHANNEL_DIRECTIONS* directions
                 break;
         }
     }
-    if (edge_cnt == 1) {
-        // edge - enable pattern & software trigger
+    if (edge_cnt == 1 || trg.cmp_msk != 0) {
+        // an edge, levels qualifying an edge, or levels alone (the FPGA triggers on
+        // the pattern when no edge is set) - enable pattern & software trigger
         rp_LaAcqSetTrigSettings(&g_la_acq_handle, trg);
         rp_LaAcqGlobalTrigSet(&g_la_acq_handle, RP_TRG_LOA_PAT_MASK | RP_TRG_LOA_SWE_MASK);
     } else {
@@ -163,6 +164,19 @@ int rp_Run(uint32_t noOfPreTriggerSamples, uint32_t noOfPostTriggerSamples, uint
         return RP_EIPV;
     }
 
+    // DMA ring: room for the worst case (every sample in its own 2-byte RLE word),
+    // at most the reserved region and the memory a copy of the capture may take
+    uint64_t need = 2ull * ((uint64_t)noOfPreTriggerSamples + noOfPostTriggerSamples);
+    uint64_t usable = getUsableMemory();
+    if (usable != 0 && need > usable) {
+        WARNING("The capture may need %llu bytes, %llu bytes of memory can be used: the oldest samples of a busy signal can be lost",
+                (unsigned long long)need, (unsigned long long)usable)
+        need = usable;
+    }
+    if (rp_LaAcqSetBufferSize(&g_la_acq_handle, need) != RP_OK) {
+        return RP_EOMD;
+    }
+
     TRACE_SHORT("rp_LaAcqRunAcq");
     std::lock_guard lock(g_data_mtx);
     // start acq.
@@ -177,11 +191,31 @@ int rp_Run(uint32_t noOfPreTriggerSamples, uint32_t noOfPostTriggerSamples, uint
     return RP_OK;
 }
 
+/*
+ * Waits until the FPGA has stopped the acquisition. The DMA completion cannot be
+ * used for this: xilinx_dma signals a cyclic transfer only when the last buffer
+ * descriptor of the ring completes, while the stream ends (TLAST) wherever the
+ * capture ends, so with more than one descriptor the read could block forever.
+ * The wait has no timeout, as before (the DMA driver got 0).
+ */
+static int waitAcqStopped() {
+    bool stopped = false;
+    while (!stopped) {
+        usleep(1000);
+        if (rp_LaAcqAcqIsStopped(&g_la_acq_handle, &stopped) != RP_OK) {
+            return -1;
+        }
+    }
+    // the tail of the stream still has to pass the FIFOs to memory
+    usleep(1000);
+    return RP_OK;
+}
+
 int rp_WaitDataRLE(int timeout) {
     // block till acq. is complete
     TRACE_SHORT("Blocking read");
     bool isTimeout = false;
-    int ret = rp_LaAcqRead(&g_la_acq_handle, timeout, &isTimeout);
+    int ret = waitAcqStopped();
 
     rp_LaAcqStopAcq(&g_la_acq_handle);
     // make sure acq. is stopped
@@ -224,7 +258,7 @@ int rp_WaitData(int timeout) {
     // block till acq. is complete
     TRACE_SHORT("Blocking read");
     bool isTimeout = false;
-    int ret = rp_LaAcqRead(&g_la_acq_handle, timeout, &isTimeout);
+    int ret = waitAcqStopped();
 
     rp_LaAcqStopAcq(&g_la_acq_handle);
     // make sure acq. is stopped
@@ -293,18 +327,83 @@ int rp_GetIsTimeout(bool* isTimeout) {
     return RP_OK;
 }
 
+/*
+ * Walks the RLE ring backwards from the last written word until the requested
+ * number of samples is covered. Returns the first word, the number of words and
+ * the samples to cut from the first word.
+ */
+static int findCaptureRLE(const int16_t* map, uint32_t* first, uint32_t* blocks, uint32_t* firstAdjust, uint32_t* trigBlock) {
+    uint32_t buff_size = 0;
+    rp_LaAcqBufLenInSamples(&g_la_acq_handle, &buff_size);
+
+    uint64_t len = 0;
+    uint32_t i = 0;
+    uint32_t index = g_acq_data.last_blockIndexRLE;
+    uint64_t total = (uint64_t)g_acq_data.pre_samples + g_acq_data.post_samples;
+    bool trig_sample_found = false;
+    *trigBlock = 0;
+    *firstAdjust = 0;
+
+    TRACE_SHORT("Samples total %llu pre %d post %d index %d", (unsigned long long)total, g_acq_data.pre_samples, g_acq_data.post_samples, index)
+
+    while (1) {
+        i++;
+        len += ((uint8_t)(map[index] >> 8)) + 1;
+
+        // trigger position
+        if (!trig_sample_found && len >= (uint64_t)g_acq_data.post_samples - 1) {
+            *trigBlock = i;
+            trig_sample_found = true;
+        }
+
+        // first sample position: adjust its length to the requested data
+        if (len >= total) {
+            *firstAdjust = len - total;
+            break;
+        }
+
+        // the whole ring holds fewer samples: the oldest ones were overwritten
+        if (i == buff_size) {
+            WARNING("The DMA ring holds %llu of %llu samples, the oldest samples are lost", (unsigned long long)len, (unsigned long long)total)
+            break;
+        }
+
+        index = index == 0 ? buff_size - 1 : index - 1;
+    }
+    *first = index;
+    *blocks = i;
+    return RP_OK;
+}
+
+int rp_GetCapturedBlocksRLE(uint32_t* noOfBlocks) {
+    std::lock_guard lock(g_data_mtx);
+    int16_t* map = (int16_t*)mmap(NULL, g_la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, g_la_acq_handle.dma_fd, 0);
+    if (map == MAP_FAILED) {
+        ERROR_LOG("Failed to mmap");
+        return RP_EMMD;
+    }
+    uint32_t first, adjust, trig;
+    findCaptureRLE(map, &first, noOfBlocks, &adjust, &trig);
+    if (munmap(map, g_la_acq_handle.dma_size) == -1) {
+        ERROR_LOG("Failed to munmap");
+        return RP_EUMD;
+    }
+    return RP_OK;
+}
+
 int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples) {
     std::lock_guard lock(g_data_mtx);
     TRACE_SHORT("Dma size %d dev %s", g_la_acq_handle.dma_size, g_la_acq_handle.dma_dev.c_str())
     int16_t* map = (int16_t*)mmap(NULL, g_la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, g_la_acq_handle.dma_fd, 0);
-    if (map == NULL) {
+    if (map == MAP_FAILED) {
         ERROR_LOG("Failed to mmap");
         rp_CloseUnit();
         return RP_EMMD;
     }
 
     if (g_acq_data.buf == NULL || g_acq_data.buf_size == 0) {
-        FATAL("Buffer for writing is not set")
+        munmap(map, g_la_acq_handle.dma_size);
+        ERROR_LOG("Buffer for writing is not set")
         return RP_EOP;
     }
 
@@ -313,49 +412,21 @@ int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples) {
 
     uint32_t first_sample = 0;
     uint32_t blockCount = 0;
-    g_acq_data.trig_blockIndexRLE = 0;
+    uint32_t fist_sample_len_adj = 0;
+    uint32_t trigBlock = 0;
+    findCaptureRLE(map, &first_sample, &blockCount, &fist_sample_len_adj, &trigBlock);
 
-    uint32_t fist_sample_len_adj;
-
-    uint32_t len = 0;
-    uint32_t i = 0;
-    uint32_t index = g_acq_data.last_blockIndexRLE;
-    uint32_t total = g_acq_data.pre_samples + g_acq_data.post_samples;
-
-    TRACE_SHORT("Samples total %d pre %d post %d index %d", total, g_acq_data.pre_samples, g_acq_data.post_samples, index)
-
-    bool trig_sample_found = false;
-
-    // Find trigger block position
-
-    while (1) {
-        i++;
-        len += ((uint8_t)(map[index] >> 8)) + 1;
-
-        // trigger position
-        if (!trig_sample_found) {
-            if (len >= (g_acq_data.post_samples - 1)) {
-                g_acq_data.trig_blockIndexRLE = i;
-                trig_sample_found = true;
-            }
-        }
-
-        // first sample position
-        if (len >= total) {
-            first_sample = index;
-            blockCount = i;
-            // adjust first sample length so that it fits to the
-            // length of requested data
-            fist_sample_len_adj = len - total;
-            break;
-        }
-
-        index = index == 0 ? buff_size - 1 : index - 1;
+    // the caller's buffer (bytes) must hold the whole capture
+    if ((uint64_t)blockCount * 2 > g_acq_data.buf_size) {
+        ERROR_LOG("The data buffer (%zu bytes) is smaller than the capture (%u bytes)", g_acq_data.buf_size, blockCount * 2)
+        *noOfBlocks = blockCount;
+        munmap(map, g_la_acq_handle.dma_size);
+        return RP_EOOR;
     }
 
     // Copy data from circular buffer
-    index = first_sample;
-    for (i = 0; i < blockCount; i++) {
+    uint32_t index = first_sample;
+    for (uint32_t i = 0; i < blockCount; i++) {
         if (index >= buff_size) {
             index = 0;
         }
@@ -368,7 +439,7 @@ int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples) {
         index++;
     }
 
-    g_acq_data.trig_blockIndexRLE = blockCount - g_acq_data.trig_blockIndexRLE;
+    g_acq_data.trig_blockIndexRLE = blockCount - trigBlock;
     TRACE_SHORT("Post trig_blockIndexRLE %d last_blockIndexRLE %d blockCount %d", g_acq_data.trig_blockIndexRLE, g_acq_data.last_blockIndexRLE, blockCount)
     *noOfBlocks = blockCount;
 

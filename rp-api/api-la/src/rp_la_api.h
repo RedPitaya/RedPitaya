@@ -128,6 +128,10 @@ int rp_GetTrigPosition(uint32_t* tigger_pos);
  */
 int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples);
 
+// Number of RLE words (2 bytes each) of the last capture, before rp_GetValuesRLE:
+// the data buffer must hold twice as many bytes
+int rp_GetCapturedBlocksRLE(uint32_t* noOfBlocks);
+
 int rp_GetValues(uint32_t* noOfSamples);
 
 /**

@@ -72,3 +72,26 @@ auto getClockMs() -> double {
     clock_gettime(CLOCK_REALTIME, &tp);
     return ((double)tp.tv_sec * 1000.f) + ((double)tp.tv_nsec / 1000000.f);
 }
+
+auto getAvailableMemory() -> uint64_t {
+    FILE* f = fopen("/proc/meminfo", "r");
+    if (!f) {
+        return 0;
+    }
+    char line[128];
+    uint64_t kb = 0;
+    while (fgets(line, sizeof(line), f)) {
+        if (sscanf(line, "MemAvailable: %llu kB", (unsigned long long*)&kb) == 1) {
+            break;
+        }
+    }
+    fclose(f);
+    return kb * 1024;
+}
+
+auto getUsableMemory() -> uint64_t {
+    const uint64_t minReserve = 8 * 1024 * 1024;
+    uint64_t available = getAvailableMemory();
+    uint64_t reserve = available / 4 > minReserve ? available / 4 : minReserve;
+    return available > reserve ? available - reserve : 0;
+}

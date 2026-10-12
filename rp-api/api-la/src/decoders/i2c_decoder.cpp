@@ -1,4 +1,5 @@
 #include "i2c_decoder.h"
+#include <functional>
 
 #include <algorithm>
 #include <cassert>
@@ -49,6 +50,8 @@ class I2CDecoder::Impl {
 
     std::deque<std::vector<uint32_t>> m_bits;
     std::vector<OutputPacket> m_result;
+    // progress of decode(): bytes done, bytes in the input
+    std::function<void(size_t, size_t)> m_onProgress;
 
     void resetDecoder();
     void addNothing();
@@ -171,7 +174,10 @@ void I2CDecoder::Impl::addNothing() {
 }
 
 void I2CDecoder::decode(const uint8_t* _input, uint32_t _size) {
+    m_progress = 0;
+    m_impl->m_onProgress = [this](size_t d, size_t t) { setProgress(0, 1, d, t); };
     m_impl->decode(_input, _size);
+    m_progress = 1;
 }
 
 void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
@@ -203,6 +209,8 @@ void I2CDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
     bool needInit = true;
 
     for (size_t i = 0; i < _size; i += 2) {
+        if ((i & 0xFFFF) == 0 && m_onProgress)
+            m_onProgress(i, _size);
         const uint8_t count = _input[i];  // 0 = 1 count, 1 = 2, etc.
         const uint8_t data = _input[i + 1];
         for (uint16_t j = 0; j < count + 1; ++j) {

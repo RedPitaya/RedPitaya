@@ -1,4 +1,5 @@
 #include "can_decoder.h"
+#include <functional>
 
 #include <math.h>
 #include <algorithm>
@@ -75,6 +76,8 @@ class CANDecoder::Impl {
     FrameFormat m_frameType = FrameFormat::None;
 
     std::vector<OutputPacket> m_result;
+    // progress of decode(): bytes done, bytes in the input
+    std::function<void(size_t, size_t)> m_onProgress;
 
     bit_decoder::BitDecoderOneLine m_bitDecoder;
 
@@ -210,7 +213,10 @@ auto CANDecoder::getDecoderSettingsString(std::string& key, std::string* value) 
 }
 
 auto CANDecoder::decode(const uint8_t* _input, uint32_t _size) -> void {
+    m_progress = 0;
+    m_impl->m_onProgress = [this](size_t d, size_t t) { setProgress(0, 1, d, t); };
     m_impl->decode(_input, _size);
+    m_progress = 1;
 }
 
 auto CANDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) -> void {
@@ -242,8 +248,11 @@ auto CANDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) -> void {
     m_bitDecoder.setStartMode(bit_decoder::LOW);
 
     bit_decoder::Bit bit;
+    uint32_t bits = 0;
     while (m_bitDecoder.getNextBit(&bit)) {
         handleBit(bit);
+        if ((++bits & 0x3FF) == 0 && m_onProgress)
+            m_onProgress(m_bitDecoder.getPosition(), _size);
     }
 
     if (bit.valid) {

@@ -241,6 +241,10 @@ auto BitDecoderOneLine::Impl::findBit(const uint8_t* _input, size_t _size, Bit* 
     return false;
 }
 
+auto BitDecoderOneLine::getPosition() -> size_t {
+    return m_impl->m_i;
+}
+
 auto BitDecoderOneLine::getNextBit(Bit* value) -> bool {
     if (value == nullptr) {
         ERROR_LOG("The structure must not have a null pointer")

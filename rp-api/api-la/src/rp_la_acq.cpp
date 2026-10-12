@@ -22,7 +22,12 @@
 #include "rp.h"
 #include "rp_la_acq.h"
 
+// One period of the cyclic DMA. It must fit one AXI DMA buffer descriptor
+// (xlnx,sg-length-width = 23: 8 MB - 1).
 #define SEG_SIZE (1024 * 1024 * 4)
+
+// Size of the reserved memory region (device tree, buffer@2000000_b)
+static uint32_t g_reservedSize = 0;
 
 #define CHECK_REGSET                               \
     {                                              \
@@ -63,7 +68,8 @@ int rp_LaAcqOpen(const char* dev, rp_handle_uio_t* handle) {
         ERROR_LOG("The reserved memory size (0x%X) is less than the segment size (0x%X).", size, SEG_SIZE)
         return -1;
     }
-    // TODO Due to a problem in the xilinx_dma driver, we cannot set more than 1 segment.
+    g_reservedSize = size;
+    // One segment until a capture sets the ring size (rp_LaAcqSetBufferSize)
     status = rp_dmaOpen("/dev/axi:rprx@2", handle, SEG_SIZE, 1);
     if (status != RP_OK) {
         ERROR_LOG("Error open device /dev/axi:rprx@2")
@@ -76,6 +82,24 @@ int rp_LaAcqOpen(const char* dev, rp_handle_uio_t* handle) {
         return status;
     }
 
+    return RP_OK;
+}
+
+/** Sets the DMA ring for the next capture: whole segments, at most the reserved region */
+int rp_LaAcqSetBufferSize(rp_handle_uio_t* handle, size_t bytes) {
+    size_t maxSegments = g_reservedSize / SEG_SIZE;
+    size_t segments = (bytes + SEG_SIZE - 1) / SEG_SIZE;
+    if (segments == 0)
+        segments = 1;
+    if (segments > maxSegments)
+        segments = maxSegments;
+    if (segments == 0) {
+        ERROR_LOG("The reserved memory size (0x%X) is less than the segment size (0x%X).", g_reservedSize, SEG_SIZE)
+        return RP_EOMD;
+    }
+    rp_setSgmntS(handle, SEG_SIZE);
+    rp_setSgmntC(handle, segments);
+    handle->dma_size = segments * SEG_SIZE;
     return RP_OK;
 }
 

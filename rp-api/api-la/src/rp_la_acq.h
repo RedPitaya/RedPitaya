@@ -117,5 +117,6 @@ int rp_LaAcqIsRLE(rp_handle_uio_t* handle, bool* state);
 
 int rp_LaAcqBufLenInSamples(rp_handle_uio_t* handle, uint32_t* size);
 int rp_LaAcqGetFullBufferSize(rp_handle_uio_t* handle, uint32_t* size);
+int rp_LaAcqSetBufferSize(rp_handle_uio_t* handle, size_t bytes);
 
 #endif  // __LA_ACQ_H

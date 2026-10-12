@@ -21,6 +21,8 @@ class BitDecoderOneLine {
     auto setSwitchBitWidth(double width) -> void;
     auto detectBitChange() -> void;
     auto getNextBit(Bit* value) -> bool;
+    // Bytes of the input already read
+    auto getPosition() -> size_t;
     auto setSampleRate(uint64_t rate) -> void;
     auto setBoundRate(uint64_t rate) -> void;
     auto setSamplePoint(float value) -> void;

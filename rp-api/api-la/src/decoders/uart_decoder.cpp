@@ -1,4 +1,5 @@
 #include "uart_decoder.h"
+#include <functional>
 
 #include <math.h>
 #include <cassert>
@@ -43,6 +44,8 @@ class UARTDecoder::Impl {
 
     std::string m_name;
     std::vector<OutputPacket> m_result;
+    // progress of decode(): bytes done, bytes in the input
+    std::function<void(size_t, size_t)> m_onProgress;
 
     void resetDecoder();
     void decode(const uint8_t* _input, uint32_t _size);
@@ -164,10 +167,18 @@ void UARTDecoder::Impl::resetDecoder() {
 }
 
 void UARTDecoder::decode(const uint8_t* _input, uint32_t _size) {
-    if (m_impl_rx->m_options.m_rx != 0)
-        m_impl_rx->decode(_input, _size);
-    if (m_impl_tx->m_options.m_tx != 0)
-        m_impl_tx->decode(_input, _size);
+    // one pass over the input per line
+    const float passes = (m_impl_rx->m_options.m_rx != 0) + (m_impl_tx->m_options.m_tx != 0);
+    float done = 0;
+    m_progress = 0;
+    for (Impl* impl : {m_impl_rx, m_impl_tx}) {
+        if ((impl == m_impl_rx ? impl->m_options.m_rx : impl->m_options.m_tx) == 0)
+            continue;
+        impl->m_onProgress = [this, done, passes](size_t d, size_t t) { setProgress(done / passes, 1 / passes, d, t); };
+        impl->decode(_input, _size);
+        done++;
+    }
+    m_progress = 1;
 }
 
 void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
@@ -232,9 +243,12 @@ void UARTDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
     m_bitdecoder.setSampleRate(m_options.m_samplerate);
     m_bitdecoder.setBoundRate(m_options.m_baudrate);
     bit_decoder::Bit bit;
+    uint32_t bits = 0;
     while (m_bitdecoder.getNextBit(&bit)) {
         // bit_decoder::Bit::print(bit);
         parseBit(bit);
+        if ((++bits & 0x3FF) == 0 && m_onProgress)
+            m_onProgress(m_bitdecoder.getPosition(), _size);
     }
     if (bit.valid) {
         // bit_decoder::Bit::print(bit);

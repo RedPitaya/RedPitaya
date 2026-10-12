@@ -22,6 +22,7 @@
 #include <thread>
 #include "bit_decoder/bit_decoder_one_line_rle.h"
 #include "common/common.h"
+#include "common/dma.h"
 #include "common/profiler.h"
 #include "decoders/can_decoder.h"
 #include "decoders/decoder.h"
@@ -78,6 +79,8 @@ struct CLAController::Impl {
     auto getAnnotation(la_Decoder_t decoder, uint8_t control) -> std::string;
     auto getAnnotationSize(la_Decoder_t decoder) -> uint16_t;
     auto initFpga() -> bool;
+    auto copyCapture() -> bool;
+    auto startThread(std::function<void()> work) -> void;
 
     bool m_isOpen = false;
     std::map<std::string, std::shared_ptr<Decoder>> m_decoders;
@@ -86,6 +89,12 @@ struct CLAController::Impl {
     std::mutex m_thread_mutex;
     std::mutex m_delegate_mutex;
     std::atomic_bool m_isRun = false;
+
+    // decode progress: decoder index, number of decoders, the decoder running now
+    std::atomic<uint32_t> m_decodeIndex = 0;
+    std::atomic<uint32_t> m_decodeCount = 0;
+    std::shared_ptr<Decoder> m_decodeCurrent;
+    std::mutex m_progress_mutex;
 
     // Settings
     RP_DIGITAL_CHANNEL_DIRECTIONS m_triggers[RP_MAX_DIGITAL_CHANNELS];
@@ -169,16 +178,8 @@ auto CLAController::initFpga() -> bool {
 auto CLAController::Impl::initFpga() -> bool {
     std::lock_guard lock(m_run_mutex);
     if (!m_isOpen) {
+        // the capture buffer is sized after each capture, see run()
         open();
-        uint32_t dmaSize = 0;
-        rp_GetFullBufferSize(&dmaSize);
-        m_data.m_buffer.resize(dmaSize);
-        if (m_data.m_buffer.size() != dmaSize) {
-            ERROR_LOG("Can't allocate buffer")
-            m_data.m_buffer.resize(0);
-            close();
-            return false;
-        }
     }
     return true;
 }
@@ -493,19 +494,33 @@ auto CLAController::Impl::resetAllDecoders() -> void {
 
 auto CLAController::Impl::decode(const uint8_t* _input, uint32_t _size) -> void {
     std::lock_guard lock(m_decoder_mutex);
+    uint32_t count = 0;
+    for (auto& decoder : m_decoders) {
+        count += decoder.second->getEnabled();
+    }
+    m_decodeIndex = 0;
+    m_decodeCount = count;
     for (auto decoder : m_decoders) {
         if (!decoder.second->getEnabled())
             continue;
+        {
+            std::lock_guard lock_progress(m_progress_mutex);
+            m_decodeCurrent = decoder.second;
+        }
         TRACE_CODE(profiler::clearHistory(decoder.first))
         TRACE_CODE(profiler::setTimePoint(decoder.first))
         decoder.second->decode(_input, _size);
         TRACE_CODE(profiler::saveTimePointuS(decoder.first, "Decoder %s. Data size %d", decoder.first.c_str(), _size))
         TRACE_SHORT("Decoder %s. Memory usage %llu", decoder.first.c_str(), decoder.second->getMemoryUsage())
+        m_decodeIndex++;
         std::lock_guard lock_delegate(m_delegate_mutex);
         if (m_delegate) {
             m_delegate->decodeDone(m_parent, decoder.first);
         }
     }
+    std::lock_guard lock_progress(m_progress_mutex);
+    m_decodeCurrent = nullptr;
+    m_decodeCount = 0;
     TRACE_CODE(profiler::print())
 }
 
@@ -574,6 +589,30 @@ auto CLAController::removeDelegate() -> void {
     m_pimpl->m_delegate = nullptr;
 }
 
+auto CLAController::getReservedMemorySize() -> uint64_t {
+    uint32_t start = 0, size = 0;
+    if (rp_dmaReservedMemory(&start, &size) != RP_OK)
+        return 0;
+    return size;
+}
+
+auto CLAController::getUsableMemory() -> uint64_t {
+    return ::getUsableMemory();
+}
+
+auto CLAController::getDecodeProgress() -> float {
+    std::shared_ptr<Decoder> current;
+    {
+        std::lock_guard lock(m_pimpl->m_progress_mutex);
+        current = m_pimpl->m_decodeCurrent;
+    }
+    uint32_t count = m_pimpl->m_decodeCount;
+    if (current == nullptr || count == 0)
+        return -1;
+    float progress = (m_pimpl->m_decodeIndex + current->getProgress()) / count;
+    return progress > 1 ? 1 : progress;
+}
+
 auto CLAController::isCaptureRun() -> bool {
     return m_pimpl->m_isRun;
 }
@@ -636,32 +675,12 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void {
     if (fut.valid())
         fut.wait();
 
-    // Need check buffer size for DMA
-    uint32_t dmaSize = 0;
-    rp_GetFullBufferSize(&dmaSize);
-    if (m_data.m_buffer.size() != dmaSize) {
-        m_data.m_buffer.resize(dmaSize);
-    }
-
-    if (m_data.m_buffer.size() != dmaSize) {
-        ERROR_LOG("Can't allocate buffer")
-        m_data.m_buffer.resize(0);
-    }
-
-    rp_SetDataBuffer((int16_t*)m_data.m_buffer.data(), m_data.m_buffer.size());
     bool isTimeout = false;
     rp_GetIsTimeout(&isTimeout);
-    if (!isTimeout) {
-        uint32_t blockCount = 0;
-        uint64_t numSamples = 0;
-        ECHECK_NO_RET(rp_GetValuesRLE(&blockCount, &numSamples))
-        m_data.m_capturedBytes = blockCount * 2;
-        rp_GetTrigBlockPositionRLE(&m_data.m_trigerPosistion);
-        m_data.m_samplesBeforeTrigger = m_preTriggerSamples;
-        m_data.m_capturedSamples = numSamples;
-        m_data.m_isRLE = true;
+    if (!isTimeout && copyCapture()) {
         decode(m_data.m_buffer.data(), m_data.m_capturedBytes);
     } else {
+        m_data.m_capturedBytes = 0;
         m_data.m_trigerPosistion = 0;
         m_data.m_samplesBeforeTrigger = 0;
         m_data.m_capturedSamples = 0;
@@ -674,6 +693,46 @@ auto CLAController::Impl::run(uint32_t timeoutMs) -> void {
             m_parent, isTimeout, m_data.m_capturedBytes, m_data.m_capturedSamples, m_data.m_samplesBeforeTrigger, m_data.m_capturedSamples - m_data.m_samplesBeforeTrigger);
     }
     TRACE_SHORT("Done")
+}
+
+/*
+ * Copies the last capture out of the DMA ring. The buffer keeps its capacity
+ * between captures and grows only when a capture is larger, as far as the free
+ * memory allows.
+ */
+auto CLAController::Impl::copyCapture() -> bool {
+    uint32_t blockCount = 0;
+    if (rp_GetCapturedBlocksRLE(&blockCount) != RP_OK) {
+        return false;
+    }
+    size_t bytes = (size_t)blockCount * 2;
+    if (bytes > m_data.m_buffer.capacity()) {
+        uint64_t usable = ::getUsableMemory();
+        if (usable != 0 && bytes - m_data.m_buffer.capacity() > usable) {
+            ERROR_LOG("Not enough memory for the capture: %zu bytes, %llu bytes can be used", bytes, (unsigned long long)usable)
+            return false;
+        }
+        // nothing to keep: drop the old data before growing, so it is not copied
+        m_data.m_buffer.clear();
+    }
+    try {
+        m_data.m_buffer.resize(bytes);
+    } catch (const std::bad_alloc&) {
+        ERROR_LOG("Can't allocate %zu bytes for the capture", bytes)
+        m_data.m_buffer.clear();
+        return false;
+    }
+    rp_SetDataBuffer((int16_t*)m_data.m_buffer.data(), m_data.m_buffer.size());
+    uint64_t numSamples = 0;
+    if (rp_GetValuesRLE(&blockCount, &numSamples) != RP_OK) {
+        return false;
+    }
+    m_data.m_capturedBytes = blockCount * 2;
+    rp_GetTrigBlockPositionRLE(&m_data.m_trigerPosistion);
+    m_data.m_samplesBeforeTrigger = m_preTriggerSamples;
+    m_data.m_capturedSamples = numSamples;
+    m_data.m_isRLE = true;
+    return true;
 }
 
 auto CLAController::Impl::loadFromBytes(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void {
@@ -721,41 +780,47 @@ auto CLAController::Impl::runDecode() -> void {
     TRACE_SHORT("Decode done")
 }
 
+/*
+ * Starts work after the previous capture or decode has finished. The new thread
+ * waits for the previous one itself, so the caller (in la_pro the parameter
+ * thread, which also sends the decode progress) is never blocked by a long decode.
+ * Called with m_thread_mutex held.
+ */
+auto CLAController::Impl::startThread(std::function<void()> work) -> void {
+    std::thread* previous = m_captureThread;
+    m_captureThread = new std::thread([previous, work]() {
+        if (previous) {
+            if (previous->joinable())
+                previous->join();
+            delete previous;
+        }
+        work();
+    });
+}
+
 // TODO Timeout support should be implemented. Timeout is currently ignored.
 auto CLAController::runAsync(uint32_t timeoutMs) -> void {
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
     if (m_pimpl->m_isRun)
         return;
-
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
-        m_pimpl->m_captureThread->join();
-    }
-    delete m_pimpl->m_captureThread;
-    timeoutMs = 0;
     m_pimpl->m_isRun = true;
-    m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::run, m_pimpl, timeoutMs);
+    auto impl = m_pimpl;
+    m_pimpl->startThread([impl]() { impl->run(0); });
 }
 
 auto CLAController::runAsync(std::vector<uint8_t> data, bool isRLE, uint64_t triggerSamplePosition) -> void {
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
     if (m_pimpl->m_isRun)
         return;
-
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
-        m_pimpl->m_captureThread->join();
-    }
-    delete m_pimpl->m_captureThread;
     m_pimpl->m_isRun = true;
-    m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::loadFromBytes, m_pimpl, data, isRLE, triggerSamplePosition);
+    auto impl = m_pimpl;
+    m_pimpl->startThread([impl, data = std::move(data), isRLE, triggerSamplePosition]() { impl->loadFromBytes(data, isRLE, triggerSamplePosition); });
 }
 
 auto CLAController::decodeAsync() -> void {
     std::lock_guard lock_thread(m_pimpl->m_thread_mutex);
-    if (m_pimpl->m_captureThread && m_pimpl->m_captureThread->joinable()) {
-        m_pimpl->m_captureThread->join();
-    }
-    delete m_pimpl->m_captureThread;
-    m_pimpl->m_captureThread = new std::thread(&CLAController::Impl::runDecode, m_pimpl);
+    auto impl = m_pimpl;
+    m_pimpl->startThread([impl]() { impl->runDecode(); });
 }
 
 auto CLAController::decode(std::string name) -> std::vector<rp_la::OutputPacket> {
@@ -938,7 +1003,7 @@ auto CLAController::getUnpackedRLEDataNP(uint8_t* np_buffer, int size) -> uint64
         uint16_t count = m_pimpl->m_data.m_buffer[index++] + 1;
         uint8_t data = m_pimpl->m_data.m_buffer[index];
         for (uint16_t j = 0; j < count; j++) {
-            if ((uint64_t)size < samples) {
+            if ((uint64_t)size <= samples) {
                 WARNING("There was not enough buffer to decompress the data")
                 return samples;
             }

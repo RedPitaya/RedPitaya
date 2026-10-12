@@ -1,4 +1,5 @@
 #include "spi_decoder.h"
+#include <functional>
 #include <cassert>
 #include <climits>
 #include <limits>
@@ -30,6 +31,8 @@ class SPIDecoder::Impl {
     uint32_t m_clockChangeSample = 0;
 
     std::vector<OutputPacket> m_result;
+    // progress of decode(): bytes done, bytes in the input
+    std::function<void(size_t, size_t)> m_onProgress;
     State m_state;
 
     void resetDecoder();
@@ -142,10 +145,18 @@ void SPIDecoder::Impl::resetDecoder() {
 }
 
 void SPIDecoder::decode(const uint8_t* _input, uint32_t _size) {
-    if (m_impl_miso->m_options.m_miso != 0)
-        m_impl_miso->decode(_input, _size);
-    if (m_impl_mosi->m_options.m_mosi != 0)
-        m_impl_mosi->decode(_input, _size);
+    // one pass over the input per data line
+    const float passes = (m_impl_miso->m_options.m_miso != 0) + (m_impl_mosi->m_options.m_mosi != 0);
+    float done = 0;
+    m_progress = 0;
+    for (Impl* impl : {m_impl_miso, m_impl_mosi}) {
+        if ((impl == m_impl_miso ? impl->m_options.m_miso : impl->m_options.m_mosi) == 0)
+            continue;
+        impl->m_onProgress = [this, done, passes](size_t d, size_t t) { setProgress(done / passes, 1 / passes, d, t); };
+        impl->decode(_input, _size);
+        done++;
+    }
+    m_progress = 1;
 }
 
 void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
@@ -200,6 +211,8 @@ void SPIDecoder::Impl::decode(const uint8_t* _input, uint32_t _size) {
     data_line--;
     bool initCLK_CS = false;
     for (size_t i = 0; i < _size; i += 2) {
+        if ((i & 0xFFFF) == 0 && m_onProgress)
+            m_onProgress(i, _size);
         const uint8_t count = _input[i];  // 0 = 1 count, 1 = 2, etc.
         const uint8_t data = _input[i + 1];
         for (uint16_t j = 0; j < count + 1; ++j) {
