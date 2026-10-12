@@ -18,10 +18,11 @@
         LOGGER.log_data_raw = []
         for(var ch = 1; ch <= 4; ch++){
             var data = LA.decodedData[ch]
+            if (data === undefined) continue
             for (var line in data.values) {
                 var values = data.values[line]
-                for (var item in values) {
-                    var new_item = values[item]
+                for (var i = 0; i < values.length; i++) {
+                    var new_item = values[i]
                     new_item['bus'] = ch
                     new_item['protocol'] = data['name']
                     new_item['line'] = line
@@ -29,59 +30,75 @@
                 }
             }
         }
-        LOGGER.log_data_raw.sort((a, b) => {
-            if (a.s < b.s) return -1
-            if (a.s > b.s) return 1
-            return 0
-        });
-
         LOGGER.buildLog()
     }
 
 
-    LOGGER.buildLog = function(){
-        // const sbt = CLIENT.getValue('LA_PRE_TRIGGER_SAMPLES')
-        const radix = CLIENT.getValue('LA_LOGGER_RADIX')
-        var log = []
-        var divArray = []
-        for(var idx in LOGGER.log_data_raw){
-            const item = LOGGER.log_data_raw[idx]
-            if (LOGGER.getLogBUS(item.bus)){
-                // item["trig_off"] = item.s - (sbt !== undefined ? sbt : 0)
-                log.push(item)
-            }
-        }
-        log.sort((a, b) => {
-            if (a.s < b.s) return -1
-            if (a.s > b.s) return 1
-            return 0
-        });
+    // Row text of the DATA list
+    LOGGER.logRowText = function(item, radix){
+        var value = "ERROR"
+        if (item.protocol == "SPI") value = SPI.getValue(item, radix)
+        if (item.protocol == "CAN") value = CAN.getValue(item, radix)
+        if (item.protocol == "UART") value = UART.getValue(item, radix)
+        if (item.protocol == "I2C") value = I2C.getValue(item, radix)
+        return '[' + item.protocol + '<' + item.line + '>] ' + value
+    }
 
-        for(var idx in log){
-            var value = "ERROR"
-            if (log[idx].protocol == "SPI"){
-                value = SPI.getValue(log[idx],radix)
-            }
-            if (log[idx].protocol == "CAN"){
-                value = CAN.getValue(log[idx],radix)
-            }
-            if (log[idx].protocol == "UART"){
-                value = UART.getValue(log[idx],radix)
-            }
-            if (log[idx].protocol == "I2C"){
-                value = I2C.getValue(log[idx],radix)
-            }
-            value = '[' + log[idx].protocol + '<' + log[idx].line  +'>] ' + value
-            divArray.push("<div class='data_row' offset='" + log[idx].s + "'>" + value + "</div>")
+    LOGGER.LOG_ROW_HEIGHT = 20  // px, .data_row
+
+    LOGGER.buildLog = function(){
+        var log = []
+        for (var i = 0; i < LOGGER.log_data_raw.length; i++) {
+            const item = LOGGER.log_data_raw[i]
+            if (LOGGER.getLogBUS(item.bus))
+                log.push(item)
         }
+        log.sort((a, b) => a.s - b.s);
         LOGGER.log_array = log
-        $('#log-container').html(divArray);
+        LOGGER.renderLog(true)
         LOGGER.scrollDataArea()
         LOGGER.buildDecoderData()
     }
 
+    // Only the rows in sight exist in the DOM: a spacer gives the list its full height
+    LOGGER.renderLog = function(rebuild){
+        var box = document.getElementById('log-container')
+        if (!box) return
+        if (rebuild || !LOGGER.log_spacer) {
+            box.innerHTML = ''
+            LOGGER.log_spacer = document.createElement('div')
+            LOGGER.log_spacer.style.position = 'relative'
+            LOGGER.log_rows = document.createElement('div')
+            LOGGER.log_rows.style.position = 'absolute'
+            LOGGER.log_rows.style.left = '0'
+            LOGGER.log_rows.style.right = '0'
+            LOGGER.log_spacer.appendChild(LOGGER.log_rows)
+            box.appendChild(LOGGER.log_spacer)
+            box.onscroll = function() { LOGGER.renderLog(false) }
+        }
+        const h = LOGGER.LOG_ROW_HEIGHT
+        const n = LOGGER.log_array.length
+        LOGGER.log_spacer.style.height = (n * h) + 'px'
+        const first = Math.max(0, Math.floor(box.scrollTop / h) - 10)
+        const last = Math.min(n, Math.ceil((box.scrollTop + box.clientHeight) / h) + 10)
+        if (!rebuild && LOGGER.log_window && LOGGER.log_window[0] === first && LOGGER.log_window[1] === last) return
+        LOGGER.log_window = [first, last]
+        const radix = CLIENT.getValue('LA_LOGGER_RADIX')
+        const frag = document.createDocumentFragment()
+        for (var i = first; i < last; i++) {
+            var div = document.createElement('div')
+            div.className = 'data_row'
+            div.setAttribute('offset', LOGGER.log_array[i].s)
+            div.textContent = LOGGER.logRowText(LOGGER.log_array[i], radix)
+            frag.appendChild(div)
+        }
+        LOGGER.log_rows.style.top = (first * h) + 'px'
+        LOGGER.log_rows.replaceChildren(frag)
+    }
+
     LOGGER.clearLog = function() {
         $('#log-container').empty();
+        LOGGER.log_spacer = undefined
     }
 
     LOGGER.getColumns = function(width){
@@ -315,154 +332,103 @@
         ev.stopPropagation()
     }
 
+    // Text of the table cells of one item, in the order of the current columns
+    LOGGER.tableCells = function(item, cols, ctx){
+        var cells = []
+        for (var k = 0; k < cols.length; k++) {
+            var c = cols[k], x = ""
+            if (c == LOGGER.COLUMNS.TIME_OFFSET) {
+                x = ctx.samplerate !== undefined ? COMMON.convertTimeFromSec(1.0 / ctx.samplerate * (item.s - ctx.ts)) : "ERROR"
+            } else if (c == LOGGER.COLUMNS.TIME_LEN) {
+                x = ctx.samplerate !== undefined ? COMMON.convertTimeFromSec(1.0 / ctx.samplerate * item.l) : "ERROR"
+            } else if (c == LOGGER.COLUMNS.LINE_NAME) {
+                x = item.protocol.toUpperCase() + '/' + item.ln.toUpperCase() + ' <' + item.line + '>'
+            } else if (c == LOGGER.COLUMNS.DATA_COMMAND || c == LOGGER.COLUMNS.COMMAND) {
+                var dec = {SPI: SPI, CAN: CAN, UART: UART, I2C: I2C}[item.protocol]
+                x = dec === undefined ? "ERROR" : (c == LOGGER.COLUMNS.COMMAND ? dec.getAnnotation(item.c) : dec.getValue(item, ctx.radix))
+            } else if (c == LOGGER.COLUMNS.DATA) {
+                x = COMMON.formatData(item.d, "", "", ctx.radix)[0]
+            } else if (c == LOGGER.COLUMNS.SAMPLES_START) {
+                x = item.s
+            } else if (c == LOGGER.COLUMNS.SAMPLES_LEN) {
+                x = item.l
+            }
+            cells.push(String(x).replace(/(\r\n|\r|\n)/g, ''))
+        }
+        return cells
+    }
+
+    LOGGER.TABLE_ROW_HEIGHT = 19  // px, measured from a rendered row in renderTable
+
+    // Rows passing the filter; the table shows them through renderTable
     LOGGER.buildDecoderData = function(){
-        const tw = $('#decoded_table').width() - 20
         const filter = $('#LA_DATA_FILTER').val()
-        const radix = CLIENT.getValue('LA_LOGGER_RADIX')
-        const ts = CLIENT.getValue('LA_PRE_TRIGGER_SAMPLES')
         const total_samp = CLIENT.getValue('LA_TOTAL_SAMPLES')
-        var samplerate = CLIENT.getValue("LA_CUR_FREQ")
         var body = document.getElementById("decoded_body");
-        body.innerHTML = ''
-        var fixedW = 0;
-        var fixedC = 0
-        if (total_samp == undefined) return
-        for(var idx in LOGGER.log_header){
-            var l = LOGGER.getFixedWidth(LOGGER.log_header[idx])
-            if (l !== 0){
-                fixedW += l
-                fixedC++
-            }
+        LOGGER.table_rows = []
+        if (total_samp == undefined) {
+            body.innerHTML = ''
+            return
         }
-        for(var z = 0; z < LOGGER.log_array.length; z++){
-            const item =  LOGGER.log_array[z]
+        LOGGER.table_ctx = {radix: CLIENT.getValue('LA_LOGGER_RADIX'), ts: CLIENT.getValue('LA_PRE_TRIGGER_SAMPLES'),
+                            samplerate: CLIENT.getValue("LA_CUR_FREQ"), total: total_samp}
+        for (var z = 0; z < LOGGER.log_array.length; z++) {
+            if (filter === "" || LOGGER.tableCells(LOGGER.log_array[z], LOGGER.log_header, LOGGER.table_ctx).some(x => x.includes(filter)))
+                LOGGER.table_rows.push(z)
+        }
+        if (!body.onscroll)
+            body.onscroll = function() { LOGGER.renderTable(false) }
+        LOGGER.renderTable(true)
+    }
 
+    // Only the rows in sight exist in the DOM, between two spacer rows
+    LOGGER.renderTable = function(rebuild){
+        var body = document.getElementById("decoded_body");
+        if (!body || LOGGER.table_rows === undefined) return
+        const h = LOGGER.TABLE_ROW_HEIGHT
+        const n = LOGGER.table_rows.length
+        const first = Math.max(0, Math.floor(body.scrollTop / h) - 10)
+        const last = Math.min(n, Math.ceil((body.scrollTop + Math.max(body.clientHeight, 400)) / h) + 10)
+        if (!rebuild && LOGGER.table_window && LOGGER.table_window[0] === first && LOGGER.table_window[1] === last) return
+        LOGGER.table_window = [first, last]
+        const frag = document.createDocumentFragment()
+        const spacer = (height) => {
+            var tr = document.createElement("tr")
+            tr.style.height = height + 'px'
+            tr.style.border = '0'
+            return tr
+        }
+        frag.appendChild(spacer(first * h))
+        for (var r = first; r < last; r++) {
+            const item = LOGGER.log_array[LOGGER.table_rows[r]]
             var tr = document.createElement("tr");
-            tr.setAttribute("pos",item.s / total_samp)
+            tr.setAttribute("pos", item.s / LOGGER.table_ctx.total)
             tr.onmouseup = LOGGER.onClickRow
-            var is_found = filter === "";
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.TIME_OFFSET)){
+            const cells = LOGGER.tableCells(item, LOGGER.log_header, LOGGER.table_ctx)
+            for (var k = 0; k < cells.length; k++) {
                 var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.TIME_OFFSET);
+                td.classList.add("column_" + LOGGER.log_header[k]);
                 td.classList.add("text-clip")
-                if (samplerate !== undefined){
-                    var t = 1.0 / samplerate * (item.s - ts)
-                    td.innerText = COMMON.convertTimeFromSec(t)                
-                }else{
-                    td.innerText = "ERROR"
-                }
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
+                td.innerText = cells[k]
                 tr.appendChild(td)
             }
-
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.TIME_LEN)){
-                var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.TIME_LEN);
-                td.classList.add("text-clip")
-                if (samplerate !== undefined){
-                    var t = 1.0 / samplerate * (item.l)
-                    td.innerText = COMMON.convertTimeFromSec(t)
-                }else{
-                    td.innerText = "ERROR"
-                }
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
-                tr.appendChild(td)
-            }
-
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.LINE_NAME)){
-                var x = item.protocol.toUpperCase() + '/' + item.ln.toUpperCase() + ' <' + item.line + '>'
-                var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.LINE_NAME);
-                td.classList.add("text-clip")
-                td.innerText = x
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
-                tr.appendChild(td)
-            }
-
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.DATA_COMMAND)){
-                var x = "ERROR"
-                var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.DATA_COMMAND);
-                td.classList.add("text-clip")
-
-                if (item.protocol == "SPI"){
-                    x = SPI.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
-                }
-                if (item.protocol == "CAN"){
-                    x = CAN.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
-                }
-                if (item.protocol == "UART"){
-                    x = UART.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
-                }
-                if (item.protocol == "I2C"){
-                    x = I2C.getValue(item,radix).replace(/(\r\n|\r|\n)/g, '');
-                }
-                td.innerText = x
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
-                tr.appendChild(td)
-            }
-
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.COMMAND)){
-                var x = "ERROR"
-                var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.COMMAND);
-                td.classList.add("text-clip")
-
-                if (item.protocol == "SPI"){
-                    x = SPI.getAnnotation(item.c)
-                }
-                if (item.protocol == "CAN"){
-                    x = CAN.getAnnotation(item.c)
-                }
-                if (item.protocol == "UART"){
-                    x = UART.getAnnotation(item.c)
-                }
-                if (item.protocol == "I2C"){
-                    x = I2C.getAnnotation(item.c)
-                }
-
-                td.innerText = x
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
-                tr.appendChild(td)
-            }
-
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.DATA)){
-                var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.DATA);
-                td.classList.add("text-clip")
-                td.innerText = COMMON.formatData(item.d, "", "", radix)[0].replace(/(\r\n|\r|\n)/g, '');
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
-                tr.appendChild(td)
-            }
-
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.SAMPLES_START)){
-                var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.SAMPLES_START);
-                td.classList.add("text-clip")
-                td.innerText = item.s
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
-                tr.appendChild(td)
-            }
-
-            if (LOGGER.log_header.includes(LOGGER.COLUMNS.SAMPLES_LEN)){
-                var td = document.createElement("td");
-                td.classList.add("column_"+LOGGER.COLUMNS.SAMPLES_LEN);
-                td.classList.add("text-clip")
-                td.innerText = item.l
-                if (filter !== "" && td.innerText.includes(filter)) is_found = true;
-                tr.appendChild(td)
-            }
-            if (is_found == true)
-                body.appendChild(tr);
-
+            frag.appendChild(tr)
         }
-
+        frag.appendChild(spacer((n - last) * h))
+        body.replaceChildren(frag)
+        // the spacers must match the real row height
+        if (last > first && body.children[1] && body.children[1].offsetHeight > 0 && body.children[1].offsetHeight !== h) {
+            LOGGER.TABLE_ROW_HEIGHT = body.children[1].offsetHeight
+            LOGGER.renderTable(true)
+            return
+        }
         LOGGER.setDecodedSize()
     }
 
     LOGGER.clearDecoderValues = function(){
         var body = document.getElementById("decoded_body");
         body.innerHTML = ''
+        LOGGER.table_window = undefined
     }
 
     LOGGER.loadDecoderValues = function(){
@@ -515,15 +481,14 @@
 
     LOGGER.scrollDataArea = function() {
         const start = LA.region_samples.start
-        // Scroll
-        var div_index = 0;
-        for (var i = 0; i < LOGGER.log_array.length; i++) {
-            if (LOGGER.log_array[i].s < start)
-                div_index++;
-            else
-                break;
+        // first row at or after the start of the view
+        var lo = 0, hi = LOGGER.log_array.length
+        while (lo < hi) {
+            const mid = (lo + hi) >> 1
+            if (LOGGER.log_array[mid].s < start) lo = mid + 1; else hi = mid
         }
-        $('#log-container').scrollTop(20 * div_index);
+        $('#log-container').scrollTop(LOGGER.LOG_ROW_HEIGHT * lo);
+        LOGGER.renderLog(false)
     }
 
 

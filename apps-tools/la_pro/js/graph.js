@@ -22,8 +22,7 @@
 
     LA.trigger_color = '#75cede'
 
-    LA.lastData = undefined;
-    LA.lastDataRepacked = undefined;
+    LA.rle = undefined;
     LA.decodedData = {}
     LA.region_view_moving = false;
     LA.region_samples = {start:0 , end:0}
@@ -129,46 +128,111 @@
         }
     }
 
+    // The last capture in a compact form: start sample of every RLE word and its value
+    LA.packRLE = function(signal) {
+        const n = signal.size >> 1;
+        const v = signal.value;
+        const pos = new Uint32Array(n + 1);
+        const val = new Uint8Array(n);
+        let p = 0;
+        for (let i = 0; i < n; i++) {
+            pos[i] = p;
+            val[i] = v[2 * i + 1];
+            p += v[2 * i] + 1;
+        }
+        pos[n] = p;
+        return {n: n, pos: pos, val: val, total: p};
+    }
+
+    // Index of the RLE word that holds sample s
+    LA.findWord = function(rle, s) {
+        let lo = 0, hi = rle.n - 1;
+        while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if (rle.pos[mid] <= s) lo = mid; else hi = mid - 1;
+        }
+        return lo;
+    }
+
+    /*
+     * Polylines of the channels over samples [x0, x1) for a plot widthPx pixels wide.
+     * Exact steps when a pixel holds a few samples; otherwise one pass over the words
+     * marks for every pixel which lines change inside it, and such a pixel is drawn as
+     * a vertical bar. The number of points follows the width, not the capture.
+     * channels: [{bit, low, high}], low/high are the y of the two levels.
+     */
+    LA.traceChannels = function(rle, x0, x1, widthPx, channels) {
+        const traces = channels.map(() => []);
+        if (!rle || rle.n === 0 || x1 <= x0 || widthPx <= 0) return traces;
+        x0 = Math.max(0, x0);
+        x1 = Math.min(rle.total, x1);
+        const spp = (x1 - x0) / widthPx;
+        const level = (c, v) => ((v >> c.bit) & 1) ? c.high : c.low;
+
+        if (spp <= 2) {
+            const i0 = LA.findWord(rle, x0), i1 = LA.findWord(rle, Math.max(x0, x1 - 1));
+            channels.forEach((c, k) => {
+                const pts = traces[k];
+                let y = level(c, rle.val[i0]);
+                pts.push([x0, y]);
+                for (let i = i0 + 1; i <= i1; i++) {
+                    const ny = level(c, rle.val[i]);
+                    if (ny !== y) {
+                        pts.push([rle.pos[i], y], [rle.pos[i], ny]);
+                        y = ny;
+                    }
+                }
+                pts.push([x1, y]);
+            });
+            return traces;
+        }
+
+        const ys = channels.map(c => level(c, rle.val[LA.findWord(rle, x0)]));
+        channels.forEach((c, k) => traces[k].push([x0, ys[k]]));
+        let i = LA.findWord(rle, x0);
+        let prevLast = rle.val[i];
+        for (let px = 0; px < widthPx; px++) {
+            const a = x0 + px * spp, b = Math.min(x1, a + spp);
+            let changed = 0;
+            while (i + 1 < rle.n && rle.pos[i + 1] < b) {
+                changed |= rle.val[i] ^ rle.val[i + 1];
+                i++;
+            }
+            const last = rle.val[i];
+            // nothing changed inside the pixel nor since the previous one
+            if ((changed | (prevLast ^ last)) === 0) continue;
+            prevLast = last;
+            channels.forEach((c, k) => {
+                const ly = level(c, last);
+                if ((changed >> c.bit) & 1) {
+                    traces[k].push([a, ys[k]], [a, c.low], [a, c.high], [b, c.high], [b, ly]);
+                    ys[k] = ly;
+                } else if (ly !== ys[k]) {
+                    traces[k].push([a, ys[k]], [a, ly]);
+                    ys[k] = ly;
+                }
+            });
+        }
+        channels.forEach((c, k) => traces[k].push([x1, ys[k]]));
+        return traces;
+    }
+
     LA.setupDataToBufferGraph = function() {
 
         var preTriggerCount = CLIENT.getValue("LA_PRE_TRIGGER_SAMPLES")
         if (preTriggerCount === undefined) return
-        if (LA.lastDataRepacked === undefined) return
+        if (LA.rle === undefined) return
 
-        var channel_list = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'];
-        var pointArr = [];
-        var colorsArr = [];
         var sig_h = 5; // px
-
-        for (var sig_name in LA.lastDataRepacked) {
-
-            var index_channel = channel_list.indexOf(sig_name);
-
-            // Ignore empty signals
-            if (LA.lastDataRepacked[sig_name].size == 0)
-                continue;
-
-            var points = [];
-            var color = LA.graph_colors[sig_name];
-            var start_point = 0;
-            var offset = 11;
-            for (var u = 0; u < LA.lastDataRepacked[sig_name].value.length; u += 2) {
-                var start_x = start_point;
-                var start_y = (LA.lastDataRepacked[sig_name].value[u + 1] === 1 ? sig_h : 0);
-                start_y += (index_channel + 1) * offset;
-                points.push([start_x, start_y]);
-
-                start_point += LA.lastDataRepacked[sig_name].value[u];
-
-                var end_x = start_point;
-                var end_y = start_y;
-                points.push([end_x, end_y]);
-            }
-            pointArr.push(points);
-            colorsArr.push(color);
-
+        var offset = 11;
+        var channels = [];
+        var colorsArr = [];
+        for (var ch = 0; ch < 8; ch++) {
+            var base = (ch + 1) * offset;
+            channels.push({bit: ch, low: base, high: base + sig_h});
+            colorsArr.push(LA.graph_colors['ch' + (ch + 1)]);
         }
-
+        var pointArr = LA.traceChannels(LA.rle, 0, LA.rle.total, $('#graphs_buffer').width(), channels);
 
         // Added trigger v line
         if (pointArr.length > 0 && preTriggerCount !== 0){
@@ -186,48 +250,30 @@
         }
     }
 
+    // Main view: only the samples of the visible region are traced
     LA.setupDataToGraph = function() {
 
         var preTriggerCount = CLIENT.getValue("LA_PRE_TRIGGER_SAMPLES")
         if (preTriggerCount === undefined) return
-        if (LA.lastDataRepacked === undefined) return
+        if (LA.rle === undefined) return
 
-        var channel_list = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8'];
-        var pointArr = [];
-        var colorsArr = [];
         var sig_h = 0.5;
-
-        for (var sig_name in LA.lastDataRepacked) {
-
-            var index_channel = channel_list.indexOf(sig_name);
-
-            // Ignore empty signals
-            if (LA.lastDataRepacked[sig_name].size == 0)
+        var channels = [];
+        var colorsArr = [];
+        for (var ch = 0; ch < 8; ch++) {
+            if (CLIENT.getValue('LA_DIN_' + (ch + 1)) !== true)
                 continue;
-
-            if (CLIENT.getValue('LA_DIN_' + (index_channel + 1)) !== true)
-                continue;
-
-            var points = [];
-            var color = LA.graph_colors[sig_name];
-            var start_point = 0;
-            var offset = CLIENT.getValue("LA_DIN_" +(index_channel+1)+ "_POS")
-            for (var u = 0; u < LA.lastDataRepacked[sig_name].value.length; u += 2) {
-                var start_x = start_point;
-                var start_y = (LA.lastDataRepacked[sig_name].value[u + 1] === 1 ? sig_h : 0);
-                start_y += offset;
-                points.push([start_x, start_y]);
-
-                start_point += LA.lastDataRepacked[sig_name].value[u];
-
-                var end_x = start_point;
-                var end_y = start_y;
-                points.push([end_x, end_y]);
-            }
-            pointArr.push(points);
-            colorsArr.push(color);
+            var offset = CLIENT.getValue("LA_DIN_" + (ch + 1) + "_POS")
+            channels.push({bit: ch, low: offset, high: offset + sig_h});
+            colorsArr.push(LA.graph_colors['ch' + (ch + 1)]);
         }
-
+        var x0 = LA.region_samples.start
+        var x1 = LA.region_samples.end
+        if (x1 <= x0) {
+            x0 = 0
+            x1 = LA.rle.total
+        }
+        var pointArr = LA.traceChannels(LA.rle, x0, x1, $('#graph_grid').width(), channels);
 
         // Added trigger v line
         if (pointArr.length > 0 && preTriggerCount !== 0){
@@ -338,8 +384,8 @@
             var max = LA.region_samples.end
             axes.xaxis.options.min = min
             axes.xaxis.options.max = max
-            plot.setupGrid();
-            plot.draw();
+            // the traces cover the visible region only: rebuild them for the new one
+            LA.setupDataToGraph()
             LA.drawAllSeries()
             LOGGER.scrollDataArea()
         }
@@ -543,7 +589,8 @@
 
         var data = LA.decodedData[idx_decoder]
 
-        if (data.values !== undefined && data.name !== undefined){
+        // a bus can be enabled before its decoded data arrive
+        if (data !== undefined && data.values !== undefined && data.name !== undefined){
             for (var line in data.values) {
                 let sel_idx = -1
                 for(let idx = 0; idx < 8; idx++){

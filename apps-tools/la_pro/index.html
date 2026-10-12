@@ -46,20 +46,20 @@
     <script src="js/html2canvas.min.js?1" onerror="location.reload()"></script>
     <script src="js/baseConverter.js?3" onerror="location.reload()"></script>
     <script src="js/FileSaver.min.js?1" onerror="location.reload()"></script>
-    <script src="js/common.js?3" onerror="location.reload()"></script>
+    <script src="js/common.js?5" onerror="location.reload()"></script>
     <script src="js/ui.js?3" onerror="location.reload()"></script>
-    <script src="js/logger.js?3" onerror="location.reload()"></script>
+    <script src="js/logger.js?5" onerror="location.reload()"></script>
     <script src="js/handlers.js?3" onerror="location.reload()"></script>
     <script src="js/cursors.js?3" onerror="location.reload()"></script>
-    <script src="js/graph.js?3" onerror="location.reload()"></script>
+    <script src="js/graph.js?5" onerror="location.reload()"></script>
     <script src="js/seriers.common.js?3" onerror="location.reload()"></script>
     <script src="js/sub_window_legend.js?3" onerror="location.reload()"></script>
-    <script src="js/decoders_settings.js?3" onerror="location.reload()"></script>
+    <script src="js/decoders_settings.js?4" onerror="location.reload()"></script>
     <script src="js/series.spi.js?3" onerror="location.reload()"></script>
     <script src="js/series.i2c.js?3" onerror="location.reload()"></script>
     <script src="js/series.can.js?3" onerror="location.reload()"></script>
     <script src="js/series.uart.js?3" onerror="location.reload()"></script>
-    <script src="js/scope.js?4" onerror="location.reload()"></script>
+    <script src="js/scope.js?6" onerror="location.reload()"></script>
     <script src="js/rp_client.js?5" onerror="location.reload()"></script>
     <script src="js/client.js?3" onerror="location.reload()"></script>
 </head>
@@ -449,14 +449,14 @@
                                     <div class="col-info" style="margin-top: -11px;">Pre-trigger buffer, mS</div>
                                     <div class="right-menu-option" style="margin-top: 10px;">
                                         <input id="LA_PRE_TRIGGER_BUFFER_MS" class="setfield input-number" type="text"
-                                            value="1" step="1" min="1" max="360000">
+                                            value="1" step="1" min="0.001" max="360000" data-precision="3" data-adaptive-step>
                                     </div>
                                 </div>
                                 <div class="col-xs-12 option-content">
                                     <div class="col-info" style="margin-top: -11px;">Post-trigger buffer, mS</div>
                                     <div class="right-menu-option" style="margin-top: 10px;">
                                         <input id="LA_POST_TRIGGER_BUFFER_MS" class="setfield input-number" type="text"
-                                            value="1" step="1" min="1" max="360000">
+                                            value="1" step="1" min="0.001" max="360000" data-precision="3" data-adaptive-step>
                                     </div>
                                 </div>
                             </div>

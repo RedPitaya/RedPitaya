@@ -23,23 +23,25 @@
 
     LA.isChannelInUse = function(ch, ex_bus) {
         if (ch == 0) return -1
+        // bus configs name the lines DIN0..DIN7, ch counts from 1
+        var line = 'DIN' + (ch - 1)
         for (var i = 1; i < 5; i++) {
             if (ex_bus !== undefined && ex_bus == i)
                 continue;
             var bus = 'bus' + i;
             if (LA.buses[bus] !== undefined && LA.buses[bus].name !== undefined) {
                 if ((LA.buses[bus].name == "UART")
-                    && (LA.buses[bus].config.rx == ch || LA.buses[bus].config.tx == ch))
+                    && (LA.buses[bus].config.rx == line || LA.buses[bus].config.tx == line))
                         return i;
 
                 if (LA.buses[bus].name == "SPI" &&
-                    (LA.buses[bus].config.clk == ch || LA.buses[bus].config.miso == ch || LA.buses[bus].config.mosi == ch  || LA.buses[bus].config.cs == ch))
+                    (LA.buses[bus].config.clk == line || LA.buses[bus].config.miso == line || LA.buses[bus].config.mosi == line  || LA.buses[bus].config.cs == line))
                     return i;
 
-                if (LA.buses[bus].name == "I2C" && (LA.buses[bus].config.sda == ch || LA.buses[bus].config.scl == ch))
+                if (LA.buses[bus].name == "I2C" && (LA.buses[bus].config.sda == line || LA.buses[bus].config.scl == line))
                     return i;
 
-                if (LA.buses[bus].name == "CAN" && (LA.buses[bus].config.rx == ch))
+                if (LA.buses[bus].name == "CAN" && (LA.buses[bus].config.rx == line))
                     return i;
             }
         }
@@ -58,6 +60,20 @@
             arrow_info.text("");
             arrow_img.hide();
         }
+    }
+
+    // DECODER_DATA_x: 28-byte records (see packDecoded in main.cpp) into packet objects
+    LA.DECODED_LINES = ['miso', 'mosi', 'rx', 'tx', 'sda']
+    LA.unpackDecoded = function(signal){
+        const bytes = signal.value
+        const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+        const n = Math.floor(bytes.byteLength / 28)
+        const out = new Array(n)
+        for (let i = 0, o = 0; i < n; i++, o += 28) {
+            out[i] = {s: dv.getFloat64(o, true), l: dv.getFloat64(o + 8, true), d: dv.getUint32(o + 16, true),
+                      b: dv.getFloat32(o + 20, true), c: dv.getUint8(o + 24), ln: LA.DECODED_LINES[dv.getUint8(o + 25)]}
+        }
+        return {value: out}
     }
 
     LA.repackDecodedData = function(data, idx){
@@ -184,13 +200,13 @@
             }
 
             if (LA.isChannelInUse(parseInt(rx.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
-                $('#warn-message').text($('#uart_serial option:selected').text() + " is already in use");
+                $('#warn-message').text($('#uart_rx option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
             if (LA.isChannelInUse(parseInt(tx.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
-                $('#warn-message').text($('#uart_serial option:selected').text() + " is already in use");
+                $('#warn-message').text($('#uart_tx option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
@@ -239,21 +255,22 @@
             // }
 
 
-            if (miso == mosi || miso == clk || miso == cs ||
-                mosi == clk || mosi == cs || clk == cs) {
+            // unused lines are all "None" and may repeat
+            var used = [miso, mosi, clk, cs].filter(function(l) { return l !== "None" })
+            if (new Set(used).size != used.length) {
                 $('#warn-message').text("You can't specify same input lines");
                 $('#warning-dialog').show();
                 return;
             }
 
             if (LA.isChannelInUse(parseInt(miso.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
-                $('#warn-message').text($('#spi_data option:selected').text() + " is already in use");
+                $('#warn-message').text($('#spi_miso option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
 
             if (LA.isChannelInUse(parseInt(mosi.replace("DIN",""))+1 , LA.state.bus_editing) != -1) {
-                $('#warn-message').text($('#spi_data option:selected').text() + " is already in use");
+                $('#warn-message').text($('#spi_mosi option:selected').text() + " is already in use");
                 $('#warning-dialog').show();
                 return;
             }
@@ -451,13 +468,13 @@
         if (name === 'UART'){
             $(protocol).show()
 
-            $('#uart_data_length option[value=' + LA.buses[bus].config.num_data_bits + ']').attr('selected', 'selected');
-            $('#uart_stop_bits option[value=' + LA.buses[bus].config.num_stop_bits + ']').attr('selected', 'selected');
-            $('#uart_parity option[value=' + LA.buses[bus].config.parity + ']').attr('selected', 'selected');
-            $('#uart_order option[value=' + LA.buses[bus].config.bitOrder + ']').attr('selected', 'selected');
-            $('#uart_invert option[value=' + LA.buses[bus].config.invert + ']').attr('selected', 'selected');
-            $('#uart_rx option[value=' + (LA.buses[bus].config.rx) + ']').attr('selected', 'selected');
-            $('#uart_tx option[value=' + (LA.buses[bus].config.tx) + ']').attr('selected', 'selected');
+            $('#uart_data_length').val(LA.buses[bus].config.num_data_bits);
+            $('#uart_stop_bits').val(LA.buses[bus].config.num_stop_bits);
+            $('#uart_parity').val(LA.buses[bus].config.parity);
+            $('#uart_order').val(LA.buses[bus].config.bitOrder);
+            $('#uart_invert').val(LA.buses[bus].config.invert);
+            $('#uart_rx').val(LA.buses[bus].config.rx);
+            $('#uart_tx').val(LA.buses[bus].config.tx);
             $('#uart_baudrate').val(LA.buses[bus].config.baudrate);
             // $('#uart_adc_speed').val(LA.buses[bus].config.acq_speed);
         }
@@ -465,28 +482,28 @@
         if (name === 'SPI'){
             $(protocol).show()
 
-            $('#spi_clk option[value=' + (LA.buses[bus].config.clk) + ']').attr('selected', 'selected');
-            $('#spi_miso option[value=' + (LA.buses[bus].config.miso) + ']').attr('selected', 'selected');
-            $('#spi_mosi option[value=' + (LA.buses[bus].config.mosi) + ']').attr('selected', 'selected');
-            $('#spi_cs option[value=' + (LA.buses[bus].config.cs) + ']').attr('selected', 'selected');
+            $('#spi_clk').val(LA.buses[bus].config.clk);
+            $('#spi_miso').val(LA.buses[bus].config.miso);
+            $('#spi_mosi').val(LA.buses[bus].config.mosi);
+            $('#spi_cs').val(LA.buses[bus].config.cs);
 
-            $('#spi_order option[value=' + LA.buses[bus].config.word_size + ']').attr('selected', 'selected');
-            $('#spi_length option[value=' + LA.buses[bus].config.data_length + ']').attr('selected', 'selected');
-            $('#spi_cpol option[value=' + LA.buses[bus].config.cpol + ']').attr('selected', 'selected');
-            $('#spi_cpha option[value=' + LA.buses[bus].config.cpha + ']').attr('selected', 'selected');
-            $('#spi_state option[value=' + LA.buses[bus].config.cs_polarity + ']').attr('selected', 'selected');
-            $('#spi_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
+            $('#spi_order').val(LA.buses[bus].config.bit_order);
+            $('#spi_length').val(LA.buses[bus].config.word_size);
+            $('#spi_cpol').val(LA.buses[bus].config.cpol);
+            $('#spi_cpha').val(LA.buses[bus].config.cpha);
+            $('#spi_state').val(LA.buses[bus].config.cs_polarity);
+            $('#spi_invert').val(LA.buses[bus].config.invert_bit);
             // $('#spi_adc_speed').val(LA.buses[bus].config.acq_speed);
 
         }
 
         if (name === 'CAN'){
             $(protocol).show()
-            $('#can_rx option[value=' + ((LA.buses[bus].config.rx)) + ']').attr('selected', 'selected');
+            $('#can_rx').val(LA.buses[bus].config.rx);
             $('#can_nom_bitrate').val(LA.buses[bus].config.nominal_bitrate);
             $('#can_fast_bitrate').val(LA.buses[bus].config.fast_bitrate);
             $('#sample_point').val(LA.buses[bus].config.sample_point);
-            $('#can_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
+            $('#can_invert').val(LA.buses[bus].config.invert_bit);
             // $('#can_adc_speed').val(LA.buses[bus].config.acq_speed);
 
         }
@@ -494,10 +511,10 @@
         if (name === 'I2C'){
             $(protocol).show()
 
-            $('#i2c_sda option[value=' + (LA.buses[bus].config.sda) + ']').attr('selected', 'selected');
-            $('#i2c_scl option[value=' + (LA.buses[bus].config.scl) + ']').attr('selected', 'selected');
-            $('#i2c_addr option[value=' + LA.buses[bus].config.address_format + ']').attr('selected', 'selected');
-            $('#i2c_invert option[value=' + LA.buses[bus].config.invert_bit + ']').attr('selected', 'selected');
+            $('#i2c_sda').val(LA.buses[bus].config.sda);
+            $('#i2c_scl').val(LA.buses[bus].config.scl);
+            $('#i2c_addr').val(LA.buses[bus].config.address_format);
+            $('#i2c_invert').val(LA.buses[bus].config.invert_bit);
             // $('#i2c_adc_speed').val(LA.buses[bus].config.acq_speed);
 
         }

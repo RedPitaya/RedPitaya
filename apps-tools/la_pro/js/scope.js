@@ -37,14 +37,14 @@
             CLIENT.client_log(signals)
             var needRedraw = false
             if (signals['data_rle']){
-                LA.lastData = signals
-                LA.lastDataRepacked = COMMON.repackSignals(LA.lastData)
+                // only the packed form is kept, the raw signal can be large
+                LA.rle = LA.packRLE(signals['data_rle'])
                 needRedraw = true
             }
             for(var ch = 1; ch <= 4; ch++){
-                if (signals['DECODER_SIGNAL_' + ch]){
+                if (signals['DECODER_DATA_' + ch]){
                     var name = LA.getDecoderName(ch)
-                    LA.decodedData[ch] = {name : name, values: LA.repackDecodedData(signals['DECODER_SIGNAL_' + ch],ch)}
+                    LA.decodedData[ch] = {name : name, values: LA.repackDecodedData(LA.unpackDecoded(signals['DECODER_DATA_' + ch]), ch)}
                     needRedraw = true
                 }
             }
@@ -124,6 +124,8 @@
 
     LA.show_step = function(new_params) {
         step = new_params["LA_MEASURE_STATE"].value;
+        // the decode progress takes the status line while a decode runs
+        if (CLIENT.getValue("LA_DECODE_PROGRESS") >= 0) return;
         if (step === 1){
             $("#STATUS_MSG").text("CLICK RUN TO START").css('color', '#f00');
         }
@@ -133,11 +135,23 @@
         }
 
         if (step === 3){
-            $("#STATUS_MSG").text("DONE").css('color', '#0f0');
+            if (CLIENT.getValue("LA_DECODED_TRUNCATED") === true)
+                $("#STATUS_MSG").text("DONE, DECODED DATA CUT: NOT ENOUGH MEMORY").css('color', '#ff0');
+            else
+                $("#STATUS_MSG").text("DONE").css('color', '#0f0');
         }
 
         if (step === 4){
             $("#STATUS_MSG").text("TRIGGER TIMEOUT").css('color', '#f00');
+        }
+    }
+
+    LA.showDecodeProgress = function(new_params) {
+        var percent = new_params["LA_DECODE_PROGRESS"].value;
+        if (percent >= 0) {
+            $("#STATUS_MSG").text("DECODING " + percent + "%").css('color', '#ff0');
+        } else if (CLIENT.getValue("LA_MEASURE_STATE") !== undefined) {
+            LA.show_step({"LA_MEASURE_STATE": {value: CLIENT.getValue("LA_MEASURE_STATE")}});
         }
     }
 
@@ -230,6 +244,11 @@
     LA.param_callbacks["LA_CURSOR_X2_POS"] = LA.cursorX;
 
     LA.param_callbacks["LA_MEASURE_STATE"] = LA.show_step;
+    LA.param_callbacks["LA_DECODE_PROGRESS"] = LA.showDecodeProgress;
+    LA.param_callbacks["LA_DECODED_TRUNCATED"] = function() {
+        if (CLIENT.getValue("LA_MEASURE_STATE") !== undefined)
+            LA.show_step({"LA_MEASURE_STATE": {value: CLIENT.getValue("LA_MEASURE_STATE")}})
+    };
 
     LA.param_callbacks["RP_SYSTEM_CPU_LOAD"] = LA.setCpu;
     LA.param_callbacks["RP_SYSTEM_TEMPERATURE"] = LA.setCpuTemp;

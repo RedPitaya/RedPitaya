@@ -76,8 +76,7 @@
             checkInputAttr(input);
 
             var newValue = value + step;
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
+            var signs = decimals(input);
             newValue = parseFloat(newValue.toFixed(signs));
 
             if (newValue > max) {
@@ -102,8 +101,7 @@
             checkInputAttr(input);
 
             var newValue = value - step;
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
+            var signs = decimals(input);
             newValue = parseFloat(newValue.toFixed(signs));
             if (newValue < min) {
                 newValue = min;
@@ -128,6 +126,20 @@
             } else {
                 step = 1;
             }
+            // data-adaptive-step: the arrows change the value by a step that follows its size
+            if (input.attr('data-adaptive-step') !== undefined) {
+                var a = Math.abs(value);
+                step = a >= 10 ? 1 : a >= 1 ? 0.1 : a >= 0.1 ? 0.01 : 0.001;
+            }
+        }
+
+        // digits kept after the point: data-precision, otherwise those of the step
+        function decimals(input) {
+            if (input.attr('data-precision') !== undefined) {
+                return parseInt(input.attr('data-precision'));
+            }
+            var parts = step.toString().split('.');
+            return parts.length < 2 ? 0 : parts[1].length;
         }
 
         $(newInput).change(function() {
@@ -138,8 +150,7 @@
             var min = limits.min;
             var max = limits.max;
 
-            var parts = step.toString().split('.');
-            var signs = parts.length < 2 ? 0 : parts[1].length;
+            var signs = decimals(input);
             value = parseFloat(value.toFixed(signs));
 
             if (value < min) {
@@ -349,90 +360,6 @@
         }
     };
 
-    COMMON.repackSignals = function(signals) {
-        var vals = {};
-        var res = {};
-        var hasData = false;
-        for (var i = 1; i < 9; i++) {
-            res["ch" + i] = {};
-            res["ch" + i]["value"] = [];
-            res["ch" + i]["size"] = 0;
-        }
-
-        for (var i = 0; i < signals["data_rle"].size; i += 2) {
-            var length = signals["data_rle"].value[i] + 1;
-            for (var chn = 0; chn < 8; chn++) {
-                var ch = "ch" + (chn + 1);
-                var val = (signals["data_rle"].value[i + 1] >> chn) & 1;
-                if (res[ch].value.length > 0) {
-                    if (val == (res[ch].value[res[ch].value.length - 1]))
-                        res[ch].value[res[ch].value.length - 2] += length;
-                    else {
-                        res[ch].value.push(length);
-                        res[ch].value.push(val);
-                    }
-                } else {
-                    res[ch].value.push(length);
-                    res[ch].value.push(val);
-                }
-            }
-        }
-
-        for (var k in res) {
-            res[k]['size'] = res[k].value.length;
-        }
-        return res;
-    }
-
-
-
-    COMMON.splitSignals = function(signals) {
-        var new_data = []
-        for (var i = 0; i < signals["data_rle"].size; i += 2) {
-            var data = signals["data_rle"].value[i + 1]
-            var length = signals["data_rle"].value[i] + 1
-
-            if (new_data.length > 0){
-                if (new_data[new_data.length - 1] == data){
-                    new_data[new_data.length - 2] += length
-                }else{
-                    new_data.push(length)
-                    new_data.push(data)
-                }
-            }else{
-                new_data.push(length)
-                new_data.push(data)
-            }
-        }
-        var res = {};
-        for (var i = 1; i < 9; i++) {
-            res["ch" + i] = {};
-            res["ch" + i]["value"] = [];
-            res["ch" + i]["size"] = 0;
-        }
-
-        res["raw"] = {};
-        res["raw"]["value"] = [];
-        res["raw"]["size"] = 0;
-
-        for (var i = 0; i < new_data.length; i += 2) {
-            var length = new_data[i];
-            for (var chn = 0; chn < 8; chn++) {
-                var ch = "ch" + (chn + 1);
-                var val = (new_data[i + 1] >> chn) & 1;
-                res[ch].value.push(length);
-                res[ch].value.push(val);
-            }
-            res["raw"].value.push(length)
-            res["raw"].value.push(new_data[i + 1])
-        }
-        res["raw"]["size"] = res["raw"].value.length;
-        for (var k in res) {
-            res[k]['size'] = res[k].value.length;
-        }
-        return res;
-    }
-
     COMMON.saveGraphs = function() {
         const fireEvent = function (obj, evt) {
             var fireOnThis = obj;
@@ -457,37 +384,40 @@
         });
     }
 
+    // One row per run of equal values (consecutive RLE words with the same value are merged)
     COMMON.downloadDataAsCSV = function(filename) {
-        var strings = "";
         var col_delim = ', ';
         var row_delim = '\n';
-
-
-        if (LA.lastData === undefined) return
-        var d = COMMON.splitSignals(LA.lastData)
-        var signal_names = ['ch1', 'ch2', 'ch3', 'ch4', 'ch5', 'ch6', 'ch7', 'ch8']
-        strings = "POSITION" + col_delim + "LENGTH" + col_delim + "RAW VALUE"
-        for (var sig_name in signal_names) {
-            var en = CLIENT.getValue('LA_DIN_'+ (parseInt(sig_name) + 1))
-            if (en == true){
-                strings += col_delim + signal_names[sig_name].toUpperCase()
+        var rle = LA.rle
+        if (rle === undefined) return
+        var enabled = []
+        var header = "POSITION" + col_delim + "LENGTH" + col_delim + "RAW VALUE"
+        for (var ch = 0; ch < 8; ch++) {
+            if (CLIENT.getValue('LA_DIN_' + (ch + 1)) == true) {
+                enabled.push(ch)
+                header += col_delim + 'CH' + (ch + 1)
             }
         }
-        strings += row_delim
-        var start = 0;
-        for(var i = 0; i < d["raw"].value.length; i+=2){
-            strings += start + col_delim + d["raw"].value[i] + col_delim + '0x' + ConvertBase.dec2hex(d["raw"].value[i + 1])
-            for (var sig_name in signal_names) {
-                var en = CLIENT.getValue('LA_DIN_'+ (parseInt(sig_name) + 1))
-                if (en == true){
-                    strings += col_delim +  d[signal_names[sig_name]].value[i + 1]
-                }
+        // the text is collected in parts, a single string would not hold a large capture
+        var parts = [header + row_delim]
+        var chunk = ""
+        var i = 0
+        while (i < rle.n) {
+            var v = rle.val[i]
+            var j = i + 1
+            while (j < rle.n && rle.val[j] === v) j++
+            var row = rle.pos[i] + col_delim + (rle.pos[j] - rle.pos[i]) + col_delim + '0x' + ConvertBase.dec2hex(v)
+            for (var k = 0; k < enabled.length; k++)
+                row += col_delim + ((v >> enabled[k]) & 1)
+            chunk += row + row_delim
+            if (chunk.length > (1 << 20)) {
+                parts.push(chunk)
+                chunk = ""
             }
-            start += d["raw"].value[i]
-            strings += row_delim
+            i = j
         }
-
-        saveAs(new Blob([strings], { type: "text/plain;charset=utf-8" }), filename);
+        parts.push(chunk)
+        saveAs(new Blob(parts, { type: "text/plain;charset=utf-8" }), filename);
     };
 
     COMMON.downloadDecodedDataAsCSV = function(filename) {
@@ -610,39 +540,41 @@
     };
 
     COMMON.accordingChanName = function(chan_number) {
+        // bus configs name the lines DIN0..DIN7, chan_number counts from 1
+        var line = 'DIN' + (chan_number - 1);
         for (var i = 1; i < 5; i++) {
             var bus = 'bus' + i;
             var enable = CLIENT.getValue('DECODER_ENABLED_'+i)
             if (LA.buses[bus] !== undefined && LA.buses[bus].name !== undefined && enable) {
                 // Check UART
                 if (LA.buses[bus].name == "UART"){
-                    if (LA.buses[bus].config.rx == chan_number)
+                    if (LA.buses[bus].config.rx == line)
                         return "UART: RX";
-                    if (LA.buses[bus].config.tx == chan_number)
+                    if (LA.buses[bus].config.tx == line)
                         return "UART: TX";
                 }
 
-                if (LA.buses[bus].name == "CAN" && LA.buses[bus].config.rx == chan_number) {
+                if (LA.buses[bus].name == "CAN" && LA.buses[bus].config.rx == line) {
                     return "CAN: RX";
                 }
 
                 // Check I2C
                 if (LA.buses[bus].name == "I2C") {
-                    if (LA.buses[bus].config.scl == chan_number)
+                    if (LA.buses[bus].config.scl == line)
                         return "I2C: SCL";
-                    else if (LA.buses[bus].config.sda == chan_number)
+                    else if (LA.buses[bus].config.sda == line)
                         return "I2C: SDA";
                 }
 
                 // Check SPI
                 if (LA.buses[bus].name == "SPI") {
-                    if (LA.buses[bus].config.clk == chan_number)
+                    if (LA.buses[bus].config.clk == line)
                         return "SPI: CLK";
-                    else if (LA.buses[bus].config.miso == chan_number)
+                    else if (LA.buses[bus].config.miso == line)
                         return "SPI: MISO";
-                    else if (LA.buses[bus].config.mosi == chan_number)
+                    else if (LA.buses[bus].config.mosi == line)
                         return "SPI: MOSI";
-                    else if (LA.buses[bus].config.cs == chan_number)
+                    else if (LA.buses[bus].config.cs == line)
                         return "SPI: CS";
                 }
             }
