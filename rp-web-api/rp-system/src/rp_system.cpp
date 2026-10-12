@@ -159,14 +159,14 @@ uint32_t getReservedMemory() {
         fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
         return 0;
     }
-    char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // unsigned: no sign extension of bytes >= 0x80
     int sz = read(fd, &data, 8);
 
     if (close(fd) < 0) {
         return 0;
     }
     if (sz == 8) {
-        return data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
+        return (uint32_t)data[4] << 24 | (uint32_t)data[5] << 16 | (uint32_t)data[6] << 8 | data[7];
     }
     return 0;
 }

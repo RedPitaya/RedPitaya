@@ -270,15 +270,15 @@ int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
         fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
         return RP_EOMD;
     }
-    char data[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // unsigned: no sign extension of bytes >= 0x80
     int sz = read(fd, &data, 8);
 
     if (close(fd) < 0) {
         return RP_EOMD;
     }
     if (sz == 8) {
-        *_startAddress = data[0] << 24 | data[1] << 16 | data[2] << 8 | data[3];
-        *_size = data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
+        *_startAddress = (uint32_t)data[0] << 24 | (uint32_t)data[1] << 16 | (uint32_t)data[2] << 8 | data[3];
+        *_size = (uint32_t)data[4] << 24 | (uint32_t)data[5] << 16 | (uint32_t)data[6] << 8 | data[7];
     } else {
         return RP_EOMD;
     }
