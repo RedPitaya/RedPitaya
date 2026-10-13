@@ -1904,5 +1904,11 @@ void mainViewThreadFun() {
             }
             checkAutoscale();
         }
+        // The screen lock is held for the whole decimation and the mutex is not fair: without a pause
+        // this loop takes it back at once and osc_getData() on the websocket thread can wait for
+        // seconds (long enough for the server stop watchdog to kill the worker on an app switch).
+        // The pause also stops the loop spinning a core while there is nothing to draw. 10 ms still
+        // redraws more often than the pages read the view (signal interval 15 ms).
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
