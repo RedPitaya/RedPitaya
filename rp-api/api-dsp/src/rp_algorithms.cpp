@@ -564,7 +564,10 @@ int initFFT(uint32_t max_buffer, uint32_t adcRate) {
 
 int releaseFFT() {
     std::lock_guard<std::mutex> lock(g_fft_mutex);
+    // The library outlives the applications, so a release without a matching init (ba_pro on a
+    // board without a generator skips initFFT) must not free the previous application's data again.
     delete g_fft_data;
+    g_fft_data = NULL;
     delete g_fft;
     g_fft = NULL;
     return RP_A_OK;
