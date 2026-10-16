@@ -300,16 +300,16 @@ endif
 
 ifeq ($(MODEL),Z20_LL)
 
-	# Used in board: v0.94 barebones
+	# Used in board: v0.94 barebones stream_app
 
 	FPGA_0_94	= $(FPGA_COMMIT)
 	FPGA_BAREBONE = $(FPGA_COMMIT)
+	FPGA_STREAM_APP = $(FPGA_COMMIT)
 
 	FPGA_MODEL = Z20_ll
 	FPGA_VERSION = z20_125_ll
 
 #todo
-#   FPGA_STREAM_APP = $(FPGA_COMMIT)
 #	FPGA_LOGIC	= $(FPGA_COMMIT)
 
 endif
