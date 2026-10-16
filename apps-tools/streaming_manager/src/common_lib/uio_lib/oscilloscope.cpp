@@ -302,7 +302,8 @@ auto COscilloscope::getFPGAInfo(uint8_t index, uint32_t& _overFlow, int64_t& _ti
     _time = (index == 1 ? m_OscMap->buff2TimeHi : m_OscMap->buff1TimeHi);
     _time = _time << 32;
     _time |= (index == 1 ? m_OscMap->buff2TimeLo : m_OscMap->buff1TimeLo);
-    _time = g_time + _time * m_sampleLeninNS;
+    // in int64: g_time is the epoch in ns, a double holding the sum keeps only ~256 ns
+    _time = g_time + (int64_t)llround((double)_time * m_sampleLeninNS);
     return true;
 }
 
