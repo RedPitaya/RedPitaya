@@ -75,7 +75,11 @@ CGenerator::CGenerator(bool _channel1Enable, bool _channel2Enable, int _fd, void
       m_waitLock(),
       m_maxDacSpeedHz(maxDacHz),
       m_dacSpeedHz(dacHz),
-      m_is8Bit{false, false} {
+      m_is8Bit{false, false},
+      m_running(false),
+      m_trigMode{false, false},
+      m_trigMask(TRIG_SRC_GEN_A),
+      m_eventSource(gen0_event_id) {
     // m_BufferNumber[0] = m_BufferNumber[1] = 0;
     m_calib_offset_ch1 = 0;
     m_calib_gain_ch1 = 0x2000;
@@ -118,10 +122,13 @@ void CGenerator::setReg(volatile GeneratorMapT* _Map) {
     setRegister(_Map, &(_Map->chB_dma_addr2), 0, "Address chB buff 2");
 
     // Select event
-    setRegister(_Map, &(_Map->event_select), gen0_event_id);
+    setRegister(_Map, &(_Map->event_select), m_eventSource);
 
     // Event trig
-    setRegister(_Map, &(_Map->trig_mask), 1);
+    setRegister(_Map, &(_Map->trig_mask), m_trigMask);
+
+    // Trigger mode, must be set before the start
+    setRegister(_Map, &(_Map->trig_mode), (m_trigMode[0] ? 0x1 : 0) | (m_trigMode[1] ? 0x2 : 0), "Trigger mode");
 
     // Set trigger immediatly
     setRegisterVal(_Map->config.trig_chA, 0x1, "Set trig immediately chA");
@@ -244,6 +251,7 @@ auto CGenerator::start(bool enableCh1, bool enableCh2) -> void {
     if (m_Map != nullptr) {
         setRegister(m_Map, &(m_Map->event_status), 0x2, "Start event");
         setRegister(m_Map, &(m_Map->dma_control), (enableCh1 ? 0x1 : 0) | (enableCh2 ? 0x100 : 0), "Start DMA");
+        m_running = true;
     } else {
         FATAL("Memory map not initialized")
     }
@@ -256,9 +264,49 @@ auto CGenerator::stop() -> void {
         setRegister(m_Map, &(m_Map->event_status), 0x4);
         // Stop DMA
         setRegister(m_Map, &(m_Map->dma_control), 0);
+        m_running = false;
     } else {
         FATAL("Memory map not initialized")
     }
+}
+
+auto CGenerator::setTriggerMode(bool chA, bool chB) -> bool {
+    if (m_running)
+        return false;
+    m_trigMode[0] = chA;
+    m_trigMode[1] = chB;
+    return true;
+}
+
+auto CGenerator::getArmed() -> uint8_t {
+    return (m_Map->trig_mode >> 8) & 0x3;
+}
+
+auto CGenerator::setTriggerSources(uint32_t mask) -> bool {
+    if (m_running || (mask & ~TRIG_SRC_ALL))
+        return false;
+    m_trigMask = mask;
+    return true;
+}
+
+auto CGenerator::getTriggerSources() -> uint32_t {
+    return m_trigMask;
+}
+
+auto CGenerator::setEventSource(uint32_t source) -> bool {
+    if (m_running || source > EVENT_SRC_MAX)
+        return false;
+    m_eventSource = source;
+    return true;
+}
+
+auto CGenerator::softwareTrigger() -> void {
+    const std::lock_guard lock(m_waitLock);
+    setRegister(m_Map, &(m_Map->event_status), EVENT_TRIG, "Trigger event");
+}
+
+auto CGenerator::isRunning() -> bool {
+    return m_running;
 }
 
 auto CGenerator::printReg() -> void {
@@ -281,4 +329,5 @@ auto CGenerator::printReg() -> void {
     fprintf(stderr, "0x3C chA_dma_addr2 = 0x%X\n", m_Map->chA_dma_addr2);
     fprintf(stderr, "0x40 chB_dma_addr1 = 0x%X\n", m_Map->chB_dma_addr1);
     fprintf(stderr, "0x44 chB_dma_addr2 = 0x%X\n", m_Map->chB_dma_addr2);
+    fprintf(stderr, "0x68 trig_mode = 0x%X\n", m_Map->trig_mode);
 }

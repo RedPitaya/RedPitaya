@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include "trigger.h"
 #include "uio_parser.h"
 
 namespace uio_lib {
@@ -72,7 +73,16 @@ struct GeneratorMapT {
     uint32_t chA_dma_addr2;     // 60   - offset 0x3C
     uint32_t chB_dma_addr1;     // 64   - offset 0x40
     uint32_t chB_dma_addr2;     // 68   - offset 0x44
-    uint32_t reserv[10];
+    uint32_t setdec_chA;        // 72   - offset 0x48
+    uint32_t setdec_chB;        // 76   - offset 0x4C
+    uint32_t errs_rst;          // 80   - offset 0x50
+    uint32_t errs_cnt_chA;      // 84   - offset 0x54
+    uint32_t errs_cnt_chB;      // 88   - offset 0x58
+    uint32_t loopback_en;       // 92   - offset 0x5C
+    uint32_t out_shift_chA;     // 96   - offset 0x60
+    uint32_t out_shift_chB;     // 100  - offset 0x64
+    uint32_t trig_mode;         // 104  - offset 0x68: bits 1:0 trigger mode A/B, bits 9:8 armed A/B (read only)
+    uint32_t reserv;            // 108  - offset 0x6C
     uint32_t diag_reg1;  // 112  - offset 0x70
     uint32_t diag_reg2;  // 114  - offset 0x74
     uint32_t diag_reg3;  // 118  - offset 0x78
@@ -101,6 +111,16 @@ class CGenerator {
     auto stop() -> void;
     auto printReg() -> void;
 
+    // Trigger mode per channel: the channel fills its FIFO, arms and starts on the
+    // next trigger edge. The setters apply on the next prepare() and fail while running.
+    auto setTriggerMode(bool chA, bool chB) -> bool;
+    auto getArmed() -> uint8_t;  // bit 0 - channel A, bit 1 - channel B
+    auto setTriggerSources(uint32_t mask) -> bool;
+    auto getTriggerSources() -> uint32_t;
+    auto setEventSource(uint32_t source) -> bool;
+    auto softwareTrigger() -> void;
+    auto isRunning() -> bool;
+
    private:
     CGenerator(const CGenerator&) = delete;
     CGenerator(CGenerator&&) = delete;
@@ -127,6 +147,10 @@ class CGenerator {
     uint32_t m_maxDacSpeedHz;
     uint32_t m_dacSpeedHz;
     bool m_is8Bit[2];
+    bool m_running;
+    bool m_trigMode[2];
+    uint32_t m_trigMask;
+    uint32_t m_eventSource;
 };
 
 }  // namespace uio_lib

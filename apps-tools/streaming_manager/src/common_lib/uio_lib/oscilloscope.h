@@ -5,6 +5,7 @@
 #include <memory>
 #include <mutex>
 #include "memory_manager.h"
+#include "trigger.h"
 #include "uio_parser.h"
 
 namespace uio_lib {
@@ -16,7 +17,7 @@ struct OscilloscopeMapT {
     uint32_t event_sts;        // 0   - offset
     uint32_t event_sel;        // 4   - offset
     uint32_t trig_mask;        // 8   - offset
-    uint32_t _reserved_0;      // 12  - offset
+    uint32_t trig_blocks;      // 12  - offset 0x0C: blocks per trigger in the trigger mode, 0 - continuous
     uint32_t trig_pre_samp;    // 16  - offset 0x10
     uint32_t trig_post_samp;   // 20  - offset 0x14
     uint32_t trig_pre_cnt;     // 24  - offset 0x18
@@ -24,7 +25,7 @@ struct OscilloscopeMapT {
     uint32_t trig_low_level;   // 32  - offset 0x20
     uint32_t trig_high_level;  // 36  - offset 0x24
     uint32_t trig_edge;        // 40  - offset 0x28
-    uint32_t _reserved_1;      // 44  - offset
+    uint32_t trig_mode;        // 44  - offset 0x2C: bit 0 trigger mode, bit 8 armed (read only)
     uint32_t dec_factor;       // 48  - offset 0x30
     uint32_t dec_rshift;       // 52  - offset 0x34
     uint32_t avg_en_addr;      // 56  - offset 0x38
@@ -98,6 +99,11 @@ struct OscilloscopeMapT {
     uint32_t buff1TimeHi;    // 524 - offset 0x20C
     uint32_t buff2TimeLo;    // 528 - offset 0x210
     uint32_t buff2TimeHi;    // 532 - offset 0x214
+    uint32_t trig_count;     // 536 - offset 0x218: triggers taken since the start
+    uint32_t reserv9;        // 540 - offset 0x21C
+    // samples lost right before a buffer, latched with its timestamp, per channel:
+    // buffer 1 low/high, buffer 2 low/high
+    uint32_t buff_lost[4][2][2];  // 544 - offset 0x220 .. 0x25C
 };
 
 enum BoardMode { UNKNOWN, MASTER, SLAVE };
@@ -130,6 +136,29 @@ class COscilloscope {
     auto getOSCRate() -> uint32_t;
     auto isMaster() -> BoardMode;
 
+    // Trigger mode: after the start the core waits for a trigger and writes nothing until then.
+    // The setters apply on the next prepare() and fail while the core runs.
+    auto setTriggerMode(bool enable) -> bool;
+    auto getTriggerMode() -> bool;
+    auto isArmed() -> bool;
+    auto setTriggerSources(uint32_t mask) -> bool;
+    auto getTriggerSources() -> uint32_t;
+    auto setTriggerLevel(int32_t low, int32_t high) -> bool;
+    auto setTriggerEdge(bool falling) -> bool;
+    auto setEventSource(uint32_t source) -> bool;
+    auto softwareTrigger() -> void;
+    auto isRunning() -> bool;
+
+    // Block mode: with the trigger mode on, a trigger writes `blocks` DMA buffers (a trigger
+    // inside a series extends it), then the core waits for the next trigger. 0 - continuous.
+    auto hasBlockMode() -> bool;
+    auto setTriggerBlocks(uint16_t blocks) -> bool;
+    auto getTriggerBlocks() -> uint16_t;
+    auto getTriggerCount() -> uint32_t;
+    // samples lost right before DMA buffer `index` (0/1) of channel `ch`, 64 bit; read it when
+    // the buffer is full (it is latched when the buffer starts and kept until it starts again)
+    auto getBufferLost(uint8_t index, uint8_t ch) -> uint64_t;
+
    private:
     COscilloscope(const COscilloscope&) = delete;
     COscilloscope(COscilloscope&&) = delete;
@@ -160,6 +189,15 @@ class COscilloscope {
     uint8_t m_maxChannels;
     uint32_t m_dataSize;  // in bytes
     double m_sampleLeninNS;
+    bool m_running;
+    bool m_trigMode;
+    bool m_trigMaskSet;
+    uint32_t m_trigMask;
+    int32_t m_trigLow;
+    int32_t m_trigHigh;
+    bool m_trigFalling;
+    uint32_t m_eventSource;
+    uint16_t m_trigBlocks;
 };
 
 }  // namespace uio_lib

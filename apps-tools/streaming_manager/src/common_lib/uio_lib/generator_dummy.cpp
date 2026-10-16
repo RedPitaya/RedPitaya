@@ -56,3 +56,29 @@ auto CGenerator::start(bool, bool) -> void {}
 auto CGenerator::stop() -> void {}
 
 auto CGenerator::printReg() -> void {}
+
+auto CGenerator::setTriggerMode(bool, bool) -> bool {
+    return true;
+}
+
+auto CGenerator::getArmed() -> uint8_t {
+    return 0;
+}
+
+auto CGenerator::setTriggerSources(uint32_t) -> bool {
+    return true;
+}
+
+auto CGenerator::getTriggerSources() -> uint32_t {
+    return 0;
+}
+
+auto CGenerator::setEventSource(uint32_t) -> bool {
+    return true;
+}
+
+auto CGenerator::softwareTrigger() -> void {}
+
+auto CGenerator::isRunning() -> bool {
+    return false;
+}

@@ -72,7 +72,16 @@ COscilloscope::COscilloscope(int _fd, void* _regset, size_t _regsetSize, uint32_
       m_fpgaBits(_fpgaBits),
       m_maxChannels(_maxChannels),
       m_dataSize(0),
-      m_sampleLeninNS(0) {
+      m_sampleLeninNS(0),
+      m_running(false),
+      m_trigMode(false),
+      m_trigMaskSet(false),
+      m_trigMask(0),
+      m_trigLow(-4),
+      m_trigHigh(4),
+      m_trigFalling(false),
+      m_eventSource(osc0_event_id),
+      m_trigBlocks(0) {
     for (int i = 0; i < 4; i++) {
         setCalibration(i, 0, 1.0, true);
         setFilterCalibration(i, 0, 0, 0xFFFFFF, 0);
@@ -153,24 +162,23 @@ auto COscilloscope::setReg(volatile OscilloscopeMapT* _OscMap) -> void {
     //_OscMap->filt_bypass = UINT32_C(0x00000001);
 
     // Event
-    setRegister(_OscMap, &(_OscMap->event_sel), osc0_event_id);
-    //_OscMap->event_sel =  osc0_event_id ;
+    setRegister(_OscMap, &(_OscMap->event_sel), m_eventSource);
 
     // Trigger mask
-    setRegister(_OscMap, &(_OscMap->trig_mask), m_isMaster ? UINT32_C(0x00000004) : UINT32_C(0x00000020));
-    //setRegister(_OscMap,&(_OscMap->trig_mask), UINT32_C(0x00000004));
+    setRegister(_OscMap, &(_OscMap->trig_mask), getTriggerSources());
 
     // Trigger low level
-    setRegister(_OscMap, &(_OscMap->trig_low_level), -4);
-    //_OscMap->trig_low_level = -4;
+    setRegister(_OscMap, &(_OscMap->trig_low_level), m_trigLow);
 
     // Trigger high level
-    setRegister(_OscMap, &(_OscMap->trig_high_level), 4);
-    //_OscMap->trig_high_level = 4;
+    setRegister(_OscMap, &(_OscMap->trig_high_level), m_trigHigh);
 
     // Trigger edge
-    setRegister(_OscMap, &(_OscMap->trig_edge), UINT32_C(0x00000000));
-    //_OscMap->trig_edge = UINT32_C(0x00000000);
+    setRegister(_OscMap, &(_OscMap->trig_edge), m_trigFalling ? 1 : 0);
+
+    // Trigger mode and blocks per trigger, must be set before the start event
+    setRegister(_OscMap, &(_OscMap->trig_blocks), m_trigBlocks);
+    setRegister(_OscMap, &(_OscMap->trig_mode), m_trigMode ? 1 : 0);
 
     // set bit mode 8 bit = 1 or 16 bit = 0
     setRegister(_OscMap, &(_OscMap->bitSwitch), m_is8BitMode ? 1 : 0);
@@ -239,6 +247,15 @@ auto COscilloscope::setFilterBypass(bool _state) -> void {
 auto COscilloscope::prepare() -> void {
     stop();
 
+    // The uio event counter is per device, the last seen value per open file: interrupts read
+    // through another descriptor, or never waited for, would end the first wait() at once.
+    struct pollfd pfd = {.fd = m_Fd, .events = POLLIN, .revents = 0};
+    while (poll(&pfd, 1, 0) > 0) {
+        uint32_t info;
+        if (read(m_Fd, &info, sizeof(info)) != sizeof(info))
+            break;
+    }
+
     if (m_OscMap != nullptr) {
         setReg(m_OscMap);
     } else {
@@ -257,9 +274,12 @@ auto COscilloscope::prepare() -> void {
     setRegister(m_OscMap, &(m_OscMap->dma_ctrl), UINT32_C(0x0000021E));
     setRegister(m_OscMap, &(m_OscMap->event_sts), UINT32_C(0x00000002));
 
-    if (m_isMaster) {
+    // A slave in mode 0 starts its DMA on the daisy chain trigger. In the trigger mode the
+    // trigger only starts the writing, so every board starts the DMA itself.
+    if (m_isMaster || m_trigMode) {
         setRegister(m_OscMap, &(m_OscMap->dma_ctrl), UINT32_C(0x00000001));
     }
+    m_running = true;
 }
 
 auto COscilloscope::setCalibration(uint8_t ch, int32_t _offset, float _gain, bool isCalibV6) -> void {
@@ -332,10 +352,106 @@ auto COscilloscope::stop() -> void {
     std::lock_guard lock(m_waitLock);
     if (m_OscMap != nullptr) {
         setRegister(m_OscMap, &(m_OscMap->event_sts), UINT32_C(0x00000004));
+        m_running = false;
     } else {
         std::cerr << "Error: COscilloscope::stop()" << std::endl;
         exit(-1);
     }
+}
+
+auto COscilloscope::setTriggerMode(bool enable) -> bool {
+    if (m_running)
+        return false;
+    m_trigMode = enable;
+    return true;
+}
+
+auto COscilloscope::getTriggerMode() -> bool {
+    return m_trigMode;
+}
+
+auto COscilloscope::isArmed() -> bool {
+    return (m_OscMap->trig_mode >> 8) & 0x1;
+}
+
+auto COscilloscope::setTriggerSources(uint32_t mask) -> bool {
+    if (m_running || (mask & ~TRIG_SRC_ALL))
+        return false;
+    m_trigMask = mask;
+    m_trigMaskSet = true;
+    return true;
+}
+
+auto COscilloscope::getTriggerSources() -> uint32_t {
+    if (m_trigMaskSet)
+        return m_trigMask;
+    // the master starts on its own trigger output, the slave on the daisy chain trigger
+    return m_isMaster ? TRIG_SRC_ADC_CH1 : TRIG_SRC_EXT;
+}
+
+auto COscilloscope::setTriggerLevel(int32_t low, int32_t high) -> bool {
+    if (m_running || low > high || low < INT16_MIN || high > INT16_MAX)
+        return false;
+    m_trigLow = low;
+    m_trigHigh = high;
+    return true;
+}
+
+auto COscilloscope::setTriggerEdge(bool falling) -> bool {
+    if (m_running)
+        return false;
+    m_trigFalling = falling;
+    return true;
+}
+
+auto COscilloscope::setEventSource(uint32_t source) -> bool {
+    if (m_running || source > EVENT_SRC_MAX)
+        return false;
+    m_eventSource = source;
+    return true;
+}
+
+auto COscilloscope::softwareTrigger() -> void {
+    std::lock_guard lock(m_waitLock);
+    // the event reaches every core whose event selector points at this one
+    setRegister(m_OscMap, &(m_OscMap->event_sts), EVENT_TRIG);
+}
+
+auto COscilloscope::isRunning() -> bool {
+    return m_running;
+}
+
+auto COscilloscope::hasBlockMode() -> bool {
+    // bitstreams without the block mode have no register at 0x0C: it reads back 0
+    uint32_t old = m_OscMap->trig_blocks;
+    setRegister(m_OscMap, &(m_OscMap->trig_blocks), 0x5A5A);
+    bool present = m_OscMap->trig_blocks == 0x5A5A;
+    setRegister(m_OscMap, &(m_OscMap->trig_blocks), old);
+    return present;
+}
+
+auto COscilloscope::setTriggerBlocks(uint16_t blocks) -> bool {
+    if (m_running)
+        return false;
+    m_trigBlocks = blocks;
+    return true;
+}
+
+auto COscilloscope::getTriggerBlocks() -> uint16_t {
+    return m_trigBlocks;
+}
+
+auto COscilloscope::getTriggerCount() -> uint32_t {
+    return m_OscMap->trig_count;
+}
+
+auto COscilloscope::getBufferLost(uint8_t index, uint8_t ch) -> uint64_t {
+    if (index > 1 || ch >= 4)
+        return 0;
+    // the value only changes when this buffer starts again, a full buffer later
+    uint32_t lo = m_OscMap->buff_lost[ch][index][0];
+    uint32_t hi = m_OscMap->buff_lost[ch][index][1];
+    return ((uint64_t)hi << 32) | lo;
 }
 
 auto COscilloscope::getDecimation() -> u_int32_t {
@@ -377,6 +493,7 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0x20 trig_low_level = 0x%X\n", m_OscMap->trig_low_level);
     fprintf(stderr, "0x24 trig_high_level = 0x%X\n", m_OscMap->trig_high_level);
     fprintf(stderr, "0x28 trig_edge = 0x%X\n", m_OscMap->trig_edge);
+    fprintf(stderr, "0x2C trig_mode = 0x%X\n", m_OscMap->trig_mode);
 
     fprintf(stderr, "0x30 dec_factor = 0x%X\n", m_OscMap->dec_factor);
     fprintf(stderr, "0x34 dec_rshift = 0x%X\n", m_OscMap->dec_rshift);
@@ -445,4 +562,6 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0x20C buff1TimeHi = 0x%X\n", m_OscMap->buff1TimeHi);
     fprintf(stderr, "0x210 buff2TimeLo = 0x%X\n", m_OscMap->buff2TimeLo);
     fprintf(stderr, "0x214 buff2TimeHi = 0x%X\n", m_OscMap->buff2TimeHi);
+    fprintf(stderr, "0x0C trig_blocks = 0x%X\n", m_OscMap->trig_blocks);
+    fprintf(stderr, "0x218 trig_count = 0x%X\n", m_OscMap->trig_count);
 }

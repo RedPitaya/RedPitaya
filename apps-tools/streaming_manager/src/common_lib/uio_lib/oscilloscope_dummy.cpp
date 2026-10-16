@@ -78,3 +78,61 @@ auto COscilloscope::stop() -> void {}
 auto COscilloscope::printReg() -> void {}
 
 auto COscilloscope::set8BitMode(bool) -> void {}
+
+auto COscilloscope::setTriggerMode(bool) -> bool {
+    return true;
+}
+
+auto COscilloscope::getTriggerMode() -> bool {
+    return false;
+}
+
+auto COscilloscope::isArmed() -> bool {
+    return false;
+}
+
+auto COscilloscope::setTriggerSources(uint32_t) -> bool {
+    return true;
+}
+
+auto COscilloscope::getTriggerSources() -> uint32_t {
+    return 0;
+}
+
+auto COscilloscope::setTriggerLevel(int32_t, int32_t) -> bool {
+    return true;
+}
+
+auto COscilloscope::setTriggerEdge(bool) -> bool {
+    return true;
+}
+
+auto COscilloscope::setEventSource(uint32_t) -> bool {
+    return true;
+}
+
+auto COscilloscope::softwareTrigger() -> void {}
+
+auto COscilloscope::isRunning() -> bool {
+    return false;
+}
+
+auto COscilloscope::hasBlockMode() -> bool {
+    return false;
+}
+
+auto COscilloscope::setTriggerBlocks(uint16_t) -> bool {
+    return true;
+}
+
+auto COscilloscope::getTriggerBlocks() -> uint16_t {
+    return 0;
+}
+
+auto COscilloscope::getTriggerCount() -> uint32_t {
+    return 0;
+}
+
+auto COscilloscope::getBufferLost(uint8_t, uint8_t) -> uint64_t {
+    return 0;
+}

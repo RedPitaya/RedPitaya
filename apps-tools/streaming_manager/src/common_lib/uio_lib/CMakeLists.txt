@@ -38,6 +38,9 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/oscilloscope.h
             ${PROJECT_SOURCE_DIR}/memory_manager.h
             ${PROJECT_SOURCE_DIR}/uio_parser.h
+            ${PROJECT_SOURCE_DIR}/trigger.h
+            ${PROJECT_SOURCE_DIR}/ext_trigger.h
+            ${PROJECT_SOURCE_DIR}/gpio.h
       )
 
 if(RP_PLATFORM)
@@ -45,6 +48,8 @@ if(RP_PLATFORM)
             ${PROJECT_SOURCE_DIR}/generator.cpp
             ${PROJECT_SOURCE_DIR}/oscilloscope.cpp
             ${PROJECT_SOURCE_DIR}/memory_manager_static.cpp
+            ${PROJECT_SOURCE_DIR}/ext_trigger.cpp
+            ${PROJECT_SOURCE_DIR}/gpio.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
         )
 else()
@@ -52,6 +57,8 @@ else()
             ${PROJECT_SOURCE_DIR}/generator_dummy.cpp
             ${PROJECT_SOURCE_DIR}/oscilloscope_dummy.cpp
             ${PROJECT_SOURCE_DIR}/memory_manager_dynamic.cpp
+            ${PROJECT_SOURCE_DIR}/ext_trigger_dummy.cpp
+            ${PROJECT_SOURCE_DIR}/gpio_dummy.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
         )
 endif()
