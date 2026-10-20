@@ -47,6 +47,8 @@ using DataType = CStreamSettings::DataType;
 using PassMode = CStreamSettings::PassMode;
 using Resolution = CStreamSettings::Resolution;
 using State = CStreamSettings::State;
+using TriggerEdge = CStreamSettings::TriggerEdge;
+using EventSource = CStreamSettings::EventSource;
 
 // Out parameter, not a return value: CStreamSettings deletes its move
 // constructor, so a factory returning one by value does not compile.
@@ -76,6 +78,38 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setADCSize(111);
     s.setDACSize(222);
     s.setGPIOSize(333);
+    s.setADCTriggerMode(State::ON);
+    s.setADCTriggerSources(0x21);
+    s.setADCTriggerLevelLow(-1000);
+    s.setADCTriggerLevelHigh(2000);
+    s.setADCTriggerEdge(TriggerEdge::FALLING);
+    s.setADCEventSource(EventSource::GEN_A);
+    s.setADCTriggerBlocks(5);
+    s.setDACTriggerMode(1, State::ON);
+    s.setDACTriggerMode(2, State::ON);
+    s.setDACTriggerSources(0x04);
+    s.setDACEventSource(EventSource::OSC1);
+    s.setExtTrigConditioner(State::ON);
+    s.setExtTrigEdge(TriggerEdge::FALLING);
+    s.setExtTrigDebounce(1000);
+    s.setExtTrigDio0(State::OFF);
+    s.setGPIOInStreaming(State::ON);
+    s.setGPIOOutStreaming(State::ON);
+    s.setGPIOOutputsP(0x0F);
+    s.setGPIOOutputsN(0xF0);
+    s.setGPIOPolarity(0x0101);
+    s.setGPIODecimation(4);
+    s.setGPIORLE(State::ON);
+    s.setGPIOOutStep(3);
+    s.setGPIOPatternMask(0x00FF);
+    s.setGPIOPatternValue(0x0055);
+    s.setGPIOPatternPosEdge(0x0001);
+    s.setGPIOPatternNegEdge(0x0002);
+    s.setGPIOTriggerSources(0x10);
+    s.setGPIOEventSource(EventSource::LA);
+    s.setGPIOInTriggerMode(State::ON);
+    s.setGPIOOutTriggerMode(State::ON);
+    s.setGPIOTriggerBlocks(7);
 }
 
 // A directory removed on destruction, so a failing test cannot leave files
@@ -149,6 +183,73 @@ TEST(StreamSettingsJson, EveryFieldSurvivesToJsonThenParseJson) {
     EXPECT_EQ(target.getADCSize(), 111u);
     EXPECT_EQ(target.getDACSize(), 222u);
     EXPECT_EQ(target.getGPIOSize(), 333u);
+
+    EXPECT_EQ(target.getADCTriggerMode(), State::ON);
+    EXPECT_EQ(target.getADCTriggerSources(), 0x21u);
+    EXPECT_EQ(target.getADCTriggerLevelLow(), -1000) << "a negative level survives the JSON";
+    EXPECT_EQ(target.getADCTriggerLevelHigh(), 2000);
+    EXPECT_EQ(target.getADCTriggerEdge(), TriggerEdge::FALLING);
+    EXPECT_EQ(target.getADCEventSource(), EventSource::GEN_A);
+    EXPECT_EQ(target.getADCTriggerBlocks(), 5u);
+    EXPECT_EQ(target.getDACTriggerMode(1), State::ON);
+    EXPECT_EQ(target.getDACTriggerMode(2), State::ON);
+    EXPECT_EQ(target.getDACTriggerSources(), 0x04u);
+    EXPECT_EQ(target.getDACEventSource(), EventSource::OSC1);
+    EXPECT_EQ(target.getExtTrigConditioner(), State::ON);
+    EXPECT_EQ(target.getExtTrigEdge(), TriggerEdge::FALLING);
+    EXPECT_EQ(target.getExtTrigDebounce(), 1000u);
+    EXPECT_EQ(target.getExtTrigDio0(), State::OFF);
+    EXPECT_EQ(target.getGPIOInStreaming(), State::ON);
+    EXPECT_EQ(target.getGPIOOutStreaming(), State::ON);
+    EXPECT_EQ(target.getGPIOOutputsP(), 0x0Fu);
+    EXPECT_EQ(target.getGPIOOutputsN(), 0xF0u);
+    EXPECT_EQ(target.getGPIOPolarity(), 0x0101u);
+    EXPECT_EQ(target.getGPIODecimation(), 4u);
+    EXPECT_EQ(target.getGPIORLE(), State::ON);
+    EXPECT_EQ(target.getGPIOOutStep(), 3u);
+    EXPECT_EQ(target.getGPIOPatternMask(), 0x00FFu);
+    EXPECT_EQ(target.getGPIOPatternValue(), 0x0055u);
+    EXPECT_EQ(target.getGPIOPatternPosEdge(), 0x0001u);
+    EXPECT_EQ(target.getGPIOPatternNegEdge(), 0x0002u);
+    EXPECT_EQ(target.getGPIOTriggerSources(), 0x10u);
+    EXPECT_EQ(target.getGPIOEventSource(), EventSource::LA);
+    EXPECT_EQ(target.getGPIOInTriggerMode(), State::ON);
+    EXPECT_EQ(target.getGPIOOutTriggerMode(), State::ON);
+    EXPECT_EQ(target.getGPIOTriggerBlocks(), 7u);
+}
+
+// Files written before ext_trigger and gpio_streaming existed have only the three
+// required sections; they still parse and leave the new settings untouched.
+TEST(StreamSettingsJson, TheExtTriggerAndGpioSectionsAreOptional) {
+    const std::string json = CStreamSettings().toJson();
+    EXPECT_NE(json.find("\"ext_trigger\""), std::string::npos);
+    EXPECT_NE(json.find("\"gpio_streaming\""), std::string::npos);
+
+    CStreamSettings s;
+    ASSERT_TRUE(s.setGPIODecimation(16));
+    ASSERT_TRUE(s.setExtTrigDebounce(50));
+    ASSERT_TRUE(s.parseJson(R"({"adc_streaming":{},"dac_streaming":{},"memory_manager":{}})"));
+    EXPECT_EQ(s.getGPIODecimation(), 16u);
+    EXPECT_EQ(s.getExtTrigDebounce(), 50u);
+
+    ASSERT_TRUE(s.parseJson(R"({"adc_streaming":{},"dac_streaming":{},"memory_manager":{},)"
+                            R"("ext_trigger":{"ext_trig_edge":"FALLING"},"gpio_streaming":{"gpio_event_source":"OSC2"}})"));
+    EXPECT_EQ(s.getExtTrigEdge(), TriggerEdge::FALLING);
+    EXPECT_EQ(s.getGPIOEventSource(), EventSource::OSC2);
+    EXPECT_EQ(s.getGPIODecimation(), 16u) << "absent keys keep the current value";
+}
+
+// Like file_type_sd: an out-of-range value does not fail the document, the field keeps its value.
+TEST(StreamSettingsJson, AnOutOfRangeTriggerValueIsIgnored) {
+    CStreamSettings s;
+    EXPECT_TRUE(s.parseJson(R"({"adc_streaming":{"adc_trigger_sources":64,"adc_trigger_level_low":-40000},)"
+                            R"("dac_streaming":{},"memory_manager":{},"gpio_streaming":{"gpio_decimation":0}})"));
+    EXPECT_EQ(s.getADCTriggerSources(), 0u);
+    EXPECT_EQ(s.getADCTriggerLevelLow(), -4);
+    EXPECT_EQ(s.getGPIODecimation(), 1u);
+
+    EXPECT_FALSE(s.parseJson(R"({"adc_streaming":{"adc_event_source":"DAC A"},"dac_streaming":{},"memory_manager":{}})"))
+        << "an unknown enum name still rejects the document";
 }
 
 TEST(StreamSettingsJson, TheDefaultsAlsoSurviveTheRoundTrip) {

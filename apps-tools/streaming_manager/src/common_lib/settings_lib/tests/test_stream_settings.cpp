@@ -32,6 +32,8 @@ using DataType = CStreamSettings::DataType;
 using PassMode = CStreamSettings::PassMode;
 using Resolution = CStreamSettings::Resolution;
 using State = CStreamSettings::State;
+using TriggerEdge = CStreamSettings::TriggerEdge;
+using EventSource = CStreamSettings::EventSource;
 
 // Fills every field with a value different from its default, so that a missed
 // field in copy() or resetDefault() shows up.
@@ -65,6 +67,38 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setADCSize(111);
     s.setDACSize(222);
     s.setGPIOSize(333);
+    s.setADCTriggerMode(State::ON);
+    s.setADCTriggerSources(0x21);
+    s.setADCTriggerLevelLow(-1000);
+    s.setADCTriggerLevelHigh(2000);
+    s.setADCTriggerEdge(TriggerEdge::FALLING);
+    s.setADCEventSource(EventSource::GEN_A);
+    s.setADCTriggerBlocks(5);
+    s.setDACTriggerMode(1, State::ON);
+    s.setDACTriggerMode(2, State::ON);
+    s.setDACTriggerSources(0x04);
+    s.setDACEventSource(EventSource::OSC1);
+    s.setExtTrigConditioner(State::ON);
+    s.setExtTrigEdge(TriggerEdge::FALLING);
+    s.setExtTrigDebounce(1000);
+    s.setExtTrigDio0(State::OFF);
+    s.setGPIOInStreaming(State::ON);
+    s.setGPIOOutStreaming(State::ON);
+    s.setGPIOOutputsP(0x0F);
+    s.setGPIOOutputsN(0xF0);
+    s.setGPIOPolarity(0x0101);
+    s.setGPIODecimation(4);
+    s.setGPIORLE(State::ON);
+    s.setGPIOOutStep(3);
+    s.setGPIOPatternMask(0x00FF);
+    s.setGPIOPatternValue(0x0055);
+    s.setGPIOPatternPosEdge(0x0001);
+    s.setGPIOPatternNegEdge(0x0002);
+    s.setGPIOTriggerSources(0x10);
+    s.setGPIOEventSource(EventSource::LA);
+    s.setGPIOInTriggerMode(State::ON);
+    s.setGPIOOutTriggerMode(State::ON);
+    s.setGPIOTriggerBlocks(7);
 }
 
 auto SameSettings(const CStreamSettings& a, const CStreamSettings& b) -> ::testing::AssertionResult {
@@ -107,6 +141,108 @@ TEST(StreamSettings, TheDefaultsAreTheOnesDeclaredInTheHeader) {
     EXPECT_EQ(s.getADCSize(), expectedRegion);
     EXPECT_EQ(s.getDACSize(), expectedRegion);
     EXPECT_EQ(s.getGPIOSize(), expectedRegion);
+
+    // The trigger settings default to what the blocks do without them: no trigger, own events.
+    EXPECT_EQ(s.getADCTriggerMode(), State::OFF);
+    EXPECT_EQ(s.getADCTriggerSources(), 0u);
+    EXPECT_EQ(s.getADCTriggerLevelLow(), -4);
+    EXPECT_EQ(s.getADCTriggerLevelHigh(), 4);
+    EXPECT_EQ(s.getADCTriggerEdge(), TriggerEdge::RISING);
+    EXPECT_EQ(s.getADCEventSource(), EventSource::OWN);
+    EXPECT_EQ(s.getADCTriggerBlocks(), 0u);
+    EXPECT_EQ(s.getDACTriggerMode(1), State::OFF);
+    EXPECT_EQ(s.getDACTriggerMode(2), State::OFF);
+    EXPECT_EQ(s.getDACTriggerSources(), 0u);
+    EXPECT_EQ(s.getDACEventSource(), EventSource::OWN);
+
+    EXPECT_EQ(s.getExtTrigConditioner(), State::OFF);
+    EXPECT_EQ(s.getExtTrigEdge(), TriggerEdge::RISING);
+    EXPECT_EQ(s.getExtTrigDebounce(), 0u);
+    EXPECT_EQ(s.getExtTrigDio0(), State::ON);
+
+    EXPECT_EQ(s.getGPIOInStreaming(), State::OFF);
+    EXPECT_EQ(s.getGPIOOutStreaming(), State::OFF);
+    EXPECT_EQ(s.getGPIOOutputsP(), 0u);
+    EXPECT_EQ(s.getGPIOOutputsN(), 0u);
+    EXPECT_EQ(s.getGPIOPolarity(), 0u);
+    EXPECT_EQ(s.getGPIODecimation(), 1u);
+    EXPECT_EQ(s.getGPIORLE(), State::OFF);
+    EXPECT_EQ(s.getGPIOOutStep(), 1u);
+    EXPECT_EQ(s.getGPIOPatternMask(), 0u);
+    EXPECT_EQ(s.getGPIOPatternValue(), 0u);
+    EXPECT_EQ(s.getGPIOPatternPosEdge(), 0u);
+    EXPECT_EQ(s.getGPIOPatternNegEdge(), 0u);
+    EXPECT_EQ(s.getGPIOTriggerSources(), 0u);
+    EXPECT_EQ(s.getGPIOEventSource(), EventSource::OWN);
+    EXPECT_EQ(s.getGPIOInTriggerMode(), State::OFF);
+    EXPECT_EQ(s.getGPIOOutTriggerMode(), State::OFF);
+    EXPECT_EQ(s.getGPIOTriggerBlocks(), 0u);
+}
+
+// The range of every checked setter, at both bounds; a rejected value is not stored.
+TEST(StreamSettings, TheTriggerAndGpioSettersCheckTheirRange) {
+    CStreamSettings s;
+
+    EXPECT_TRUE(s.setADCTriggerSources(0x3F));
+    EXPECT_FALSE(s.setADCTriggerSources(0x40));
+    EXPECT_EQ(s.getADCTriggerSources(), 0x3Fu);
+    EXPECT_TRUE(s.setDACTriggerSources(0x3F));
+    EXPECT_FALSE(s.setDACTriggerSources(0x80));
+    EXPECT_TRUE(s.setGPIOTriggerSources(0x3F));
+    EXPECT_FALSE(s.setGPIOTriggerSources(0x100));
+
+    EXPECT_TRUE(s.setADCTriggerLevelLow(-32768));
+    EXPECT_FALSE(s.setADCTriggerLevelLow(-32769));
+    EXPECT_EQ(s.getADCTriggerLevelLow(), -32768);
+    EXPECT_TRUE(s.setADCTriggerLevelHigh(32767));
+    EXPECT_FALSE(s.setADCTriggerLevelHigh(32768));
+    EXPECT_EQ(s.getADCTriggerLevelHigh(), 32767);
+    // The order of the two levels is left to the consumer, so they can be set one by one.
+    EXPECT_TRUE(s.setADCTriggerLevelLow(100));
+    EXPECT_TRUE(s.setADCTriggerLevelHigh(-100));
+
+    EXPECT_TRUE(s.setADCTriggerBlocks(0xFFFF));
+    EXPECT_FALSE(s.setADCTriggerBlocks(0x10000));
+    EXPECT_TRUE(s.setGPIOTriggerBlocks(0xFFFF));
+    EXPECT_FALSE(s.setGPIOTriggerBlocks(0x10000));
+    EXPECT_TRUE(s.setExtTrigDebounce(0xFFFF));
+    EXPECT_FALSE(s.setExtTrigDebounce(0x10000));
+    EXPECT_EQ(s.getExtTrigDebounce(), 0xFFFFu);
+
+    EXPECT_TRUE(s.setGPIOOutputsP(0xFF));
+    EXPECT_FALSE(s.setGPIOOutputsP(0x100));
+    EXPECT_TRUE(s.setGPIOOutputsN(0xFF));
+    EXPECT_FALSE(s.setGPIOOutputsN(0x100));
+    for (auto setter : {&CStreamSettings::setGPIOPolarity, &CStreamSettings::setGPIOPatternMask, &CStreamSettings::setGPIOPatternValue,
+                        &CStreamSettings::setGPIOPatternPosEdge, &CStreamSettings::setGPIOPatternNegEdge}) {
+        EXPECT_TRUE((s.*setter)(0xFFFF));
+        EXPECT_FALSE((s.*setter)(0x10000));
+    }
+
+    EXPECT_TRUE(s.setGPIODecimation(131072));
+    EXPECT_FALSE(s.setGPIODecimation(131073));
+    EXPECT_FALSE(s.setGPIODecimation(0));
+    EXPECT_EQ(s.getGPIODecimation(), 131072u);
+    EXPECT_FALSE(s.setGPIOOutStep(0));
+    EXPECT_EQ(s.getGPIOOutStep(), 1u);
+    EXPECT_TRUE(s.setGPIOOutStep(0xFFFFFFFFu));
+
+    EXPECT_TRUE(s.setDACTriggerMode(2, State::ON));
+    EXPECT_EQ(s.getDACTriggerMode(1), State::OFF);
+    EXPECT_FALSE(s.setDACTriggerMode(0, State::ON));
+    EXPECT_FALSE(s.setDACTriggerMode(3, State::ON));
+    EXPECT_EQ(s.getDACTriggerMode(3), State::OFF);
+}
+
+// The event source enum carries the uio_lib EVENT_SRC_* numbers, OWN is not a register value.
+TEST(StreamSettings, TheEventSourceValuesMatchUioLib) {
+    EXPECT_EQ(static_cast<int>(EventSource::OWN), -1);
+    EXPECT_EQ(static_cast<int>(EventSource::GEN_A), 0);
+    EXPECT_EQ(static_cast<int>(EventSource::GEN_B), 1);
+    EXPECT_EQ(static_cast<int>(EventSource::OSC1), 2);
+    EXPECT_EQ(static_cast<int>(EventSource::OSC2), 3);
+    EXPECT_EQ(static_cast<int>(EventSource::LA), 4);
+    EXPECT_EQ(CStreamSettings::TRIGGER_SOURCES_ALL, 0x3Fu);
 }
 
 TEST(StreamSettings, AdcChannelAccessorsAreOneBasedAndRangeChecked) {
@@ -291,6 +427,9 @@ TEST(StreamSettings, ToStringReportsEveryGroup) {
     EXPECT_NE(dump.find("ADC streaming"), std::string::npos);
     EXPECT_NE(dump.find("DAC streaming"), std::string::npos);
     EXPECT_NE(dump.find("Memory Manager"), std::string::npos);
+    EXPECT_NE(dump.find("External trigger"), std::string::npos);
+    EXPECT_NE(dump.find("GPIO streaming"), std::string::npos);
+    EXPECT_NE(dump.find("Trigger blocks:\t\tContinuous"), std::string::npos) << "0 trigger blocks prints as Continuous";
     EXPECT_NE(dump.find("Samples:\t\tUnlimited"), std::string::npos) << "0 samples prints as Unlimited";
 
     s.setADCSamples(10);
@@ -311,7 +450,13 @@ TEST(StreamSettings, GetHelpNamesEveryKeyTheKeyValueInterfaceAccepts) {
     const std::string help = CStreamSettings::getHelp();
     for (const char* key : {"format_sd", "data_type_sd", "samples_limit_sd", "adc_pass_mode", "resolution", "adc_decimation", "use_calib",
                             "adc_capture_time", "dac_rate", "file_sd", "file_type_sd", "dac_pass_mode", "repeat", "repeatCount", "block_size",
-                            "adc_size", "dac_size", "gpio_size"}) {
+                            "adc_size", "dac_size", "gpio_size", "adc_trigger_mode", "adc_trigger_sources", "adc_trigger_level_low",
+                            "adc_trigger_level_high", "adc_trigger_edge", "adc_event_source", "adc_trigger_blocks", "dac_trigger_sources",
+                            "dac_event_source", "ext_trig_conditioner", "ext_trig_edge", "ext_trig_debounce", "ext_trig_dio0",
+                            "gpio_in_streaming", "gpio_out_streaming", "gpio_outputs_p", "gpio_outputs_n", "gpio_polarity", "gpio_decimation",
+                            "gpio_rle", "gpio_out_step", "gpio_pattern_mask", "gpio_pattern_value", "gpio_pattern_pos_edge",
+                            "gpio_pattern_neg_edge", "gpio_trigger_sources", "gpio_event_source", "gpio_in_trigger_mode",
+                            "gpio_out_trigger_mode", "gpio_trigger_blocks"}) {
         EXPECT_NE(help.find(key), std::string::npos) << "missing key " << key;
     }
     for (int i = 1; i <= 4; i++) {
@@ -321,10 +466,13 @@ TEST(StreamSettings, GetHelpNamesEveryKeyTheKeyValueInterfaceAccepts) {
     }
     for (int i = 1; i <= 2; i++) {
         EXPECT_NE(help.find("channel_gain_" + std::to_string(i)), std::string::npos);
+        EXPECT_NE(help.find("dac_trigger_mode_" + std::to_string(i)), std::string::npos);
     }
     // The listed alternatives come from names(), which is what setValue parses.
     EXPECT_NE(help.find("WAV,TDMS,BIN"), std::string::npos);
     EXPECT_NE(help.find("DAC_REP_OFF,DAC_REP_INF,DAC_REP_ON"), std::string::npos);
+    EXPECT_NE(help.find("OWN,GEN_A,GEN_B,OSC1,OSC2,LA"), std::string::npos);
+    EXPECT_NE(help.find("RISING,FALLING"), std::string::npos);
 }
 
 // getDACDirPath is global process state guarded by a preprocessor switch: the

@@ -30,6 +30,16 @@ class CStreamSettings {
 
     ENUM(DACGain, X1 = 0, "x1", X5 = 1, "x5")
 
+    ENUM(TriggerEdge, RISING = 0, "Rising", FALLING = 1, "Falling")
+
+    // The block whose start/stop/reset/trigger events a block follows (uio_lib EVENT_SRC_*);
+    // OWN - its own events, the uio_lib default.
+    ENUM(EventSource, OWN = -1, "Own", GEN_A = 0, "DAC A", GEN_B = 1, "DAC B", OSC1 = 2, "ADC 1", OSC2 = 3, "ADC 2", LA = 4, "GPIO")
+
+    // Trigger source masks follow uio_lib TRIG_SRC_*: bit 0 DAC A, 1 DAC B, 2 ADC CH1, 3 ADC CH2,
+    // 4 GPIO (LA), 5 external.
+    static constexpr uint32_t TRIGGER_SOURCES_ALL = 0x3F;
+
     CStreamSettings();
     ~CStreamSettings();
     CStreamSettings(const CStreamSettings&);
@@ -87,6 +97,76 @@ class CStreamSettings {
     auto setDACRepeatCount(uint32_t _value) -> void;
     auto getDACRepeatCount() const -> uint32_t;
 
+    // stream_app triggers of the ADC: trigger mode, block mode, level trigger in ADC codes
+    auto setADCTriggerMode(State _value) -> void;
+    auto getADCTriggerMode() const -> State;
+    auto setADCTriggerSources(uint32_t _mask) -> bool;
+    auto getADCTriggerSources() const -> uint32_t;
+    auto setADCTriggerLevelLow(int32_t _value) -> bool;
+    auto getADCTriggerLevelLow() const -> int32_t;
+    auto setADCTriggerLevelHigh(int32_t _value) -> bool;
+    auto getADCTriggerLevelHigh() const -> int32_t;
+    auto setADCTriggerEdge(TriggerEdge _value) -> void;
+    auto getADCTriggerEdge() const -> TriggerEdge;
+    auto setADCEventSource(EventSource _value) -> void;
+    auto getADCEventSource() const -> EventSource;
+    auto setADCTriggerBlocks(uint32_t _blocks) -> bool;
+    auto getADCTriggerBlocks() const -> uint32_t;
+
+    // stream_app triggers of the DAC
+    auto setDACTriggerMode(uint8_t _channel, State _value) -> bool;
+    auto getDACTriggerMode(uint8_t _channel) const -> State;
+    auto setDACTriggerSources(uint32_t _mask) -> bool;
+    auto getDACTriggerSources() const -> uint32_t;
+    auto setDACEventSource(EventSource _value) -> void;
+    auto getDACEventSource() const -> EventSource;
+
+    // external trigger conditioner
+    auto setExtTrigConditioner(State _value) -> void;
+    auto getExtTrigConditioner() const -> State;
+    auto setExtTrigEdge(TriggerEdge _value) -> void;
+    auto getExtTrigEdge() const -> TriggerEdge;
+    auto setExtTrigDebounce(uint32_t _clocks) -> bool;
+    auto getExtTrigDebounce() const -> uint32_t;
+    auto setExtTrigDio0(State _value) -> void;
+    auto getExtTrigDio0() const -> State;
+
+    // GPIO streaming (DIO0..7 P and N)
+    auto setGPIOInStreaming(State _value) -> void;
+    auto getGPIOInStreaming() const -> State;
+    auto setGPIOOutStreaming(State _value) -> void;
+    auto getGPIOOutStreaming() const -> State;
+    auto setGPIOOutputsP(uint32_t _mask) -> bool;
+    auto getGPIOOutputsP() const -> uint32_t;
+    auto setGPIOOutputsN(uint32_t _mask) -> bool;
+    auto getGPIOOutputsN() const -> uint32_t;
+    auto setGPIOPolarity(uint32_t _mask) -> bool;
+    auto getGPIOPolarity() const -> uint32_t;
+    auto setGPIODecimation(uint32_t _decimation) -> bool;
+    auto getGPIODecimation() const -> uint32_t;
+    auto setGPIORLE(State _value) -> void;
+    auto getGPIORLE() const -> State;
+    auto setGPIOOutStep(uint32_t _step) -> bool;
+    auto getGPIOOutStep() const -> uint32_t;
+    auto setGPIOPatternMask(uint32_t _mask) -> bool;
+    auto getGPIOPatternMask() const -> uint32_t;
+    auto setGPIOPatternValue(uint32_t _value) -> bool;
+    auto getGPIOPatternValue() const -> uint32_t;
+    auto setGPIOPatternPosEdge(uint32_t _mask) -> bool;
+    auto getGPIOPatternPosEdge() const -> uint32_t;
+    auto setGPIOPatternNegEdge(uint32_t _mask) -> bool;
+    auto getGPIOPatternNegEdge() const -> uint32_t;
+    auto setGPIOTriggerSources(uint32_t _mask) -> bool;
+    auto getGPIOTriggerSources() const -> uint32_t;
+    auto setGPIOEventSource(EventSource _value) -> void;
+    auto getGPIOEventSource() const -> EventSource;
+    auto setGPIOInTriggerMode(State _value) -> void;
+    auto getGPIOInTriggerMode() const -> State;
+    auto setGPIOOutTriggerMode(State _value) -> void;
+    auto getGPIOOutTriggerMode() const -> State;
+    auto setGPIOTriggerBlocks(uint32_t _blocks) -> bool;
+    auto getGPIOTriggerBlocks() const -> uint32_t;
+
     auto setMemoryBlockSize(uint32_t size) -> void;
     auto getMemoryBlockSize() const -> uint32_t;
     auto setADCSize(uint32_t size) -> void;
@@ -116,6 +196,13 @@ class CStreamSettings {
         State m_useCalib = State::ON;
         AC_DC m_ac_dc[4] = {AC_DC::DC, AC_DC::DC, AC_DC::DC, AC_DC::DC};
         ADCCaptureTime m_captureTime = ADCCaptureTime::ON;
+        State m_trigMode = State::OFF;
+        uint32_t m_trigSources = 0;
+        int32_t m_trigLevelLow = -4;  // the uio_lib defaults
+        int32_t m_trigLevelHigh = 4;
+        TriggerEdge m_trigEdge = TriggerEdge::RISING;
+        EventSource m_eventSource = EventSource::OWN;
+        uint32_t m_trigBlocks = 0;  // 0 - continuous after the trigger
     };
 
     struct MemorySettings {
@@ -134,11 +221,43 @@ class CStreamSettings {
         uint64_t m_memoryUsage = 1024 * 1024;
         uint32_t m_repeatCount = 0;
         uint32_t m_rate = 125000000;
+        State m_trigMode[2] = {State::OFF, State::OFF};
+        uint32_t m_trigSources = 0;
+        EventSource m_eventSource = EventSource::OWN;
+    };
+
+    struct ExtTriggerSettings {
+        State m_conditioner = State::OFF;  // off: the raw pin level goes to the trigger masks
+        TriggerEdge m_edge = TriggerEdge::RISING;
+        uint32_t m_debounce = 0;  // clocks, 0 - no debounce
+        State m_dio0 = State::ON;  // DIO0_P drives the external trigger, as after the bitstream load
+    };
+
+    struct GPIOSettings {
+        State m_inStreaming = State::OFF;
+        State m_outStreaming = State::OFF;
+        uint32_t m_outputsP = 0;  // 1 - the line is driven by the output stream
+        uint32_t m_outputsN = 0;
+        uint32_t m_polarity = 0;  // inverted input lines: bits 7:0 P, 15:8 N
+        uint32_t m_decimation = 1;
+        State m_rle = State::OFF;
+        uint32_t m_outStep = 1;
+        uint32_t m_patternMask = 0;  // pattern trigger: bits 7:0 P, 15:8 N
+        uint32_t m_patternValue = 0;
+        uint32_t m_patternPosEdge = 0;
+        uint32_t m_patternNegEdge = 0;
+        uint32_t m_trigSources = 0;
+        EventSource m_eventSource = EventSource::OWN;
+        State m_inTrigMode = State::OFF;
+        State m_outTrigMode = State::OFF;
+        uint32_t m_trigBlocks = 0;
     };
 
     ADCSettings m_adcsettings;
     MemorySettings m_memorysettings;
     DACSettings m_dacsettings;
+    ExtTriggerSettings m_exttrigsettings;
+    GPIOSettings m_gpiosettings;
 };
 
 #endif

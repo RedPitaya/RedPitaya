@@ -57,6 +57,38 @@ const std::vector<KeyValue> kAllKeys = {
     {"adc_size", "1000"},
     {"dac_size", "2000"},
     {"gpio_size", "3000"},
+    {"adc_trigger_mode", "ON"},
+    {"adc_trigger_sources", "33"},
+    {"adc_trigger_level_low", "-1000"},
+    {"adc_trigger_level_high", "2000"},
+    {"adc_trigger_edge", "FALLING"},
+    {"adc_event_source", "GEN_B"},
+    {"adc_trigger_blocks", "10"},
+    {"dac_trigger_mode_1", "ON"},
+    {"dac_trigger_mode_2", "ON"},
+    {"dac_trigger_sources", "4"},
+    {"dac_event_source", "OSC2"},
+    {"ext_trig_conditioner", "ON"},
+    {"ext_trig_edge", "FALLING"},
+    {"ext_trig_debounce", "200"},
+    {"ext_trig_dio0", "OFF"},
+    {"gpio_in_streaming", "ON"},
+    {"gpio_out_streaming", "ON"},
+    {"gpio_outputs_p", "255"},
+    {"gpio_outputs_n", "1"},
+    {"gpio_polarity", "65535"},
+    {"gpio_decimation", "131072"},
+    {"gpio_rle", "ON"},
+    {"gpio_out_step", "2"},
+    {"gpio_pattern_mask", "3"},
+    {"gpio_pattern_value", "1"},
+    {"gpio_pattern_pos_edge", "2"},
+    {"gpio_pattern_neg_edge", "4"},
+    {"gpio_trigger_sources", "63"},
+    {"gpio_event_source", "LA"},
+    {"gpio_in_trigger_mode", "ON"},
+    {"gpio_out_trigger_mode", "ON"},
+    {"gpio_trigger_blocks", "65535"},
 };
 
 }  // namespace
@@ -177,6 +209,32 @@ TEST(StreamSettingsKeys, NumericOverflowIsRejectedNotWrapped) {
     EXPECT_EQ(s.getValue("samples_limit_sd"), "18446744073709551615");
 
     EXPECT_FALSE(s.setValue("block_size", "99999999999999999999999999")) << "far past 64 bits, rejected in to_uint64";
+}
+
+// The trigger levels are the only signed keys: an optional minus, then digits only.
+TEST(StreamSettingsKeys, TheTriggerLevelsTakeSignedValues) {
+    CStreamSettings s;
+    EXPECT_TRUE(s.setValue("adc_trigger_level_low", "-32768"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_low"), "-32768");
+    EXPECT_TRUE(s.setValue("adc_trigger_level_high", "32767"));
+    EXPECT_TRUE(s.setValue("adc_trigger_level_high", "-0"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_high"), "0");
+
+    EXPECT_FALSE(s.setValue("adc_trigger_level_low", "-32769")) << "out of the ADC code range";
+    EXPECT_FALSE(s.setValue("adc_trigger_level_high", "32768"));
+    EXPECT_FALSE(s.setValue("adc_trigger_level_low", "-"));
+    EXPECT_FALSE(s.setValue("adc_trigger_level_low", "--1"));
+    EXPECT_FALSE(s.setValue("adc_trigger_level_low", "+1"));
+    EXPECT_FALSE(s.setValue("adc_trigger_level_low", "-9999999999"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_low"), "-32768") << "nothing stored";
+
+    EXPECT_FALSE(s.setValue("adc_trigger_blocks", "-1")) << "the other numeric keys stay unsigned";
+    EXPECT_FALSE(s.setValue("gpio_decimation", "0"));
+    EXPECT_FALSE(s.setValue("gpio_out_step", "0"));
+    EXPECT_FALSE(s.setValue("adc_trigger_sources", "64"));
+    EXPECT_FALSE(s.setValue("adc_event_source", "DAC A")) << "the display string is not accepted";
+    EXPECT_FALSE(s.setValue("dac_trigger_mode_3", "ON"));
+    EXPECT_EQ(s.getValue("dac_trigger_mode_3"), "ERROR");
 }
 
 TEST(StreamSettingsKeys, TheFilePathKeyTakesAnyString) {
