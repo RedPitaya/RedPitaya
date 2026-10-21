@@ -85,7 +85,6 @@ auto ClientNetConfigManager::removeHadlers() -> void {
 
 auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> void {
     m_pBroadcast = broadcast_lib::CAsioBroadcastSocket::create(0, "", host, port);
-    m_pBroadcast->initClient();
     m_pBroadcast->errorNotify.connect([=, this](std::error_code er) {
         ERROR_LOG("Broadcast client error: %s (%d)", er.message().c_str(), er.value());
         errorNofiy(Errors::BROADCAST_ERROR, host, er);
@@ -121,6 +120,8 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
         if (riseEmit)
             broadCastNewClientNofiy(h);
     });
+    // After the handlers: a bind error is reported through errorNotify.
+    m_pBroadcast->initClient();
 }
 
 auto ClientNetConfigManager::parseBroadcast(const std::string& message, BroadCastClients& client) -> bool {
