@@ -1,6 +1,7 @@
 #ifndef CONFIG_NET_LIB_SNCM_H
 #define CONFIG_NET_LIB_SNCM_H
 
+#include <mutex>
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
 #include "net_config_manager.h"
@@ -72,6 +73,7 @@ class ServerNetConfigManager {
 
     auto sendConfigFileMissed() -> bool;
 
+    // Not synchronized with the config channel: use only while no client changes the settings.
     auto getSettingsRef() -> CStreamSettings&;
     auto setSettingsParameter(const std::string& key, const std::string& value) -> bool;
     auto getSettings() -> const CStreamSettings;
@@ -121,6 +123,8 @@ class ServerNetConfigManager {
     std::string m_file_settings;
     broadcast_lib::EMode m_mode;
     CStreamSettings m_settings;
+    // m_settings is changed on the asio thread and read from the streaming threads.
+    std::mutex m_settingsMtx;
     uint8_t m_maxADCChannels = 0;
 };
 

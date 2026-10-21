@@ -22,6 +22,8 @@ endif()
 add_executable(config_net_lib_tests
     test_trigger_status.cpp
     test_net_config.cpp
+    test_net_robustness.cpp
+    test_app_flows.cpp
 )
 
 target_include_directories(config_net_lib_tests PRIVATE ${COMMON_LIB_DIR})

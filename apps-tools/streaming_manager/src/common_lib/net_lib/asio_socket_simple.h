@@ -1,7 +1,9 @@
 #ifndef NET_LIB_ASIO_SOCKET_SIMPLE_H
 #define NET_LIB_ASIO_SOCKET_SIMPLE_H
 
-#include <map>
+#include <deque>
+#include <future>
+#include <mutex>
 
 #include "asio.hpp"
 #include "asio_common.h"
@@ -10,6 +12,9 @@
 
 namespace net_lib {
 
+// One TCP connection: a server keeps the newest client (a new one replaces the old), a client
+// connects once. Every socket operation runs on the asio thread; the signals are emitted
+// without the internal lock held, so a handler may call back into the object.
 class CAsioSocketSimple {
    public:
     using Ptr = std::shared_ptr<CAsioSocketSimple>;
@@ -24,8 +29,12 @@ class CAsioSocketSimple {
     auto initServer() -> void;
     auto initClient() -> void;
     auto closeSocket() -> void;
+    // True only while a connection is established.
     auto isConnected() -> bool;
+    auto runningInIoThread() -> bool;
 
+    // Buffers are written whole and in order. With async == false the call waits until the
+    // buffer is written, except on the asio thread, where it only queues it.
     auto sendBuffer(bool async, net_lib::net_buffer _buffer, size_t _size) -> bool;
 
     sigslot::signal<std::string&> connectNotify;
@@ -43,12 +52,27 @@ class CAsioSocketSimple {
     CAsioSocketSimple& operator=(const CAsioSocketSimple&) = delete;
     CAsioSocketSimple& operator=(const CAsioSocketSimple&&) = delete;
 
-    auto handlerReceive(const asio::error_code& error, size_t bytes_transferred) -> void;
+    using read_buffer = std::shared_ptr<uint8_t[]>;
+
+    struct PendingWrite {
+        net_buffer buffer;
+        size_t size;
+        std::shared_ptr<std::promise<bool>> done;
+    };
+
+    auto startAccept() -> void;
+    auto startReceive(socket_ptr socket, read_buffer buffer) -> void;
+    auto startWrite(socket_ptr socket) -> void;
     auto handlerAccept(const asio::error_code& _error, socket_ptr socket) -> void;
-    auto handlerConnect(const asio::error_code& ec) -> void;
-    auto handlerSend(const asio::error_code& _error, size_t _bytesTransferred) -> void;
-    auto handlerSend2(const asio::error_code& _error, size_t _bytesTransferred, uint64_t bufferId) -> void;
-    auto handlerReceiveFromServer(const asio::error_code& ErrorCode, size_t bytes_transferred) -> void;
+    auto handlerConnect(const asio::error_code& _error, socket_ptr socket) -> void;
+    auto handlerReceive(const asio::error_code& _error, size_t bytes_transferred, socket_ptr socket, read_buffer buffer) -> void;
+    auto handlerWrite(const asio::error_code& _error, size_t _bytesTransferred, socket_ptr socket) -> void;
+    // Closes the current connection if it is still this socket; emits disconnectNotify if it was established.
+    auto dropConnection(socket_ptr socket) -> void;
+    auto closeOnIoThread(socket_ptr socket, acceptor_ptr acceptor) -> void;
+    // Under m_mtx: the queued buffers are reported as not sent.
+    auto failQueueLocked() -> void;
+    auto isCurrentLocked(const socket_ptr& socket) -> bool;
 
     net_lib::EMode m_mode;
     std::string m_host;
@@ -56,16 +80,15 @@ class CAsioSocketSimple {
 
     socket_ptr m_tcp_socket = nullptr;
     acceptor_ptr m_tcp_acceptor = nullptr;
-    asio::ip::tcp::endpoint m_tcp_endpoint;
-    asio::ip::tcp::resolver::results_type m_endpoints;
+    std::string m_peer;
+    bool m_connected = false;
     CAsioService* m_asio;
-    asio::steady_timer m_timoutTimer;
-    uint8_t* m_SocketReadBuffer;
-    bool m_disableRestartServer;
+    // Destroyed before m_asio: a timer must not outlive its io_context.
+    std::unique_ptr<asio::steady_timer> m_timoutTimer;
     std::mutex m_mtx;
 
-    uint64_t m_sendbufersSSId = 0;
-    std::map<uint64_t, net_buffer> m_sendbuffersSS;
+    std::deque<PendingWrite> m_writeQueue;
+    bool m_writing = false;
 };
 
 }  // namespace net_lib

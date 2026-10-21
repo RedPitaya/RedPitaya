@@ -8,6 +8,9 @@ namespace net_lib {
 class CAsioService {
    public:
     auto getIO() -> asio::io_context&;
+    // Stops the loop and waits for its thread, unless called from that thread (then it is detached).
+    auto stop() -> void;
+    auto runningInThisThread() -> bool;
 
     CAsioService();
     ~CAsioService();

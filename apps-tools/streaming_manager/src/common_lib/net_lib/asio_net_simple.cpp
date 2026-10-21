@@ -45,6 +45,19 @@ auto CAsioNetSimple::disconnect() -> void {
     m_IsRun = false;
 }
 
+auto CAsioNetSimple::runningInIoThread() -> bool {
+    return m_server && m_server->runningInIoThread();
+}
+
+auto CAsioNetSimple::disconnectSignals() -> void {
+    connectNotify.disconnect_all();
+    disconnectNotify.disconnect_all();
+    errorNotify.disconnect_all();
+    connectTimeoutNotify.disconnect_all();
+    sendNotify.disconnect_all();
+    recivedNotify.disconnect_all();
+}
+
 auto CAsioNetSimple::sendData(bool async, net_buffer _buffer, size_t _size) -> bool {
     if (m_server)
         return m_server->sendBuffer(async, _buffer, _size);

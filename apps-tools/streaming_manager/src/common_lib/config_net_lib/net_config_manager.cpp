@@ -1,6 +1,7 @@
 #include "net_config_manager.h"
 #include <time.h>
 #include <cstdlib>
+#include <thread>
 #include "data_lib/neon_asm.h"
 #include "logger_lib/file_logger.h"
 
@@ -56,6 +57,21 @@ auto packCommand(uint32_t command, std::string tag, size_t* len) -> net_lib::net
 
 CNetConfigManager::CNetConfigManager() : m_host(""), m_port(0), m_asionet(nullptr), m_mode(net_lib::EMode::M_CLIENT), m_buffers() {}
 
+namespace {
+
+// Deleting the connection joins its asio thread, which cannot happen on that thread: there the
+// deletion is handed to a thread of its own.
+auto deleteAsioNet(net_lib::CAsioNetSimple* net) -> void {
+    if (net->runningInIoThread()) {
+        net->disconnectSignals();
+        std::thread([net]() { delete net; }).detach();
+    } else {
+        delete net;
+    }
+}
+
+}  // namespace
+
 CNetConfigManager::~CNetConfigManager() {
     stopAsioNet();
     delete[] m_buffers.m_buffers;
@@ -70,14 +86,24 @@ auto CNetConfigManager::startAsioNet(net_lib::EMode _mode, std::string _host, ui
     return start();
 }
 
+auto CNetConfigManager::net() -> std::shared_ptr<net_lib::CAsioNetSimple> {
+    std::lock_guard lock(m_netMtx);
+    return m_asionet;
+}
+
 auto CNetConfigManager::stopAsioNet() -> bool {
-    if (m_asionet) {
-        m_asionet->disconnect();
-        delete m_asionet;
-        m_asionet = nullptr;
-        return true;
+    std::shared_ptr<net_lib::CAsioNetSimple> net;
+    {
+        std::lock_guard lock(m_netMtx);
+        net = std::move(m_asionet);
     }
-    return false;
+    if (!net)
+        return false;
+    net->disconnect();
+    // A sender may still hold it (the last owner deletes it through deleteAsioNet); whatever it
+    // reports from now on is not ours.
+    net->disconnectSignals();
+    return true;
 }
 
 bool CNetConfigManager::start() {
@@ -85,92 +111,111 @@ bool CNetConfigManager::start() {
         return false;
 
     stopAsioNet();
+    m_buffers.clear();
 
-    m_asionet = new net_lib::CAsioNetSimple(m_mode, m_host, m_port);
+    auto asionet = std::shared_ptr<net_lib::CAsioNetSimple>(new net_lib::CAsioNetSimple(m_mode, m_host, m_port), deleteAsioNet);
 
-    m_asionet->connectNotify.connect([=, this](auto& host) { this->connectNotify(host); });
-    m_asionet->disconnectNotify.connect([=, this](auto& host) { this->disconnectNotify(host); });
-    m_asionet->connectTimeoutNotify.connect([=, this](auto code) { this->connectTimeoutNotify(code); });
-    m_asionet->errorNotify.connect([=, this](auto code) { this->errorNotify(code); });
-    m_asionet->sendNotify.connect([=, this](auto e, auto s) { this->sendNotify(e, s); });
-    m_asionet->recivedNotify.connect(&CNetConfigManager::receiveHandler, this);
+    asionet->connectNotify.connect([=, this](auto& host) {
+        // A new peer starts a new stream: nothing left over from the previous one.
+        m_buffers.clear();
+        this->connectNotify(host);
+    });
+    asionet->disconnectNotify.connect([=, this](auto& host) { this->disconnectNotify(host); });
+    asionet->connectTimeoutNotify.connect([=, this](auto code) { this->connectTimeoutNotify(code); });
+    asionet->errorNotify.connect([=, this](auto code) { this->errorNotify(code); });
+    asionet->sendNotify.connect([=, this](auto e, auto s) { this->sendNotify(e, s); });
+    asionet->recivedNotify.connect(&CNetConfigManager::receiveHandler, this);
 
-    m_asionet->start();
+    {
+        std::lock_guard lock(m_netMtx);
+        m_asionet = asionet;
+    }
+    asionet->start();
     return true;
 }
 
 bool CNetConfigManager::isConnected() {
-    if (!m_asionet)
-        return false;
-    return m_asionet->isConnected();
+    auto asionet = net();
+    return asionet && asionet->isConnected();
 }
 
 auto CNetConfigManager::sendData(std::string key, std::string value, bool async) -> bool {
-    if (!m_asionet)
-        return false;
-    if (!m_asionet->isConnected())
+    auto asionet = net();
+    if (!asionet || !asionet->isConnected())
         return false;
     size_t len = 0;
     auto buff = packStrStr(key, value, &len);
-    bool ret = m_asionet->sendData(async, buff, len);
-    return ret;
+    return asionet->sendData(async, buff, len);
 }
 
 bool CNetConfigManager::sendConfig(std::string value, bool async) {
-    if (!m_asionet)
-        return false;
-    if (!m_asionet->isConnected())
+    auto asionet = net();
+    if (!asionet || !asionet->isConnected())
         return false;
     size_t len = 0;
     auto buff = packConfig(value, &len);
-    bool ret = m_asionet->sendData(async, buff, len);
-    return ret;
+    return asionet->sendData(async, buff, len);
 }
 
 bool CNetConfigManager::sendCommand(ECommands command, const std::string& tag, bool async) {
-    if (!m_asionet)
-        return false;
-    if (!m_asionet->isConnected())
+    auto asionet = net();
+    if (!asionet || !asionet->isConnected())
         return false;
     size_t len = 0;
     auto buff = packCommand(command, tag, &len);
-    bool ret = m_asionet->sendData(async, buff, len);
-    return ret;
+    return asionet->sendData(async, buff, len);
 }
 
 auto CNetConfigManager::receiveHandler(std::error_code, uint8_t* _buff, size_t _size) -> void {
+    // A handler may drop the last owner of this object (a client list replaced from a callback):
+    // it lives until the loop below is done with its buffer.
+    auto self = weak_from_this().lock();
     m_buffers.push_back(_buff, _size);
-    while (m_buffers.m_data_size > 0) {
-        if (m_buffers.m_data_size < 8) {
-            break;
+    while (m_buffers.m_data_size >= 8 && m_buffers.m_buffers) {
+        const uint32_t* words = (uint32_t*)m_buffers.m_buffers;
+        uint32_t header = words[0];
+        uint32_t segment_size = words[1];
+        uint32_t prefix_len = 0;
+        if (header == HEADER_CONFIG) {
+            prefix_len = 12;
+        } else if (header == HEADER_STR_STR || header == HEADER_COMMAND) {
+            prefix_len = 16;
+        } else {
+            TRACE_SHORT("Broken header")
+            throw std::runtime_error("Broken header");
         }
-        if (!m_buffers.m_buffers)
+        // The packers write exactly prefix + payload; anything else is not this protocol.
+        if (segment_size < prefix_len) {
+            TRACE_SHORT("Broken segment size")
+            throw std::runtime_error("Broken segment size");
+        }
+        if (m_buffers.m_data_size < segment_size)
             break;
-        uint32_t header = ((uint32_t*)m_buffers.m_buffers)[0];
-        uint32_t segment_size = ((uint32_t*)m_buffers.m_buffers)[1];
-        if (m_buffers.m_data_size < segment_size) {
-            break;
-        } else if (header == HEADER_CONFIG) {
-            uint32_t data_size = ((uint32_t*)m_buffers.m_buffers)[2];
+        const uint64_t payload = segment_size - prefix_len;
+        if (header == HEADER_CONFIG) {
+            uint32_t data_size = words[2];
+            if (data_size != payload)
+                throw std::runtime_error("Broken segment size");
             std::string data(reinterpret_cast<char const*>(&(m_buffers.m_buffers[12])), data_size);
             m_buffers.removeAtStart(segment_size);
             receivedConfigNotify(data);
         } else if (header == HEADER_STR_STR) {
-            uint32_t key_size = ((uint32_t*)m_buffers.m_buffers)[2];
-            uint32_t data_size = ((uint32_t*)m_buffers.m_buffers)[3];
+            uint32_t key_size = words[2];
+            uint32_t data_size = words[3];
+            if (uint64_t(key_size) + data_size != payload)
+                throw std::runtime_error("Broken segment size");
             std::string key(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16])), key_size);
             std::string data(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16 + key_size])), data_size);
             m_buffers.removeAtStart(segment_size);
             receivedStringNotify(key, data);
-        } else if (header == HEADER_COMMAND) {
-            uint32_t command = ((uint32_t*)m_buffers.m_buffers)[2];
-            uint32_t data_size = ((uint32_t*)m_buffers.m_buffers)[3];
+        } else {
+            uint32_t command = words[2];
+            uint32_t data_size = words[3];
+            if (data_size != payload)
+                throw std::runtime_error("Broken segment size");
             std::string key(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16])), data_size);
             m_buffers.removeAtStart(segment_size);
             receivedCommandNotify(command, key);
-        } else {
-            TRACE_SHORT("Broken header")
-            throw std::runtime_error("Broken header");
         }
     }
 }
@@ -224,6 +269,10 @@ auto CNetConfigManager::parseTriggerTarget(const std::string& tag, ETriggerTarge
         return false;
     }
     return true;
+}
+
+auto CNetConfigManager::dyn_buffer::clear() -> void {
+    m_data_size = 0;
 }
 
 auto CNetConfigManager::getHost() -> std::string {

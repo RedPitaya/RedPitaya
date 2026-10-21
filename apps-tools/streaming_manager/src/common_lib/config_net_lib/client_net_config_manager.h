@@ -2,6 +2,7 @@
 #define CONFIG_NET_LIB_CNCM_H
 
 #include <ctime>
+#include <mutex>
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
 #include "net_config_manager.h"
@@ -37,6 +38,9 @@ class ClientNetConfigManager : public CStreamSettings {
     auto connectToServers(std::vector<std::string> _hosts, uint16_t port) -> void;
     auto isServersConnected() -> bool;
     auto diconnectAll() -> void;
+
+    // One broadcast message: "mac\nhost\nmode\nmodel" with an optional trailing newline.
+    static auto parseBroadcast(const std::string& message, BroadCastClients& client) -> bool;
 
     auto getBroadcastClients() -> const std::list<BroadCastClients>;
     auto getHosts() -> std::list<std::string>;
@@ -133,12 +137,20 @@ class ClientNetConfigManager : public CStreamSettings {
     auto receiveStrStr(std::string key, std::string value, std::weak_ptr<Clients> sender) -> void;
     auto receiveConfig(std::string value, std::weak_ptr<Clients> sender) -> void;
 
+    // A connected server by its host, nullptr if there is none; with handshake only one that
+    // has answered with its mode.
+    auto findClient(const std::string& host, bool handshake) -> std::shared_ptr<Clients>;
+    auto clientsCopy() -> std::list<std::shared_ptr<Clients>>;
+
     auto serverError(std::error_code error, std::weak_ptr<Clients> sender) -> void;
     auto connectTimeoutError(std::error_code error, std::weak_ptr<Clients> sender) -> void;
 
     std::string m_file_settings;
     std::list<BroadCastClients> m_broadcastClients;
+    std::mutex m_broadcastMtx;
+    // Guards the list and Clients::m_mode; never held while a connection is started or stopped.
     std::list<std::shared_ptr<Clients>> m_clients;
+    std::mutex m_clientsMtx;
 };
 
 #endif

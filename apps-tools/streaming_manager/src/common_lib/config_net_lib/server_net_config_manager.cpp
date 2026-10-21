@@ -1,4 +1,5 @@
 #include "server_net_config_manager.h"
+#include "config_apply.h"
 #include "logger_lib/file_logger.h"
 
 ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings_path, broadcast_lib::EMode mode, std::string host, uint16_t port, uint8_t maxAdcChannels)
@@ -11,11 +12,12 @@ ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings
     m_pNetConfManager->disconnectNotify.connect(&ServerNetConfigManager::disconnected, this);
     m_pNetConfManager->errorNotify.connect(&ServerNetConfigManager::serverError, this);
 
-    startServer(host, port);
+    // The settings are in place before a client can ask for them.
     if (!m_settings.readFromFile(defualt_file_settings_path)) {
         m_settings.resetDefault();
         m_settings.writeToFile(defualt_file_settings_path);
     }
+    startServer(host, port);
 }
 
 ServerNetConfigManager::~ServerNetConfigManager() {
@@ -23,8 +25,12 @@ ServerNetConfigManager::~ServerNetConfigManager() {
 }
 
 auto ServerNetConfigManager::stop() -> void {
-    if (m_pBroadcast)
+    if (m_pBroadcast) {
+        m_pBroadcast->errorNotify.disconnect_all();
         m_pBroadcast->closeSocket();
+        // Joins the broadcast thread, so its handler is not running into this object later.
+        m_pBroadcast.reset();
+    }
     m_pNetConfManager->stopAsioNet();
 }
 
@@ -42,7 +48,8 @@ auto ServerNetConfigManager::startBroadcast(uint8_t model, std::string mac, std:
 }
 
 auto ServerNetConfigManager::setBroadcastAddress(std::string host) -> void {
-    m_pBroadcast->setIPAddress(host);
+    if (m_pBroadcast)
+        m_pBroadcast->setIPAddress(host);
 }
 
 auto ServerNetConfigManager::isConnected() -> bool {
@@ -125,22 +132,24 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
     }
 
     if (c == CNetConfigManager::ECommands::CS_REQUEST_GET_SERVER_MODE) {
-        if (m_settings.getADCPassMode().value == CStreamSettings::PassMode::FILE) {
+        const auto mode = getSettings().getADCPassMode().value;
+        if (mode == CStreamSettings::PassMode::FILE) {
             sendADCServerModeSD();
-        } else if (m_settings.getADCPassMode().value == CStreamSettings::PassMode::NET) {
+        } else if (mode == CStreamSettings::PassMode::NET) {
             sendADCServerModeTCP();
         }
         getServerModeNofiy();
     }
 
     if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_MEM_BLOCK_SIZE) {
-        m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_MEM_BLOCK_SIZE, std::to_string(m_settings.getMemoryBlockSize()));
+        m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_MEM_BLOCK_SIZE, std::to_string(getSettings().getMemoryBlockSize()));
     }
 
     if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_ACTIVE_CHANNELS) {
+        const auto settings = getSettings();
 		adc_channels_t ac;
 		for (int i = 1; i <= 4 && i <= m_maxADCChannels; i++) {
-			if (m_settings.getADCChannels(i).value == CStreamSettings::State::ON) {
+			if (settings.getADCChannels(i).value == CStreamSettings::State::ON) {
 				ac.enable((ADCChannels) (i - 1));
 			}
 		}
@@ -148,7 +157,12 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
 	}
 
 	if (c == CNetConfigManager::ECommands::CS_REQUEST_LOAD_SETTING_FROM_FILE) {
-		if (m_settings.readFromFile(m_file_settings)) {
+        bool loaded = false;
+        {
+            std::lock_guard lock(m_settingsMtx);
+            loaded = m_settings.readFromFile(m_file_settings);
+        }
+		if (loaded) {
 			getNewSettingsNofiy();
 			memoryBlockSizeChangeNofiy();
             m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_LOAD_SETTING_FROM_FILE_SUCCES);
@@ -158,7 +172,8 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
 	}
 
 	if (c == CNetConfigManager::ECommands::CS_REQUEST_SAVE_SETTING_TO_FILE) {
-		if (m_settings.writeToFile(m_file_settings)) {
+		auto settings = getSettings();
+		if (settings.writeToFile(m_file_settings)) {
 			m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SAVE_SETTING_TO_FILE_SUCCES);
 		} else {
 			m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SAVE_SETTING_TO_FILE_FAIL);
@@ -166,11 +181,16 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
 	}
 
 	if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS) {
-		m_pNetConfManager->sendConfig(m_settings.toJson(), false);
+		m_pNetConfManager->sendConfig(getSettings().toJson(), false);
 	}
 
 	if (c == CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS_VARIABLE) {
-        m_pNetConfManager->sendData(tag, m_settings.getValue(tag));
+        std::string value;
+        {
+            std::lock_guard lock(m_settingsMtx);
+            value = m_settings.getValue(tag);
+        }
+        m_pNetConfManager->sendData(tag, value);
     }
 }
 
@@ -184,7 +204,11 @@ auto ServerNetConfigManager::receiveValueStr(std::string key, std::string value)
 }
 
 auto ServerNetConfigManager::setSettingsParameter(const std::string& key, const std::string& value) -> bool {
-    bool state = m_settings.setValue(key, value);
+    bool state = false;
+    {
+        std::lock_guard lock(m_settingsMtx);
+        state = m_settings.setValue(key, value);
+    }
     if (state && key == "block_size") {
         memoryBlockSizeChangeNofiy();
     }
@@ -192,10 +216,14 @@ auto ServerNetConfigManager::setSettingsParameter(const std::string& key, const 
 }
 
 auto ServerNetConfigManager::receiveConfig(std::string value) -> void {
-    // Applied over the current settings: a client that does not know some keys leaves them as they are.
-    CStreamSettings settings(m_settings);
-    if (settings.parseJson(value)) {
-        m_settings = settings;
+    // Applied over the current settings: a client that does not know some keys leaves them as
+    // they are. A value that is not taken fails the whole document.
+    bool applied = false;
+    {
+        std::lock_guard lock(m_settingsMtx);
+        applied = applyConfigJson(value, m_settings);
+    }
+    if (applied) {
         m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SETTINGS_GET_SUCCESS);
         getNewSettingsNofiy();
         memoryBlockSizeChangeNofiy();
@@ -333,6 +361,7 @@ auto ServerNetConfigManager::sendTriggerStatus(const TriggerStatus& status) -> b
 }
 
 auto ServerNetConfigManager::getSettings() -> const CStreamSettings {
+    std::lock_guard lock(m_settingsMtx);
     return m_settings;
 }
 

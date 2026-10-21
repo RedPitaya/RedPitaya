@@ -1,11 +1,12 @@
 #ifndef CONFIG_NET_LIB_NCM_H
 #define CONFIG_NET_LIB_NCM_H
 
+#include <mutex>
 #include "data_lib/signal.hpp"
 #include "net_lib/asio_common.h"
 #include "net_lib/asio_net_simple.h"
 
-class CNetConfigManager {
+class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager> {
    public:
     // The numbers are the wire protocol shared with older clients and servers: never change or
     // reuse a number, add new commands at the end with the next free one. A side that does not
@@ -134,14 +135,18 @@ class CNetConfigManager {
         void push_back(uint8_t* _src, uint32_t _size);
         void resize(uint32_t _size);
         void removeAtStart(uint32_t _size);
+        void clear();
     };
 
     auto start() -> bool;
+    auto net() -> std::shared_ptr<net_lib::CAsioNetSimple>;
+    // Throws on a packet this protocol does not produce: a peer of another version must not be served.
     auto receiveHandler(std::error_code error, uint8_t*, size_t) -> void;
 
     std::string m_host;
     uint16_t m_port;
-    net_lib::CAsioNetSimple* m_asionet;
+    std::shared_ptr<net_lib::CAsioNetSimple> m_asionet;
+    std::mutex m_netMtx;
     net_lib::EMode m_mode;
     dyn_buffer m_buffers;
 };

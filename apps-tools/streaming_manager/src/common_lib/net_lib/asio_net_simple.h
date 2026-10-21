@@ -1,6 +1,7 @@
 #ifndef NET_LIB_ASIO_NET_SIMPLE_H
 #define NET_LIB_ASIO_NET_SIMPLE_H
 
+#include <atomic>
 #include "data_lib/signal.hpp"
 #include "net_lib/asio_common.h"
 
@@ -31,6 +32,9 @@ class CAsioNetSimple {
 
     auto sendData(bool async, net_buffer _buffer, size_t _size) -> bool;
     auto isConnected() -> bool;
+    auto runningInIoThread() -> bool;
+    // Nothing is reported to the owner after this, for an object that outlives it.
+    auto disconnectSignals() -> void;
 
    private:
     CAsioNetSimple(const CAsioNetSimple&) = delete;
@@ -41,7 +45,7 @@ class CAsioNetSimple {
     net_lib::EMode m_mode;
     std::string m_host;
     uint16_t m_port;
-    bool m_IsRun;
+    std::atomic<bool> m_IsRun;
     CAsioSocketSimple* m_server;
 };
 

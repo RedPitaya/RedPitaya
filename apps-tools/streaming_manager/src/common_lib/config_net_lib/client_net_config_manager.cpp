@@ -2,13 +2,11 @@
 #include <algorithm>
 #include <functional>
 #include <mutex>
+#include "config_apply.h"
 #include "logger_lib/file_logger.h"
 
 // IN seconds
 #define BROADCAST_TIMEOUT 10
-
-std::mutex g_broadcast_mutex;
-std::mutex g_client_mutex;
 
 ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings_path, bool loadConfig)
     : CStreamSettings(), m_pBroadcast(nullptr), m_file_settings(default_file_settings_path), m_broadcastClients() {
@@ -17,8 +15,15 @@ ClientNetConfigManager::ClientNetConfigManager(std::string default_file_settings
 }
 
 ClientNetConfigManager::~ClientNetConfigManager() {
+    if (m_pBroadcast) {
+        m_pBroadcast->receivedNotify.disconnect_all();
+        m_pBroadcast->errorNotify.disconnect_all();
+        m_pBroadcast->closeSocket();
+        // Joins the broadcast thread before the members its handler uses are gone.
+        m_pBroadcast.reset();
+    }
     removeHadlers();
-    for (auto& cli : m_clients) {
+    for (auto& cli : clientsCopy()) {
         cli->m_manager->stopAsioNet();
     }
 }
@@ -90,37 +95,14 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
         bool riseEmit = false;
         std::string h = "";
         if (!er) {
-            const std::lock_guard<std::mutex> lock(g_broadcast_mutex);
+            const std::lock_guard<std::mutex> lock(m_broadcastMtx);
             BroadCastClients cl;
-            cl.mode = broadcast_lib::AB_NONE;
-            cl.ts = std::time(0);
-            std::string s = std::string((char*)buf, size);
-            std::vector<const char*> pointers;
-            pointers.push_back((char*)buf);
-            for (size_t idx = 0; idx < size; idx++) {
-                if (buf[idx] == '\n') {
-                    buf[idx] = '\0';
-                    if (idx + 1 < size) {
-                        pointers.push_back((char*)buf + idx + 1);
-                    }
-                }
-            }
-            if (pointers.size() != 4) {
+            const std::string s = std::string((char*)buf, size);
+            if (!parseBroadcast(s, cl)) {
                 TRACE_SHORT("[FATAL ERROR] Broadcast parse error \'%s\'", s.c_str())
                 errorNofiy(Errors::BROADCAST_ERROR_PARSE, host, er);
             } else {
-                h = std::string(pointers[0]);
-                if (pointers[2][0] == 'M') {
-                    cl.mode = broadcast_lib::AB_SERVER_MASTER;
-                } else if (pointers[2][0] == 'S') {
-                    cl.mode = broadcast_lib::AB_SERVER_SLAVE;
-                } else {
-                    cl.mode = broadcast_lib::AB_NONE;
-                }
-                cl.model = atoi(pointers[3]);
-                cl.mac = std::string(pointers[0]);
-                cl.host = h = std::string(pointers[1]);
-
+                h = cl.host;
                 auto find = std::find_if(std::begin(m_broadcastClients), std::end(m_broadcastClients), [&cl](const BroadCastClients& c) { return c.host == cl.host; });
                 if (find == std::end(m_broadcastClients)) {
                     m_broadcastClients.push_back(cl);
@@ -141,16 +123,58 @@ auto ClientNetConfigManager::startBroadcast(std::string host, uint16_t port) -> 
     });
 }
 
+auto ClientNetConfigManager::parseBroadcast(const std::string& message, BroadCastClients& client) -> bool {
+    std::vector<std::string> fields;
+    size_t begin = 0;
+    while (begin <= message.size()) {
+        size_t end = message.find('\n', begin);
+        if (end == std::string::npos)
+            end = message.size();
+        fields.push_back(message.substr(begin, end - begin));
+        begin = end + 1;
+    }
+    if (!fields.empty() && fields.back().empty() && !message.empty() && message.back() == '\n')
+        fields.pop_back();
+    if (fields.size() != 4)
+        return false;
+    client.mac = fields[0];
+    client.host = fields[1];
+    if (fields[2].size() > 0 && fields[2][0] == 'M') {
+        client.mode = broadcast_lib::AB_SERVER_MASTER;
+    } else if (fields[2].size() > 0 && fields[2][0] == 'S') {
+        client.mode = broadcast_lib::AB_SERVER_SLAVE;
+    } else {
+        client.mode = broadcast_lib::AB_NONE;
+    }
+    client.model = atoi(fields[3].c_str());
+    client.ts = std::time(0);
+    return true;
+}
+
 auto ClientNetConfigManager::getBroadcastClients() -> const std::list<ClientNetConfigManager::BroadCastClients> {
-    const std::lock_guard<std::mutex> lock(g_broadcast_mutex);
+    const std::lock_guard<std::mutex> lock(m_broadcastMtx);
     m_broadcastClients.remove_if([](const BroadCastClients& c) { return (std::time(0) - c.ts > BROADCAST_TIMEOUT); });
     auto copyClients = m_broadcastClients;
     return copyClients;
 }
 
+auto ClientNetConfigManager::clientsCopy() -> std::list<std::shared_ptr<Clients>> {
+    const std::lock_guard lock(m_clientsMtx);
+    return m_clients;
+}
+
+auto ClientNetConfigManager::findClient(const std::string& host, bool handshake) -> std::shared_ptr<Clients> {
+    const std::lock_guard lock(m_clientsMtx);
+    for (const auto& c : m_clients) {
+        if (c->m_manager->getHost() == host && (!handshake || c->m_mode != broadcast_lib::AB_NONE))
+            return c;
+    }
+    return nullptr;
+}
+
 auto ClientNetConfigManager::getHosts() -> std::list<std::string> {
     std::list<std::string> list;
-    for (auto& c : m_clients) {
+    for (auto& c : clientsCopy()) {
         if (c->m_manager->isConnected()) {
             list.push_back(c->m_manager->getHost());
         }
@@ -159,7 +183,13 @@ auto ClientNetConfigManager::getHosts() -> std::list<std::string> {
 }
 
 auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts, uint16_t port) -> void {
-    m_clients.clear();
+    std::list<std::shared_ptr<Clients>> old;
+    {
+        const std::lock_guard lock(m_clientsMtx);
+        old.swap(m_clients);
+    }
+    // Stopped outside the lock: their handlers take it.
+    old.clear();
     for (std::string& host : _hosts) {
         auto cl = std::make_shared<Clients>();
         cl->m_manager = std::make_shared<CNetConfigManager>();
@@ -174,14 +204,16 @@ auto ClientNetConfigManager::connectToServers(std::vector<std::string> _hosts, u
         cl->m_manager->errorNotify.connect(std::bind(&ClientNetConfigManager::serverError, this, std::placeholders::_1, cl_weak));
         cl->m_manager->connectTimeoutNotify.connect(std::bind(&ClientNetConfigManager::connectTimeoutError, this, std::placeholders::_1, cl_weak));
 
+        {
+            const std::lock_guard lock(m_clientsMtx);
+            m_clients.push_back(cl);
+        }
         cl->m_manager->startAsioNet(net_lib::EMode::M_CLIENT, host, port);
-        m_clients.push_back(cl);
     }
 }
 
 auto ClientNetConfigManager::diconnectAll() -> void {
-    const std::lock_guard lock(g_client_mutex);
-    for (const auto& c : m_clients) {
+    for (const auto& c : clientsCopy()) {
         c->m_manager->stopAsioNet();
     }
 }
@@ -193,16 +225,18 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
 
     CNetConfigManager::ECommands c = static_cast<CNetConfigManager::ECommands>(command);
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_MASTER_CONNECTED) {
-        g_client_mutex.lock();
-        sender->m_mode = broadcast_lib::AB_SERVER_MASTER;
-        g_client_mutex.unlock();
+        {
+            const std::lock_guard lock(m_clientsMtx);
+            sender->m_mode = broadcast_lib::AB_SERVER_MASTER;
+        }
         serverConnectedNofiy(sender->m_manager->getHost());
     }
 
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_SLAVE_CONNECTED) {
-        g_client_mutex.lock();
-        sender->m_mode = broadcast_lib::AB_SERVER_SLAVE;
-        g_client_mutex.unlock();
+        {
+            const std::lock_guard lock(m_clientsMtx);
+            sender->m_mode = broadcast_lib::AB_SERVER_SLAVE;
+        }
         serverConnectedNofiy(sender->m_manager->getHost());
     }
 
@@ -365,15 +399,16 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
 }
 
 auto ClientNetConfigManager::isServersConnected() -> bool {
-    const std::lock_guard lock(g_client_mutex);
-    bool ret = true;
-    for (auto& c : m_clients) {
-        if (c->m_mode == broadcast_lib::AB_NONE && c->m_manager->isConnected()) {
-            ret = false;
-            break;
+    for (auto& c : clientsCopy()) {
+        bool handshake = false;
+        {
+            const std::lock_guard lock(m_clientsMtx);
+            handshake = c->m_mode != broadcast_lib::AB_NONE;
         }
+        if (!handshake && c->m_manager->isConnected())
+            return false;
     }
-    return ret;
+    return true;
 }
 
 auto ClientNetConfigManager::receiveStrStr(std::string key, std::string value, std::weak_ptr<Clients> cl) -> void {
@@ -391,9 +426,7 @@ auto ClientNetConfigManager::receiveConfig(std::string value, std::weak_ptr<Clie
     auto sender = cl.lock();
     if (!sender)
         return;
-    CStreamSettings settings;
-    if (settings.parseJson(value)) {
-        sender->m_client_settings = settings;
+    if (applyConfigJson(value, sender->m_client_settings)) {
         sender->m_manager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SETTINGS_GET_SUCCESS);
         getNewSettingsNofiy(sender->m_manager->getHost());
     } else {
@@ -419,178 +452,117 @@ auto ClientNetConfigManager::connectTimeoutError(std::error_code error, std::wea
 }
 
 auto ClientNetConfigManager::sendConfigVariable(const std::string& host, const std::string key, const std::string value) -> bool {
-    const std::lock_guard lock(g_client_mutex);
-    for (const auto& c : m_clients) {
-        if (c->m_mode != broadcast_lib::AB_NONE && host == c->m_manager->getHost()) {
-            auto ret = c->m_manager->sendData(key, value);
-            if (!ret) {
-                c->m_manager->stopAsioNet();
-            }
-            return ret;
-        }
+    auto c = findClient(host, true);
+    if (!c)
+        return false;
+    auto ret = c->m_manager->sendData(key, value);
+    if (!ret) {
+        c->m_manager->stopAsioNet();
     }
-    return false;
+    return ret;
 }
 
 auto ClientNetConfigManager::sendConfig(const std::string& host) -> bool {
-    const std::lock_guard lock(g_client_mutex);
-    for (const auto& c : m_clients) {
-        if (c->m_mode != broadcast_lib::AB_NONE && host == c->m_manager->getHost()) {
-            auto ret = c->m_manager->sendConfig(toJson(), true);
-            if (!ret) {
-                c->m_manager->stopAsioNet();
-            }
-            return ret;
-        }
+    auto c = findClient(host, true);
+    if (!c)
+        return false;
+    auto ret = c->m_manager->sendConfig(toJson(), true);
+    if (!ret) {
+        c->m_manager->stopAsioNet();
     }
-    return false;
+    return ret;
 }
 
 auto ClientNetConfigManager::requestConfig(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS);
 }
 
 auto ClientNetConfigManager::requestConfigVariable(const std::string& host, const std::string& variable) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS_VARIABLE, variable);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_SETTINGS_VARIABLE, variable);
 }
 
 auto ClientNetConfigManager::requestMemoryBlockSize(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_MEM_BLOCK_SIZE);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_MEM_BLOCK_SIZE);
 }
 
 auto ClientNetConfigManager::requestActiveChannels(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_ACTIVE_CHANNELS);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SERVER_ACTIVE_CHANNELS);
 }
 
 auto ClientNetConfigManager::requestTriggerStatus(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_TRIGGER_STATUS);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_TRIGGER_STATUS);
 }
 
 auto ClientNetConfigManager::getLocalSettingsOfHost(const std::string& host) -> CStreamSettings* {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return (CStreamSettings*)&(it->operator->()->m_client_settings);
-    }
-    return nullptr;
+    auto c = findClient(host, false);
+    return c ? &c->m_client_settings : nullptr;
 }
 
 auto ClientNetConfigManager::sendSaveToFile(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SAVE_SETTING_TO_FILE);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SAVE_SETTING_TO_FILE);
 }
 
 auto ClientNetConfigManager::sendADCServerStart(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_ADC_SERVER_START);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_ADC_SERVER_START);
 }
 
 auto ClientNetConfigManager::sendADCServerStop(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_ADC_SERVER_STOP);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_ADC_SERVER_STOP);
 }
 
 auto ClientNetConfigManager::sendDACServerStart(const std::string &host, const dac_channels_t &activeChannels) -> bool
 {
-	auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) {
-		return c->m_manager->getHost() == host;
-	});
-	if (it != std::end(m_clients)) {
-		return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_START,
-														activeChannels.toString());
-	}
-	return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_START, activeChannels.toString());
 }
 
 auto ClientNetConfigManager::sendDACServerStop(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_STOP);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_SERVER_STOP);
 }
 
 auto ClientNetConfigManager::sendADCFPGAStart(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_ADC_FPGA_START);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_ADC_FPGA_START);
 }
 
 auto ClientNetConfigManager::sendDACFPGAStart(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_FPGA_START);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_FPGA_START);
 }
 
 auto ClientNetConfigManager::sendGPIOServerStart(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_START);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_START);
 }
 
 auto ClientNetConfigManager::sendGPIOServerStop(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_STOP);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_STOP);
 }
 
 auto ClientNetConfigManager::sendSoftwareTrigger(const std::string& host, CNetConfigManager::ETriggerTarget target) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SOFTWARE_TRIGGER, std::to_string(target));
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SOFTWARE_TRIGGER, std::to_string(target));
 }
 
 auto ClientNetConfigManager::sendGetServerMode(const std::string& host) -> bool {
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GET_SERVER_MODE);
-    }
-    return false;
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GET_SERVER_MODE);
 }
 
 auto ClientNetConfigManager::getModeByHost(const std::string& host) -> broadcast_lib::EMode {
-    const std::lock_guard<std::mutex> lock(g_client_mutex);
-    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
-    if (it != std::end(m_clients)) {
-        return it->operator->()->m_mode;
-    }
-    return broadcast_lib::AB_NONE;
+    auto c = findClient(host, false);
+    if (!c)
+        return broadcast_lib::AB_NONE;
+    const std::lock_guard lock(m_clientsMtx);
+    return c->m_mode;
 }
