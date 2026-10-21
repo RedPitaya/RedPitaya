@@ -14,10 +14,10 @@
     'use strict';
 
     // Digits are chosen per quantity: a supply current is not worth more than
-    // a milliamp. The setpoint is whole kelvin, finer than that is of no use
-    // to a detector.
+    // a milliamp. Detector temperature is whole kelvin, as is the setpoint it
+    // is read against; the trend still plots what the controller reports.
     var READOUTS = {
-        PTCC_T_DET: 3,
+        PTCC_T_DET: 0,
         PTCC_T_INT: 1,
         PTCC_I_TEC: 3,
         PTCC_U_TEC: 3,
