@@ -1,20 +1,16 @@
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter
 
-FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-WHITE = (255, 255, 255, 255)
-NAVY = (13, 13, 92, 255)
+LOGO = "../img/vigo_logo.png"
+NAVY = (3, 5, 94, 255)
 # Measured off the stock icons: 63 px of corner radius on a 256 px plate.
 RADIUS_RATIO = 63.0 / 256.0  # same corner radius as the stock icons
 SUPERSAMPLE = 4
 
 
-def fitted(draw, text, target, start):
-    for points in range(start, 6, -1):
-        font = ImageFont.truetype(FONT, points)
-        left, _, right, _ = draw.textbbox((0, 0), text, font=font)
-        if right - left <= target:
-            return font
-    return ImageFont.truetype(FONT, 8)
+def lockup():
+    """The brand logo as drawn in the header: white artwork, no background."""
+    logo = Image.open(LOGO).convert("RGBA")
+    return logo.crop(logo.getbbox())
 
 
 def render(size):
@@ -26,17 +22,11 @@ def render(size):
     ImageDraw.Draw(plate).rounded_rectangle([0, 0, big_size - 1, big_size - 1], radius=radius,
                                             fill=NAVY)
 
-    layer = Image.new("RGBA", (big_size, big_size), (0, 0, 0, 0))
-    pen = ImageDraw.Draw(layer)
-    big = fitted(pen, "VIGO", int(big_size * 0.66), int(big_size * 0.56))
-    small_text = "P H O T O N I C S"
-    small = fitted(pen, small_text, int(big_size * 0.72), int(big_size * 0.185))
-    pen.text((big_size // 2, int(big_size * 0.42)), "VIGO", font=big, fill=WHITE, anchor="mm")
-    pen.text((big_size // 2, int(big_size * 0.66)), small_text, font=small, fill=WHITE, anchor="mm")
-    box = layer.getbbox()
-    dx = (big_size - (box[2] - box[0])) // 2 - box[0]
-    dy = (big_size - (box[3] - box[1])) // 2 - box[1]
-    plate.alpha_composite(layer.transform(layer.size, Image.AFFINE, (1, 0, -dx, 0, 1, -dy)))
+    art = lockup()
+    width = int(big_size * 0.76)
+    height = max(1, int(round(width * art.size[1] / art.size[0])))
+    art = art.resize((width, height), Image.LANCZOS)
+    plate.alpha_composite(art, ((big_size - width) // 2, (big_size - height) // 2))
 
     # Edge shading following the outline, as on the stock icons.
     inner = Image.new("L", (big_size, big_size), 0)

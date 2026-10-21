@@ -1413,3 +1413,32 @@ a.list-group-item:hover:visited {
     color: #999;
     font-size: 11px;
 }
+
+/* Identification of the controller, its module and the detector, under the
+   name each panel opens with. The rows carry their own height: a menu option
+   is a fixed 31 px and would let them spill over the controls below. */
+.ptcc-iden {
+    font-size: 11px;
+    line-height: 17px;
+    padding: 5px 9px 6px 9px;
+    text-align: left;
+}
+
+.ptcc-iden > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.ptcc-iden .k {
+    color: #8a8a8a;
+    letter-spacing: 0.04em;
+}
+
+.ptcc-iden .v {
+    color: #ccc;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

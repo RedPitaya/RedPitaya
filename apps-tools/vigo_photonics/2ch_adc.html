@@ -36,7 +36,7 @@
                     <a class="navbar-brand" href="/">
                         <img class="back-btn" src="../assets/images/home.png">
                     </a>
-                    <img class="logo" height=26 src="img/vigo_logo.png">
+                    <img class="logo" height=30 src="img/vigo_logo.png?3">
                 </div>
                 <div class="collapse navbar-collapse">
                     <ul class="nav navbar-nav">
@@ -1783,9 +1783,19 @@
                             <div class="right-menu-option ptcc-note" data-ptcc-text="PTCC_MOD_NAME">no module</div>
                         </div>
                         <div class="col-xs-12 option-content">
+                            <div class="ptcc-iden">
+                                <div><span class="k">Module</span><span class="v" data-ptcc-text="PTCC_MOD_TYPE">&mdash;</span></div>
+                                <div><span class="k">Module S/N</span><span class="v" data-ptcc-text="PTCC_MOD_SERIAL">&mdash;</span></div>
+                                <div><span class="k">Controller</span><span class="v" data-ptcc-text="PTCC_DEV_TYPE">&mdash;</span></div>
+                                <div><span class="k">Controller S/N</span><span class="v" data-ptcc-text="PTCC_DEV_SERIAL">&mdash;</span></div>
+                                <div><span class="k">Firmware</span><span class="v" data-ptcc-text="PTCC_DEV_FIRMWARE">&mdash;</span></div>
+                                <div><span class="k">Hardware</span><span class="v" data-ptcc-text="PTCC_DEV_HARDWARE">&mdash;</span></div>
+                            </div>
+                        </div>
+                        <div class="col-xs-12 option-content">
                             <div class="col-info" style="margin-top: -11px;">Setpoint / K</div>
                             <div class="right-menu-option" style="margin-top: 10px;">
-                                <input id="PTCC_SETPOINT" class="setfield input-number" type="text" value="0" step="0.001">
+                                <input id="PTCC_SETPOINT" class="setfield input-number" type="text" value="0" step="1">
                             </div>
                         </div>
                         <div class="col-xs-12 option-content">
@@ -1804,6 +1814,12 @@
                         </div>
                         <div class="col-xs-12 option-content">
                             <div class="right-menu-option ptcc-note" data-ptcc-text="PTCC_DET_NAME">no detector</div>
+                        </div>
+                        <div class="col-xs-12 option-content">
+                            <div class="ptcc-iden">
+                                <div><span class="k">Detector S/N</span><span class="v" data-ptcc-text="PTCC_DET_SERIAL">&mdash;</span></div>
+                                <div><span class="k">Module S/N</span><span class="v" data-ptcc-text="PTCC_MOD_SERIAL">&mdash;</span></div>
+                            </div>
                         </div>
                         <div id="ptcc_det_absent" class="col-xs-12 option-content" hidden>
                             <div class="right-menu-option ptcc-note">

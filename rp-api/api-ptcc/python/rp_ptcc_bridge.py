@@ -555,12 +555,23 @@ def list_ports():
                   if name.startswith("ttyACM") or name.startswith("ttyUSB"))
 
 
+# Quotation marks the upstream tables wrap some messages in. The typographic
+# ones reach the web page as mojibake, so none of them are passed on.
+_QUOTES = "\"'\u2018\u2019\u201a\u201b\u201c\u201d\u201e\u201f\u00ab\u00bb"
+_DROP_QUOTES = {ord(mark): None for mark in _QUOTES}
+
+
 def status_text(code):
     if code in status_messages:
-        return status_messages[code]
+        return _plain(status_messages[code])
     if code in error_messages:
-        return error_messages[code]
+        return _plain(error_messages[code])
     return "unknown status code"
+
+
+def _plain(text):
+    """The message as the page can show it, without quotation marks."""
+    return text.translate(_DROP_QUOTES).strip()
 
 
 def is_error_status(code):

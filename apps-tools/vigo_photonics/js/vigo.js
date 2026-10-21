@@ -13,8 +13,9 @@
 (function(OSC, $, undefined) {
     'use strict';
 
-    // Digits are chosen per quantity: a setpoint is meaningful to 1 mK, a
-    // supply current is not worth more than a milliamp.
+    // Digits are chosen per quantity: a supply current is not worth more than
+    // a milliamp. The setpoint is whole kelvin, finer than that is of no use
+    // to a detector.
     var READOUTS = {
         PTCC_T_DET: 3,
         PTCC_T_INT: 1,
@@ -41,7 +42,10 @@
     };
 
     // Free text shown as it arrives.
-    var TEXTS = ['PTCC_STATUS_TEXT', 'PTCC_LAST_ERROR', 'PTCC_MOD_NAME', 'PTCC_DET_NAME'];
+    var TEXTS = ['PTCC_STATUS_TEXT', 'PTCC_LAST_ERROR', 'PTCC_MOD_NAME', 'PTCC_DET_NAME',
+        'PTCC_MOD_TYPE', 'PTCC_MOD_SERIAL', 'PTCC_DEV_TYPE', 'PTCC_DEV_SERIAL',
+        'PTCC_DET_SERIAL', 'PTCC_DEV_FIRMWARE', 'PTCC_DEV_HARDWARE'
+    ];
 
     // Input fields bounded by what the module reports it accepts.
     var LIMITS = {
@@ -60,7 +64,7 @@
     // codes moves in steps of its own range, which the module reports; the
     // others carry the resolution the protocol gives them.
     var FIELDS = {
-        PTCC_SETPOINT: { step: 0.001 },
+        PTCC_SETPOINT: { step: 1 },
         PTCC_I_TEC_MAX: { step: 0.01 },
         PTCC_SUP_U_P: { step: 0.1 },
         PTCC_SUP_U_N: { step: 0.1 },
@@ -71,9 +75,9 @@
         PTCC_LABM_OFFSET: { coded: true }
     };
 
-    // Nothing is shown or stepped finer than this: a millivolt, a milliamp,
-    // a millikelvin. The module codes its values in 256 steps of its range,
-    // which is coarser than that for every quantity it has.
+    // Nothing is shown or stepped finer than this: a millivolt, a milliamp.
+    // The module codes its values in 256 steps of its range, which is
+    // coarser than that for every quantity it has.
     var FINEST_STEP = 0.001;
 
     /** Decimals a step itself is written with, so a reading is shown on the
@@ -172,8 +176,16 @@
         }
     }
 
+    var UNKNOWN = '\u2014';
+
     function onText(new_params, name) {
-        $('[data-ptcc-text="' + name + '"]').text(new_params[name].value);
+        var text = String(new_params[name].value);
+        $('[data-ptcc-text="' + name + '"]').each(function() {
+            // An identification row keeps a dash as long as the controller
+            // has not told the application what is attached to it.
+            var blank = text === '' && $(this).hasClass('v');
+            $(this).text(blank ? UNKNOWN : text);
+        });
     }
 
     function onSetting(new_params, name) {
@@ -204,7 +216,7 @@
         }
 
         if (name === 'PTCC_SETPOINT') {
-            showValue(name, Number(value).toFixed(3));
+            showValue(name, Number(value).toFixed(0));
         }
     }
 
@@ -315,6 +327,8 @@
         if (!OSC.ptcc.connected) {
             $('#ptcc_status_led').removeClass('ptcc-led-ok ptcc-led-error');
             $('[data-ptcc-text="PTCC_STATUS_TEXT"]').text('no controller');
+            // What was read off the last controller is no longer true.
+            $('.ptcc-iden .v').text(UNKNOWN);
         }
         updateVisibility();
     }

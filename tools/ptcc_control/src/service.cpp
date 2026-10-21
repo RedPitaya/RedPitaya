@@ -319,8 +319,10 @@ void Service::publishIdentification() {
         m_out->send("PTCC_DEV_NAME", std::string(device.name));
         m_out->send("PTCC_DEV_TYPE", std::string(device.type));
         m_out->send("PTCC_DEV_SERIAL", std::string(device.serial));
-        m_out->send("PTCC_DEV_FIRMWARE", device.firmware_version);
-        m_out->send("PTCC_DEV_HARDWARE", device.hardware_version);
+        // Sent as text: the page prints the versions beside the serials, and
+        // the format they are written in belongs here rather than there.
+        m_out->send("PTCC_DEV_FIRMWARE", std::to_string(device.firmware_version));
+        m_out->send("PTCC_DEV_HARDWARE", std::to_string(device.hardware_version));
     }
 
     if (rp_PtccGetModuleIden(&module) == RP_PTCC_OK) {
