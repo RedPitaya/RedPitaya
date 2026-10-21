@@ -38,18 +38,20 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/client_net_config_manager.h
             ${PROJECT_SOURCE_DIR}/net_config_manager.h
             ${PROJECT_SOURCE_DIR}/server_net_config_manager.h
+            ${PROJECT_SOURCE_DIR}/trigger_status.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/client_net_config_manager.cpp
             ${PROJECT_SOURCE_DIR}/net_config_manager.cpp
             ${PROJECT_SOURCE_DIR}/server_net_config_manager.cpp
+            ${PROJECT_SOURCE_DIR}/trigger_status.cpp
         )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC broadcast_lib streaming_lib
+    PUBLIC broadcast_lib streaming_lib settings_lib
     PRIVATE pthread stdc++)
 
 
@@ -60,3 +62,16 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}"
     COMMENT "Copying ${PROJECT_NAME} public headers to ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}"
     VERBATIM)
+
+if(NOT CMAKE_CROSSCOMPILING AND BUILD_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+
+    ## The suite runs as part of the build, so a regression fails the build.
+    add_custom_target(rp_config_net_lib_run_tests ALL
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Running config_net_lib unit tests (ctest) - the build fails if any test fails"
+        VERBATIM)
+    add_dependencies(rp_config_net_lib_run_tests config_net_lib_tests)
+endif()

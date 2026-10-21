@@ -89,6 +89,41 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
         stopDacStreamingNofiy();
     }
 
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_START) {
+        if (startGpioStreamingNofiy.slot_count() == 0) {
+            sendGPIOServerConfigErrorStopped();
+        } else {
+            startGpioStreamingNofiy();
+        }
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_STOP) {
+        if (stopGpioStreamingNofiy.slot_count() == 0) {
+            sendGPIOServerStopped();
+        } else {
+            stopGpioStreamingNofiy();
+        }
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_SOFTWARE_TRIGGER) {
+        CNetConfigManager::ETriggerTarget target;
+        if (!CNetConfigManager::parseTriggerTarget(tag, target)) {
+            m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_FAIL, tag);
+        } else if (softwareTriggerNofiy.slot_count() == 0) {
+            sendSoftwareTriggerFail(target);
+        } else {
+            softwareTriggerNofiy(target);
+        }
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_TRIGGER_STATUS) {
+        if (triggerStatusRequestNofiy.slot_count() == 0) {
+            m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_TRIGGER_STATUS, "");
+        } else {
+            triggerStatusRequestNofiy();
+        }
+    }
+
     if (c == CNetConfigManager::ECommands::CS_REQUEST_GET_SERVER_MODE) {
         if (m_settings.getADCPassMode().value == CStreamSettings::PassMode::FILE) {
             sendADCServerModeSD();
@@ -157,7 +192,8 @@ auto ServerNetConfigManager::setSettingsParameter(const std::string& key, const 
 }
 
 auto ServerNetConfigManager::receiveConfig(std::string value) -> void {
-    CStreamSettings settings;
+    // Applied over the current settings: a client that does not know some keys leaves them as they are.
+    CStreamSettings settings(m_settings);
     if (settings.parseJson(value)) {
         m_settings = settings;
         m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SETTINGS_GET_SUCCESS);
@@ -181,7 +217,7 @@ auto ServerNetConfigManager::sendADCStarted() -> bool {
 }
 
 auto ServerNetConfigManager::sendDACStarted() -> bool {
-    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ADC_FPGA_START_ADC_DONE);
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_DAC_FPGA_START_DONE);
 }
 
 auto ServerNetConfigManager::sendADCServerStartedTCP() -> bool {
@@ -224,6 +260,10 @@ auto ServerNetConfigManager::sendServerMemoryModifyStopped() -> bool {
     return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_MEM_MODIFY);
 }
 
+auto ServerNetConfigManager::sendServerConfigErrorStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_CONFIG_ERROR);
+}
+
 auto ServerNetConfigManager::sendServerStoppedSDFull() -> bool {
     return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_SD_FULL);
 }
@@ -262,6 +302,34 @@ auto ServerNetConfigManager::sendDACServerStoppedSDBroken() -> bool {
 
 auto ServerNetConfigManager::sendDACServerStoppedSDMissingFile() -> bool {
     return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_SD_MISSING);
+}
+
+auto ServerNetConfigManager::sendGPIOServerStarted() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STARTED);
+}
+
+auto ServerNetConfigManager::sendGPIOServerStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED);
+}
+
+auto ServerNetConfigManager::sendGPIOServerMemoryErrorStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_MEM_ERROR);
+}
+
+auto ServerNetConfigManager::sendGPIOServerConfigErrorStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_CONFIG_ERROR);
+}
+
+auto ServerNetConfigManager::sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_DONE, std::to_string(target));
+}
+
+auto ServerNetConfigManager::sendSoftwareTriggerFail(CNetConfigManager::ETriggerTarget target) -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_FAIL, std::to_string(target));
+}
+
+auto ServerNetConfigManager::sendTriggerStatus(const TriggerStatus& status) -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_TRIGGER_STATUS, status.toJson());
 }
 
 auto ServerNetConfigManager::getSettings() -> const CStreamSettings {

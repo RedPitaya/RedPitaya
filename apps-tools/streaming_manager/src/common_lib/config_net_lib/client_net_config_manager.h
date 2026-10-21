@@ -7,6 +7,7 @@
 #include "net_config_manager.h"
 #include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
+#include "trigger_status.h"
 
 class ClientNetConfigManager : public CStreamSettings {
    public:
@@ -18,7 +19,14 @@ class ClientNetConfigManager : public CStreamSettings {
         std::time_t ts;
     };
 
-    enum class Errors { CANNT_SET_DATA_TO_CONFIG, ERROR_SEND_CONFIG, SERVER_INTERNAL, BROADCAST_ERROR, BROADCAST_ERROR_PARSE, CONNECT_TIMEOUT };
+    enum class Errors {
+        CANNT_SET_DATA_TO_CONFIG = 0,
+        ERROR_SEND_CONFIG = 1,
+        SERVER_INTERNAL = 2,
+        BROADCAST_ERROR = 3,
+        BROADCAST_ERROR_PARSE = 4,
+        CONNECT_TIMEOUT = 5
+    };
 
     using Ptr = std::shared_ptr<ClientNetConfigManager>;
 
@@ -46,11 +54,15 @@ class ClientNetConfigManager : public CStreamSettings {
     auto sendDACFPGAStart(const std::string& host) -> bool;
     auto sendGetServerMode(const std::string& host) -> bool;
     auto sendActiveDACChannels(const std::string& host, std::string& count) -> bool;
+    auto sendGPIOServerStart(const std::string& host) -> bool;
+    auto sendGPIOServerStop(const std::string& host) -> bool;
+    auto sendSoftwareTrigger(const std::string& host, CNetConfigManager::ETriggerTarget target) -> bool;
 
     auto requestConfig(const std::string& host) -> bool;
     auto requestConfigVariable(const std::string& host, const std::string& variable) -> bool;
     auto requestMemoryBlockSize(const std::string& host) -> bool;
     auto requestActiveChannels(const std::string& host) -> bool;
+    auto requestTriggerStatus(const std::string& host) -> bool;
 
     auto removeHadlers() -> void;
 
@@ -71,6 +83,7 @@ class ClientNetConfigManager : public CStreamSettings {
     sigslot::signal<std::string&> serverStoppedMemModifyNofiy;
     sigslot::signal<std::string&> serverStoppedSDFullNofiy;
     sigslot::signal<std::string&> serverStoppedSDDoneNofiy;
+    sigslot::signal<std::string&> serverStoppedConfigErrorNofiy;
 
     sigslot::signal<std::string&> serverDacStartedNofiy;
     sigslot::signal<std::string&> serverDacStartedSDNofiy;
@@ -82,6 +95,17 @@ class ClientNetConfigManager : public CStreamSettings {
     sigslot::signal<std::string&> serverDacStoppedSDEmptyNofiy;
     sigslot::signal<std::string&> serverDacStoppedSDBrokenNofiy;
     sigslot::signal<std::string&> serverDacStoppedSDMissingNofiy;
+
+    sigslot::signal<std::string&> serverGpioStartedNofiy;
+    sigslot::signal<std::string&> serverGpioStoppedNofiy;
+    sigslot::signal<std::string&> serverGpioStoppedMemErrorNofiy;
+    sigslot::signal<std::string&> serverGpioStoppedConfigErrorNofiy;
+
+    sigslot::signal<std::string&, CNetConfigManager::ETriggerTarget> softwareTriggerDoneNofiy;
+    sigslot::signal<std::string&, CNetConfigManager::ETriggerTarget> softwareTriggerFailNofiy;
+    sigslot::signal<std::string&, TriggerStatus> getTriggerStatusNofiy;
+    // The server has no status to give (no stream running, or a server without triggers).
+    sigslot::signal<std::string&> failTriggerStatusNofiy;
 
     sigslot::signal<std::string&> serverModeTCPNofiy;
     sigslot::signal<std::string&> serverModeSDNofiy;

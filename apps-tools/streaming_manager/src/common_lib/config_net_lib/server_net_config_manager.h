@@ -6,10 +6,11 @@
 #include "net_config_manager.h"
 #include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
+#include "trigger_status.h"
 
 class ServerNetConfigManager {
    public:
-    enum Errors { CANNT_SET_DATA, SERVER_INTERNAL, BROADCAST_ERROR };
+    enum Errors { CANNT_SET_DATA = 0, SERVER_INTERNAL = 1, BROADCAST_ERROR = 2 };
 
     enum EStopReason {
         NORMAL = 0,
@@ -17,8 +18,8 @@ class ServerNetConfigManager {
         DONE = 2,
         MEM_ERROR = 3,
         MEM_MODIFY = 4,
-        NO_CHANNELS = 5
-
+        NO_CHANNELS = 5,
+        CONFIG_ERROR = 6
     };
 
     using Ptr = std::shared_ptr<ServerNetConfigManager>;
@@ -49,6 +50,7 @@ class ServerNetConfigManager {
     auto sendServerNoChannelsStopped() -> bool;
     auto sendServerMemoryErrorStopped() -> bool;
     auto sendServerMemoryModifyStopped() -> bool;
+    auto sendServerConfigErrorStopped() -> bool;
 
     auto sendDACServerStopped() -> bool;
     auto sendDACServerMemoryErrorStopped() -> bool;
@@ -58,6 +60,15 @@ class ServerNetConfigManager {
     auto sendDACServerStoppedSDEmpty() -> bool;
     auto sendDACServerStoppedSDBroken() -> bool;
     auto sendDACServerStoppedSDMissingFile() -> bool;
+
+    auto sendGPIOServerStarted() -> bool;
+    auto sendGPIOServerStopped() -> bool;
+    auto sendGPIOServerMemoryErrorStopped() -> bool;
+    auto sendGPIOServerConfigErrorStopped() -> bool;
+
+    auto sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool;
+    auto sendSoftwareTriggerFail(CNetConfigManager::ETriggerTarget target) -> bool;
+    auto sendTriggerStatus(const TriggerStatus& status) -> bool;
 
     auto sendConfigFileMissed() -> bool;
 
@@ -82,6 +93,14 @@ class ServerNetConfigManager {
     sigslot::signal<> startDACNofiy;
 
     sigslot::signal<> memoryBlockSizeChangeNofiy;
+
+    sigslot::signal<> startGpioStreamingNofiy;
+    sigslot::signal<> stopGpioStreamingNofiy;
+
+    // The handler answers with sendSoftwareTriggerDone/Fail and sendTriggerStatus. Without a
+    // handler the request is answered here: trigger fail, empty status, GPIO config error.
+    sigslot::signal<CNetConfigManager::ETriggerTarget> softwareTriggerNofiy;
+    sigslot::signal<> triggerStatusRequestNofiy;
 
     sigslot::signal<ServerNetConfigManager::Errors> errorNofiy;
 

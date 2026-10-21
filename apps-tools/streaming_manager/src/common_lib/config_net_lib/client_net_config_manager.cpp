@@ -36,10 +36,12 @@ auto ClientNetConfigManager::removeHadlers() -> void {
     serverStartedTCPNofiy.disconnect_all();
     serverStartedSDNofiy.disconnect_all();
     serverStoppedNofiy.disconnect_all();
+    serverStoppedNoActiveChannelsNofiy.disconnect_all();
     serverStoppedMemErrorNofiy.disconnect_all();
     serverStoppedMemModifyNofiy.disconnect_all();
     serverStoppedSDFullNofiy.disconnect_all();
     serverStoppedSDDoneNofiy.disconnect_all();
+    serverStoppedConfigErrorNofiy.disconnect_all();
 
     serverDacStartedNofiy.disconnect_all();
     serverDacStartedSDNofiy.disconnect_all();
@@ -51,6 +53,16 @@ auto ClientNetConfigManager::removeHadlers() -> void {
     serverDacStoppedSDEmptyNofiy.disconnect_all();
     serverDacStoppedSDBrokenNofiy.disconnect_all();
     serverDacStoppedSDMissingNofiy.disconnect_all();
+
+    serverGpioStartedNofiy.disconnect_all();
+    serverGpioStoppedNofiy.disconnect_all();
+    serverGpioStoppedMemErrorNofiy.disconnect_all();
+    serverGpioStoppedConfigErrorNofiy.disconnect_all();
+
+    softwareTriggerDoneNofiy.disconnect_all();
+    softwareTriggerFailNofiy.disconnect_all();
+    getTriggerStatusNofiy.disconnect_all();
+    failTriggerStatusNofiy.disconnect_all();
 
     serverModeTCPNofiy.disconnect_all();
     serverModeSDNofiy.disconnect_all();
@@ -242,6 +254,46 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
         serverStoppedSDFullNofiy(sender->m_manager->getHost());
     }
 
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_ADC_SERVER_STOPPED_CONFIG_ERROR) {
+        serverStoppedConfigErrorNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STARTED) {
+        serverGpioStartedNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED) {
+        serverGpioStoppedNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_MEM_ERROR) {
+        serverGpioStoppedMemErrorNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_CONFIG_ERROR) {
+        serverGpioStoppedConfigErrorNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_DONE || c == CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_FAIL) {
+        CNetConfigManager::ETriggerTarget target;
+        if (!CNetConfigManager::parseTriggerTarget(tag, target)) {
+            errorNofiy(Errors::SERVER_INTERNAL, sender->m_manager->getHost(), std::error_code());
+        } else if (c == CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_DONE) {
+            softwareTriggerDoneNofiy(sender->m_manager->getHost(), target);
+        } else {
+            softwareTriggerFailNofiy(sender->m_manager->getHost(), target);
+        }
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_TRIGGER_STATUS) {
+        TriggerStatus status;
+        if (TriggerStatus::fromJson(tag, status)) {
+            getTriggerStatusNofiy(sender->m_manager->getHost(), status);
+        } else {
+            failTriggerStatusNofiy(sender->m_manager->getHost());
+        }
+    }
+
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STARTED) {
         serverDacStartedNofiy(sender->m_manager->getHost());
     }
@@ -292,11 +344,11 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
 	}
 
 	if (c == CNetConfigManager::ECommands::CS_RESPONSE_SERVER_MODE_TCP) {
-        serverModeSDNofiy(sender->m_manager->getHost());
+        serverModeTCPNofiy(sender->m_manager->getHost());
     }
 
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_SERVER_MODE_SD) {
-        serverModeTCPNofiy(sender->m_manager->getHost());
+        serverModeSDNofiy(sender->m_manager->getHost());
     }
 
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_ADC_FPGA_START_ADC_DONE) {
@@ -426,6 +478,14 @@ auto ClientNetConfigManager::requestActiveChannels(const std::string& host) -> b
     return false;
 }
 
+auto ClientNetConfigManager::requestTriggerStatus(const std::string& host) -> bool {
+    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
+    if (it != std::end(m_clients)) {
+        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_TRIGGER_STATUS);
+    }
+    return false;
+}
+
 auto ClientNetConfigManager::getLocalSettingsOfHost(const std::string& host) -> CStreamSettings* {
     auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
     if (it != std::end(m_clients)) {
@@ -490,6 +550,30 @@ auto ClientNetConfigManager::sendDACFPGAStart(const std::string& host) -> bool {
     auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
     if (it != std::end(m_clients)) {
         return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_FPGA_START);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendGPIOServerStart(const std::string& host) -> bool {
+    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
+    if (it != std::end(m_clients)) {
+        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_START);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendGPIOServerStop(const std::string& host) -> bool {
+    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
+    if (it != std::end(m_clients)) {
+        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_STOP);
+    }
+    return false;
+}
+
+auto ClientNetConfigManager::sendSoftwareTrigger(const std::string& host, CNetConfigManager::ETriggerTarget target) -> bool {
+    auto it = std::find_if(std::begin(m_clients), std::end(m_clients), [&host](const std::shared_ptr<Clients> c) { return c->m_manager->getHost() == host; });
+    if (it != std::end(m_clients)) {
+        return it->operator->()->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_SOFTWARE_TRIGGER, std::to_string(target));
     }
     return false;
 }

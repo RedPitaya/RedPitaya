@@ -213,6 +213,19 @@ auto CNetConfigManager::dyn_buffer::removeAtStart(uint32_t _size) -> void {
     m_data_size -= _size;
 }
 
+auto CNetConfigManager::parseTriggerTarget(const std::string& tag, ETriggerTarget& target) -> bool {
+    if (tag == std::to_string(TT_ADC)) {
+        target = TT_ADC;
+    } else if (tag == std::to_string(TT_DAC)) {
+        target = TT_DAC;
+    } else if (tag == std::to_string(TT_GPIO)) {
+        target = TT_GPIO;
+    } else {
+        return false;
+    }
+    return true;
+}
+
 auto CNetConfigManager::getHost() -> std::string {
     return m_host;
 }
