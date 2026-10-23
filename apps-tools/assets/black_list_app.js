@@ -232,7 +232,6 @@
         if (model == 25 || model == 27 || model == 28) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
-                    listOfapplications[i]["id"] === 'la_pro' ||
                     listOfapplications[i]["id"] === 'pyrpl' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
@@ -263,7 +262,6 @@
         if (model == 26 || model == 29) {
             for (i = listOfapplications.length - 1; i >= 0; i -= 1) {
                 if (listOfapplications[i]["id"] === 'marketplace' ||
-                    listOfapplications[i]["id"] === 'la_pro' ||
                     listOfapplications[i]["id"] === 'pyrpl' ||
                     listOfapplications[i]["id"] === 'fpgaexamples' ||
                     listOfapplications[i]["id"] === 'activelearning' ||
