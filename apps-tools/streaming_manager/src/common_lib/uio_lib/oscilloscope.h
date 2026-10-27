@@ -1,6 +1,7 @@
 #ifndef UIO_LIB_OSCILLOSCOPE_H
 #define UIO_LIB_OSCILLOSCOPE_H
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -36,8 +37,7 @@ struct OscilloscopeMapT {
     uint32_t dma_ctrl;               // 80  - offset 0x50
     uint32_t dma_sts_addr;           // 84  - offset 0x54
     uint32_t dma_buf_size;           // 88  - offset 0x58
-    uint32_t lost_samples_buf1_ch1;  // 92  - offset 0x5C
-    uint32_t lost_samples_buf2_ch1;  // 96  - offset 0x60
+    uint32_t reserv_5c[2];           // 92  - offset 0x5C: the old 32 bit lost counters, removed
     uint32_t dma_dst_addr1_ch1;      // 100 - offset 0x64
     uint32_t dma_dst_addr2_ch1;      // 104 - offset 0x68
     uint32_t dma_dst_addr1_ch2;      // 108 - offset 0x6C
@@ -48,8 +48,7 @@ struct OscilloscopeMapT {
     uint32_t calib_gain_ch2;         // 128 - offset 0x80
     uint32_t calib_isLegacy;         // 132 - offset 0x84
     uint32_t reserv2[5];
-    uint32_t lost_samples_buf1_ch2;  // 156 - offset 0x9C
-    uint32_t lost_samples_buf2_ch2;  // 160 - offset 0xA0
+    uint32_t reserv_9c[2];           // 156 - offset 0x9C: removed
     uint32_t write_pointer_ch1;      // 164 - offset 0xA4
     uint32_t write_pointer_ch2;      // 168 - offset 0xA8
     uint32_t reserv3[5];
@@ -66,8 +65,7 @@ struct OscilloscopeMapT {
 
     // Extended regset for stream_app_4ch project
     uint32_t reserv5[22];
-    uint32_t lost_samples_buf1_ch3;  // 348 - offset 0x15C
-    uint32_t lost_samples_buf2_ch3;  // 352 - offset 0x160
+    uint32_t reserv_15c[2];          // 348 - offset 0x15C: removed
     uint32_t dma_dst_addr1_ch3;      // 356 - offset 0x164
     uint32_t dma_dst_addr2_ch3;      // 360 - offset 0x168
     uint32_t dma_dst_addr1_ch4;      // 364 - offset 0x16C
@@ -77,8 +75,7 @@ struct OscilloscopeMapT {
     uint32_t calib_offset_ch4;       // 380 - offset 0x17C
     uint32_t calib_gain_ch4;         // 384 - offset 0x180
     uint32_t reserv6[6];
-    uint32_t lost_samples_buf1_ch4;  // 412 - offset 0x19C
-    uint32_t lost_samples_buf2_ch4;  // 416 - offset 0x1A0
+    uint32_t reserv_19c[2];          // 412 - offset 0x19C: removed
     uint32_t write_pointer_ch3;      // 420 - offset 0x1A4
     uint32_t write_pointer_ch4;      // 424 - offset 0x1A8
     uint32_t reserv7[5];
@@ -100,11 +97,26 @@ struct OscilloscopeMapT {
     uint32_t buff2TimeLo;    // 528 - offset 0x210
     uint32_t buff2TimeHi;    // 532 - offset 0x214
     uint32_t trig_count;     // 536 - offset 0x218: triggers taken since the start
-    uint32_t reserv9;        // 540 - offset 0x21C
+    uint32_t features;       // 540 - offset 0x21C: OSC_FEATURE_*, 0 in older bitstreams
     // samples lost right before a buffer, latched with its timestamp, per channel:
     // buffer 1 low/high, buffer 2 low/high
     uint32_t buff_lost[4][2][2];  // 544 - offset 0x220 .. 0x25C
+    // the part of the lost samples not written while waiting for a trigger (all channels wait
+    // together): buffer 1 low/high, buffer 2 low/high
+    uint32_t buff_wait[2][2];     // 608 - offset 0x260 .. 0x26C
 };
+
+static_assert(offsetof(OscilloscopeMapT, reserv_5c) == 0x5C);
+static_assert(offsetof(OscilloscopeMapT, reserv_19c) == 0x19C);
+static_assert(offsetof(OscilloscopeMapT, trig_count) == 0x218);
+static_assert(offsetof(OscilloscopeMapT, features) == 0x21C);
+static_assert(offsetof(OscilloscopeMapT, buff_lost) == 0x220);
+static_assert(offsetof(OscilloscopeMapT, buff_wait) == 0x260);
+
+// Bits of the features register (0x21C).
+constexpr uint32_t OSC_FEATURE_BLOCK_MODE = 0x1;
+constexpr uint32_t OSC_FEATURE_LOST64 = 0x2;
+constexpr uint32_t OSC_FEATURE_WAIT = 0x4;
 
 enum BoardMode { UNKNOWN, MASTER, SLAVE };
 
@@ -122,7 +134,10 @@ class COscilloscope {
     auto setSkipDataAddress(uio_lib::MemoryRegionT block) -> void;
     auto setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t ch3, uint32_t ch4) -> void;
     auto setDataSize(uint32_t size) -> void;
+    // The lost samples (64 bit counter of CH1, saturated) and the time of DMA buffer `index` (0/1).
     auto getFPGAInfo(uint8_t index, uint32_t& _overFlow, int64_t& _time) -> bool;
+    // Time of the first sample of DMA buffer `index`, ns since the epoch.
+    auto getBufferTime(uint8_t index) -> int64_t;
     auto setCalibration(uint8_t ch, int32_t _offset, float _gain, bool isCalibV6) -> void;
     auto setFilterCalibration(uint8_t ch, int32_t _aa, int32_t _bb, int32_t _kk, int32_t _pp) -> void;
     auto setFilterBypass(bool _state) -> void;
@@ -158,6 +173,12 @@ class COscilloscope {
     // samples lost right before DMA buffer `index` (0/1) of channel `ch`, 64 bit; read it when
     // the buffer is full (it is latched when the buffer starts and kept until it starts again)
     auto getBufferLost(uint8_t index, uint8_t ch) -> uint64_t;
+    // the part of getBufferLost() not written while waiting for a trigger (the same for all
+    // channels): the series gap in the block mode; 0 without the trigger mode or the register
+    auto getBufferWait(uint8_t index) -> uint64_t;
+    // OSC_FEATURE_* of the bitstream, 0 for a bitstream without the register
+    auto getFeatures() -> uint32_t;
+    auto hasWaitCounter() -> bool;
 
    private:
     COscilloscope(const COscilloscope&) = delete;

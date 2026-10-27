@@ -297,14 +297,36 @@ auto COscilloscope::setCalibration(uint8_t ch, int32_t _offset, float _gain, boo
 }
 
 auto COscilloscope::getFPGAInfo(uint8_t index, uint32_t& _overFlow, int64_t& _time) -> bool {
-    // This fix for FPGA
-    _overFlow = (index == 1 ? m_OscMap->lost_samples_buf1_ch1 : m_OscMap->lost_samples_buf2_ch1);
-    _time = (index == 1 ? m_OscMap->buff2TimeHi : m_OscMap->buff1TimeHi);
-    _time = _time << 32;
-    _time |= (index == 1 ? m_OscMap->buff2TimeLo : m_OscMap->buff1TimeLo);
-    // in int64: g_time is the epoch in ns, a double holding the sum keeps only ~256 ns
-    _time = g_time + (int64_t)llround((double)_time * m_sampleLeninNS);
+    // the lost samples right before this buffer (the old 32 bit registers gave the other buffer's)
+    uint64_t lost = getBufferLost(index, 0);
+    _overFlow = lost > UINT32_MAX ? UINT32_MAX : (uint32_t)lost;
+    _time = getBufferTime(index);
     return true;
+}
+
+auto COscilloscope::getBufferTime(uint8_t index) -> int64_t {
+    // index 0 is the buffer of the 0x208 registers (named buffer 1 in the register map)
+    int64_t time = (index == 1 ? m_OscMap->buff2TimeHi : m_OscMap->buff1TimeHi);
+    time = time << 32;
+    time |= (index == 1 ? m_OscMap->buff2TimeLo : m_OscMap->buff1TimeLo);
+    // in int64: g_time is the epoch in ns, a double holding the sum keeps only ~256 ns
+    return g_time + (int64_t)llround((double)time * m_sampleLeninNS);
+}
+
+auto COscilloscope::getFeatures() -> uint32_t {
+    return m_OscMap->features;
+}
+
+auto COscilloscope::hasWaitCounter() -> bool {
+    return getFeatures() & OSC_FEATURE_WAIT;
+}
+
+auto COscilloscope::getBufferWait(uint8_t index) -> uint64_t {
+    if (index > 1 || !hasWaitCounter())
+        return 0;
+    uint32_t lo = m_OscMap->buff_wait[index][0];
+    uint32_t hi = m_OscMap->buff_wait[index][1];
+    return ((uint64_t)hi << 32) | lo;
 }
 
 auto COscilloscope::clearBuffer(uint8_t index) -> bool {
@@ -423,7 +445,9 @@ auto COscilloscope::isRunning() -> bool {
 }
 
 auto COscilloscope::hasBlockMode() -> bool {
-    // bitstreams without the block mode have no register at 0x0C: it reads back 0
+    if (getFeatures() & OSC_FEATURE_BLOCK_MODE)
+        return true;
+    // bitstreams without the features register: the block mode has a register at 0x0C, without it 0 reads back
     uint32_t old = m_OscMap->trig_blocks;
     setRegister(m_OscMap, &(m_OscMap->trig_blocks), 0x5A5A);
     bool present = m_OscMap->trig_blocks == 0x5A5A;
@@ -504,8 +528,6 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0x50 dma_ctrl = 0x%X\n", m_OscMap->dma_ctrl);
     fprintf(stderr, "0x54 dma_sts_addr = 0x%X\n", m_OscMap->dma_sts_addr);
     fprintf(stderr, "0x58 dma_buf_size = 0x%X\n", m_OscMap->dma_buf_size);
-    fprintf(stderr, "0x5C lost_samples_buf1 = 0x%X\n", m_OscMap->lost_samples_buf1_ch1);
-    fprintf(stderr, "0x60 lost_samples_buf2 = 0x%X\n", m_OscMap->lost_samples_buf2_ch1);
     fprintf(stderr, "0x64 dma_dst_addr1_ch1 = 0x%X\n", m_OscMap->dma_dst_addr1_ch1);
     fprintf(stderr, "0x68 dma_dst_addr2_ch1 = 0x%X\n", m_OscMap->dma_dst_addr2_ch1);
     fprintf(stderr, "0x6C dma_dst_addr1_ch2 = 0x%X\n", m_OscMap->dma_dst_addr1_ch2);
@@ -516,8 +538,6 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0x7C calib_offset_ch2 = 0x%X\n", m_OscMap->calib_offset_ch2);
     fprintf(stderr, "0x80 calib_gain_ch2 = 0x%X\n", m_OscMap->calib_gain_ch2);
 
-    fprintf(stderr, "0x9C lost_samples_buf1_ch2 = 0x%X\n", m_OscMap->lost_samples_buf1_ch2);
-    fprintf(stderr, "0xA0 lost_samples_buf2_ch2 = 0x%X\n", m_OscMap->lost_samples_buf2_ch2);
     fprintf(stderr, "0xA4 write_pointer_ch1 = 0x%X\n", m_OscMap->write_pointer_ch1);
     fprintf(stderr, "0xA8 write_pointer_ch2 = 0x%X\n", m_OscMap->write_pointer_ch2);
 
@@ -531,8 +551,6 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0xDC filt_coeff_pp_ch2 = 0x%X\n", m_OscMap->filt_coeff_pp_ch2);
     fprintf(stderr, "0x100 mode_slave_sts = 0x%X\n", m_OscMap->mode_slave_sts);
 
-    fprintf(stderr, "0x15C lost_samples_buf1_ch3 = 0x%X\n", m_OscMap->lost_samples_buf1_ch3);
-    fprintf(stderr, "0x160 lost_samples_buf2_ch3 = 0x%X\n", m_OscMap->lost_samples_buf2_ch3);
     fprintf(stderr, "0x164 dma_dst_addr1_ch3 = 0x%X\n", m_OscMap->dma_dst_addr1_ch3);
     fprintf(stderr, "0x168 dma_dst_addr2_ch3 = 0x%X\n", m_OscMap->dma_dst_addr2_ch3);
     fprintf(stderr, "0x16C dma_dst_addr1_ch4 = 0x%X\n", m_OscMap->dma_dst_addr1_ch4);
@@ -543,8 +561,6 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0x17C calib_offset_ch4 = 0x%X\n", m_OscMap->calib_offset_ch4);
     fprintf(stderr, "0x180 calib_gain_ch4 = 0x%X\n", m_OscMap->calib_gain_ch4);
 
-    fprintf(stderr, "0x19C lost_samples_buf1_ch4 = 0x%X\n", m_OscMap->lost_samples_buf1_ch3);
-    fprintf(stderr, "0x1A0 lost_samples_buf2_ch4 = 0x%X\n", m_OscMap->lost_samples_buf2_ch4);
     fprintf(stderr, "0x1A4 write_pointer_ch3 = 0x%X\n", m_OscMap->write_pointer_ch3);
     fprintf(stderr, "0x1A8 write_pointer_ch4 = 0x%X\n", m_OscMap->write_pointer_ch4);
 
@@ -565,4 +581,8 @@ auto COscilloscope::printReg() -> void {
     fprintf(stderr, "0x214 buff2TimeHi = 0x%X\n", m_OscMap->buff2TimeHi);
     fprintf(stderr, "0x0C trig_blocks = 0x%X\n", m_OscMap->trig_blocks);
     fprintf(stderr, "0x218 trig_count = 0x%X\n", m_OscMap->trig_count);
+    fprintf(stderr, "0x21C features = 0x%X\n", m_OscMap->features);
+    for (int b = 0; b < 2; b++)
+        fprintf(stderr, "0x%X buffer %d lost CH1 = %llu, wait = %llu\n", 0x220 + 8 * b, b + 1, (unsigned long long)getBufferLost(b, 0),
+                (unsigned long long)getBufferWait(b));
 }

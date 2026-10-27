@@ -241,8 +241,10 @@ auto CGpio::isOutputArmed() -> bool {
 }
 
 auto CGpio::hasInputBlockMode() -> bool {
+    if (getFeatures() & GPIO_FEATURE_IN_BLOCK_MODE)
+        return true;
     std::lock_guard lock(m_lock);
-    // older bitstreams have no register at 0x0C: it reads back 0
+    // bitstreams without the features register: the block mode has a register at 0x0C, without it 0 reads back
     uint32_t old = m_Map->trig_blocks;
     m_Map->trig_blocks = 0x5A5A;
     bool present = (m_Map->trig_blocks & 0xFFFF) == 0x5A5A;
@@ -288,6 +290,22 @@ auto CGpio::getInLost64(uint8_t index) -> uint64_t {
     return (uint64_t)hi << 32 | lo;
 }
 
+auto CGpio::getFeatures() -> uint32_t {
+    return m_Map->features;
+}
+
+auto CGpio::hasWaitCounter() -> bool {
+    return getFeatures() & GPIO_FEATURE_WAIT;
+}
+
+auto CGpio::getInWait64(uint8_t index) -> uint64_t {
+    if (index > 1 || !hasWaitCounter())
+        return 0;
+    uint32_t lo = m_Map->in_wait[index][0];
+    uint32_t hi = m_Map->in_wait[index][1];
+    return (uint64_t)hi << 32 | lo;
+}
+
 auto CGpio::waitIn(uint8_t index, int timeoutMs) -> bool {
     const uint32_t mask = index == 0 ? IN_STS_BUF1_FULL : IN_STS_BUF2_FULL;
     auto end = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
@@ -305,7 +323,8 @@ auto CGpio::clearInBuffer(uint8_t index) -> void {
 }
 
 auto CGpio::getInLost(uint8_t index) -> uint32_t {
-    return index == 0 ? m_Map->lost_buf1 : m_Map->lost_buf2;
+    uint64_t lost = getInLost64(index);
+    return lost > UINT32_MAX ? UINT32_MAX : (uint32_t)lost;
 }
 
 auto CGpio::getInWritePointer() -> uint32_t {
@@ -358,10 +377,12 @@ auto CGpio::printReg() -> void {
     fprintf(stderr, "0xA4 buf1_out = 0x%X\n", m_Map->buf1_out);
     fprintf(stderr, "0xA8 buf2_in = 0x%X\n", m_Map->buf2_in);
     fprintf(stderr, "0xAC buf2_out = 0x%X\n", m_Map->buf2_out);
-    fprintf(stderr, "0xB0 lost_buf1 = 0x%X\n", m_Map->lost_buf1);
-    fprintf(stderr, "0xB4 lost_buf2 = 0x%X\n", m_Map->lost_buf2);
     fprintf(stderr, "0xB8 wp_in = 0x%X\n", m_Map->wp_in);
     fprintf(stderr, "0xBC rp_out = 0x%X\n", m_Map->rp_out);
     fprintf(stderr, "0xC0 out_step = 0x%X\n", m_Map->out_step);
     fprintf(stderr, "0xC4 in_dma_diag = 0x%X\n", m_Map->in_dma_diag);
+    fprintf(stderr, "0xDC features = 0x%X\n", m_Map->features);
+    for (int b = 0; b < 2; b++)
+        fprintf(stderr, "0x%X input buffer %d lost = %llu, wait = %llu\n", 0xE0 + 8 * b, b + 1, (unsigned long long)getInLost64(b),
+                (unsigned long long)getInWait64(b));
 }

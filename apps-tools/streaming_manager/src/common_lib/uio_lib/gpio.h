@@ -1,6 +1,7 @@
 #ifndef UIO_LIB_GPIO_H
 #define UIO_LIB_GPIO_H
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -62,8 +63,7 @@ struct GpioMapT {
     uint32_t buf1_out;      // 0xA4
     uint32_t buf2_in;       // 0xA8
     uint32_t buf2_out;      // 0xAC
-    uint32_t lost_buf1;     // 0xB0
-    uint32_t lost_buf2;     // 0xB4
+    uint32_t reserv_b0[2];  // 0xB0 the old 32 bit lost counters, removed
     uint32_t wp_in;         // 0xB8
     uint32_t rp_out;        // 0xBC
     uint32_t out_step;      // 0xC0
@@ -73,9 +73,20 @@ struct GpioMapT {
     uint32_t axi_ar_rlast;  // 0xD0 read address handshakes << 16 | read bursts completed
     uint32_t axi_r;         // 0xD4 read data beats
     uint32_t in_trig_count; // 0xD8 triggers taken by the input since the start (series started or extended)
-    uint32_t reserv5;       // 0xDC
+    uint32_t features;      // 0xDC GPIO_FEATURE_*, 0 in older bitstreams
     uint32_t in_lost[2][2]; // 0xE0 64 bit samples lost right before input buffer 1 {lo, hi}, 0xE8 buffer 2
+    uint32_t in_wait[2][2]; // 0xF0 the part of in_lost not written while waiting for a trigger, 0xF8 buffer 2
 };
+
+static_assert(offsetof(GpioMapT, reserv_b0) == 0xB0);
+static_assert(offsetof(GpioMapT, features) == 0xDC);
+static_assert(offsetof(GpioMapT, in_lost) == 0xE0);
+static_assert(offsetof(GpioMapT, in_wait) == 0xF0);
+
+// Bits of the features register (0xDC).
+constexpr uint32_t GPIO_FEATURE_IN_BLOCK_MODE = 0x1;
+constexpr uint32_t GPIO_FEATURE_LOST64 = 0x2;
+constexpr uint32_t GPIO_FEATURE_WAIT = 0x4;
 
 // GPIO streaming block of stream_app (DIO0..7 P and N), present on the boards with rp_gpio
 // in their stream_app (not on the 250-12 and the low latency boards).
@@ -136,9 +147,16 @@ class CGpio {
     auto getInputTriggerCount() -> uint32_t;
     // samples lost right before input buffer `index` (words of RLE count c stand for c + 1 samples)
     auto getInLost64(uint8_t index) -> uint64_t;
+    // the part of getInLost64() not written while waiting for a trigger: the series gap in the
+    // block mode; 0 without the trigger mode or the register
+    auto getInWait64(uint8_t index) -> uint64_t;
+    // GPIO_FEATURE_* of the bitstream, 0 for a bitstream without the register
+    auto getFeatures() -> uint32_t;
+    auto hasWaitCounter() -> bool;
 
     auto waitIn(uint8_t index, int timeoutMs) -> bool;
     auto clearInBuffer(uint8_t index) -> void;
+    // getInLost64() saturated to 32 bits
     auto getInLost(uint8_t index) -> uint32_t;
     auto getInWritePointer() -> uint32_t;
     auto getOutReadPointer() -> uint32_t;

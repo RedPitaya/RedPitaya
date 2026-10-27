@@ -57,7 +57,7 @@ class CStreamingFPGA {
     bool m_verbMode;
     bool m_printDebugBuffer;
 
-    uint64_t m_overFlowSumm;
+    uint64_t m_overFlowSumm[4];  // per channel, of the buffers dropped for want of a free pack
     uint64_t m_overFlowSummCount;
 
     DataLib::CDataBuffersPackDMA::Ptr m_mappedBuffers[2];

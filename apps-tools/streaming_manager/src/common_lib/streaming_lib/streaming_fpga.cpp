@@ -122,7 +122,8 @@ void CStreamingFPGA::oscWorker() {
         uint64_t dataSize = 0;
         uint64_t lostSize = 0;
         uint64_t totalPassRate = 0;
-        m_overFlowSumm = 0;
+        for (auto& s : m_overFlowSumm)
+            s = 0;
         m_overFlowSummCount = 0;
         while (m_OscThreadRun) {
             bool state = true;
@@ -168,14 +169,12 @@ void CStreamingFPGA::oscWorker() {
 }
 
 auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPackDMA::Ptr {
-    bool success = false;
-    uint32_t overFlow = 0;
-    int64_t time = 0;
-    success = m_Osc_ch->getFPGAInfo(m_currentBuffer, overFlow, time);
-
-    if (!success) {
-        return nullptr;
-    }
+    int64_t time = m_Osc_ch->getBufferTime(m_currentBuffer);
+    // the 64 bit counter of each channel, latched when this buffer started: the samples lost
+    // right before it (with the block mode also the series gap)
+    uint64_t lost[4];
+    for (uint8_t ch = 0; ch < 4; ch++)
+        lost[ch] = m_Osc_ch->getBufferLost(m_currentBuffer, ch);
 
     if (m_printDebugBuffer) {
         // short *wb2_1 = (short*)buffer_ch1;
@@ -196,35 +195,35 @@ auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPackDMA::Ptr {
     auto packNew = getBuffF();
     DataLib::CDataBuffersPackDMA::Ptr pack = nullptr;
     if (packNew) {
-        overFlow += m_overFlowSumm;
         if (!m_saveCaptureTime)
             time = 0;
         pack = m_mappedBuffers[m_currentBuffer];
         auto bCh1 = pack->getBuffer(DataLib::CH1);
         if (bCh1) {
-            bCh1->setLostSamples(DataLib::FPGA, overFlow + bCh1->getSamplesCount() * m_overFlowSummCount);
+            bCh1->setLostSamples(DataLib::FPGA, lost[0] + m_overFlowSumm[0] + bCh1->getSamplesCount() * m_overFlowSummCount);
             bCh1->setTimeCapture(time);
         }
 
         auto bCh2 = pack->getBuffer(DataLib::CH2);
         if (bCh2) {
-            bCh2->setLostSamples(DataLib::FPGA, overFlow + bCh2->getSamplesCount() * m_overFlowSummCount);
+            bCh2->setLostSamples(DataLib::FPGA, lost[1] + m_overFlowSumm[1] + bCh2->getSamplesCount() * m_overFlowSummCount);
             bCh2->setTimeCapture(time);
         }
 
         auto bCh3 = pack->getBuffer(DataLib::CH3);
         if (bCh3) {
-            bCh3->setLostSamples(DataLib::FPGA, overFlow + bCh3->getSamplesCount() * m_overFlowSummCount);
+            bCh3->setLostSamples(DataLib::FPGA, lost[2] + m_overFlowSumm[2] + bCh3->getSamplesCount() * m_overFlowSummCount);
             bCh3->setTimeCapture(time);
         }
 
         auto bCh4 = pack->getBuffer(DataLib::CH4);
         if (bCh4) {
-            bCh4->setLostSamples(DataLib::FPGA, overFlow + bCh4->getSamplesCount() * m_overFlowSummCount);
+            bCh4->setLostSamples(DataLib::FPGA, lost[3] + m_overFlowSumm[3] + bCh4->getSamplesCount() * m_overFlowSummCount);
             bCh4->setTimeCapture(time);
         }
 
-        m_overFlowSumm = 0;
+        for (auto& s : m_overFlowSumm)
+            s = 0;
         m_overFlowSummCount = 0;
         unlockBuffF();
         m_mappedBuffers[m_currentBuffer] = packNew;
@@ -236,7 +235,8 @@ auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPackDMA::Ptr {
                                      packNew->getBufferDataAddress(DataLib::CH4));
         }
     } else {
-        m_overFlowSumm += overFlow;
+        for (uint8_t ch = 0; ch < 4; ch++)
+            m_overFlowSumm[ch] += lost[ch];
         m_overFlowSummCount++;
     }
     m_Osc_ch->clearBuffer(m_currentBuffer);

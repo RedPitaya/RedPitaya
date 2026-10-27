@@ -110,6 +110,18 @@ auto CGpio::getInLost64(uint8_t) -> uint64_t {
     return 0;
 }
 
+auto CGpio::getInWait64(uint8_t) -> uint64_t {
+    return 0;
+}
+
+auto CGpio::getFeatures() -> uint32_t {
+    return 0;
+}
+
+auto CGpio::hasWaitCounter() -> bool {
+    return false;
+}
+
 auto CGpio::waitIn(uint8_t, int) -> bool {
     return false;
 }

@@ -49,6 +49,22 @@ auto COscilloscope::getFPGAInfo(uint8_t, uint32_t& _overFlow, int64_t& _time) ->
     return true;
 }
 
+auto COscilloscope::getBufferTime(uint8_t) -> int64_t {
+    return 0;
+}
+
+auto COscilloscope::getBufferWait(uint8_t) -> uint64_t {
+    return 0;
+}
+
+auto COscilloscope::getFeatures() -> uint32_t {
+    return 0;
+}
+
+auto COscilloscope::hasWaitCounter() -> bool {
+    return false;
+}
+
 auto COscilloscope::getDecimation() -> uint32_t {
     return m_dec_factor;
 }
