@@ -69,6 +69,10 @@ auto CStreamingNet::run() -> void {
 auto CStreamingNet::stop() -> void {
     std::lock_guard lock(m_mtx);
     m_threadRun = false;
+    // The sender may be blocked on a client that stopped reading: closing the socket releases it.
+    if (m_asionet) {
+        m_asionet->disconnect();
+    }
     if (m_thread.joinable()) {
         m_thread.join();
     }

@@ -1,6 +1,7 @@
 #ifndef NET_LIB_ASIO_NET_H
 #define NET_LIB_ASIO_NET_H
 
+#include <atomic>
 #include <string>
 
 #include "asio_common.h"
@@ -48,7 +49,7 @@ class CAsioNet {
     net_lib::EMode m_mode;
     std::string m_host;
     uint16_t m_port;
-    bool m_IsRun;
+    std::atomic<bool> m_IsRun;
     std::shared_ptr<CAsioSocketDMA> m_server;
 };
 
