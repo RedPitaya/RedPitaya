@@ -52,6 +52,7 @@ static struct option long_options_streaming[] = {
     {"mode", required_argument, 0, 'm'},
     {"timeout", required_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
+    {"tdms_time", no_argument, 0, 'T'},  // long only
     {0, 0, 0, 0}};
 
 static constexpr char optstring_streaming[] = "sh:c:f:d:l:m:t:v";
@@ -287,7 +288,7 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\tOptions:\n"
         "\t\t%s -s [-h IPs] -f tdms|wav|csv|bin [-d NAME] [-m raw|volt] [-l SAMPLES] [-t MSEC] [-v]\n"
         "\t\t%s --streaming [--hosts=IPs] --format=tdms|wav|csv|bin [--dir=NAME] [--limit=SAMPLES] [--mode=raw|volt] [--timeout=MSEC] "
-        "[--verbose]\n"
+        "[--tdms_time] [--verbose]\n"
         "\n"
         "\t\t--streaming            -s              Enable streaming mode.\n"
         "\t\t--hosts=IP,...         -h IP,...       You can specify one or more board IP addresses through a separator - ','\n"
@@ -307,6 +308,9 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\t\t                                              volt = Converts binary integer format to floating point format.\n"
         "\t\t                                                    Measured in volts. In wav format, it is limited from -1 to 1.\n"
         "\t\t--timeout=MSEC         -t MSEC         Stops recording after a specified amount of time.\n"
+        "\t\t--tdms_time                            TDMS: a column with the time of every sample (8 bytes each).\n"
+        "\t\t                                       Without it the time is in the channel properties (wf_start_time,\n"
+        "\t\t                                       wf_increment) and in the group Buffers, a row per buffer.\n"
         "\t\t--verbose              -v              Displays service information.\n"
         "\n"
         "DAC streaming Mode:\n"
@@ -585,6 +589,10 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
 
                 case 'v':
                     opt.verbous = true;
+                    break;
+
+                case 'T':
+                    opt.tdms_time = true;
                     break;
 
                 case 'h': {

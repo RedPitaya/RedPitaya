@@ -74,6 +74,7 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
     }
 
     auto g_file_manager = streaming_lib::CStreamingFile::create(file_type, g_soption.save_dir, g_soption.samples, convert_v, false);
+    g_file_manager->setTDMSTimeColumn(g_soption.tdms_time);
     g_file_manager->run(host + "_" + g_filenameDate);
 
     auto g_s_file_w = std::weak_ptr<streaming_lib::CStreamingFile>(g_file_manager);

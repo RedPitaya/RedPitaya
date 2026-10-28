@@ -858,6 +858,7 @@ bool startServer(bool testMode) {
         if (use_file.value == CStreamSettings::PassMode::FILE) {
             auto path = std::string(FILE_PATH);
             g_s_file = streaming_lib::CStreamingFile::create(format, path, samples, save_mode.value == CStreamSettings::DataType::VOLT, testMode, true);
+            g_s_file->setTDMSTimeColumn(settings.getTDMSTimeColumn().value == CStreamSettings::State::ON);
             g_s_file->stopNotify.connect([](streaming_lib::CStreamingFile::EStopReason r) {
                 switch (r) {
                     case streaming_lib::CStreamingFile::EStopReason::NORMAL:
@@ -1052,6 +1053,9 @@ void stopServer(ServerNetConfigManager::EStopReason x) {
             g_s_fpga->stop();
             g_s_fpga = nullptr;
         }
+        // The acquisition has stopped: what is queued for the SD card still goes into the file
+        if (g_s_file)
+            g_s_file->stopAndFlush();
 
         g_s_buffer = nullptr;
         g_s_net = nullptr;

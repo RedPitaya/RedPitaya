@@ -9,18 +9,14 @@
 #endif
 
 void createTestFiels() {
-    // Takes the stream by const reference to a unique_ptr rather than as a raw
-    // pointer so that the ownership of what BuildWAVStream and buildTDMSStream
-    // return is stated in the type: both hand the caller a new'd stream, and the
-    // caller of this lambda keeps it.
-    auto func = [](size_t size, std::string suffix, const std::unique_ptr<std::iostream>& s) {
+    auto func = [](size_t size, std::string suffix, const FileChunk::Ptr& s) {
         if (!s) {
             return;
         }
         std::string file_name = "td_sin_" + std::to_string(size) + "_" + suffix;
         std::ofstream file(file_name, std::ios::out | std::ios::binary | std::ios::trunc);
         if (file.is_open()) {
-            file << s->rdbuf();
+            s->writeTo(file);
             file.close();
         }
     };
@@ -66,23 +62,23 @@ void createTestFiels() {
 
         CWaveWriter wav;
         wav.resetHeaderInit();
-        std::unique_ptr<std::iostream> str_ch1_8(wav.BuildWAVStream(pack_ch1_8));
+        auto str_ch1_8 = wav.BuildWAVChunk(pack_ch1_8);
         wav.resetHeaderInit();
-        std::unique_ptr<std::iostream> str_ch2_8(wav.BuildWAVStream(pack_ch2_8));
+        auto str_ch2_8 = wav.BuildWAVChunk(pack_ch2_8);
         wav.resetHeaderInit();
-        std::unique_ptr<std::iostream> str_ch1_16(wav.BuildWAVStream(pack_ch1_16));
+        auto str_ch1_16 = wav.BuildWAVChunk(pack_ch1_16);
         wav.resetHeaderInit();
-        std::unique_ptr<std::iostream> str_ch2_16(wav.BuildWAVStream(pack_ch2_16));
+        auto str_ch2_16 = wav.BuildWAVChunk(pack_ch2_16);
 
         func(size, "8bit_ch1.wav", str_ch1_8);
         func(size, "8bit_ch2.wav", str_ch2_8);
         func(size, "16bit_ch1.wav", str_ch1_16);
         func(size, "16bit_ch2.wav", str_ch2_16);
 
-        str_ch1_8.reset(buildTDMSStream(pack_ch1_8, nullptr));
-        str_ch2_8.reset(buildTDMSStream(pack_ch2_8, nullptr));
-        str_ch1_16.reset(buildTDMSStream(pack_ch1_16, nullptr));
-        str_ch2_16.reset(buildTDMSStream(pack_ch2_16, nullptr));
+        str_ch1_8 = buildTDMSChunk(pack_ch1_8, nullptr);
+        str_ch2_8 = buildTDMSChunk(pack_ch2_8, nullptr);
+        str_ch1_16 = buildTDMSChunk(pack_ch1_16, nullptr);
+        str_ch2_16 = buildTDMSChunk(pack_ch2_16, nullptr);
 
         func(size, "8bit_ch1.tdms", str_ch1_8);
         func(size, "8bit_ch2.tdms", str_ch2_8);

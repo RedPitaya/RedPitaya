@@ -5,6 +5,7 @@
 #include "data_lib/neon_asm.h"
 #include "logger_lib/file_logger.h"
 #include "streaming_file.h"
+#include "tdms_lib/tdms.h"
 
 #ifdef _WIN32
 #include <dir.h>
@@ -125,6 +126,7 @@ auto CStreamingFile::run(std::string _prefix, std::string _fileName) -> void {
     m_passSizeSamples[DataLib::CH3] = 0;
     m_passSizeSamples[DataLib::CH4] = 0;
 
+    m_tdmsStarted = false;
     m_file_out = _fileName == "" ? getNewFileName(m_fileType, m_filePath, _prefix) : _fileName;
     m_fileLogger = CFileLogger::create(m_file_out + ".log", m_testMode);
     aprintf(stdout, "Run write to: %s\n", m_file_out.c_str());
@@ -235,6 +237,78 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPackDMA::Ptr pack, Data
     }
 }
 
+auto CStreamingFile::setTDMSTimeColumn(bool enable) -> void {
+    m_tdmsTimeColumn = enable;
+}
+
+namespace {
+
+const char* const kTDMSChannels[4] = {"ch1", "ch2", "ch3", "ch4"};
+
+// The first channel of a pack, CH4 + 1 when it has none
+auto firstChannel(DataLib::CDataBuffersPackDMA::Ptr pack) -> int {
+    int i = (int)DataLib::CH1;
+    while (i <= (int)DataLib::CH4 && !pack->getBuffer((DataLib::EDataBuffersPackChannel)i))
+        i++;
+    return i;
+}
+
+}  // namespace
+
+// The properties of the recording, in its first segment
+auto CStreamingFile::addTDMSProperties(TDMS::SegmentBuilder& segment, DataLib::CDataBuffersPackDMA::Ptr pack, std::map<DataLib::EDataBuffersPackChannel, SBuffPass>& map)
+    -> void {
+    const int firstCh = firstChannel(pack);
+    if (m_tdmsStarted || firstCh > (int)DataLib::CH4)
+        return;
+    m_tdmsStarted = true;
+    auto first = pack->getBuffer((DataLib::EDataBuffersPackChannel)firstCh);
+    const int64_t timeCapture = pack->getTimeCapture();
+    const uint64_t rate = pack->getOSCRate();  // the sample rate, after the decimation
+
+    segment.setGroupProperty("Group", "sample_rate", static_cast<double>(rate));
+    segment.setGroupProperty("Group", "data_type", m_volt_mode ? "Volt" : "Raw");
+    segment.setGroupProperty("Group", "resolution_bits", first->getBitBySample());
+    if (first->getDecimation()) {
+        segment.setGroupProperty("Group", "decimation", first->getDecimation());
+        segment.setGroupProperty("Group", "adc_rate", static_cast<double>(rate) * first->getDecimation());
+        segment.setGroupProperty("Group", "trigger_mode", (first->getADCFlags() & DataLib::ADC_FLAG_TRIGGER_MODE) != 0);
+    }
+    for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
+        auto ch = (DataLib::EDataBuffersPackChannel)i;
+        auto buff = pack->getBuffer(ch);
+        if (!buff || !map[ch].bufferLen)
+            continue;
+        if (rate)
+            segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::Increment, 1.0 / static_cast<double>(rate));
+        if (timeCapture) {
+            segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::StartTime, TDMS::TimeStamp::fromUnixNs(timeCapture));
+            segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::StartOffset, 0.0);
+        }
+        if (m_volt_mode)
+            segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::Unit, "V");
+        segment.setChannelProperty("Group", kTDMSChannels[i], "attenuator", buff->getADCMode() == DataLib::CDataBufferDMA::ATT_1_20 ? "1:20" : "1:1");
+    }
+}
+
+// A row per buffer in the group "Buffers": when it starts, the samples written, and what is
+// missing right before it (overflow, trigger wait)
+auto CStreamingFile::addTDMSBufferRow(TDMS::SegmentBuilder& segment, DataLib::CDataBuffersPackDMA::Ptr pack, std::map<DataLib::EDataBuffersPackChannel, SBuffPass>& map)
+    -> void {
+    const int firstCh = firstChannel(pack);
+    if (firstCh > (int)DataLib::CH4)
+        return;
+    auto first = pack->getBuffer((DataLib::EDataBuffersPackChannel)firstCh);
+    const int64_t start = pack->getTimeCapture();
+    const uint64_t samples = map[(DataLib::EDataBuffersPackChannel)firstCh].samplesCount;
+    const uint64_t lost = first->getLostSamplesAll();
+    const uint64_t wait = first->getWaitSamples();
+    segment.copySamples("Buffers", "start_time_ns", &start, 1);
+    segment.copySamples("Buffers", "samples", &samples, 1);
+    segment.copySamples("Buffers", "lost", &lost, 1);
+    segment.copySamples("Buffers", "wait", &wait, 1);
+}
+
 auto CStreamingFile::getFileLost() -> uint64_t {
     if (m_fileLogger) {
         return m_fileLogger->getFileLost();
@@ -307,25 +381,26 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
             uint64_t bufSamples = pack->getBuffersSamples();
             auto time_cap = pack->getTimeCapture();
 
-            static std::shared_ptr<std::vector<int64_t>> time = std::make_shared<std::vector<int64_t>>();
-            if (time_cap != 0 && bufSamples != 0) {
+            // A vector per segment: the queued segment references it until the file thread writes it
+            std::shared_ptr<std::vector<int64_t>> time;
+            if (m_tdmsTimeColumn && time_cap != 0 && bufSamples != 0) {
+                time = std::make_shared<std::vector<int64_t>>();
                 time->resize(bufSamples);
                 double frequency_hz = pack->getOSCRate();
                 double period_ns = (frequency_hz > 0) ? (1.0 / frequency_hz) * 1e9 : 0;
                 for (auto idx = 0u; idx < bufSamples; idx++) {
                     time->at(idx) = time_cap + (uint64_t)(period_ns * idx);
                 }
-            } else {
-                time->resize(0);
             }
 
-            auto stream_data = buildTDMSStream(map, time);
+            auto segment = std::make_shared<TDMS::SegmentBuilder>();
+            addTDMSProperties(*segment, pack, map);
+            addTDMSSamples(*segment, map, time);
+            addTDMSBufferRow(*segment, pack, map);
             if (m_file_manager->isWork()) {
-                if (!m_file_manager->addBufferToWrite(stream_data)) {
+                if (!m_file_manager->addChunkToWrite(buildTDMSChunk(segment))) {
                     m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
                 }
-            } else {
-                delete stream_data;
             }
         } else {
             m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
@@ -372,13 +447,11 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
                     m_passSizeSamples[ch] += map[ch].samplesCount;
                 }
             }
-            auto stream_data = m_waveWriter->BuildWAVStream(map);
+            auto chunk = m_waveWriter->BuildWAVChunk(map);
             if (m_file_manager->isWork()) {
-                if (!m_file_manager->addBufferToWrite(stream_data)) {
+                if (!m_file_manager->addChunkToWrite(std::move(chunk))) {
                     m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
                 }
-            } else {
-                delete stream_data;
             }
         } else {
             m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
@@ -416,13 +489,10 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
             }
         }
 
-        auto stream_data = buildBINStream(pack, map);
         if (m_file_manager->isWork()) {
-            if (!m_file_manager->addBufferToWrite(stream_data)) {
+            if (!m_file_manager->addChunkToWrite(buildBINChunk(pack, map))) {
                 m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
             }
-        } else {
-            delete stream_data;
         }
     }
     uint64_t rate = 0;

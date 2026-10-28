@@ -46,6 +46,10 @@ class CStreamingFile {
     auto getPassSamples() -> uint64_t;
     auto getWritedSize() -> uint64_t;
 
+    // TDMS: a column with the time of every sample (off by default; the time is always in the
+    // wf_* properties of the channels and in the row of every buffer in the group "Buffers")
+    auto setTDMSTimeColumn(bool enable) -> void;
+
    private:
     CStreamingFile(const CStreamingFile&) = delete;
     CStreamingFile(CStreamingFile&&) = delete;
@@ -70,11 +74,15 @@ class CStreamingFile {
     bool m_volt_mode;
     bool m_disableNotify;
     bool m_rp_mode;
+    bool m_tdmsTimeColumn = false;
+    bool m_tdmsStarted = false;  // the first segment, with the properties of the recording, is written
 
     CStreamSettings::DataFormat m_fileType;
 
     auto stop(EStopReason reason, bool _flush) -> void;
     auto convertBuffers(DataLib::CDataBuffersPackDMA::Ptr pack, DataLib::EDataBuffersPackChannel channel, bool lockADCTo1V) -> SBuffPass;
+    auto addTDMSProperties(TDMS::SegmentBuilder& segment, DataLib::CDataBuffersPackDMA::Ptr pack, std::map<DataLib::EDataBuffersPackChannel, SBuffPass>& map) -> void;
+    auto addTDMSBufferRow(TDMS::SegmentBuilder& segment, DataLib::CDataBuffersPackDMA::Ptr pack, std::map<DataLib::EDataBuffersPackChannel, SBuffPass>& map) -> void;
 };
 
 }  // namespace streaming_lib

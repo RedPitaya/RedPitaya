@@ -69,6 +69,9 @@ auto stopServer(ServerNetConfigManager::EStopReason reason) -> void {
         }
 
         g_s_fpga = nullptr;
+        // The acquisition has stopped: what is queued for the SD card still goes into the file
+        if (g_s_file)
+            g_s_file->stopAndFlush();
         g_s_buffer = nullptr;
         g_s_net = nullptr;
         g_s_file = nullptr;
@@ -360,6 +363,7 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
             auto path = std::string(FILE_PATH);
             g_s_file = streaming_lib::CStreamingFile::create(
                 settings.getADCFormat(), path, settings.getADCSamples(), settings.getADCType().value == CStreamSettings::DataType::VOLT, testMode, is_platform);
+            g_s_file->setTDMSTimeColumn(settings.getTDMSTimeColumn().value == CStreamSettings::State::ON);
 
             g_s_file->stopNotify.connect([](CStreamingFile::EStopReason r) {
                 switch (r) {

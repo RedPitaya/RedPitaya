@@ -57,7 +57,7 @@ class FileLoggerTest : public ::testing::Test {
             buf->setDecimation(decimation);
             buf->setADCFlags(flags);
             buf->setTriggerCount(triggers);
-            buf->setADCBaseRate(125000000);
+            buf->setADCBaseRate(15625000);  // the rate after the decimation 8
             pack->addBuffer(ch, buf);
         }
         return pack;
@@ -70,7 +70,7 @@ class FileLoggerTest : public ::testing::Test {
             logger.addMetric(CFileLogger::EMetric::RECIVE_DATE, buf->getDataLenght());
             logger.addMetric(ch, buf->getDataLenght(), buf->getLostSamples(DataLib::FPGA), buf->getWaitSamples(), buf->getSamplesCount());
         }
-        logger.addMetric(CFileLogger::EMetric::OSC_RATE, 125000000);
+        logger.addMetric(CFileLogger::EMetric::OSC_RATE, 15625000);
         logger.addMetric(pack);
     }
 
@@ -155,7 +155,8 @@ TEST_F(FileLoggerTest, TheReportKeepsTheWaitApartFromTheLoss) {
     EXPECT_NE(r.find("Wait for a trigger on: Channel 1\n\t- 150 Samples"), std::string::npos) << r;
     EXPECT_NE(r.find("Wait for a trigger on: Channel 2\n\t- 150 Samples"), std::string::npos) << r;
     EXPECT_NE(r.find("Decimation:\t8\n"), std::string::npos) << r;
-    EXPECT_NE(r.find("Sample rate:\t15625000.000\n"), std::string::npos) << r;
+    EXPECT_NE(r.find("Sample rate:\t15625000\n"), std::string::npos) << r;
+    EXPECT_NE(r.find("ADC rate:\t125000000\n"), std::string::npos) << "the buffers carry the rate after the decimation\n" << r;
     EXPECT_NE(r.find("Trigger mode:\ton\n"), std::string::npos) << r;
     EXPECT_NE(r.find("after the first and the last buffer:\t7 / 9\n"), std::string::npos) << r;
     EXPECT_NE(r.find("apart from the loss:\tyes\n"), std::string::npos) << r;

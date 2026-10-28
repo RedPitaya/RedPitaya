@@ -18,7 +18,9 @@ class FileQueueManager : public Queue {
     FileQueueManager(bool testMode = false);
     ~FileQueueManager();
 
-    auto addBufferToWrite(std::iostream* buffer) -> bool;
+    // Queues a chunk for the file thread; false (the chunk dropped) when the thread does not run
+    // or the queue already holds half of the RAM
+    auto addChunkToWrite(FileChunk::Ptr chunk) -> bool;
     auto closeFile() -> void;
     auto isWork() -> bool { return m_threadWork && !m_hasErrorWrite; }
     auto isOutOfSpace() -> bool { return m_IsOutOfSpace; }
@@ -26,7 +28,8 @@ class FileQueueManager : public Queue {
     auto startWrite(CStreamSettings::DataFormat _fileType) -> void;
     auto stopWrite(bool waitAllWrite) -> void;
 	auto updateWavFile(uint32_t _size) -> void;
-	auto writeToFile() -> int;
+    // Writes the next chunk, waiting up to `wait` for one: 0 written, -1 none, 1 not written (error)
+    auto writeToFile(std::chrono::milliseconds wait = std::chrono::milliseconds(0)) -> int;
     auto deleteFile() -> void;
     auto getWritedSize() -> uint64_t;
 
@@ -40,16 +43,16 @@ class FileQueueManager : public Queue {
     std::fstream fs;
     std::thread* th;
     std::atomic_bool m_ThreadRun;
-    bool m_threadWork;
+    std::atomic_bool m_threadWork;
     int m_waitAllWrite;
     std::mutex m_waitLock;
     std::mutex m_threadControl;
-    bool m_hasErrorWrite;
+    std::atomic_bool m_hasErrorWrite;
     CStreamSettings::DataFormat m_fileType = CStreamSettings::DataFormat::BIN;
     bool m_firstSectionWrite;  // Need for detect first section of wav file
-    bool m_IsOutOfSpace;
+    std::atomic_bool m_IsOutOfSpace;
     uint64_t m_freeSize;
-    uint64_t m_hasWriteSize;
+    std::atomic<uint64_t> m_hasWriteSize;
     uint64_t m_aviablePhyMemory;
     bool m_testMode;
     std::string m_fileName;

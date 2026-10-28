@@ -57,6 +57,7 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setADCFormat(DataFormat::TDMS);
     s.setADCType(DataType::VOLT);
     s.setADCCaptureTime(ADCCaptureTime::OFF);
+    s.setTDMSTimeColumn(State::ON);
     s.setADCPassMode(PassMode::FILE);
     s.setADCResolution(Resolution::BIT_8);
     s.setADCDecimation(64);
@@ -162,6 +163,7 @@ TEST(StreamSettingsJson, EveryFieldSurvivesToJsonThenParseJson) {
     EXPECT_EQ(target.getADCFormat(), DataFormat::TDMS);
     EXPECT_EQ(target.getADCType(), DataType::VOLT);
     EXPECT_EQ(target.getADCCaptureTime(), ADCCaptureTime::OFF);
+    EXPECT_EQ(target.getTDMSTimeColumn(), State::ON);
     EXPECT_EQ(target.getADCPassMode(), PassMode::FILE);
     EXPECT_EQ(target.getADCResolution(), Resolution::BIT_8);
     EXPECT_EQ(target.getADCDecimation(), 64u);

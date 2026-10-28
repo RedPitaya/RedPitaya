@@ -3,12 +3,19 @@
 #include "file_helper.h"
 #include "logger_lib/file_logger.h"
 
+namespace {
+// How long the file thread sleeps on an empty queue before it looks at the stop flag again
+constexpr std::chrono::milliseconds kWaitForChunk(100);
+}  // namespace
+
 FileQueueManager::FileQueueManager(bool testMode) : Queue() {
     m_threadWork = false;
     m_waitAllWrite = false;
     m_hasErrorWrite = false;
     m_IsOutOfSpace = false;
     th = nullptr;
+    m_freeSize = 0;
+    m_aviablePhyMemory = 0;
     m_testMode = testMode;
     m_fileName = "";
     m_hasWriteSize = 0;
@@ -26,19 +33,10 @@ auto FileQueueManager::deleteFile() -> void {
     }
 }
 
-auto FileQueueManager::addBufferToWrite(std::iostream* buffer) -> bool {
-    if (!buffer) {
+auto FileQueueManager::addChunkToWrite(FileChunk::Ptr chunk) -> bool {
+    if (!chunk || !m_threadWork)
         return false;
-    }
-    //   acout() << "m_threadWork: " << m_threadWork << " m_useMemory: " << m_useMemory << " m_aviablePhyMemory: " << m_aviablePhyMemory << '\n';
-    //   aprintf(stdout,"m_useMemory %lld m_aviablePhyMemory %lld\n",m_useMemory,m_aviablePhyMemory);
-    if (m_threadWork && (m_useMemory < m_aviablePhyMemory)) {
-        pushQueue(buffer);
-        return true;
-    } else {
-        delete buffer;
-        return false;
-    }
+    return pushQueue(std::move(chunk), m_aviablePhyMemory);
 }
 
 auto FileQueueManager::openFile(std::string FileName, bool Append) -> void {
@@ -108,45 +106,36 @@ auto FileQueueManager::getWritedSize() -> uint64_t {
 
 auto FileQueueManager::task() -> void {
     while (m_ThreadRun) {
-        writeToFile();
+        writeToFile(kWaitForChunk);
     }
     m_waitLock.lock();
     if (this->m_waitAllWrite) {
         while (writeToFile() == 0)
             ;
     } else {
-        auto bstream = popQueue();
-        while (bstream) {
-            delete bstream;
-            bstream = popQueue();
-        }
+        while (popQueue())
+            ;
     }
     m_threadWork = false;
     m_waitLock.unlock();
 }
 
-auto FileQueueManager::writeToFile() -> int {
-    auto bstream = popQueue();
-    if (bstream == nullptr)
+auto FileQueueManager::writeToFile(std::chrono::milliseconds wait) -> int {
+    auto chunk = popQueue(wait);
+    if (chunk == nullptr)
         return -1;
 
-    if (m_hasErrorWrite) {
-        delete bstream;
+    if (m_hasErrorWrite)
         return 1;
-    }
 
-    bstream->seekg(0, bstream->end);
-    auto Length = bstream->tellg();
+    const uint64_t Length = chunk->size();
 
     if (fs.good() && ((m_hasWriteSize + Length) < m_freeSize)) {
-        bstream->seekg(0, bstream->beg);
         if (m_testMode) {
             fs.seekp(0);
         }
-        fs << bstream->rdbuf();
+        chunk->writeTo(fs);
         fs.flush();
-        //        bstream->seekg(0, std::ios::end);
-        //        auto Length = bstream->tellg();
         m_hasWriteSize += Length;
 
         if (m_fileType.value == CStreamSettings::DataFormat::WAV) {
@@ -171,7 +160,6 @@ auto FileQueueManager::writeToFile() -> int {
         outSpaceNotifyThread();
         return 1;
     }
-    delete bstream;
     return 0;
 }
 

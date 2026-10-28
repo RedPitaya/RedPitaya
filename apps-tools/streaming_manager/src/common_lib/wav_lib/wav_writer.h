@@ -10,13 +10,15 @@ class CWaveWriter {
    public:
     CWaveWriter();
     auto resetHeaderInit() -> void;
-    auto BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs) -> std::iostream*;
+    // The interleaved samples of the buffers, after the header for the first chunk; nullptr when
+    // there is no memory for them
+    auto BuildWAVChunk(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs) -> FileChunk::Ptr;
 
    private:
-    auto addInt32ToFileData(std::stringstream* memory, int32_t i) -> void;
-    auto addInt16ToFileData(std::stringstream* memory, int16_t i) -> void;
-    auto addStringToFileData(std::stringstream* memory, std::string s) -> void;
-    auto BuildHeader(std::stringstream* memory) -> void;
+    auto addInt32ToFileData(std::vector<uint8_t>& memory, int32_t i) -> void;
+    auto addInt16ToFileData(std::vector<uint8_t>& memory, int16_t i) -> void;
+    auto addStringToFileData(std::vector<uint8_t>& memory, std::string s) -> void;
+    auto BuildHeader(std::vector<uint8_t>& memory) -> void;
 
     bool m_headerInit;
     uint32_t m_numChannels;

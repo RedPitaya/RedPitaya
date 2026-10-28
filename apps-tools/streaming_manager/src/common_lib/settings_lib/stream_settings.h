@@ -67,6 +67,10 @@ class CStreamSettings {
     auto getADCType() const -> DataType;
     auto setADCCaptureTime(ADCCaptureTime _time) -> void;
     auto getADCCaptureTime() const -> ADCCaptureTime;
+    // A TDMS column with the time of every sample (8 bytes each); off, the time is in the
+    // wf_* properties of the channels and a row per buffer
+    auto setTDMSTimeColumn(State _state) -> void;
+    auto getTDMSTimeColumn() const -> State;
     auto setADCPassMode(PassMode _mode) -> void;
     auto getADCPassMode() const -> PassMode;
     auto setADCChannels(uint8_t _channel, State _state) -> bool;
@@ -196,6 +200,7 @@ class CStreamSettings {
         State m_useCalib = State::ON;
         AC_DC m_ac_dc[4] = {AC_DC::DC, AC_DC::DC, AC_DC::DC, AC_DC::DC};
         ADCCaptureTime m_captureTime = ADCCaptureTime::ON;
+        State m_tdmsTimeColumn = State::OFF;
         State m_trigMode = State::OFF;
         uint32_t m_trigSources = 0;
         int32_t m_trigLevelLow = -4;  // the uio_lib defaults

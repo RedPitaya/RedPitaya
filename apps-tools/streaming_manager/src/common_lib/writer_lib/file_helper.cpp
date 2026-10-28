@@ -12,7 +12,8 @@
 
 #include "file_helper.h"
 #include "logger_lib/file_logger.h"
-#include "tdms_lib/file.h"
+#include "data_lib/neon_asm.h"
+#include "tdms_lib/tdms.h"
 #include "w_binary.h"
 
 static constexpr uint8_t g_endOfSegment[12] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -67,108 +68,43 @@ auto dirNameOf(const std::string& fname) -> std::string {
     return (std::string::npos == pos) ? "." : fname.substr(0, pos);
 }
 
-auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs, std::shared_ptr<std::vector<int64_t>> time) -> std::iostream* {
-    TDMS::File outFile;
-    TDMS::WriterSegment segment;
-    std::vector<std::shared_ptr<TDMS::Metadata>> data;
-    //    std::time_t tim_sec = std::time(0);
-    //    std::time_t local = std::mktime(std::localtime(&tim_sec));
-    //    std::time_t gmt = std::mktime(std::gmtime(&tim_sec));
-    //    auto timezone = static_cast<long> (local - gmt);
-
-    auto root = segment.GenerateRoot();
-    root->TableOfContents.HasMetaData = true;
-    root->TableOfContents.HasRawData = true;
-    data.push_back(root);
-    auto group = segment.GenerateGroup("Group");
-    data.push_back(group);
-    // new_buffs.at(DataLib::CH1)
-
-    //    auto *time = TDMS::DataType::GetRawTimeValue(tim_sec + timezone);
-    //    TDMS::DataType dataprop;
-    //    dataprop.InitDataType(TDMS::DataType::TimeStamp,time);
-    //    segment.AddProperties(root,"time_stamp_now",dataprop);
-
+auto addTDMSSamples(TDMS::SegmentBuilder& segment, std::map<DataLib::EDataBuffersPackChannel, SBuffPass>& new_buffs, std::shared_ptr<std::vector<int64_t>> time) -> void {
     if (time != nullptr && time->size() != 0) {
-        auto channel = segment.GenerateChannel("Group", "time");
-        data.push_back(channel);
-        auto sh_time = std::shared_ptr<uint8_t[]>(time, reinterpret_cast<uint8_t*>(time->data()));
-        segment.AddRaw(channel, TDMS::TDMSType::Integer64, time->size(), sh_time);
+        segment.addSamples("Group", "time", time);
     }
-
-    if (new_buffs.find(DataLib::CH1) != new_buffs.end()) {
-        auto settings = new_buffs.at(DataLib::CH1);
-        if (settings.bufferLen) {
-            auto data_type = TDMS::TDMSType::Integer8;
-            if (settings.bitsBySample == 16)
-                data_type = TDMS::TDMSType::Integer16;
-            if (settings.bitsBySample == 32)
-                data_type = TDMS::TDMSType::SingleFloat;
-            auto sampelsCount = settings.samplesCount;
-            auto buffer = settings.buffer;
-            auto channel = segment.GenerateChannel("Group", "ch1");
-            data.push_back(channel);
-            segment.AddRaw(channel, data_type, sampelsCount, buffer);
-        }
+    const char* names[4] = {"ch1", "ch2", "ch3", "ch4"};
+    for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
+        auto it = new_buffs.find((DataLib::EDataBuffersPackChannel)i);
+        if (it == new_buffs.end() || !it->second.bufferLen || !it->second.buffer)
+            continue;
+        const auto& b = it->second;
+        auto type = TDMS::TDMSType::Integer8;
+        if (b.bitsBySample == 16)
+            type = TDMS::TDMSType::Integer16;
+        if (b.bitsBySample == 32)
+            type = TDMS::TDMSType::SingleFloat;
+        segment.addSamples("Group", names[i], type, std::shared_ptr<const std::uint8_t[]>(b.buffer), b.samplesCount);
     }
-
-    if (new_buffs.find(DataLib::CH2) != new_buffs.end()) {
-        auto settings = new_buffs.at(DataLib::CH2);
-        if (settings.bufferLen) {
-            auto data_type = TDMS::TDMSType::Integer8;
-            if (settings.bitsBySample == 16)
-                data_type = TDMS::TDMSType::Integer16;
-            if (settings.bitsBySample == 32)
-                data_type = TDMS::TDMSType::SingleFloat;
-            auto sampelsCount = settings.samplesCount;
-            auto buffer = settings.buffer;
-            auto channel = segment.GenerateChannel("Group", "ch2");
-            data.push_back(channel);
-            segment.AddRaw(channel, data_type, sampelsCount, buffer);
-        }
-    }
-
-    if (new_buffs.find(DataLib::CH3) != new_buffs.end()) {
-        auto settings = new_buffs.at(DataLib::CH3);
-        if (settings.bufferLen) {
-            auto data_type = TDMS::TDMSType::Integer8;
-            if (settings.bitsBySample == 16)
-                data_type = TDMS::TDMSType::Integer16;
-            if (settings.bitsBySample == 32)
-                data_type = TDMS::TDMSType::SingleFloat;
-            auto sampelsCount = settings.samplesCount;
-            auto buffer = settings.buffer;
-            auto channel = segment.GenerateChannel("Group", "ch3");
-            data.push_back(channel);
-            segment.AddRaw(channel, data_type, sampelsCount, buffer);
-        }
-    }
-
-    if (new_buffs.find(DataLib::CH4) != new_buffs.end()) {
-        auto settings = new_buffs.at(DataLib::CH4);
-        if (settings.bufferLen) {
-            auto data_type = TDMS::TDMSType::Integer8;
-            if (settings.bitsBySample == 16)
-                data_type = TDMS::TDMSType::Integer16;
-            if (settings.bitsBySample == 32)
-                data_type = TDMS::TDMSType::SingleFloat;
-            auto sampelsCount = settings.samplesCount;
-            auto buffer = settings.buffer;
-            auto channel = segment.GenerateChannel("Group", "ch4");
-            data.push_back(channel);
-            segment.AddRaw(channel, data_type, sampelsCount, buffer);
-        }
-    }
-
-    segment.LoadMetadata(data);
-    std::stringstream* memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
-    outFile.WriteMemory(*memory, segment);
-    return memory;
 }
 
-auto buildBINStream(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib::EDataBuffersPackChannel, uint32_t> _samples) -> std::iostream* {
-    std::stringstream* memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
+auto buildTDMSChunk(std::shared_ptr<TDMS::SegmentBuilder> segment) -> FileChunk::Ptr {
+    auto chunk = std::make_unique<FileChunk>();
+    for (const auto& part : segment->parts()) {
+        chunk->add(segment, part.data, part.size);
+    }
+    return chunk;
+}
+
+auto buildTDMSChunk(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs, std::shared_ptr<std::vector<int64_t>> time) -> FileChunk::Ptr {
+    auto segment = std::make_shared<TDMS::SegmentBuilder>();
+    addTDMSSamples(*segment, new_buffs, time);
+    return buildTDMSChunk(segment);
+}
+
+auto buildBINChunk(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib::EDataBuffersPackChannel, uint32_t> _samples) -> FileChunk::Ptr {
     CBinInfo::BinHeader header;
+    // The padding of the header goes into the file too; all fields start at 0
+    std::memset(static_cast<void*>(&header), 0, sizeof(header));
     DataLib::CDataBufferDMA::Ptr ch[4] = {NULL, NULL, NULL, NULL};
     ch[0] = buff_pack->getBuffer(DataLib::CH1);
     ch[1] = buff_pack->getBuffer(DataLib::CH2);
@@ -194,15 +130,21 @@ auto buildBINStream(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLi
     }
 
     header.sigmentLength = header.sizeCh[0] + header.sizeCh[1] + header.sizeCh[2] + header.sizeCh[3];
-    //Write header
-    memory->write((const char*)&header, sizeof(header));
+    // One copy out of the DMA buffers, which go back to the ring right after, into a block of the final size
+    std::vector<uint8_t> segment(sizeof(header) + header.sigmentLength + sizeof(g_endOfSegment));
+    uint8_t* at = segment.data();
+    memcpy(at, &header, sizeof(header));
+    at += sizeof(header);
     for (int i = 0; i < 4; i++) {
-        if (ch[i].get() && ch_size[i])
-            memory->write((const char*)ch[i]->getMappedDataMemory(), ch_size[i]);
+        if (ch[i].get() && ch_size[i]) {
+            memcpy_neon(at, ch[i]->getMappedDataMemory(), ch_size[i]);
+            at += ch_size[i];
+        }
     }
-    //Write end segment
-    memory->write((const char*)g_endOfSegment, 12);
-    return memory;
+    memcpy(at, g_endOfSegment, sizeof(g_endOfSegment));
+    auto chunk = std::make_unique<FileChunk>();
+    chunk->add(std::move(segment));
+    return chunk;
 }
 
 auto readCSV(std::iostream* buffer, int64_t* _position, int* _channels, uint64_t* samplePos, bool skipData, FH_CSVMode mode) -> std::iostream* {

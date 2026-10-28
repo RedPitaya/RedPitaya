@@ -265,12 +265,12 @@ void CFileLogger::dumpToFile() {
         log << "======================================================================\n";
         log << "\n\n";
         if (m_packs || !m_gpio.buffers) {  // a GPIO only recording has no ADC part
+            // The rate of the buffers is the sample rate after the decimation
             log << "Current ADC speed:\t" << m_oscRate << "\n";
             if (m_decimation) {
                 log << "Decimation:\t" << m_decimation << "\n";
-                char rate[32];
-                snprintf(rate, sizeof(rate), "%.3f", (double)m_oscRate / m_decimation);
-                log << "Sample rate:\t" << rate << "\n";
+                log << "Sample rate:\t" << m_oscRate << "\n";
+                log << "ADC rate:\t" << m_oscRate * m_decimation << "\n";
                 log << "Trigger mode:\t" << ((m_flags & DataLib::ADC_FLAG_TRIGGER_MODE) ? "on" : "off") << "\n";
                 if (m_flags & DataLib::ADC_FLAG_TRIGGER_MODE) {
                     log << "FPGA trigger counter after the first and the last buffer:\t" << m_triggerCountFirst << " / " << m_triggerCountLast << "\n";

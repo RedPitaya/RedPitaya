@@ -49,6 +49,7 @@ struct Options {
     StreamingType streamign_type;
     SaveType save_type{SaveType::NONE};
     int samples{0};
+    bool tdms_time{false};  // a TDMS column with the time of every sample
     std::string config_item_name{""};
     std::string config_item_value{""};
     bool config_item_write{false};

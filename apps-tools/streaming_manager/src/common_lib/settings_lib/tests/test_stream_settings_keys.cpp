@@ -28,6 +28,7 @@ const std::vector<KeyValue> kAllKeys = {
     {"format_sd", "TDMS"},
     {"data_type_sd", "VOLT"},
     {"adc_capture_time", "OFF"},
+    {"tdms_time_column", "ON"},
     {"samples_limit_sd", "123456789012"},
     {"adc_pass_mode", "FILE"},
     {"resolution", "BIT_8"},

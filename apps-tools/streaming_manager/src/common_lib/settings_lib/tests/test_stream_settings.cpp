@@ -46,6 +46,7 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setADCFormat(DataFormat::TDMS);
     s.setADCType(DataType::VOLT);
     s.setADCCaptureTime(ADCCaptureTime::OFF);
+    s.setTDMSTimeColumn(State::ON);
     s.setADCPassMode(PassMode::FILE);
     s.setADCResolution(Resolution::BIT_8);
     s.setADCDecimation(64);
@@ -121,6 +122,7 @@ TEST(StreamSettings, TheDefaultsAreTheOnesDeclaredInTheHeader) {
     EXPECT_EQ(s.getADCDecimation(), 1u);
     EXPECT_EQ(s.getADCCalibration(), State::ON);
     EXPECT_EQ(s.getADCCaptureTime(), ADCCaptureTime::ON);
+    EXPECT_EQ(s.getTDMSTimeColumn(), State::OFF) << "the time is in the channel properties by default";
     for (uint8_t ch = 1; ch <= 4; ch++) {
         EXPECT_EQ(s.getADCChannels(ch), State::OFF) << "channel " << static_cast<int>(ch);
         EXPECT_EQ(s.getADCAttenuator(ch), Attenuator::A_1_1) << "channel " << static_cast<int>(ch);
@@ -449,7 +451,7 @@ TEST(StreamSettings, ToStringReportsEveryGroup) {
 TEST(StreamSettings, GetHelpNamesEveryKeyTheKeyValueInterfaceAccepts) {
     const std::string help = CStreamSettings::getHelp();
     for (const char* key : {"format_sd", "data_type_sd", "samples_limit_sd", "adc_pass_mode", "resolution", "adc_decimation", "use_calib",
-                            "adc_capture_time", "dac_rate", "file_sd", "file_type_sd", "dac_pass_mode", "repeat", "repeatCount", "block_size",
+                            "adc_capture_time", "tdms_time_column", "dac_rate", "file_sd", "file_type_sd", "dac_pass_mode", "repeat", "repeatCount", "block_size",
                             "adc_size", "dac_size", "gpio_size", "adc_trigger_mode", "adc_trigger_sources", "adc_trigger_level_low",
                             "adc_trigger_level_high", "adc_trigger_edge", "adc_event_source", "adc_trigger_blocks", "dac_trigger_sources",
                             "dac_event_source", "ext_trig_conditioner", "ext_trig_edge", "ext_trig_debounce", "ext_trig_dio0",

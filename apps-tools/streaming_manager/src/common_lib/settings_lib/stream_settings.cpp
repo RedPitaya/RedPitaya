@@ -113,6 +113,7 @@ auto CStreamSettings::toJson() const -> std::string {
     adc_config["format_sd"] = getADCFormat().name();
     adc_config["data_type_sd"] = getADCType().name();
     adc_config["samples_limit_sd"] = getADCSamples();
+    adc_config["tdms_time_column"] = getTDMSTimeColumn().name();
 
     adc_config["adc_pass_mode"] = getADCPassMode().name();
     adc_config["resolution"] = getADCResolution().name();
@@ -245,6 +246,8 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setADCType(DataType::from_string(adc_config["data_type_sd"].asString()));
         if (adc_config.isMember("samples_limit_sd"))
             setADCSamples(adc_config["samples_limit_sd"].asUInt64());
+        if (adc_config.isMember("tdms_time_column"))
+            setTDMSTimeColumn(State::from_string(adc_config["tdms_time_column"].asString()));
         if (adc_config.isMember("adc_pass_mode"))
             setADCPassMode(PassMode::from_string(adc_config["adc_pass_mode"].asString()));
         if (adc_config.isMember("resolution"))
@@ -386,6 +389,7 @@ auto CStreamSettings::toString() const -> std::string {
     str += "Data format:\t\t" + std::string(getADCFormat().to_string()) + " (In file mode)\n";
     str += "Data type:\t\t" + std::string(getADCType().to_string()) + " (In file mode)\n";
     str += "Save capture time:\t\t" + std::string(getADCCaptureTime().to_string()) + "\n";
+    str += "TDMS time column:\t\t" + std::string(getTDMSTimeColumn().to_string()) + " (In file mode)\n";
     str += "Trigger mode:\t\t" + std::string(getADCTriggerMode().to_string()) + "\n";
     str += "Trigger sources:\t\t" + hex(getADCTriggerSources()) + "\n";
     str += "Trigger level:\t\t" + std::to_string(getADCTriggerLevelLow()) + " .. " + std::to_string(getADCTriggerLevelHigh()) + " (ADC codes)\n";
@@ -481,6 +485,14 @@ auto CStreamSettings::setADCCaptureTime(ADCCaptureTime _time) -> void {
 
 auto CStreamSettings::getADCCaptureTime() const -> ADCCaptureTime {
     return m_adcsettings.m_captureTime;
+}
+
+auto CStreamSettings::setTDMSTimeColumn(State _state) -> void {
+    m_adcsettings.m_tdmsTimeColumn = _state;
+}
+
+auto CStreamSettings::getTDMSTimeColumn() const -> State {
+    return m_adcsettings.m_tdmsTimeColumn;
 }
 
 auto CStreamSettings::setADCPassMode(CStreamSettings::PassMode _type) -> void {
@@ -996,6 +1008,11 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return true;
         }
 
+        if (key == "tdms_time_column") {
+            setTDMSTimeColumn(State::from_string(value));
+            return true;
+        }
+
         if (key == "adc_pass_mode") {
             setADCPassMode(PassMode::from_string(value));
             return true;
@@ -1247,6 +1264,10 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
             return std::to_string(getADCSamples());
         }
 
+        if (key == "tdms_time_column") {
+            return getTDMSTimeColumn().name();
+        }
+
         if (key == "adc_pass_mode") {
             return getADCPassMode().name();
         }
@@ -1478,6 +1499,7 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "format_sd\t\t: " + concat(CStreamSettings::DataFormat::names(), CStreamSettings::DataFormat::count) + "\n";
     s += "data_type_sd\t\t: " + concat(CStreamSettings::DataType::names(), CStreamSettings::DataType::count) + "\n";
     s += "samples_limit_sd\t: An unsigned integer value. 0 - Disables write limit.\n";
+    s += "tdms_time_column\t: " + states + " A TDMS column with the time of every sample, 8 bytes each. Off: the time is in the channel properties.\n";
     s += "adc_pass_mode\t\t: " + concat(CStreamSettings::PassMode::names(), CStreamSettings::PassMode::count) + "\n";
     s += "resolution\t\t: " + concat(CStreamSettings::Resolution::names(), CStreamSettings::Resolution::count) + "\n";
     s += "adc_decimation\t\t: An unsigned integer value: 1-65536.\n";

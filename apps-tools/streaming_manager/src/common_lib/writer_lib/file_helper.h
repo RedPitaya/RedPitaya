@@ -8,6 +8,8 @@
 
 #include "data_lib/buffers_pack.h"
 #include "net_lib/asio_common.h"
+#include "file_chunk.h"
+#include "tdms_lib/segment_builder.h"
 #include "w_binary.h"
 
 #define USING_FREE_SPACE 1024 * 1024 * 30  // Left free on disk 30 Mb
@@ -47,8 +49,15 @@ auto readBinInfo(std::iostream* buffer) -> CBinInfo;
 auto readCSV(std::iostream* buffer, int64_t* _position, int* _channels, uint64_t* samplePos, bool skipData = false, FH_CSVMode mode = FH_CSVMode::FH_CSV_NONE) -> std::iostream*;
 auto readBinData(std::iostream* buffer, int64_t* _position) -> SBinData*;
 
-auto buildTDMSStream(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs, std::shared_ptr<std::vector<int64_t>> time) -> std::iostream*;
-auto buildBINStream(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib::EDataBuffersPackChannel, uint32_t> _samples) -> std::iostream*;
+// Adds the buffers to a TDMS segment by reference (no copy): the column "time" when there is one,
+// then "ch1".."ch4" of the group "Group"
+auto addTDMSSamples(TDMS::SegmentBuilder& segment, std::map<DataLib::EDataBuffersPackChannel, SBuffPass>& new_buffs, std::shared_ptr<std::vector<int64_t>> time) -> void;
+// The chunk of a finished segment; it keeps the segment, and so the buffers it references, until written
+auto buildTDMSChunk(std::shared_ptr<TDMS::SegmentBuilder> segment) -> FileChunk::Ptr;
+// Both for a segment of just the buffers
+auto buildTDMSChunk(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs, std::shared_ptr<std::vector<int64_t>> time) -> FileChunk::Ptr;
+// A BIN segment, the samples copied once out of the DMA buffers
+auto buildBINChunk(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib::EDataBuffersPackChannel, uint32_t> _samples) -> FileChunk::Ptr;
 
 auto dirNameOf(const std::string& fname) -> std::string;
 

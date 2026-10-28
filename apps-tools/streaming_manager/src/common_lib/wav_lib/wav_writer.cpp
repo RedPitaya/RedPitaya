@@ -11,7 +11,7 @@ auto CWaveWriter::resetHeaderInit() -> void {
     m_headerInit = true;
 }
 
-auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs) -> std::iostream* {
+auto CWaveWriter::BuildWAVChunk(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_buffs) -> FileChunk::Ptr {
     auto ch1 = new_buffs[DataLib::CH1];
     auto ch2 = new_buffs[DataLib::CH2];
     auto ch3 = new_buffs[DataLib::CH3];
@@ -72,16 +72,17 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel, SBuf
     m_bitDepth = maxBitBySample;
     m_OSCRate = OSCRate;
 
-    std::stringstream* memory = nullptr;
+    FileChunk::Ptr chunk;
     try {
-        memory = new std::stringstream(std::ios_base::in | std::ios_base::out | std::ios_base::binary);
+        chunk = std::make_unique<FileChunk>();
+        if (m_headerInit) {
+            std::vector<uint8_t> header;
+            BuildHeader(header);
+            chunk->add(std::move(header));
+            m_headerInit = false;
+        }
     } catch (...) {
         return nullptr;
-    }
-
-    if (m_headerInit) {
-        BuildHeader(memory);
-        m_headerInit = false;
     }
 
     auto get16Bit = [&](uint8_t ch, size_t pos) -> uint16_t {
@@ -156,19 +157,15 @@ auto CWaveWriter::BuildWAVStream(std::map<DataLib::EDataBuffersPackChannel, SBuf
                 }
             }
         }
-        memory->write((const char*)cross_buff.data(), buffLen);
-        if (memory->good()) {
-            memory->flush();
-            return memory;
-        }
+        chunk->add(std::move(cross_buff));
+        return chunk;
     } catch (std::exception& e) {
         fprintf(stderr, "[ERROR] CDataBuffer: %s\n", e.what());
     }
-    delete memory;
     return nullptr;
 }
 
-auto CWaveWriter::BuildHeader(std::stringstream* memory) -> void {
+auto CWaveWriter::BuildHeader(std::vector<uint8_t>& memory) -> void {
     int sampleRate = 44100;
     int32_t dataChunkSize = m_samplesPerChannel * m_numChannels * (m_bitDepth / 8);
     int16_t data_format = m_bitDepth == 32 ? 0x0003 : 0x0001;
@@ -195,16 +192,16 @@ auto CWaveWriter::BuildHeader(std::stringstream* memory) -> void {
     addInt16ToFileData(memory, (int16_t)m_bitDepth);
 
     // -----------------------------------------------------------
-    memory->write("data", 4);
+    addStringToFileData(memory, "data");
     addInt32ToFileData(memory, dataChunkSize);
     //    std::cout << "BuildHeader: dataChunkSize " << dataChunkSize << "\n";
 }
 
-auto CWaveWriter::addStringToFileData(std::stringstream* memory, std::string s) -> void {
-    memory->write(s.data(), s.size());
+auto CWaveWriter::addStringToFileData(std::vector<uint8_t>& memory, std::string s) -> void {
+    memory.insert(memory.end(), s.begin(), s.end());
 }
 
-void CWaveWriter::addInt32ToFileData(std::stringstream* memory, int32_t i) {
+void CWaveWriter::addInt32ToFileData(std::vector<uint8_t>& memory, int32_t i) {
     char bytes[4];
 
     if (m_endianness == Endianness::LittleEndian) {
@@ -218,10 +215,10 @@ void CWaveWriter::addInt32ToFileData(std::stringstream* memory, int32_t i) {
         bytes[2] = (i >> 8) & 0xFF;
         bytes[3] = i & 0xFF;
     }
-    memory->write(bytes, 4);
+    memory.insert(memory.end(), bytes, bytes + 4);
 }
 
-void CWaveWriter::addInt16ToFileData(std::stringstream* memory, int16_t i) {
+void CWaveWriter::addInt16ToFileData(std::vector<uint8_t>& memory, int16_t i) {
     char bytes[2];
 
     if (m_endianness == Endianness::LittleEndian) {
@@ -232,5 +229,5 @@ void CWaveWriter::addInt16ToFileData(std::stringstream* memory, int16_t i) {
         bytes[1] = i & 0xFF;
     }
 
-    memory->write(bytes, 2);
+    memory.insert(memory.end(), bytes, bytes + 2);
 }
