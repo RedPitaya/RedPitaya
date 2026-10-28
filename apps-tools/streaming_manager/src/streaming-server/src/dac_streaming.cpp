@@ -190,9 +190,9 @@ auto createNetworkManager(const std::string& ip_addr_host, bool verbMode) -> CDA
 }
 
 /**
- * Create file-based streaming manager
+ * Create file-based streaming manager; activeChannels gets the channels of the file
  */
-auto createFileManager(const CStreamSettings& settings, bool verbMode, dac_channels_t activeChannels) -> CDACStreamingManager::Ptr {
+auto createFileManager(const CStreamSettings& settings, bool verbMode, dac_channels_t& activeChannels) -> CDACStreamingManager::Ptr {
     auto format = settings.getDACFileType();
     auto filePath = settings.getDACFile();
     auto dacRepeatMode = settings.getDACRepeat();
