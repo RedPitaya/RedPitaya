@@ -176,6 +176,40 @@ TEST(DataBufferDMA, LostSamplesAreCountedInSamplesAndConvertedToBytesOnDemand) {
     EXPECT_EQ(buffer->getBitBySample(), 8);
 }
 
+// The trigger wait is a pause, not a loss: everything that counts lost samples (the zero fill of
+// the files, the loss statistics, the sample limit) leaves it out, getSamplesWithGaps adds it.
+TEST(DataBufferDMA, TheWaitIsKeptApartFromTheLoss) {
+    Arena arena(1, 4096);
+    auto buffer = CDataBufferDMA::Create(arena.regions()[0].start, 4096, arena.memoryOf(0), 16);
+
+    EXPECT_EQ(buffer->getWaitSamples(), 0u) << "the constructors seed the wait counter";
+    EXPECT_EQ(buffer->getSamplesWithGaps(), 2048u);
+
+    buffer->setLostSamples(DataLib::EDataLost::FPGA, 10);
+    buffer->setLostSamples(DataLib::EDataLost::WAIT, 5'000'000'000ull);
+    EXPECT_EQ(buffer->getWaitSamples(), 5'000'000'000ull);
+    EXPECT_EQ(buffer->getLostSamples(DataLib::EDataLost::WAIT), 5'000'000'000ull);
+    EXPECT_EQ(buffer->getLostSamplesAll(), 10u);
+    EXPECT_EQ(buffer->getLostSamplesInBytesLenght(), 20u);
+    EXPECT_EQ(buffer->getSamplesWithLost(), 2048u + 10u);
+    EXPECT_EQ(buffer->getSamplesWithGaps(), 2048u + 10u + 5'000'000'000ull);
+
+    buffer->reset();
+    EXPECT_EQ(buffer->getWaitSamples(), 0u) << "reset() clears the wait too";
+}
+
+TEST(DataBufferDMA, TheAcquisitionPropertiesAreStoredAsGiven) {
+    auto buffer = CDataBufferDMA::CreateEmpty(16);
+    buffer->setDecimation(1);
+    buffer->setTriggerCount(0xFFFFFFFFu);
+    buffer->setTriggerBlocks(0xFFFF);
+    buffer->setADCFlags(0x03);
+    EXPECT_EQ(buffer->getDecimation(), 1u);
+    EXPECT_EQ(buffer->getTriggerCount(), 0xFFFFFFFFu);
+    EXPECT_EQ(buffer->getTriggerBlocks(), 0xFFFF);
+    EXPECT_EQ(buffer->getADCFlags(), 0x03);
+}
+
 TEST(DataBufferDMA, TheWriteCounterTracksHowMuchOfTheBlockIsFilled) {
     Arena arena(1, 1024);
     auto buffer = CDataBufferDMA::Create(arena.regions()[0].start, 1024, arena.memoryOf(0), 16);
@@ -291,6 +325,11 @@ TEST(DataBufferDMA, EveryScalarFieldIsInitialisedByTheConstructor) {
     EXPECT_EQ(buffer->getADCBaseBits(), 0);
     EXPECT_EQ(buffer->getADCBaseRate(), 0u);
     EXPECT_EQ(buffer->getDACBits(), 0);
+    EXPECT_EQ(buffer->getWaitSamples(), 0u);
+    EXPECT_EQ(buffer->getDecimation(), 0u);
+    EXPECT_EQ(buffer->getTriggerCount(), 0u);
+    EXPECT_EQ(buffer->getTriggerBlocks(), 0);
+    EXPECT_EQ(buffer->getADCFlags(), 0);
     buffer->~CDataBufferDMA();
 }
 

@@ -15,8 +15,14 @@
 
 #include <gtest/gtest.h>
 
+#include <pthread.h>
+#include <signal.h>
+
+#include <atomic>
 #include <chrono>
 #include <cstring>
+#include <future>
+#include <thread>
 #include <new>
 #include <cstdint>
 #include <set>
@@ -239,6 +245,108 @@ TEST(BuffersCached, TheDestroyFlagIsStickyAndStartsClear) {
     EXPECT_TRUE(cache->isWaitToDestory());
     EXPECT_TRUE(cache->notifyToDestory());
     EXPECT_TRUE(cache->isWaitToDestory());
+}
+
+// The board stops the FPGA thread first; it may wait in writeBuffer() for a pack that only the
+// network sender frees, and that one may be blocked on a client that stopped reading.
+TEST(BuffersCached, DestroyReleasesAWriterBlockedOnAFullRing) {
+    Fixture fixture(1, 2);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_NE(fixture.cache->writeBuffer(), nullptr) << i;
+        fixture.cache->unlockBufferWrite();
+    }
+    auto writer = std::async(std::launch::async, [&] { return fixture.cache->writeBuffer(); });
+    ASSERT_EQ(writer.wait_for(std::chrono::milliseconds(200)), std::future_status::timeout) << "the ring is full";
+    fixture.cache->notifyToDestory();
+    if (writer.wait_for(std::chrono::seconds(2)) != std::future_status::ready) {
+        fixture.cache->readBuffer();  // free a pack, else the future waits for the writer forever
+        fixture.cache->unlockBufferRead();
+        FAIL() << "the destroy did not release the writer";
+    }
+    EXPECT_EQ(writer.get(), nullptr) << "no pack after the destroy";
+    const auto started = std::chrono::steady_clock::now();
+    EXPECT_EQ(fixture.cache->writeBuffer(), nullptr) << "and none for a later writer while the ring is full";
+    EXPECT_LT(Elapsed(started), 0.5) << "the writer gives up within a wait slice";
+    EXPECT_EQ(fixture.cache->writeBuffer(true), nullptr);
+}
+
+// A stop right after the start: the FPGA thread takes its first two packs only then, and a
+// missing one is fatal there. Free packs are handed out after the destroy as before.
+TEST(BuffersCached, AfterDestroyAFreePackIsStillHandedOut) {
+    Fixture fixture(1, 3);
+    fixture.cache->notifyToDestory();
+    EXPECT_NE(fixture.cache->writeBuffer(), nullptr);
+    fixture.cache->unlockBufferWrite();
+    EXPECT_NE(fixture.cache->writeBuffer(true), nullptr);
+    fixture.cache->unlockBufferWrite();
+}
+
+TEST(BuffersCached, AfterDestroyTheReaderStillGetsThePacksWrittenBefore) {
+    Fixture fixture(1, 3);
+    auto written = fixture.cache->writeBuffer();
+    ASSERT_NE(written, nullptr);
+    fixture.cache->unlockBufferWrite();
+    fixture.cache->notifyToDestory();
+    EXPECT_EQ(fixture.cache->readBuffer(), written);
+    fixture.cache->unlockBufferRead();
+    EXPECT_EQ(fixture.cache->readBuffer(), nullptr) << "nothing else was written";
+}
+
+namespace {
+
+void IgnoreSignal(int) {}
+
+// Interrupts the waits of `thread` with SIGUSR1 a few times; sem_wait is never restarted.
+void Interrupt(pthread_t thread) {
+    struct sigaction sa = {};
+    sa.sa_handler = IgnoreSignal;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGUSR1, &sa, nullptr);
+    for (int i = 0; i < 5; i++) {
+        pthread_kill(thread, SIGUSR1);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+}
+
+}  // namespace
+
+TEST(BuffersCached, ASignalDoesNotEndTheWaitOfAWriter) {
+    Fixture fixture(1, 2);
+    for (int i = 0; i < 2; i++) {
+        ASSERT_NE(fixture.cache->writeBuffer(), nullptr) << i;
+        fixture.cache->unlockBufferWrite();
+    }
+    std::atomic<bool> done{false};
+    CDataBuffersPackDMA::Ptr got;
+    std::thread writer([&] {
+        got = fixture.cache->writeBuffer();
+        done = true;
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    Interrupt(writer.native_handle());
+    EXPECT_FALSE(done) << "EINTR is not a free pack";
+    ASSERT_NE(fixture.cache->readBuffer(), nullptr);
+    fixture.cache->unlockBufferRead();
+    writer.join();
+    EXPECT_NE(got, nullptr);
+}
+
+TEST(BuffersCached, ASignalDoesNotEndTheWaitOfAReader) {
+    Fixture fixture(1, 2);
+    std::atomic<bool> done{false};
+    CDataBuffersPackDMA::Ptr got;
+    std::thread reader([&] {
+        got = fixture.cache->readBuffer();
+        done = true;
+    });
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    Interrupt(reader.native_handle());
+    EXPECT_FALSE(done) << "the reader waits its second";
+    ASSERT_NE(fixture.cache->writeBuffer(), nullptr);
+    fixture.cache->unlockBufferWrite();
+    reader.join();
+    EXPECT_NE(got, nullptr);
 }
 
 TEST(BuffersCached, SettingTheRateAndTheAdcWidthReachesEveryPack) {

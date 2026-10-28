@@ -7,7 +7,9 @@
 
 namespace DataLib {
 
-enum EDataLost { FPGA = 0 };
+// FPGA: samples lost before the buffer (overflow). WAIT: samples skipped before the buffer while
+// the acquisition waited for a trigger, a pause and not a loss.
+enum EDataLost { FPGA = 0, WAIT = 1 };
 
 class CDataBufferDMA final {
    public:
@@ -73,6 +75,17 @@ class CDataBufferDMA final {
     auto getLostSamples(EDataLost mode) const -> uint64_t;
     auto getLostSamplesAll() const -> uint64_t;
     auto getLostSamplesInBytesLenght() -> uint64_t;
+    auto getWaitSamples() const -> uint64_t;
+    auto getSamplesWithGaps() const -> uint64_t;  // samples, lost and wait: the time the buffer covers
+
+    auto setDecimation(uint32_t decimation) -> void;
+    auto getDecimation() const -> uint32_t;
+    auto setTriggerCount(uint32_t count) -> void;
+    auto getTriggerCount() const -> uint32_t;
+    auto setTriggerBlocks(uint16_t blocks) -> void;
+    auto getTriggerBlocks() const -> uint16_t;
+    auto setADCFlags(uint8_t flags) -> void;  // ADC_FLAG_* of network_header.h
+    auto getADCFlags() const -> uint8_t;
 
     auto reset() -> void;
 
@@ -109,6 +122,10 @@ class CDataBufferDMA final {
     uint32_t m_channelSizeDAC = 0;
     uint8_t m_dacBits = 0;
     int64_t m_timeCapture = 0;
+    uint32_t m_decimation = 0;
+    uint32_t m_triggerCount = 0;
+    uint16_t m_triggerBlocks = 0;
+    uint8_t m_adcFlags = 0;
 };
 
 }  // namespace DataLib

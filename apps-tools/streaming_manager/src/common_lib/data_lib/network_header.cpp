@@ -24,6 +24,11 @@ auto DataLib::initHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t oscRat
     nph.adc.adcMode = buffer->getADCMode();
     nph.adc.lostFPGA = 0;
     nph.adc.timeCapture = 0;
+    nph.adc.waitFPGA = 0;
+    nph.adc.decimation = 0;
+    nph.adc.triggerCount = 0;
+    nph.adc.triggerBlocks = 0;
+    nph.adc.flags = 0;
 
     memcpy(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
 }
@@ -50,6 +55,11 @@ auto DataLib::setHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t _id) ->
     header->packId = _id;
     header->adc.lostFPGA = buffer->getLostSamples(DataLib::EDataLost::FPGA);
     header->adc.timeCapture = buffer->getTimeCapture();
+    header->adc.waitFPGA = buffer->getLostSamples(DataLib::EDataLost::WAIT);
+    header->adc.decimation = buffer->getDecimation();
+    header->adc.triggerCount = buffer->getTriggerCount();
+    header->adc.triggerBlocks = buffer->getTriggerBlocks();
+    header->adc.flags = buffer->getADCFlags();
 }
 
 auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount, uint8_t bits) -> void {
@@ -85,6 +95,11 @@ auto DataLib::printADCHeader(uint8_t* data) -> void {
     printf("adc.adcMode: %d\n", nph.adc.adcMode);
     printf("adc.lostFPGA: %" PRIu64 "\n", nph.adc.lostFPGA);
     printf("adc.timeCapture: %" PRIi64 "\n", nph.adc.timeCapture);
+    printf("adc.waitFPGA: %" PRIu64 "\n", nph.adc.waitFPGA);
+    printf("adc.decimation: %u\n", nph.adc.decimation);
+    printf("adc.triggerCount: %u\n", nph.adc.triggerCount);
+    printf("adc.triggerBlocks: %u\n", nph.adc.triggerBlocks);
+    printf("adc.flags: 0x%X\n", nph.adc.flags);
 }
 
 auto DataLib::printDACHeader(uint8_t* data) -> void {

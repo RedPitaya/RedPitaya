@@ -230,6 +230,22 @@ TEST(DataChannel, AdcPacksArriveWholeAndInOrder) {
     EXPECT_EQ(server.sendErrors, 0);
 }
 
+// The client takes every pack from its ring as a read before the handler frees it, so after the
+// stream the ring is empty again (the data semaphore used to grow by one with every pack).
+TEST(DataChannel, TheClientRingIsEmptyAfterTheStream) {
+    const uint16_t port = NextPort();
+    AdcServer server(port);
+    AdcClient client(port);
+    client.net->start();
+    ASSERT_TRUE(WaitFor([&] { return server.connects == 1 && client.connects == 1; }));
+    for (uint64_t id = 0; id < 100; id++)
+        ASSERT_TRUE(server.net->sendSyncData(server.tx.prepare(id)));
+    ASSERT_TRUE(WaitFor([&] { return client.packs == 100; }));
+    EXPECT_TRUE(client.rx.ring->isEmpty()) << "every published pack was read";
+    EXPECT_EQ(client.rx.ring->fullPercent(), 1.f / 8) << "only the buffer taken for the next pack is in use";
+    EXPECT_EQ(client.broken, 0);
+}
+
 // A client slower than the stream is not an error: the server waits in send, nothing is lost.
 TEST(DataChannel, ASlowClientSlowsTheServerDownWithoutLoss) {
     const uint16_t port = NextPort();
@@ -471,4 +487,22 @@ TEST(DataChannelDeathTest, APackOfAnotherSizeEndsTheReceiver) {
             std::_Exit(0);
         },
         "not the correct size");
+}
+
+// A pack of the other kind (a DAC pack on the ADC stream) would be read with the wrong header.
+TEST(DataChannelDeathTest, APackOfAnotherKindEndsTheReceiver) {
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+    EXPECT_DEATH(
+        {
+            const uint16_t port = 27491;
+            AdcServer server(port);
+            SenderPacks dac(4, false);
+            AdcClient client(port);
+            client.net->start();
+            WaitFor([&] { return server.connects == 1; });
+            server.net->sendSyncData(dac.prepare(0));
+            std::this_thread::sleep_for(2s);
+            std::_Exit(0);
+        },
+        "ID_PACK");
 }

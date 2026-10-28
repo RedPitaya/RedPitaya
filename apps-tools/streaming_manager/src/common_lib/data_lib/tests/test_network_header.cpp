@@ -48,10 +48,10 @@ auto HeaderOf(const CDataBufferDMA::Ptr& buffer) -> const NetworkPackHeader* {
 }  // namespace
 
 TEST(NetworkHeader, TheWireLayoutIsFixed) {
-    static_assert(sizeof(ADCHeader) == 32, "ADC view: 8+8+4+1+1+1+1+8");
+    static_assert(sizeof(ADCHeader) == 51, "ADC view: 8+8+4+1+1+1+1+8, then 8+4+4+2+1");
     static_assert(sizeof(DACHeader) == 25, "DAC view: 1+1+4+8+1+1+8+1");
     static_assert(sizeof(DataLib::GPIOHeader) == 1);
-    static_assert(sizeof(NetworkPackHeader) == 64, "16 id + 8 size + 8 packId + 32 union");
+    static_assert(sizeof(NetworkPackHeader) == 83, "16 id + 8 size + 8 packId + 51 union");
 
     static_assert(offsetof(NetworkPackHeader, ID_PACK) == 0);
     static_assert(offsetof(NetworkPackHeader, bufferSize) == 16, "packed: no padding after the 16-byte id");
@@ -65,6 +65,12 @@ TEST(NetworkHeader, TheWireLayoutIsFixed) {
     static_assert(offsetof(ADCHeader, bitBySample) == 22);
     static_assert(offsetof(ADCHeader, adcMode) == 23);
     static_assert(offsetof(ADCHeader, timeCapture) == 24);
+    static_assert(offsetof(ADCHeader, waitFPGA) == 32, "the new fields follow the old ones");
+    static_assert(offsetof(ADCHeader, decimation) == 40);
+    static_assert(offsetof(ADCHeader, triggerCount) == 44);
+    static_assert(offsetof(ADCHeader, triggerBlocks) == 48);
+    static_assert(offsetof(ADCHeader, flags) == 50);
+    static_assert(DataLib::ADC_FLAG_TRIGGER_MODE == 0x01 && DataLib::ADC_FLAG_WAIT_COUNTER == 0x02);
 
     static_assert(offsetof(DACHeader, channels) == 0);
     static_assert(offsetof(DACHeader, channel) == 1);
@@ -101,6 +107,11 @@ TEST(NetworkHeader, TheDefaultConstructedHeaderIsZeroedExceptTheDacWidth) {
     EXPECT_EQ(adc.bitBySample, 0);
     EXPECT_EQ(adc.adcMode, 0);
     EXPECT_EQ(adc.timeCapture, 0);
+    EXPECT_EQ(adc.waitFPGA, 0u);
+    EXPECT_EQ(adc.decimation, 0u);
+    EXPECT_EQ(adc.triggerCount, 0u);
+    EXPECT_EQ(adc.triggerBlocks, 0);
+    EXPECT_EQ(adc.flags, 0);
 
     const DACHeader dac;
     EXPECT_EQ(dac.channels, 0);
@@ -130,6 +141,11 @@ TEST(NetworkHeader, InitHeaderAdcWritesTheAdcViewIntoTheMappedBlock) {
     EXPECT_EQ(header->adc.adcMode, CDataBufferDMA::ATT_1_20);
     EXPECT_EQ(header->adc.lostFPGA, 0u);
     EXPECT_EQ(header->adc.timeCapture, 0);
+    EXPECT_EQ(header->adc.waitFPGA, 0u);
+    EXPECT_EQ(header->adc.decimation, 0u);
+    EXPECT_EQ(header->adc.triggerCount, 0u);
+    EXPECT_EQ(header->adc.triggerBlocks, 0);
+    EXPECT_EQ(header->adc.flags, 0);
 
     // Only the header area is touched; the data area is left alone.
     EXPECT_EQ(static_cast<uint8_t*>(buffer->getMappedDataMemory())[0], 0);
@@ -151,13 +167,23 @@ TEST(NetworkHeader, SetHeaderAdcStampsTheIdAndTheRuntimeCounters) {
     DataLib::initHeaderADC(buffer, 125000000ull, 16, 4096, 1);
 
     buffer->setLostSamples(DataLib::EDataLost::FPGA, 42);
+    buffer->setLostSamples(DataLib::EDataLost::WAIT, 0x1'2345'6789ull);
     buffer->setTimeCapture(-9876543210ll);
+    buffer->setDecimation(65536);
+    buffer->setTriggerCount(0xFFFFFFFEu);
+    buffer->setTriggerBlocks(0xFFFF);
+    buffer->setADCFlags(DataLib::ADC_FLAG_TRIGGER_MODE | DataLib::ADC_FLAG_WAIT_COUNTER);
     DataLib::setHeaderADC(buffer, 0xAABBCCDDEEFF0011ull);
 
     const NetworkPackHeader* header = HeaderOf(buffer);
     EXPECT_EQ(header->packId, 0xAABBCCDDEEFF0011ull);
-    EXPECT_EQ(header->adc.lostFPGA, 42u);
+    EXPECT_EQ(header->adc.lostFPGA, 42u) << "the loss and the wait are separate fields";
+    EXPECT_EQ(header->adc.waitFPGA, 0x1'2345'6789ull) << "beyond 32 bits: a pause of seconds at decimation 1";
     EXPECT_EQ(header->adc.timeCapture, -9876543210ll);
+    EXPECT_EQ(header->adc.decimation, 65536u);
+    EXPECT_EQ(header->adc.triggerCount, 0xFFFFFFFEu);
+    EXPECT_EQ(header->adc.triggerBlocks, 0xFFFF);
+    EXPECT_EQ(header->adc.flags, 0x03);
     // The fields initHeaderADC wrote are untouched.
     EXPECT_EQ(header->adc.baseRateOSC, 125000000u);
     EXPECT_EQ(header->adc.channel, 1);
@@ -214,7 +240,12 @@ TEST(NetworkHeader, GetInfoFromHeaderAdcCopiesTheWireValuesBackIntoThePack) {
     for (auto& buffer : {first, second}) {
         DataLib::initHeaderADC(buffer, 62500000ull, 14, 8192, 1);
         buffer->setLostSamples(DataLib::EDataLost::FPGA, 7);
+        buffer->setLostSamples(DataLib::EDataLost::WAIT, 1000000007ull * 5);
         buffer->setTimeCapture(555);
+        buffer->setDecimation(8);
+        buffer->setTriggerCount(3);
+        buffer->setTriggerBlocks(4);
+        buffer->setADCFlags(DataLib::ADC_FLAG_WAIT_COUNTER);
         DataLib::setHeaderADC(buffer, 99);
     }
 
@@ -226,6 +257,11 @@ TEST(NetworkHeader, GetInfoFromHeaderAdcCopiesTheWireValuesBackIntoThePack) {
         buffer->setBitBySample(8);
         buffer->setADCPackId(0);
         buffer->setTimeCapture(0);
+        buffer->setLostSamples(DataLib::EDataLost::WAIT, 0);
+        buffer->setDecimation(0);
+        buffer->setTriggerCount(0);
+        buffer->setTriggerBlocks(0);
+        buffer->setADCFlags(0);
     }
 
     pack->getInfoFromHeaderADC();
@@ -237,6 +273,11 @@ TEST(NetworkHeader, GetInfoFromHeaderAdcCopiesTheWireValuesBackIntoThePack) {
         EXPECT_EQ(buffer->getBitBySample(), 16);
         EXPECT_EQ(buffer->getADCPackId(), 99u);
         EXPECT_EQ(buffer->getTimeCapture(), 555);
+        EXPECT_EQ(buffer->getWaitSamples(), 1000000007ull * 5);
+        EXPECT_EQ(buffer->getDecimation(), 8u);
+        EXPECT_EQ(buffer->getTriggerCount(), 3u);
+        EXPECT_EQ(buffer->getTriggerBlocks(), 4);
+        EXPECT_EQ(buffer->getADCFlags(), DataLib::ADC_FLAG_WAIT_COUNTER);
     }
 }
 
@@ -268,6 +309,42 @@ TEST(NetworkHeader, VerifyPackAcceptsAPackWhoseHeadersMatchTheirBuffers) {
     }
     // A mismatch here calls FATAL, which exits the process, so this test also
     // guards against initHeaderADC writing the wrong bufferSize.
-    pack->verifyPack();
+    pack->verifyPack(DataLib::ID_PACK_ADC);
     SUCCEED();
+}
+
+namespace {
+
+auto MakeAdcPack(const Arena& arena) -> DataLib::CDataBuffersPackDMA::Ptr {
+    auto pack = DataLib::CDataBuffersPackDMA::Create();
+    for (std::size_t i = 0; i < 2; i++) {
+        auto buffer = MakeHeaderedBuffer(arena, i, 16);
+        DataLib::initHeaderADC(buffer, 125000000ull, 16, 8192, static_cast<uint8_t>(i));
+        pack->addBuffer(static_cast<DataLib::EDataBuffersPackChannel>(i), buffer);
+    }
+    return pack;
+}
+
+}  // namespace
+
+// A DAC pack arriving where ADC packs are expected (or the reverse) has a header of another
+// kind: its fields would be read as ADC values.
+TEST(NetworkHeaderDeathTest, VerifyPackRefusesAPackOfTheOtherKind) {
+    Arena arena(2, 4096);
+    auto pack = MakeAdcPack(arena);
+    EXPECT_EXIT(pack->verifyPack(DataLib::ID_PACK_DAC), ::testing::ExitedWithCode(1), "ID_PACK");
+}
+
+TEST(NetworkHeaderDeathTest, VerifyPackRefusesAPackWithoutAnId) {
+    Arena arena(2, 4096);
+    auto pack = MakeAdcPack(arena);
+    std::memset(pack->getBuffer(DataLib::CH2)->getMappedMemory(), 0, 16);
+    EXPECT_EXIT(pack->verifyPack(DataLib::ID_PACK_ADC), ::testing::ExitedWithCode(1), "ID_PACK");
+}
+
+TEST(NetworkHeaderDeathTest, VerifyPackRefusesAWrongSize) {
+    Arena arena(2, 4096);
+    auto pack = MakeAdcPack(arena);
+    reinterpret_cast<NetworkPackHeader*>(pack->getBuffer(DataLib::CH1)->getMappedMemory())->bufferSize = 4095;
+    EXPECT_EXIT(pack->verifyPack(DataLib::ID_PACK_ADC), ::testing::ExitedWithCode(1), "not the correct size");
 }

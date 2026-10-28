@@ -2,6 +2,7 @@
 #define DATA_LIB_BUFFERS_CACHED_H
 
 #include <semaphore.h>
+#include <atomic>
 #include <map>
 #include <mutex>
 
@@ -25,6 +26,8 @@ class CBuffersCached {
     auto generateBuffersEmptyDAC(dac_channels_t channels, std::vector<uio_lib::MemoryRegionT> blocks, size_t headerSize = 0) -> void;
     auto generateBuffersEmptyADC(adc_channels_t channels, std::vector<uio_lib::MemoryRegionT> blocks, size_t headerSize = 0) -> void;
 
+    // With the timeout the writer waits a second for a free pack, without it until there is one.
+    // After notifyToDestory() a full ring gives nullptr within 0.1 s.
     auto writeBuffer(bool timeout = false) -> DataLib::CDataBuffersPackDMA::Ptr;
     auto unlockBufferWrite() -> void;
 
@@ -60,7 +63,7 @@ class CBuffersCached {
 
     std::map<DataLib::EDataBuffersPackChannel, uint8_t> m_channels;
     std::map<DataLib::EDataBuffersPackChannel, DataLib::CDataBufferDMA::ADC_MODE> m_channelsMode;
-    bool m_needDestroy;
+    std::atomic<bool> m_needDestroy;
     std::mutex m_mtx;
     sem_t m_countsem;
     sem_t m_spacesem;

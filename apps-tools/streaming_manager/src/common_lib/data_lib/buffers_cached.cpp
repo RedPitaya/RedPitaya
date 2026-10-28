@@ -1,10 +1,47 @@
 #include "buffers_cached.h"
+#include <errno.h>
 #include <stdint.h>
 #include "logger_lib/file_logger.h"
 #include "logger_lib/profiler.h"
 #include "network_header.h"
 
 using namespace DataLib;
+
+namespace {
+
+#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 30))
+#define DATA_LIB_SEM_CLOCK CLOCK_MONOTONIC  // the board sets its clock from NTP after the boot
+#else
+#define DATA_LIB_SEM_CLOCK CLOCK_REALTIME
+#endif
+
+// Takes the semaphore within `ms`. A signal does not end the wait.
+auto takeSem(sem_t* sem, int ms) -> bool {
+    struct timespec ts;
+    if (clock_gettime(DATA_LIB_SEM_CLOCK, &ts) == -1) {
+        return false;
+    }
+    ts.tv_sec += ms / 1000;
+    ts.tv_nsec += (ms % 1000) * 1000000L;
+    if (ts.tv_nsec >= 1000000000L) {
+        ts.tv_sec++;
+        ts.tv_nsec -= 1000000000L;
+    }
+    int res;
+#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 30))
+    while ((res = sem_clockwait(sem, DATA_LIB_SEM_CLOCK, &ts)) != 0 && errno == EINTR) {
+    }
+#else
+    while ((res = sem_timedwait(sem, &ts)) != 0 && errno == EINTR) {
+    }
+#endif
+    return res == 0;
+}
+
+constexpr int kWaitSliceMs = 100;  // how soon a writer without a timeout sees notifyToDestory()
+constexpr int kTimeoutMs = 1000;
+
+}  // namespace
 
 auto CBuffersCached::resetSemaphores() -> void {
     sem_destroy(&m_countsem);
@@ -182,6 +219,9 @@ auto CBuffersCached::initHeadersDAC(dac_channels_t channels) -> bool {
     return true;
 }
 
+// Ends the wait of a writer on a full ring: the board stops the FPGA thread before the network
+// sender, which may be blocked on a client that stopped reading. Free packs are still handed out
+// (a stop right after the start) and readers still get the packs written before.
 auto CBuffersCached::notifyToDestory() -> bool {
     m_needDestroy = true;
     return true;
@@ -219,19 +259,13 @@ auto CBuffersCached::writeBuffer(bool timeout) -> DataLib::CDataBuffersPackDMA::
         return nullptr;
     }
 
-    if (timeout) {
-        struct timespec ts;
-        if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
+    // The wait is cut into slices, each ends with a look at the destroy flag.
+    int left = kTimeoutMs;
+    while (!takeSem(&m_spacesem, kWaitSliceMs)) {
+        if (m_needDestroy) {
             return nullptr;
         }
-
-        ts.tv_sec += 1;
-        auto res = sem_timedwait(&m_spacesem, &ts);
-        if (res != 0) {
-            return nullptr;
-        }
-    } else {
-        if (sem_wait(&m_spacesem) != 0) {
+        if (timeout && (left -= kWaitSliceMs) <= 0) {
             return nullptr;
         }
     }
@@ -259,13 +293,7 @@ auto CBuffersCached::readBuffer() -> DataLib::CDataBuffersPackDMA::Ptr {
         return nullptr;
     }
 
-    struct timespec ts;
-    if (clock_gettime(CLOCK_REALTIME, &ts) == -1) {
-        return nullptr;
-    }
-
-    ts.tv_sec += 1;
-    if (sem_timedwait(&m_countsem, &ts) != 0) {
+    if (!takeSem(&m_countsem, kTimeoutMs)) {
         return nullptr;
     }
 

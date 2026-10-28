@@ -38,7 +38,7 @@ class CDataBuffersPackDMA final {
 
     auto debugPackADC() -> void;
     auto debugPackDAC() -> void;
-    auto verifyPack() -> void;
+    auto verifyPack(const uint8_t* id) -> void;  // id: ID_PACK_ADC or ID_PACK_DAC, 16 bytes
     auto getInfoFromHeaderADC() -> void;
     auto getInfoFromHeaderDAC() -> void;
 

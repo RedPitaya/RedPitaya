@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "asio_socket_dma.h"
+#include "data_lib/network_header.h"
 #include "logger_lib/file_logger.h"
 
 #define MIN_BUFFER_SIZE (10 * 1024 * 1024)
@@ -357,9 +358,22 @@ auto CAsioSocketDMA::handlerReceive(const asio::error_code& _error, size_t bytes
         b->addWriteSize(bytes_transferred);
     }
     if (m_currentBuffer->isAllDataWrite()) {
-        m_currentBuffer->verifyPack();
-        recivedNotify(_error, m_currentBuffer);
-        unlockBuffer();
+        if (m_mode == net_lib::M_CLIENT) {
+            // The ADC client: the handler consumes the pack and frees it with unlockBufferRead,
+            // so the pack is taken from the ring as a read, which keeps both semaphores balanced.
+            m_currentBuffer->verifyPack(DataLib::ID_PACK_ADC);
+            unlockBuffer();
+            auto pack = m_buffers->readBuffer();
+            if (pack)
+                recivedNotify(_error, pack);
+            else
+                ERROR_LOG("The received pack is not in the ring")
+        } else {
+            // The DAC server: the generator reads the ring at its own pace.
+            m_currentBuffer->verifyPack(DataLib::ID_PACK_DAC);
+            recivedNotify(_error, m_currentBuffer);
+            unlockBuffer();
+        }
         getBuffer();
     }
     {

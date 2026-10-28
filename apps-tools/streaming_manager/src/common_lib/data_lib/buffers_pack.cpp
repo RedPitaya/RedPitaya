@@ -1,5 +1,6 @@
 #include "buffers_pack.h"
 #include <inttypes.h>
+#include <cstring>
 #include "logger_lib/file_logger.h"
 #include "network_header.h"
 
@@ -200,9 +201,12 @@ auto CDataBuffersPackDMA::debugPackDAC() -> void {
     }
 }
 
-auto CDataBuffersPackDMA::verifyPack() -> void {
+auto CDataBuffersPackDMA::verifyPack(const uint8_t* id) -> void {
     for (auto& item : m_buffers) {
         auto header = reinterpret_cast<NetworkPackHeader*>(item.second->getMappedMemory());
+        if (memcmp(header->ID_PACK, id, sizeof(header->ID_PACK)) != 0) {
+            FATAL("The buffer is not a pack of the expected kind (ID_PACK)")
+        }
         if (header->bufferSize != item.second->getBufferFullLenght()) {
             FATAL("The buffer is not the correct size. Header size %" PRIu64 ". Pack lenght %u", header->bufferSize, (uint32_t)item.second->getBufferFullLenght())
         }
@@ -218,6 +222,11 @@ auto CDataBuffersPackDMA::getInfoFromHeaderADC() -> void {
         item.second->setBitBySample(header->adc.bitBySample);
         item.second->setADCPackId(header->packId);
         item.second->setTimeCapture(header->adc.timeCapture);
+        item.second->setLostSamples(EDataLost::WAIT, header->adc.waitFPGA);
+        item.second->setDecimation(header->adc.decimation);
+        item.second->setTriggerCount(header->adc.triggerCount);
+        item.second->setTriggerBlocks(header->adc.triggerBlocks);
+        item.second->setADCFlags(header->adc.flags);
     }
 }
 

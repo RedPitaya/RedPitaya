@@ -34,6 +34,7 @@ CDataBufferDMA::CDataBufferDMA(uint8_t bitsBySample)
       m_channelSizeDAC(0),
       m_timeCapture(0) {
     setLostSamples(EDataLost::FPGA, 0);
+    setLostSamples(EDataLost::WAIT, 0);
 }
 
 CDataBufferDMA::CDataBufferDMA(uint32_t startAddress, size_t lenght, void* mappedMemory, uint8_t bits)
@@ -55,6 +56,7 @@ CDataBufferDMA::CDataBufferDMA(uint32_t startAddress, size_t lenght, void* mappe
       m_channelSizeDAC(0),
       m_timeCapture(0) {
     setLostSamples(EDataLost::FPGA, 0);
+    setLostSamples(EDataLost::WAIT, 0);
 }
 
 CDataBufferDMA::CDataBufferDMA(uint8_t* buffer, size_t lenght, uint8_t bits)
@@ -76,6 +78,7 @@ CDataBufferDMA::CDataBufferDMA(uint8_t* buffer, size_t lenght, uint8_t bits)
       m_channelSizeDAC(0),
       m_timeCapture(0) {
     setLostSamples(EDataLost::FPGA, 0);
+    setLostSamples(EDataLost::WAIT, 0);
 }
 
 CDataBufferDMA::~CDataBufferDMA() {
@@ -88,6 +91,7 @@ CDataBufferDMA::~CDataBufferDMA() {
 
 auto CDataBufferDMA::reset() -> void {
     setLostSamples(EDataLost::FPGA, 0);
+    setLostSamples(EDataLost::WAIT, 0);
 }
 
 auto CDataBufferDMA::getBuffer() const -> uint32_t {
@@ -165,6 +169,46 @@ auto CDataBufferDMA::getLostSamplesAll() const -> uint64_t {
 auto CDataBufferDMA::getLostSamplesInBytesLenght() -> uint64_t {
     auto lost = getLostSamples(DataLib::FPGA);
     return lost * (getBitBySample() / 8);
+}
+
+auto CDataBufferDMA::getWaitSamples() const -> uint64_t {
+    return getLostSamples(DataLib::WAIT);
+}
+
+auto CDataBufferDMA::getSamplesWithGaps() const -> uint64_t {
+    return getSamplesWithLost() + getWaitSamples();
+}
+
+auto CDataBufferDMA::setDecimation(uint32_t decimation) -> void {
+    m_decimation = decimation;
+}
+
+auto CDataBufferDMA::getDecimation() const -> uint32_t {
+    return m_decimation;
+}
+
+auto CDataBufferDMA::setTriggerCount(uint32_t count) -> void {
+    m_triggerCount = count;
+}
+
+auto CDataBufferDMA::getTriggerCount() const -> uint32_t {
+    return m_triggerCount;
+}
+
+auto CDataBufferDMA::setTriggerBlocks(uint16_t blocks) -> void {
+    m_triggerBlocks = blocks;
+}
+
+auto CDataBufferDMA::getTriggerBlocks() const -> uint16_t {
+    return m_triggerBlocks;
+}
+
+auto CDataBufferDMA::setADCFlags(uint8_t flags) -> void {
+    m_adcFlags = flags;
+}
+
+auto CDataBufferDMA::getADCFlags() const -> uint8_t {
+    return m_adcFlags;
 }
 
 auto CDataBufferDMA::initHeaderAddress(size_t headerSize) -> void {
