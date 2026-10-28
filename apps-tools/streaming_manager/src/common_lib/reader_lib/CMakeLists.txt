@@ -52,7 +52,7 @@ list(APPEND src
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC wav_lib
+    PUBLIC wav_lib tdms_lib
     PRIVATE pthread stdc++)
 
 if (NOT CMAKE_CROSSCOMPILING)

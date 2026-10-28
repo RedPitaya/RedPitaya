@@ -246,31 +246,25 @@ auto CDACStreamingManager::threadFunc() -> void {
 
                 auto pack = m_buffer->writeBuffer(true);
                 if (pack) {
-                    CReaderController::Data data;
-                    auto res = m_readerController->getBufferPrepared(data);
-                    if (data.size[0] != 0 || data.size[1] != 0) {
-                        if (data.size[0] != 0) {
-                            auto ch1 = pack->getBuffer(DataLib::CH1);
-							if (ch1 == nullptr) {
-								FATAL("DMA CH1 is null")
-							}
-							if (ch1->getDataLenght() != data.size[0]) {
-								FATAL("DMA CH1 buffer has diffrent size src: %zu dst: %zu", data.size[0], ch1->getDataLenght())
-							}
-							memcpy(ch1->getMappedDataMemory(), data.ch[0], data.size[0]);
-							DataLib::setHeaderDAC(ch1, 1, data.real_size[0], onePackMode, repeatCount == -1, repeatCount, data.bits);
+                    // The reader writes the samples straight into the DMA buffers of the pack
+                    std::array<uint8_t*, MAX_DAC_CHANNELS> dst = {nullptr, nullptr};
+                    DataLib::CDataBufferDMA::Ptr chBuffers[2] = {pack->getBuffer(DataLib::CH1), pack->getBuffer(DataLib::CH2)};
+                    for (int ch = 0; ch < 2; ch++) {
+                        if (chBuffers[ch] == nullptr)
+                            continue;
+                        if (chBuffers[ch]->getDataLenght() != m_blockSize) {
+                            FATAL("DMA CH%d buffer has diffrent size src: %u dst: %zu", ch + 1, m_blockSize, chBuffers[ch]->getDataLenght())
                         }
-                        if (data.size[1] != 0) {
-                            auto ch2 = pack->getBuffer(DataLib::CH2);
-							if (ch2 == nullptr) {
-								FATAL("DMA CH2 is null")
-							}
-							if (ch2->getDataLenght() != data.size[1]) {
-								FATAL("DMA CH2 buffer has diffrent size src: %zu dst: %zu", data.size[1], ch2->getDataLenght())
-							}
-							memcpy(ch2->getMappedDataMemory(), data.ch[1], data.size[1]);
-							DataLib::setHeaderDAC(ch2, 2, data.real_size[1], onePackMode, repeatCount == -1, repeatCount, data.bits);
-						}
+                        dst[ch] = static_cast<uint8_t*>(chBuffers[ch]->getMappedDataMemory());
+                    }
+                    CReaderController::Data data;
+                    auto res = m_readerController->readBlock(dst, data);
+                    if (data.size[0] != 0 || data.size[1] != 0) {
+                        for (int ch = 0; ch < 2; ch++) {
+                            if (data.size[ch] != 0) {
+                                DataLib::setHeaderDAC(chBuffers[ch], ch + 1, data.real_size[ch], onePackMode, repeatCount == -1, repeatCount, data.bits[ch]);
+                            }
+                        }
                         m_buffer->unlockBufferWrite();
                     }
                     if (res != CReaderController::BR_OK) {

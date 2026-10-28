@@ -204,8 +204,8 @@ struct DrainTrace {
 };
 
 // Drains the controller through its public interface and returns every int16
-// sample it produced for channel 1, in order. `blockSize` is deliberately kept
-// equal to one segment's payload so no zero padding is added.
+// sample it produced for channel 1, in order, without the zero fill of the last
+// block.
 inline auto DrainChannel1Traced(CReaderController& controller, std::uint32_t blockSize, int maxBlocks = 64) -> DrainTrace {
     DrainTrace trace;
     std::ostringstream out;
@@ -219,23 +219,20 @@ inline auto DrainChannel1Traced(CReaderController& controller, std::uint32_t blo
         << " present{ch1=" << channels[DACChannels::DAC_CH1] << " ch2=" << channels[DACChannels::DAC_CH2] << "}"
         << " declared{ch1=" << ch1Size << " ch2=" << ch2Size << "} ---\n";
 
+    std::vector<std::uint8_t> block1(blockSize);
+    std::vector<std::uint8_t> block2(blockSize);
     for (int block = 0; block < maxBlocks; block++) {
         CReaderController::Data data;
-        const auto result = controller.getBufferPrepared(data);
-        const std::size_t bytes = data.real_size[0] != 0 ? data.real_size[0] : data.size[0];
-        out << "  block " << block << ": " << ResultName(result) << " ch0=" << (data.ch[0] != nullptr ? "set" : "null")
-            << " size0=" << data.size[0] << " realSize0=" << data.real_size[0] << " used=" << bytes
-            << " bits=" << static_cast<int>(data.bits) << "\n";
+        const auto result = controller.readBlock({block1.data(), block2.data()}, data);
+        out << "  block " << block << ": " << ResultName(result) << " size0=" << data.size[0] << " realSize0=" << data.real_size[0]
+            << " bits=" << static_cast<int>(data.bits[0]) << "\n";
+        for (std::size_t at = 0; at + sizeof(std::int16_t) <= data.real_size[0]; at += sizeof(std::int16_t)) {
+            std::int16_t value = 0;
+            std::memcpy(&value, block1.data() + at, sizeof(value));
+            trace.samples.push_back(value);
+        }
         if (result != CReaderController::BR_OK) {
             break;
-        }
-        if (data.ch[0] == nullptr || bytes == 0) {
-            continue;
-        }
-        for (std::size_t at = 0; at + sizeof(std::int16_t) <= bytes; at += sizeof(std::int16_t)) {
-            std::int16_t value = 0;
-            std::memcpy(&value, data.ch[0] + at, sizeof(value));
-            trace.samples.push_back(value);
         }
     }
     out << "--- end drain: " << trace.samples.size() << " samples ---\n";

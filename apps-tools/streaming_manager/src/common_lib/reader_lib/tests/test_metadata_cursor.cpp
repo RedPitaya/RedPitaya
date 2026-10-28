@@ -1,19 +1,12 @@
 /**
- * Regression tests for CReaderController's TDMS metadata cursor.
+ * TDMS files of several segment shapes, drained through CReaderController.
  *
- * The cursor (`moveNextMetadata`) used to increment its index BEFORE using it,
- * with the rewind path seeding the index to -1 and the segment-advance path
- * resetting it to 0. The first segment therefore started at record 0 but every
- * later segment started at record 1, and record 0 of those segments was never
- * handed out.
- *
- * That is invisible for files this project writes, because object 0 of each of
- * their segments is the group - which has no raw data and would be skipped
- * anyway. It silently drops a whole chunk of samples for any file whose segment
- * begins with a channel object, which is exactly the layout NI's incremental
- * metadata produces. `AllSegmentsAreRead` with `withGroup = false` is the case
- * that used to fail; the `withGroup = true` variants pin that the fix did not
- * change behaviour for the files this project produces itself.
+ * These began as regression tests for the metadata cursor of the former reader,
+ * which skipped record 0 of every segment after the first: invisible for the
+ * files this project writes (object 0 is the group) but a lost chunk for any
+ * file whose segments begin with a channel, the layout of NI's incremental
+ * metadata. The reader now goes through TDMS::FileReader; the same files still
+ * have to come out whole and in order.
  */
 
 #include <gtest/gtest.h>
@@ -153,7 +146,8 @@ TEST(MetadataCursor, AMissingFileIsReportedRatherThanCrashing) {
     EXPECT_NE(controller->isOpen(), CReaderController::OR_OK);
 
     CReaderController::Data data;
-    EXPECT_NO_THROW(controller->getBufferPrepared(data));
+    std::vector<std::uint8_t> block(kBlockSize);
+    EXPECT_EQ(controller->readBlock({block.data(), nullptr}, data), CReaderController::BR_EMPTY);
 }
 
 TEST(MetadataCursor, AnEmptyFileIsReportedRatherThanCrashing) {
@@ -164,7 +158,8 @@ TEST(MetadataCursor, AnEmptyFileIsReportedRatherThanCrashing) {
     EXPECT_NE(controller->isOpen(), CReaderController::OR_OK);
 
     CReaderController::Data data;
-    EXPECT_NO_THROW(controller->getBufferPrepared(data));
+    std::vector<std::uint8_t> block(kBlockSize);
+    EXPECT_EQ(controller->readBlock({block.data(), nullptr}, data), CReaderController::BR_EMPTY);
 }
 
 TEST(MetadataCursor, RepeatModeRereadsFromTheFirstSegment) {

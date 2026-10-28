@@ -3,38 +3,49 @@
 
 #include <stdint.h>
 #include <fstream>
+#include <string>
 
+/**
+ * A RIFF/WAVE file read by frames.
+ *
+ * openFile() walks the chunks: "fmt " gives the format, "data" the samples; any other chunk
+ * (LIST, fact, ...) before or after them is skipped. PCM and WAVE_FORMAT_EXTENSIBLE with a PCM
+ * or float subformat are understood. Samples are read raw: interleaved, little-endian, 8 bit
+ * unsigned as the format has them.
+ */
 class CWaveReader {
-    typedef struct WavHeader {
-        uint8_t RIFF[4];         // RIFF Header Magic header
-        uint32_t fileSize;       // File size - 8
-        uint8_t WAVE[4];         // WAVE Header
-        uint8_t fmt[4];          // FMT header
-        uint32_t Subchunk1Size;  // Size of the fmt chunk - 16
-        uint16_t AudioFormat;    // Audio format 1=PCM
-        uint16_t NumOfChan;      // Number of channels 1=Mono 2=Sterio
-        uint32_t SamplesPerSec;  // Sampling Frequency in Hz
-        uint32_t bytesPerSec;    // bytes per second
-        uint16_t blockAlign;     // 2=16-bit mono, 4=16-bit stereo
-        uint16_t bitsPerSample;  // Number of bits per sample
-        /* "data" sub-chunk */
-        uint8_t Subchunk2ID[4];  // "data"  string
-        uint32_t Subchunk2Size;  // Sampled data length
-    } WavHeader_t;
-
    public:
+    enum class Format { PCM, FLOAT, OTHER };
+
     CWaveReader();
     ~CWaveReader();
 
+    // False when the file is not there or not a RIFF/WAVE file with "fmt " and "data"
     auto openFile(std::string fileName) -> bool;
-    auto getHeader() -> WavHeader_t;
-    auto getDataSize() -> uint64_t;
-    auto getBuffers(uint8_t** ch1, size_t* size_ch1, uint8_t** ch2, size_t* size_ch2, uint8_t* bits) -> bool;
+    auto error() const -> const std::string& { return m_error; }
+
+    auto format() const -> Format { return m_format; }
+    auto channels() const -> uint16_t { return m_channels; }
+    auto bitsPerSample() const -> uint16_t { return m_bits; }
+    auto sampleRate() const -> uint32_t { return m_rate; }
+    auto frameSize() const -> uint32_t { return m_blockAlign; }  // bytes of one sample of every channel
+    auto frames() const -> uint64_t;
+    auto getDataSize() const -> uint64_t { return m_dataSize; }  // bytes of samples
+
+    // Reads up to `count` frames from frame `first` into `dst` (count * frameSize() bytes) and
+    // returns how many it read
+    auto readFrames(uint64_t first, uint64_t count, void* dst) -> uint64_t;
 
    private:
-    std::fstream m_read_fs;
-    WavHeader_t m_header;
-    uint64_t m_dataSize;
+    std::ifstream m_read_fs;
+    std::string m_error;
+    Format m_format = Format::OTHER;
+    uint16_t m_channels = 0;
+    uint16_t m_bits = 0;
+    uint32_t m_rate = 0;
+    uint32_t m_blockAlign = 0;
+    uint64_t m_dataOffset = 0;
+    uint64_t m_dataSize = 0;
 };
 
 #endif

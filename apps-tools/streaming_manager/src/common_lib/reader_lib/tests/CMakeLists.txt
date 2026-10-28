@@ -27,6 +27,7 @@ endif()
 
 add_executable(reader_lib_tests
     test_metadata_cursor.cpp
+    test_sources.cpp
 )
 
 target_include_directories(reader_lib_tests PRIVATE
@@ -52,7 +53,7 @@ target_link_libraries(reader_lib_tests PRIVATE
     logger_lib
     GTest::gtest_main
     pthread)
-target_compile_features(reader_lib_tests PRIVATE cxx_std_17)
+target_compile_features(reader_lib_tests PRIVATE cxx_std_20)
 
 ## Labelled so the post-build run can select exactly this library's tests when
 ## several libraries are configured into one build tree.
