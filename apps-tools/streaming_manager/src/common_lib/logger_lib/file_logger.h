@@ -92,13 +92,27 @@ class CFileLogger {
     using Ptr = std::shared_ptr<CFileLogger>;
     static auto create(std::string _filePath, bool testMode) -> Ptr;
 
+    // The GPIO input stream: its own clock, decimation and trigger, words that may be RLE runs
+    struct GpioProperties {
+        uint64_t baseRate = 0;
+        uint32_t decimation = 1;
+        bool rle = false;
+        bool triggerMode = false;
+        bool waitCounter = false;  // the FPGA counts the trigger wait apart from the loss
+    };
+
     CFileLogger(std::string _filePath, bool testMode);
     ~CFileLogger();
 
     auto resetCounters() -> void;
     auto addMetric(CFileLogger::EMetric _metric, uint64_t _value) -> void;
     auto addMetric(DataLib::CDataBuffersPackDMA::Ptr pack) -> void;
-    auto addMetric(DataLib::EDataBuffersPackChannel channel, uint64_t _value, uint64_t _lostFPGA, uint64_t _samples) -> void;
+    auto addMetric(DataLib::EDataBuffersPackChannel channel, uint64_t _value, uint64_t _lostFPGA, uint64_t _wait, uint64_t _samples) -> void;
+
+    auto setGpioProperties(const GpioProperties& properties) -> void;
+    // One GPIO input buffer: samples are the GPIO clock samples its words stand for,
+    // lost the overflow and wait the trigger wait right before it, both in samples
+    auto addGpioMetric(uint64_t bytes, uint64_t words, uint64_t samples, uint64_t lost, uint64_t wait, uint32_t triggerCount) -> void;
 
     auto dumpToFile() -> void;
 
@@ -108,6 +122,7 @@ class CFileLogger {
     struct ChStat {
         uint64_t pass;
         uint64_t lostFpga;
+        uint64_t wait;
         uint64_t samples;
     };
 
@@ -130,6 +145,27 @@ class CFileLogger {
     bool m_testMode;
     std::map<DataLib::EDataBuffersPackChannel, ChStat> m_channels;
     std::map<DataLib::EDataBuffersPackChannel, uint64_t> m_current_sample;
+    // Acquisition properties from the buffer headers; decimation 0 means the producer does not report them
+    uint64_t m_packs;
+    uint32_t m_decimation;
+    uint8_t m_flags;
+    uint32_t m_triggerCountFirst;
+    uint32_t m_triggerCountLast;
+
+    struct GpioStat {
+        uint64_t buffers = 0;
+        uint64_t bytes = 0;
+        uint64_t words = 0;
+        uint64_t samples = 0;
+        uint64_t lost = 0;
+        uint64_t wait = 0;
+        uint64_t pos = 0;
+        uint32_t triggerCountFirst = 0;
+        uint32_t triggerCountLast = 0;
+    };
+    GpioProperties m_gpioProperties;
+    bool m_gpioPropertiesSet;
+    GpioStat m_gpio;
 };
 
 #endif

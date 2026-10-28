@@ -431,7 +431,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
         auto buff = pack->getBuffer(ch);
         if (buff) {
             m_fileLogger->addMetric(CFileLogger::EMetric::RECIVE_DATE, buff->getDataLenght());
-            m_fileLogger->addMetric(ch, buff->getDataLenght(), buff->getLostSamples(DataLib::FPGA), buff->getSamplesCount());
+            m_fileLogger->addMetric(ch, buff->getDataLenght(), buff->getLostSamples(DataLib::FPGA), buff->getWaitSamples(), buff->getSamplesCount());
             rate = std::max(rate, buff->getADCBaseRate());
         }
     }
