@@ -81,6 +81,12 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/reader.h
             ${PROJECT_SOURCE_DIR}/binary_stream.h
             ${PROJECT_SOURCE_DIR}/file_struct_types.h
+            ${PROJECT_SOURCE_DIR}/tdms.h
+            ${PROJECT_SOURCE_DIR}/value.h
+            ${PROJECT_SOURCE_DIR}/segment_builder.h
+            ${PROJECT_SOURCE_DIR}/file_writer.h
+            ${PROJECT_SOURCE_DIR}/file_reader.h
+            ${PROJECT_SOURCE_DIR}/waveform.h
         )
 
 list(APPEND src
@@ -89,6 +95,11 @@ list(APPEND src
             ${PROJECT_SOURCE_DIR}/file.cpp
             ${PROJECT_SOURCE_DIR}/reader.cpp
             ${PROJECT_SOURCE_DIR}/binary_stream.cpp
+            ${PROJECT_SOURCE_DIR}/value.cpp
+            ${PROJECT_SOURCE_DIR}/path.cpp
+            ${PROJECT_SOURCE_DIR}/segment_builder.cpp
+            ${PROJECT_SOURCE_DIR}/file_writer.cpp
+            ${PROJECT_SOURCE_DIR}/file_reader.cpp
         )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})

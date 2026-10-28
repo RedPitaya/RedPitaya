@@ -1,7 +1,5 @@
 ##
-## Unit tests for tdms_lib. No Python anywhere: the library has no independent
-## third-party reference reader available here, so correctness is pinned two
-## ways instead.
+## Unit tests for tdms_lib. Correctness is pinned three ways.
 ##
 ##  1. Golden byte arrays, built declaratively with tests/support/spec_builder.h
 ##     - an encoder that shares no code with TDMS::BinaryStream - and derived by
@@ -13,9 +11,16 @@
 ##     reader from passing: a round trip through a symmetric misunderstanding
 ##     succeeds, a pinned byte pattern does not.
 ##
+##  3. compat/compat_nptdms.py checks both directions against npTDMS, an
+##     independent reader and writer, when it is installed (pip install npTDMS;
+##     TDMS_COMPAT_PYTHON picks the interpreter); otherwise ctest reports it skipped.
+##
 ## test_roundtrip.cpp sits on top of both. The remaining files are regression
 ## suites for the crashes, hangs and memory defects, plus a deterministic
-## mutation sweep over the goldens for robustness.
+## mutation sweep over the goldens for robustness. test_value, test_segment_builder,
+## test_file_reader and test_api_roundtrip cover the API of tdms.h the same way:
+## goldens from spec_builder.h for what SegmentBuilder writes and for what
+## FileReader has to read.
 ##
 ## Build:  cmake -S . -B build -DBUILD_TESTS=ON [-DTDMS_ENABLE_SANITIZERS=ON]
 ##         cmake --build build && (cd build && ctest --output-on-failure)
@@ -53,6 +58,11 @@ add_executable(tdms_tests
     test_timestamp.cpp
     test_api_compat_no_using.cpp
     test_api_compat_std_using.cpp
+    test_value.cpp
+    test_segment_builder.cpp
+    test_file_reader.cpp
+    test_api_roundtrip.cpp
+    test_file_writer.cpp
 )
 
 target_include_directories(tdms_tests PRIVATE
@@ -72,6 +82,23 @@ endif()
 ## when cross-compiling for the RedPitaya ARM target.
 ## Labelled so the post-build run can select exactly this library's tests when
 ## several libraries are configured into one build tree.
+## Compatibility with npTDMS, an independent reader and writer of the format: runs when a Python
+## with numpy and npTDMS is there (pip install npTDMS), is reported as skipped otherwise.
+## TDMS_COMPAT_PYTHON picks the interpreter.
+add_executable(tdms_compat_tool compat/tdms_compat_tool.cpp)
+target_link_libraries(tdms_compat_tool PRIVATE ${PROJECT_NAME})
+target_compile_features(tdms_compat_tool PRIVATE cxx_std_17)
+if(NOT CMAKE_CROSSCOMPILING)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    set(TDMS_COMPAT_PYTHON "${Python3_EXECUTABLE}" CACHE FILEPATH "Python with npTDMS for the TDMS compatibility test")
+    if(TDMS_COMPAT_PYTHON)
+        add_test(NAME tdms_nptdms_compat
+                 COMMAND ${TDMS_COMPAT_PYTHON} ${CMAKE_CURRENT_SOURCE_DIR}/compat/compat_nptdms.py $<TARGET_FILE:tdms_compat_tool>)
+        set_tests_properties(tdms_nptdms_compat PROPERTIES LABELS tdms_lib SKIP_RETURN_CODE 77)
+    endif()
+endif()
+add_dependencies(tdms_tests tdms_compat_tool)
+
 if(CMAKE_CROSSCOMPILING)
     add_test(NAME tdms_tests COMMAND tdms_tests)
     set_tests_properties(tdms_tests PROPERTIES LABELS tdms_lib)
