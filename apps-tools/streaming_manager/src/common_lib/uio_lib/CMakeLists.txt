@@ -41,6 +41,7 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/trigger.h
             ${PROJECT_SOURCE_DIR}/ext_trigger.h
             ${PROJECT_SOURCE_DIR}/gpio.h
+            ${PROJECT_SOURCE_DIR}/hardware.h
       )
 
 if(RP_PLATFORM)
@@ -51,6 +52,7 @@ if(RP_PLATFORM)
             ${PROJECT_SOURCE_DIR}/ext_trigger.cpp
             ${PROJECT_SOURCE_DIR}/gpio.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
+            ${PROJECT_SOURCE_DIR}/hardware.cpp
         )
 else()
     list(APPEND src
@@ -60,6 +62,7 @@ else()
             ${PROJECT_SOURCE_DIR}/ext_trigger_dummy.cpp
             ${PROJECT_SOURCE_DIR}/gpio_dummy.cpp
             ${PROJECT_SOURCE_DIR}/uio_parser.cpp
+            ${PROJECT_SOURCE_DIR}/hardware.cpp
         )
 endif()
 
@@ -75,3 +78,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}"
     COMMENT "Copying ${PROJECT_NAME} public headers to ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}"
     VERBATIM)
+
+## The tests drive CHardware over the dummy modules of the host build.
+if(NOT RP_PLATFORM AND NOT CMAKE_CROSSCOMPILING AND BUILD_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+
+    ## The suite runs as part of the build, so a regression fails the build.
+    add_custom_target(rp_uio_lib_run_tests ALL
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Running uio_lib unit tests (ctest) - the build fails if any test fails"
+        VERBATIM)
+    add_dependencies(rp_uio_lib_run_tests uio_lib_tests)
+endif()

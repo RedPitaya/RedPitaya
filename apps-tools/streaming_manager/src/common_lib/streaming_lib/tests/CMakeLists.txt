@@ -25,6 +25,7 @@ target_include_directories(streaming_lib_tests PRIVATE ${COMMON_LIB_DIR})
 
 target_link_libraries(streaming_lib_tests PRIVATE
     ${PROJECT_NAME}
+    board_lib
     uio_lib
     data_lib
     logger_lib

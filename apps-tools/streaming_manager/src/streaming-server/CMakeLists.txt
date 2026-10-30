@@ -67,7 +67,7 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/lib/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib board_lib)
 
 if(NOT WIN32 )
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++)

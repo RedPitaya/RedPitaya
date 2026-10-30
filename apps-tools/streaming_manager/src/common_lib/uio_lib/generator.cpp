@@ -262,6 +262,8 @@ auto CGenerator::start(bool enableCh1, bool enableCh2) -> void {
 auto CGenerator::stop() -> void {
     const std::lock_guard lock(m_waitLock);
     if (m_Map != nullptr) {
+        // The stop is taken from the selected event source only: select the own one first
+        setRegister(m_Map, &(m_Map->event_select), gen0_event_id);
         // Stop EVENT
         setRegister(m_Map, &(m_Map->event_status), 0x4);
         // Stop DMA. The normal mode repeats until a reset; a reset is safe while reading only on

@@ -148,6 +148,7 @@ class COscilloscope {
     auto stop() -> void;
     auto printReg() -> void;
     auto getDecimation() -> uint32_t;
+    auto setDecimation(uint32_t dec) -> bool;  // applies on the next prepare(), refused while running
     auto getOSCRate() -> uint32_t;
     auto getADCClock() -> uint32_t;  // the ADC rate before the decimation, Hz
     auto isMaster() -> BoardMode;

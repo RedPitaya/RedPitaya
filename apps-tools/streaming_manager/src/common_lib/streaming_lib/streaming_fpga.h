@@ -8,7 +8,7 @@
 
 #include "data_lib/buffers_pack.h"
 #include "data_lib/signal.hpp"
-#include "uio_lib/oscilloscope.h"
+#include "uio_lib/hardware.h"
 
 namespace streaming_lib {
 
@@ -16,7 +16,7 @@ class CStreamingFPGA {
    public:
     using Ptr = std::shared_ptr<CStreamingFPGA>;
 
-    CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, bool _saveCaptureTime);
+    CStreamingFPGA(uio_lib::CHardware::Ptr _hw, bool _saveCaptureTime);
     ~CStreamingFPGA();
 
     typedef std::function<DataLib::CDataBuffersPackDMA::Ptr()> getFreeBufferFunc;
@@ -42,7 +42,7 @@ class CStreamingFPGA {
     CStreamingFPGA& operator=(const CStreamingFPGA&) = delete;
     CStreamingFPGA& operator=(const CStreamingFPGA&&) = delete;
 
-    uio_lib::COscilloscope::Ptr m_Osc_ch;
+    uio_lib::CHardware::Ptr m_hw;
 
     std::thread m_OscThread;
     std::mutex mtx;

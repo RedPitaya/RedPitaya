@@ -486,6 +486,13 @@ auto COscilloscope::getDecimation() -> u_int32_t {
     return m_dec_factor;
 }
 
+auto COscilloscope::setDecimation(uint32_t dec) -> bool {
+    if (m_running || dec == 0)
+        return false;
+    m_dec_factor = dec;
+    return true;
+}
+
 auto COscilloscope::getOSCRate() -> uint32_t {
     if (m_dec_factor == 0)
         return 0;

@@ -1,15 +1,6 @@
 #include <algorithm>
 #include <memory>
 
-// Platform-specific includes
-#ifdef RP_PLATFORM
-#include "api250-12/rp-gpio-power.h"
-#include "api250-12/rp-i2c-max7311.h"
-#include "api250-12/rp-spi.h"
-#include "rp_hw-profiles.h"
-#include "rp_hw_calib.h"
-#endif
-
 // System includes
 #ifndef _WIN32
 #include <syslog.h>
@@ -21,7 +12,7 @@
 #include "streaming_lib/streaming_fpga.h"
 #include "streaming_lib/streaming_net.h"
 #include "uio_lib/memory_manager.h"
-#include "uio_lib/oscilloscope.h"
+#include "uio_lib/hardware.h"
 
 #include "options.h"
 #include "streaming.h"
@@ -34,7 +25,7 @@ using namespace uio_lib;
 // Global variables
 // ============================================================================
 
-COscilloscope::Ptr g_osc = nullptr;
+CHardware::Ptr g_hw = nullptr;
 CStreamingFPGA::Ptr g_s_fpga = nullptr;
 CBuffersCached::Ptr g_s_buffer = nullptr;
 CStreamingNet::Ptr g_s_net = nullptr;
@@ -56,6 +47,10 @@ auto stopServer(ServerNetConfigManager::EStopReason reason) -> void;
 
 auto setServer(std::shared_ptr<ServerNetConfigManager> serverNetConfig) -> void {
     g_serverNetConfig = serverNetConfig;
+}
+
+auto setHardware(CHardware::Ptr hw) -> void {
+    g_hw = hw;
 }
 
 // ============================================================================
@@ -96,6 +91,9 @@ auto stopServer(ServerNetConfigManager::EStopReason reason) -> void {
                 case ServerNetConfigManager::EStopReason::NO_CHANNELS:
                     g_serverNetConfig->sendServerNoChannelsStopped();
                     break;
+                case ServerNetConfigManager::EStopReason::CONFIG_ERROR:
+                    g_serverNetConfig->sendServerConfigErrorStopped();
+                    break;
                 default:
                     throw std::runtime_error("Unknown state");
             }
@@ -121,114 +119,6 @@ auto stopNonBlocking(ServerNetConfigManager::EStopReason x) -> void {
     }
 }
 
-// ============================================================================
-// Platform-specific calibration
-// ============================================================================
-
-#ifdef RP_PLATFORM
-
-struct CalibrationData {
-    int32_t ch_off[MAX_ADC_CHANNELS] = {0, 0, 0, 0};
-    double ch_gain[MAX_ADC_CHANNELS] = {1, 1, 1, 1};
-    uint32_t aa_ch[MAX_ADC_CHANNELS] = {0, 0, 0, 0};
-    uint32_t bb_ch[MAX_ADC_CHANNELS] = {0, 0, 0, 0};
-    uint32_t kk_ch[MAX_ADC_CHANNELS] = {0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF};
-    uint32_t pp_ch[MAX_ADC_CHANNELS] = {0, 0, 0, 0};
-    bool isNewCalib = false;
-};
-
-auto initPlatformCalibration(const CStreamSettings& settings, CalibrationData& calib, uint8_t max_channels, bool filterBypass) -> void {
-    // Check calibration version
-    uint8_t cver = 0;
-    if (rp_GetCalibrationVersion(&cver) == RP_HW_CALIB_OK) {
-        calib.isNewCalib = cver >= RP_HW_PACK_ID_V6;
-    } else {
-        ERROR_LOG("Error get calibration version");
-    }
-
-    for (uint8_t ch = 0; ch < max_channels; ++ch) {
-        rp_acq_ac_dc_mode_calib_t mode = (settings.getADCAC_DC(ch + 1).value == CStreamSettings::AC_DC::DC) ? RP_DC_CALIB : RP_AC_CALIB;
-        bool isAttenuator1_1 = (settings.getADCAttenuator(ch + 1).value == CStreamSettings::Attenuator::A_1_1);
-
-        if (isAttenuator1_1) {
-            if (rp_CalibGetFastADCCalibValue((rp_channel_calib_t)ch, mode, &calib.ch_gain[ch], &calib.ch_off[ch]) != RP_HW_CALIB_OK) {
-                fprintf(stderr, "Error get calibration channel: %d\n", ch);
-            }
-            if (!filterBypass) {
-                channel_filter_t f;
-                if (rp_CalibGetFastADCFilter((rp_channel_calib_t)ch, &f) == RP_HW_CALIB_OK) {
-                    calib.aa_ch[ch] = f.aa;
-                    calib.bb_ch[ch] = f.bb;
-                    calib.kk_ch[ch] = f.kk;
-                    calib.pp_ch[ch] = f.pp;
-                } else {
-                    fprintf(stderr, "Error get filter value: %d\n", ch);
-                }
-            }
-        } else {
-            if (rp_CalibGetFastADCCalibValue_1_20((rp_channel_calib_t)ch, mode, &calib.ch_gain[ch], &calib.ch_off[ch]) != RP_HW_CALIB_OK) {
-                fprintf(stderr, "Error get calibration channel: %d\n", ch);
-            }
-            if (!filterBypass) {
-                channel_filter_t f;
-                if (rp_CalibGetFastADCFilter_1_20((rp_channel_calib_t)ch, &f) == RP_HW_CALIB_OK) {
-                    calib.aa_ch[ch] = f.aa;
-                    calib.bb_ch[ch] = f.bb;
-                    calib.kk_ch[ch] = f.kk;
-                    calib.pp_ch[ch] = f.pp;
-                } else {
-                    fprintf(stderr, "Error get filter value: %d\n", ch);
-                }
-            }
-        }
-    }
-
-    // Configure hardware attenuators
-    if (rp_HPGetIsAttenuatorControllerPresentOrDefault()) {
-        rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, settings.getADCAttenuator(1).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
-        rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, settings.getADCAttenuator(2).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
-    }
-
-    // Configure AC/DC coupling
-    if (rp_HPGetFastADCIsAC_DCOrDefault()) {
-        rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, settings.getADCAC_DC(1).value == CStreamSettings::AC_DC::DC ? RP_DC_MODE : RP_AC_MODE);
-        rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, settings.getADCAC_DC(2).value == CStreamSettings::AC_DC::DC ? RP_DC_MODE : RP_AC_MODE);
-    }
-}
-
-auto createPlatformOscilloscope(const std::vector<UioT>& uioList, uint32_t rate, bool is_master, bool filterBypass, uint8_t max_channels, const CalibrationData& calib,
-                                uint8_t resolution_bits) -> COscilloscope::Ptr {
-    auto memmanager = uio_lib::CMemoryManager::instance();
-
-    for (const auto& uio : uioList) {
-        if (uio.nodeName == "rp_oscilloscope@40000000") {
-            memmanager->releaseMemory(MM_ADC_RESERVE_SKIP);
-            if (memmanager->reserveMemory(MM_ADC_RESERVE_SKIP, 1, 1) != 1) {
-                printWithLog(LOG_ERR, stdout, "Can't reserve memory via memory manager\n");
-                stopNonBlocking(ServerNetConfigManager::MEM_ERROR);
-                return nullptr;
-            }
-            auto blocks = memmanager->getRegions(MM_ADC_RESERVE_SKIP);
-
-            auto osc = COscilloscope::create(uio, rate, is_master, ClientOpt::getADCRate(), !filterBypass, ClientOpt::getADCBits(), max_channels);
-
-            for (uint8_t ch = 0; ch < max_channels; ++ch) {
-                osc->setCalibration(ch, calib.ch_off[ch], calib.ch_gain[ch], calib.isNewCalib);
-                osc->setFilterCalibration(ch, calib.aa_ch[ch], calib.bb_ch[ch], calib.kk_ch[ch], calib.pp_ch[ch]);
-            }
-
-            osc->setFilterBypass(filterBypass);
-            osc->set8BitMode(resolution_bits == 8);
-            osc->setSkipDataAddress(blocks[0]);
-
-            return osc;
-        }
-    }
-
-    return nullptr;
-}
-
-#endif
 
 // ============================================================================
 // Memory and channel configuration
@@ -294,13 +184,12 @@ auto initializeMemory(const CStreamSettings& settings, uint8_t channelsActive, b
 // Main server control
 // ============================================================================
 
-auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
-    if (!g_serverNetConfig) {
+auto startServer(bool verbMode, bool testMode) -> void {
+    if (!g_serverNetConfig || !g_hw) {
         return;
     }
 
     g_s_fpga = nullptr;
-    g_osc = nullptr;
     g_s_buffer = nullptr;
     g_s_file = nullptr;
     g_s_net = nullptr;
@@ -314,32 +203,27 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         auto rate = settings.getADCDecimation();
         auto ip_addr_host = std::string("127.0.0.1");
         auto save_capture_time = settings.getADCCaptureTime();
-        auto max_channels = ClientOpt::getADCChannels();
+        auto board = g_hw->info();
+        auto max_channels = board.adcChannels;
         auto buffersTestMode = testMode;
-        auto uioList = uio_lib::GetUioList();
         uint8_t resolution_bits = (resolution.value == CStreamSettings::Resolution::BIT_8) ? 8 : 16;
 
 #ifdef RP_PLATFORM
-        if (rp_CalibInit() != RP_HW_CALIB_OK) {
-            fprintf(stderr, "Error init calibration\n");
-        }
-        bool filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
         bool is_platform = true;
-        CalibrationData calib;
-        if (settings.getADCCalibration()) {
-            initPlatformCalibration(settings, calib, max_channels, filterBypass);
-        }
-
-        g_osc = createPlatformOscilloscope(uioList, rate, is_master, filterBypass, max_channels, calib, resolution_bits);
-        if (!g_osc) {
-            return;
-        }
 #else
         buffersTestMode = true;
         bool is_platform = false;
-        uio_lib::UioT uio_t;
-        g_osc = COscilloscope::create(uio_t, rate, is_master, ClientOpt::getADCRate(), false, 16, 2);
 #endif
+
+        // where the scope writes while no buffer is free
+        auto memmanager = uio_lib::CMemoryManager::instance();
+        memmanager->releaseMemory(MM_ADC_RESERVE_SKIP);
+        if (memmanager->reserveMemory(MM_ADC_RESERVE_SKIP, 1, 1) != 1) {
+            printWithLog(LOG_ERR, stdout, "Can't reserve memory via memory manager\n");
+            stopNonBlocking(ServerNetConfigManager::MEM_ERROR);
+            return;
+        }
+        g_hw->adcSetSkipBuffer(memmanager->getRegions(MM_ADC_RESERVE_SKIP)[0].start);
 
         // Create buffer cache
         g_s_buffer = CBuffersCached::create();
@@ -392,18 +276,32 @@ auto startServer(bool verbMode, bool testMode, bool is_master) -> void {
         }
 
         // Generate buffers
-        auto memmanager = uio_lib::CMemoryManager::instance();
         g_s_buffer->generateBuffers(memmanager->getRegions(MM_ADC), (use_file.value == CStreamSettings::PassMode::NET ? DataLib::sizeHeader() : 0), buffersTestMode);
-        g_s_buffer->setADCBits(ClientOpt::getADCBits());
-        g_s_buffer->setOSCRate(ClientOpt::getADCRate() / rate);
+        g_s_buffer->setADCBits(board.adcBits);
+        g_s_buffer->setOSCRate(board.adcRate / rate);
 
         if (use_file.value == CStreamSettings::PassMode::NET) {
             g_s_buffer->initHeadersADC();
         }
 
         // Create FPGA streaming
-        g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc, save_capture_time);
-        g_osc->setDataSize(g_s_buffer->getDataSize());
+        ADCConfig adc;
+        adc.decimation = rate;
+        adc.eightBit = resolution_bits == 8;
+        adc.calibration = settings.getADCCalibration();
+        adc.bufferBytes = g_s_buffer->getDataSize();
+        for (uint8_t ch = 0; ch < max_channels && ch < 4; ch++) {
+            adc.channels[ch] = settings.getADCChannels(ch + 1).value == CStreamSettings::State::ON;
+            adc.att1_20[ch] = settings.getADCAttenuator(ch + 1).value == CStreamSettings::Attenuator::A_1_20;
+            adc.dc[ch] = settings.getADCAC_DC(ch + 1).value == CStreamSettings::AC_DC::DC;
+        }
+        if (!g_hw->adcConfigure(adc)) {
+            printWithLog(LOG_ERR, stdout, "Can't configure the ADC\n");
+            stopNonBlocking(ServerNetConfigManager::EStopReason::CONFIG_ERROR);
+            return;
+        }
+
+        g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_hw, save_capture_time);
         g_s_fpga->setVerboseMode(g_verbMode);
         g_s_fpga->setTestMode(testMode);
 

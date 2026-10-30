@@ -41,6 +41,9 @@
 #include "options.h"
 #include "streaming.h"
 #include "streaming_lib/streaming_file.h"
+#include "board_lib/board.h"
+#include "uio_lib/hardware.h"
+#include "uio_lib/memory_manager.h"
 #include "uio_lib/oscilloscope.h"
 
 std::mutex g_print_mtx;
@@ -188,20 +191,16 @@ int main(int argc, char* argv[]) {
             ip_cur = result[0].second;
         }
 
-        auto uioList = uio_lib::GetUioList();
-        for (auto& uio : uioList) {
-            if (uio.nodeName == "rp_oscilloscope@40000000") {
-                auto osc = uio_lib::COscilloscope::create(uio, 1, true, ClientOpt::getADCRate(), false, ClientOpt::getADCBits(), 2);
-                isMaster = osc->isMaster();
-                // Disable x-streaming
-                if (ClientOpt::getIsXStreaming() == false)
-                    isMaster = uio_lib::BoardMode::MASTER;
-                printWithLog(
-                    LOG_INFO, stdout, "Detected %s mode\n", isMaster == uio_lib::BoardMode::MASTER ? "Master" : (isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
-                break;
-            }
-        }
 #endif
+        // The FPGA blocks for the whole process; the daisy chain role is read from the scope
+        auto hw = uio_lib::CHardware::create(board_lib::createBoard());
+        if (!hw) {
+            FATAL("Can't open the FPGA blocks")
+        }
+        isMaster = hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
+        printWithLog(LOG_INFO, stdout, "Detected %s mode\n", isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
+        setHardware(hw);
+        setDACHardware(hw);
         auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
         auto model = ClientOpt::getBroadcastModel();
 
@@ -223,7 +222,7 @@ int main(int argc, char* argv[]) {
         //            aprintf(stderr, "clientConnectedNofiy\n");
         //        });
 
-        con_server->startStreamingNofiy.connect([verbMode, isMaster]() { startServer(verbMode, false, isMaster != uio_lib::BoardMode::SLAVE); });
+        con_server->startStreamingNofiy.connect([verbMode]() { startServer(verbMode, false); });
 
 		con_server->startDacStreamingNofiy.connect([verbMode](auto activeChannels) { startDACServer(verbMode, activeChannels); });
 

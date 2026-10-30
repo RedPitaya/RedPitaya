@@ -12,6 +12,7 @@
 #include <mutex>
 #include <vector>
 
+#include "board_lib/board.h"
 #include "data_lib/network_header.h"
 #include "data_lib/tests/support.h"
 #include "streaming_lib/streaming_fpga.h"
@@ -51,9 +52,8 @@ class FPGARun {
     // Runs every step through a CStreamingFPGA; the buffers it delivered, in order
     auto run(bool triggerMode, bool waitCounter, uint16_t blocks) -> std::vector<Seen> {
         auto& s = uio_lib::dummy::oscState();
-        s.triggerMode = triggerMode;
         s.waitCounter = waitCounter;
-        s.triggerBlocks = blocks;
+        s.blockMode = true;
         s.wait = [this]() {
             std::unique_lock lock(m_mtx);
             if (m_next >= m_steps.size()) {
@@ -68,8 +68,17 @@ class FPGARun {
         s.waitCount = [this](uint8_t) { return m_steps[m_current].wait; };
         s.triggerCount = [this]() { return static_cast<uint32_t>(100 + m_current); };
 
-        auto osc = uio_lib::COscilloscope::create(uio_lib::UioT(), 64, true, 62500000, false, 16, 2);
-        auto fpga = std::make_shared<streaming_lib::CStreamingFPGA>(osc, false);
+        uio_lib::BoardInfo info;
+        info.adcRate = 62500000;
+        auto hw = uio_lib::CHardware::create(std::make_shared<board_lib::CDummyBoard>(info));
+        uio_lib::ADCConfig cfg;
+        cfg.decimation = 64;
+        EXPECT_TRUE(hw->adcConfigure(cfg));
+        uio_lib::ADCTrigger trig;
+        trig.enable = triggerMode;
+        trig.blocks = blocks;
+        EXPECT_TRUE(hw->adcSetTrigger(trig));
+        auto fpga = std::make_shared<streaming_lib::CStreamingFPGA>(hw, false);
         fpga->setTestMode(true);
         fpga->getBuffF = [this]() -> CDataBuffersPackDMA::Ptr {
             // the first two map the DMA buffers, then one per full buffer

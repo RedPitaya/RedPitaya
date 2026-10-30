@@ -1,14 +1,5 @@
 #include <vector>
 
-// Platform-specific includes
-#ifdef RP_PLATFORM
-#include "api250-12/rp-gpio-power.h"
-#include "api250-12/rp-i2c-max7311.h"
-#include "api250-12/rp-spi.h"
-#include "rp_hw-profiles.h"
-#include "rp_hw_calib.h"
-#endif
-
 // System includes
 #ifndef _WIN32
 #include <syslog.h>
@@ -19,7 +10,7 @@
 #include "dac_streaming_lib/dac_streaming_application.h"
 #include "dac_streaming_lib/dac_streaming_manager.h"
 #include "options.h"
-#include "uio_lib/generator.h"
+#include "uio_lib/hardware.h"
 
 using namespace dac_streaming_lib;
 using namespace uio_lib;
@@ -29,7 +20,7 @@ using namespace uio_lib;
 // ============================================================================
 CDACStreamingApplication::Ptr g_dac_app = nullptr;
 CDACStreamingManager::Ptr g_dac_manger = nullptr;
-CGenerator::Ptr g_gen = nullptr;
+CHardware::Ptr g_dac_hw = nullptr;
 ServerNetConfigManager::Ptr g_serverDACNetConfig = nullptr;
 
 bool g_dac_verbMode = false;
@@ -41,6 +32,10 @@ std::atomic_bool g_dac_serverRun(false);
 
 auto setDACServer(ServerNetConfigManager::Ptr serverNetConfig) -> void {
     g_serverDACNetConfig = serverNetConfig;
+}
+
+auto setDACHardware(CHardware::Ptr hw) -> void {
+    g_dac_hw = hw;
 }
 
 auto stopDACServer(CDACStreamingManager::NotifyResult x) -> void {
@@ -107,76 +102,6 @@ auto stopDACNonBlocking(CDACStreamingManager::NotifyResult x) -> void {
     }
 }
 
-// ============================================================================
-// Platform-specific initialization
-// ============================================================================
-
-#ifdef RP_PLATFORM
-
-/**
- * Initialize calibration and configure hardware gain settings
- */
-auto initPlatformCalibration(const CStreamSettings& settings, int32_t* ch_off, double* ch_gain, uint8_t channels_max) -> bool {
-    // Initialize calibration
-    if (rp_CalibInit() != RP_HW_CALIB_OK) {
-        aprintf(stderr, "Error init calibration\n");
-        return false;
-    }
-
-    // Get gain settings for both channels
-    CStreamSettings::DACGain dac_gain[2] = {settings.getDACGain(1), settings.getDACGain(2)};
-
-    // Load calibration values for each channel
-    for (uint8_t ch = 0; ch < channels_max; ++ch) {
-        rp_gen_gain_calib_t mode = (dac_gain[ch].value == CStreamSettings::DACGain::X1) ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
-
-        if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch, mode, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
-            aprintf(stderr, "Error get calibration channel: %d\n", ch);
-        }
-    }
-
-    // Configure hardware gain outputs if supported
-    if (rp_HPGetIsGainDACx5OrDefault()) {
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, dac_gain[0].value == CStreamSettings::DACGain::X5 ? RP_GAIN_10V : RP_GAIN_2V);
-        rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, dac_gain[1].value == CStreamSettings::DACGain::X5 ? RP_GAIN_10V : RP_GAIN_2V);
-    }
-
-    return true;
-}
-
-/**
- * Create platform-specific generator with calibration
- */
-auto createPlatformGenerator(const std::vector<UioT>& uioList, uint32_t dac_speed, const int32_t* ch_off, const double* ch_gain) -> CGenerator::Ptr {
-    for (const UioT& uio : uioList) {
-        if (uio.nodeName == "rp_dac@40100000") {
-            auto gen = CGenerator::create(uio, true, true, dac_speed, ClientOpt::getDACRate());
-            gen->setCalibration(ch_off[0], ch_gain[0], ch_off[1], ch_gain[1]);
-
-            if (!gen->setDacHz(dac_speed)) {
-                printWithLog(LOG_ERR, stdout, "DAC rate cannot be set.\n");
-                return nullptr;
-            }
-            return gen;
-        }
-    }
-    return nullptr;
-}
-
-#else
-
-/**
- * Create non-platform generator with default calibration
- */
-auto createPlatformGenerator(const std::vector<UioT>&, uint32_t dac_speed, const int32_t* ch_off, const double* ch_gain) -> CGenerator::Ptr {
-    uio_lib::UioT uio_t;
-    auto gen = CGenerator::create(uio_t, true, true, dac_speed, ClientOpt::getDACRate());
-    gen->setCalibration(ch_off[0], ch_gain[0], ch_off[1], ch_gain[1]);
-    gen->setDacHz(dac_speed);
-    return gen;
-}
-
-#endif
 
 // ============================================================================
 // Streaming mode initialization
@@ -268,12 +193,11 @@ auto initializeMemory(const CStreamSettings& settings, dac_channels_t activeChan
  * Start DAC server with specified configuration
  */
 auto startDACServer(bool verbMode, dac_channels_t activeChannels) -> void {
-    if (!g_serverDACNetConfig) {
+    if (!g_serverDACNetConfig || !g_dac_hw) {
         return;
     }
 
     // Reset global state
-    g_gen = nullptr;
     g_dac_app = nullptr;
     g_dac_manger = nullptr;
     g_dac_verbMode = verbMode;
@@ -288,23 +212,13 @@ auto startDACServer(bool verbMode, dac_channels_t activeChannels) -> void {
         auto dac_speed = settings.getDACSpeed();
         auto ip_addr_host = "127.0.0.1";
 
-        // Initialize calibration data
-        int32_t ch_off[MAX_DAC_CHANNELS] = {0, 0};
-        double ch_gain[MAX_DAC_CHANNELS] = {1, 1};
-        std::vector<UioT> uioList = GetUioList();
-
-#ifdef RP_PLATFORM
-        auto channels_max = ClientOpt::getDACChannels();
-        if (!initPlatformCalibration(settings, ch_off, ch_gain, channels_max)) {
-            stopDACNonBlocking(CDACStreamingManager::NR_SETTINGS_ERROR);
-            return;
-        }
-#endif
-
-        // Create generator
-        g_gen = createPlatformGenerator(uioList, dac_speed, ch_off, ch_gain);
-        if (!g_gen) {
-            printWithLog(LOG_ERR, stderr, "[Streaming] Error init generator module\n");
+        // The rate, the calibration and the gain of the outputs
+        DACConfig dac;
+        dac.rate = dac_speed;
+        dac.gain5x = {settings.getDACGain(1).value == CStreamSettings::DACGain::X5, settings.getDACGain(2).value == CStreamSettings::DACGain::X5};
+        dac.bufferBytes = settings.getMemoryBlockSize();
+        if (!g_dac_hw->dacConfigure(dac)) {
+            printWithLog(LOG_ERR, stderr, "[Streaming] Can't configure the DAC (rate %u)\n", dac_speed);
             stopDACNonBlocking(CDACStreamingManager::NR_SETTINGS_ERROR);
             return;
         }
@@ -326,9 +240,8 @@ auto startDACServer(bool verbMode, dac_channels_t activeChannels) -> void {
         }
 
         // Create and start application
-        g_dac_app = std::make_shared<CDACStreamingApplication>(g_dac_manger, g_gen);
+        g_dac_app = std::make_shared<CDACStreamingApplication>(g_dac_manger, g_dac_hw);
         g_dac_app->setVerboseMode(g_dac_verbMode);
-        g_gen->setDataSize(settings.getMemoryBlockSize());
 
         // Started goes out before the playback: a short file can end at once, and the stop
         // (which also drops g_dac_manger) must not reach the client first

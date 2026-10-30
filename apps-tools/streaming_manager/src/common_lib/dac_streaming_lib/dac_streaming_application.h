@@ -6,7 +6,7 @@
 #include <thread>
 
 #include "dac_streaming_manager.h"
-#include "uio_lib/generator.h"
+#include "uio_lib/hardware.h"
 
 namespace dac_streaming_lib {
 
@@ -14,7 +14,7 @@ class CDACStreamingApplication {
    public:
     using Ptr = std::shared_ptr<CDACStreamingApplication>;
 
-    CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CGenerator::Ptr _gen);
+    CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CHardware::Ptr _hw);
     ~CDACStreamingApplication();
     auto run() -> void;
     auto runNonBlock() -> void;
@@ -27,7 +27,7 @@ class CDACStreamingApplication {
     void signalHandler(const std::error_code& _error, int _signalNumber);
 
     int m_PerformanceCounterPeriod = 10;
-    uio_lib::CGenerator::Ptr m_gen;
+    uio_lib::CHardware::Ptr m_hw;
     CDACStreamingManager::Ptr m_streamingManager;
     std::thread m_Thread;
     std::mutex mtx;

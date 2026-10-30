@@ -20,9 +20,11 @@
 #include "streaming_lib/streaming_file.h"
 #include "streaming_lib/streaming_fpga.h"
 #include "streaming_lib/streaming_net.h"
-#include "uio_lib/generator.h"
-#include "uio_lib/memory_manager.h"
+#include "board_lib/board.h"
+#include "uio_lib/hardware.h"
 #include "uio_lib/oscilloscope.h"
+#include "uio_lib/uio_parser.h"
+#include "uio_lib/memory_manager.h"
 
 // ============================================================================
 // Forward declarations
@@ -139,8 +141,7 @@ CBooleanParameter ss_gpio_data_pass("SS_GPIO_DATA_PASS", CBaseParameter::RW, fal
 // Global component pointers
 // ============================================================================
 
-uio_lib::COscilloscope::Ptr g_osc = nullptr;
-uio_lib::CGenerator::Ptr g_gen = nullptr;
+uio_lib::CHardware::Ptr g_hw = nullptr;
 
 streaming_lib::CStreamingFPGA::Ptr g_s_fpga = nullptr;
 streaming_lib::CStreamingNet::Ptr g_s_net = nullptr;
@@ -289,21 +290,13 @@ auto rp_app_init(void) -> int {
     try {
         // Detect master/slave mode
         try {
-            auto uioList = uio_lib::GetUioList();
-            for (auto& uio : uioList) {
-                if (uio.nodeName == "rp_oscilloscope@40000000") {
-                    WARNING("Check master/slave");
-                    auto osc = uio_lib::COscilloscope::create(uio, 1, true, getADCRate(), false, getADCBits(), getADCChannels());
-                    g_isMaster = osc->isMaster();
-
-                    if (getIsXStreaming() == false) {
-                        g_isMaster = uio_lib::BoardMode::MASTER;
-                    }
-
-                    WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : (g_isMaster == uio_lib::BoardMode::SLAVE ? "Slave" : "Unknown"));
-                    break;
-                }
+            // The FPGA blocks while the application runs; the daisy chain role is read from the scope
+            g_hw = uio_lib::CHardware::create(board_lib::createBoard());
+            if (!g_hw) {
+                FATAL("Can't open the FPGA blocks")
             }
+            g_isMaster = g_hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
+            WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
 
             // Initialize network config manager
             TRACE("ss_ip_addr %s", ss_ip_addr.Value().c_str());
@@ -370,6 +363,8 @@ auto rp_app_exit(void) -> int {
     g_serverNetConfig->stop();
     stopServer(ServerNetConfigManager::EStopReason::NORMAL);
     stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_STOP);
+    // the module stays loaded, the next start may find another bitstream
+    g_hw = nullptr;
     aprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
 }
@@ -719,7 +714,6 @@ bool startServer(bool testMode) {
         // Reset state
         g_s_fpga = nullptr;
         g_s_buffer = nullptr;
-        g_osc = nullptr;
         g_s_file = nullptr;
         g_s_net = nullptr;
 
@@ -736,106 +730,21 @@ bool startServer(bool testMode) {
         auto save_mode = settings.getADCType();
         auto save_capture_time = settings.getADCCaptureTime();
         auto use_calib = settings.getADCCalibration();
-        auto max_channels = getADCChannels();
+        if (!g_hw)
+            return false;
+        auto board = g_hw->info();
+        auto max_channels = board.adcChannels;
 
-        // Initialize calibration
-        if (rp_CalibInit() != RP_HW_CALIB_OK) {
-            FATAL("Error init calibration");
+        // where the scope writes while no buffer is free
+        memmanager->releaseMemory(uio_lib::MM_ADC_RESERVE_SKIP);
+        auto reserved = memmanager->reserveMemory(uio_lib::MM_ADC_RESERVE_SKIP, 1, 1);
+        if (reserved != 1) {
+            TRACE_SHORT("Reserved: %d", reserved);
+            ERROR_LOG("Can't reserve memory via memory manager");
+            stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
+            return false;
         }
-
-        auto uioList = uio_lib::GetUioList();
-        int32_t ch_off[4] = {0, 0, 0, 0};
-        double ch_gain[4] = {1, 1, 1, 1};
-        bool isNewCalib = false;
-        bool filterBypass = !rp_HPGetFastADCIsFilterPresentOrDefault();
-        uint32_t aa_ch[4] = {0, 0, 0, 0};
-        uint32_t bb_ch[4] = {0, 0, 0, 0};
-        uint32_t kk_ch[4] = {0xFFFFFF, 0xFFFFFF, 0xFFFFFF, 0xFFFFFF};
-        uint32_t pp_ch[4] = {0, 0, 0, 0};
-
-        // Load calibration data
-        if (use_calib) {
-            uint8_t cver = 0;
-            if (rp_GetCalibrationVersion(&cver) == RP_HW_CALIB_OK) {
-                isNewCalib = cver >= RP_HW_PACK_ID_V6;
-            } else {
-                ERROR_LOG("Error get calibration version");
-            }
-
-            for (uint8_t ch = 0; ch < max_channels; ++ch) {
-                rp_acq_ac_dc_mode_calib_t mode = (settings.getADCAC_DC(ch + 1).value == CStreamSettings::AC_DC::DC) ? RP_DC_CALIB : RP_AC_CALIB;
-                bool isAttenuator1_1 = (settings.getADCAttenuator(ch + 1).value == CStreamSettings::Attenuator::A_1_1);
-
-                if (isAttenuator1_1) {
-                    if (rp_CalibGetFastADCCalibValue((rp_channel_calib_t)ch, mode, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
-                        ERROR_LOG("Error get calibration channel: %d", ch);
-                    }
-                    if (!filterBypass) {
-                        channel_filter_t f;
-                        if (rp_CalibGetFastADCFilter((rp_channel_calib_t)ch, &f) == RP_HW_CALIB_OK) {
-                            aa_ch[ch] = f.aa;
-                            bb_ch[ch] = f.bb;
-                            kk_ch[ch] = f.kk;
-                            pp_ch[ch] = f.pp;
-                        } else {
-                            ERROR_LOG("Error get filter value: %d", ch);
-                        }
-                    }
-                } else {
-                    if (rp_CalibGetFastADCCalibValue_1_20((rp_channel_calib_t)ch, mode, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
-                        ERROR_LOG("Error get calibration channel: %d", ch);
-                    }
-                    if (!filterBypass) {
-                        channel_filter_t f;
-                        if (rp_CalibGetFastADCFilter_1_20((rp_channel_calib_t)ch, &f) == RP_HW_CALIB_OK) {
-                            aa_ch[ch] = f.aa;
-                            bb_ch[ch] = f.bb;
-                            kk_ch[ch] = f.kk;
-                            pp_ch[ch] = f.pp;
-                        } else {
-                            ERROR_LOG("Error get filter value: %d", ch);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Configure hardware
-        if (rp_HPGetIsAttenuatorControllerPresentOrDefault()) {
-            rp_max7311::rp_setAttenuator(RP_MAX7311_IN1, settings.getADCAttenuator(1).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
-            rp_max7311::rp_setAttenuator(RP_MAX7311_IN2, settings.getADCAttenuator(2).value == CStreamSettings::Attenuator::A_1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
-        }
-
-        if (rp_HPGetFastADCIsAC_DCOrDefault()) {
-            rp_max7311::rp_setAC_DC(RP_MAX7311_IN1, settings.getADCAC_DC(1).value == CStreamSettings::AC_DC::DC ? RP_DC_MODE : RP_AC_MODE);
-            rp_max7311::rp_setAC_DC(RP_MAX7311_IN2, settings.getADCAC_DC(2).value == CStreamSettings::AC_DC::DC ? RP_DC_MODE : RP_AC_MODE);
-        }
-
-        // Create oscilloscope
-        for (auto& uio : uioList) {
-            if (uio.nodeName == "rp_oscilloscope@40000000") {
-                memmanager->releaseMemory(uio_lib::MM_ADC_RESERVE_SKIP);
-                auto reserved = memmanager->reserveMemory(uio_lib::MM_ADC_RESERVE_SKIP, 1, 1);
-                if (reserved != 1) {
-                    TRACE_SHORT("Reserved: %d", reserved);
-                    ERROR_LOG("Can't reserve memory via memory manager");
-                    stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
-                    return false;
-                }
-                auto blocks = memmanager->getRegions(uio_lib::MM_ADC_RESERVE_SKIP);
-
-                TRACE("COscilloscope::Create rate %d", rate);
-                g_osc = uio_lib::COscilloscope::create(uio, rate, g_isMaster != uio_lib::BoardMode::SLAVE, getADCRate(), !filterBypass, getADCBits(), max_channels);
-                for (uint8_t ch = 0; ch < max_channels; ++ch) {
-                    g_osc->setCalibration(ch, ch_off[ch], ch_gain[ch], isNewCalib);
-                    g_osc->setFilterCalibration(ch, aa_ch[ch], bb_ch[ch], kk_ch[ch], pp_ch[ch]);
-                }
-                g_osc->setFilterBypass(filterBypass);
-                g_osc->set8BitMode(resolution.value == CStreamSettings::Resolution::BIT_8);
-                g_osc->setSkipDataAddress(blocks[0]);
-                break;
-            }
-        }
+        g_hw->adcSetSkipBuffer(memmanager->getRegions(uio_lib::MM_ADC_RESERVE_SKIP)[0].start);
 
         // Create buffer cache
         g_s_buffer = DataLib::CBuffersCached::create();
@@ -875,7 +784,6 @@ bool startServer(bool testMode) {
         }
 
         // Create FPGA streaming
-        g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_osc, save_capture_time);
         uint8_t bits = (resolution.value == CStreamSettings::Resolution::BIT_8 ? 8 : 16);
         TRACE_SHORT("Set channels resolution %d", bits);
 
@@ -924,12 +832,29 @@ bool startServer(bool testMode) {
 
         // Generate buffers
         g_s_buffer->generateBuffers(memmanager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader(), testMode);
-        g_s_buffer->setADCBits(getADCBits());
-        g_s_buffer->setOSCRate(getADCRate() / rate);
+        g_s_buffer->setADCBits(board.adcBits);
+        g_s_buffer->setOSCRate(board.adcRate / rate);
         if (use_file.value == CStreamSettings::PassMode::NET) {
             g_s_buffer->initHeadersADC();
         }
-        g_osc->setDataSize(g_s_buffer->getDataSize());
+
+        uio_lib::ADCConfig adc;
+        adc.decimation = rate;
+        adc.eightBit = bits == 8;
+        adc.calibration = use_calib;
+        adc.bufferBytes = g_s_buffer->getDataSize();
+        for (uint8_t ch = 0; ch < max_channels && ch < 4; ch++) {
+            adc.channels[ch] = settings.getADCChannels(ch + 1).value == CStreamSettings::State::ON;
+            adc.att1_20[ch] = settings.getADCAttenuator(ch + 1).value == CStreamSettings::Attenuator::A_1_20;
+            adc.dc[ch] = settings.getADCAC_DC(ch + 1).value == CStreamSettings::AC_DC::DC;
+        }
+        if (!g_hw->adcConfigure(adc)) {
+            ERROR_LOG("Can't configure the ADC");
+            stopNonBlocking(ServerNetConfigManager::EStopReason::CONFIG_ERROR);
+            return false;
+        }
+
+        g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_hw, save_capture_time);
         g_s_fpga->setTestMode(testMode);
 
         // Setup FPGA callbacks
@@ -1045,6 +970,10 @@ void stopServer(ServerNetConfigManager::EStopReason x) {
                 g_serverNetConfig->sendServerNoChannelsStopped();
                 ss_status.SendValue(6);
                 break;
+            case ServerNetConfigManager::EStopReason::CONFIG_ERROR:
+                g_serverNetConfig->sendServerConfigErrorStopped();
+                ss_status.SendValue(0);
+                break;
             default:
                 throw std::runtime_error("Unknown state");
         }
@@ -1078,9 +1007,10 @@ auto startDACServer(__attribute__((unused)) bool testMode, dac_channels_t active
     if (!g_serverNetConfig)
         return false;
 
-    g_gen = nullptr;
     g_dac_app = nullptr;
     g_dac_manger = nullptr;
+    if (!g_hw)
+        return false;
 
     try {
         std::lock_guard guard(g_dac_mutex);
@@ -1090,46 +1020,13 @@ auto startDACServer(__attribute__((unused)) bool testMode, dac_channels_t active
         auto dac_speed = settings.getDACSpeed();
         auto ip_addr_host = "127.0.0.1";
 
-        if (rp_CalibInit() != RP_HW_CALIB_OK) {
-            ERROR_LOG("Error init calibration");
-        }
-
-        auto max_channels = getDACChannels();
-        auto uioList = uio_lib::GetUioList();
-        int32_t ch_off[2] = {0, 0};
-        double ch_gain[2] = {1, 1};
-
-        // Load DAC calibration
-        for (uint8_t ch = 0; ch < max_channels && ch < 2; ++ch) {
-            rp_gen_gain_calib_t mode = settings.getDACGain(ch + 1).value == CStreamSettings::DACGain::X1 ? RP_GAIN_CALIB_1X : RP_GAIN_CALIB_5X;
-            if (rp_CalibGetFastDACCalibValue((rp_channel_calib_t)ch, mode, &ch_gain[ch], &ch_off[ch]) != RP_HW_CALIB_OK) {
-                ERROR_LOG("Error get calibration channel: %d", ch);
-            }
-        }
-
-        // Configure hardware gain
-        if (rp_HPGetIsGainDACx5OrDefault()) {
-            rp_max7311::rp_setGainOut(RP_MAX7311_OUT1, settings.getDACGain(1).value == CStreamSettings::DACGain::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-            rp_max7311::rp_setGainOut(RP_MAX7311_OUT2, settings.getDACGain(2).value == CStreamSettings::DACGain::X1 ? RP_GAIN_2V : RP_GAIN_10V);
-        }
-
-        // Create generator
-        for (auto uio : uioList) {
-            if (uio.nodeName == "rp_dac@40100000") {
-                g_gen = uio_lib::CGenerator::create(uio, true, true, dac_speed, getDACRate());
-                g_gen->setCalibration(ch_off[0], ch_gain[0], ch_off[1], ch_gain[1]);
-                if (!g_gen->setDacHz(dac_speed)) {
-                    ERROR_LOG("DAC rate cannot be set.");
-                    stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_SETTINGS_ERROR);
-                    return false;
-                }
-                break;
-            }
-        }
-
-        if (!g_gen) {
-            ERROR_LOG("Error init generator module");
-            stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR);
+        // The rate, the calibration and the gain of the outputs
+        uio_lib::DACConfig dac;
+        dac.rate = dac_speed;
+        dac.gain5x = {settings.getDACGain(1).value == CStreamSettings::DACGain::X5, settings.getDACGain(2).value == CStreamSettings::DACGain::X5};
+        if (!g_hw->dacConfigure(dac)) {
+            ERROR_LOG("DAC rate cannot be set.");
+            stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_SETTINGS_ERROR);
             return false;
         }
 
@@ -1199,7 +1096,7 @@ auto startDACServer(__attribute__((unused)) bool testMode, dac_channels_t active
         WARNING("Reserved memory blocks: %d size: %d", reservedBlocks, reservedBlocks * memmanager->getMemoryBlockSize());
 
         // Create and start DAC application
-        g_dac_app = std::make_shared<dac_streaming_lib::CDACStreamingApplication>(g_dac_manger, g_gen);
+        g_dac_app = std::make_shared<dac_streaming_lib::CDACStreamingApplication>(g_dac_manger, g_hw);
         g_dac_manger->getBufferManager()->generateBuffersEmptyDAC(activeChannels, memmanager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
 
         // Started goes out before the playback: a short file can end at once, and the stop

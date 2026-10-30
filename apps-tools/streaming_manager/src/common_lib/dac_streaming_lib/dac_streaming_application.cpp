@@ -3,8 +3,8 @@
 
 using namespace dac_streaming_lib;
 
-CDACStreamingApplication::CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CGenerator::Ptr _gen)
-    : m_gen(_gen), m_streamingManager(_streamingManager), m_Thread(), mtx(), m_ReadyToPass(0), m_isRun(false), m_isRunNonBloking(false), m_verbMode(false) {}
+CDACStreamingApplication::CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CHardware::Ptr _hw)
+    : m_hw(_hw), m_streamingManager(_streamingManager), m_Thread(), mtx(), m_ReadyToPass(0), m_isRun(false), m_isRunNonBloking(false), m_verbMode(false) {}
 
 CDACStreamingApplication::~CDACStreamingApplication() {
     stop();
@@ -44,9 +44,9 @@ auto CDACStreamingApplication::stop() -> bool {
     if (m_streamingManager)
         m_streamingManager->stop();
     m_streamingManager = nullptr;
-    if (m_gen)
-        m_gen->stop();
-    m_gen = nullptr;
+    if (m_hw)
+        m_hw->dacStop();
+    m_hw = nullptr;
     return true;
 }
 
@@ -60,8 +60,7 @@ void CDACStreamingApplication::genWorker() {
     DataLib::CDataBuffersPackDMA::Ptr buffer = nullptr;
     bool onePackMode = false;
     bool notRun = true;
-    m_gen->stop();
-    m_gen->prepare();
+    m_hw->dacPrepare();
     m_GenThreadRun = true;
     try {
         while (m_GenThreadRun) {
@@ -70,7 +69,7 @@ void CDACStreamingApplication::genWorker() {
             if (!onePackMode && m_streamingManager->isLocalMode() && !m_streamingManager->isRunned() && m_streamingManager->isEmptyBuffer()) {
                 // a file from the SD card has ended: every block went to the FPGA, let it play them
                 // (checked before getBuffer(), which would wait a second for a block)
-                m_gen->waitPlayed(1000);
+                m_hw->dacWaitPlayed(1000);
                 break;
             }
             buffer = (!onePackMode || buffer == nullptr) ? m_streamingManager->getBuffer() : buffer;
@@ -114,21 +113,19 @@ void CDACStreamingApplication::genWorker() {
 
                 if (onePackMode && repeatInOpenPackMode == 0 && one_pack_inf_mode == false) {
                     // the buffers given last are still in the FPGA
-                    m_gen->waitPlayed(1000);
+                    m_hw->dacWaitPlayed(1000);
                     break;
                 }
 
-                if (onePackMode && m_gen->hasLoopMode()) {
+                if (onePackMode && m_hw->features().dacLoop) {
                     // The DMA repeats the buffer itself: given once, nothing to do until the end
-                    m_gen->startLoop(ch1Address, ch2Address, chSize, one_pack_inf_mode ? 0 : repeatInOpenPackMode);
-                    m_gen->setDataBits(ch18Bit, ch28Bit);
-                    m_gen->start(ch1Address, ch2Address);
-                    while (m_GenThreadRun && !m_gen->isLoopDone()) {
+                    m_hw->dacStartLoop(ch1Address, ch2Address, chSize, one_pack_inf_mode ? 0 : repeatInOpenPackMode, {ch18Bit, ch28Bit});
+                    while (m_GenThreadRun && !m_hw->dacLoopDone()) {
                         std::this_thread::sleep_for(std::chrono::milliseconds(1));
                         if (m_verbMode) {
                             auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
                             if (now - timeBegin >= 5000) {
-                                aprintf(stdout, "[DAC] Repeats: %u\n", m_gen->getLoopPlayed());
+                                aprintf(stdout, "[DAC] Repeats: %u\n", m_hw->dacLoopPlayed());
                                 timeBegin = now;
                             }
                         }
@@ -139,10 +136,9 @@ void CDACStreamingApplication::genWorker() {
                 bool ret = false;
                 do {
                     // We are waiting for the free conveyor to be freed up in FPGA
-                    ret = m_gen->setDataAddress(indexForWrite, ch1Address, ch2Address, chSize);
+                    ret = m_hw->dacSetBuffer(indexForWrite, ch1Address, ch2Address, chSize);
                     if (notRun) {
-                        m_gen->setDataBits(ch18Bit, ch28Bit);
-                        m_gen->start(ch1Address, ch2Address);
+                        m_hw->dacStart({ch1Address != 0, ch2Address != 0}, {ch18Bit, ch28Bit});
                         notRun = false;
                     }
                     if (!m_GenThreadRun)
@@ -174,7 +170,7 @@ void CDACStreamingApplication::genWorker() {
     } catch (std::exception& e) {
         ERROR_LOG("%s", e.what())
     }
-    m_gen->stop();
+    m_hw->dacStop();
     if (!m_streamingManager->isRunned())  // Send notification that generation is complete at application level
         m_streamingManager->notifyStop(CDACStreamingManager::NR_ENDED);
     m_isRun = false;
