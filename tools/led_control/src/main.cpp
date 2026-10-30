@@ -52,11 +52,14 @@ int get_state(bool* state, const char* str) {
 void usage() {
     const char* format =
         "\n"
-        "Usage: %s -y[=State] | -r[=State] | -e[=State]   \n"
+        "Usage: %s -y[=State] | -r[=State] [-f] | -e[=State]   \n"
         "\n"
         "   -y    9 Yellow LED. Responsible for the status of reading the memory card.\n"
         "   -r    Red LED, which is responsible for the heartbeat.\n"
+        "         On E3 boards with the extension module connected, turning it off reboots the board,\n"
+        "         so it is refused unless -f is given.\n"
         "   -e    LEDs on ethernet connector.\n"
+        "   -f    Force turning off the red LED on E3 boards with the extension module connected.\n"
         "\n"
         "Optional parameter:\n"
         "    State = [Off | On]  Turns LEDs on or off"
@@ -102,6 +105,7 @@ int main(int argc, char* argv[]) {
     bool r_flag = false;
     bool e_flag = false;
     bool z_flag = false;
+    bool f_flag = false;
     bool set_y_state = false;
     bool y_state = false;
     bool set_r_state = false;
@@ -114,13 +118,16 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    const char* optstring = "y::r::e::z";
+    const char* optstring = "y::r::e::zf";
 
     int ch = -1;
     while ((ch = getopt(argc, argv, optstring)) != -1) {
         switch (ch) {
             case 'z':
                 z_flag = true;
+                break;
+            case 'f':
+                f_flag = true;
                 break;
             case 'y':
                 y_flag = true;
@@ -175,10 +182,14 @@ int main(int argc, char* argv[]) {
 
     if (r_flag) {
         if (set_r_state) {
-            if (!r_state && rp_HPGetIsE3PresentOrDefault()) {
-                if (checkExtensionModuleConnection(true)) {
-                    fprintf(stderr, "[WARNING] Turning off this indicator will cause the board to reboot.\n");
+            if (!r_state && rp_HPGetIsE3PresentOrDefault() && checkExtensionModuleConnection(true)) {
+                if (!f_flag) {
+                    fprintf(stderr,
+                            "[Error] The extension module resets the board when the heartbeat stops. "
+                            "The red LED stays on. Use -f to turn it off anyway.\n");
+                    return -1;
                 }
+                fprintf(stderr, "[WARNING] Turning off the red LED, the board will reboot.\n");
             }
             if (rp_SetLEDHeartBeatState(r_state) != RP_HW_OK) {
                 fprintf(stderr, "[Error] Can't set red led state\n");

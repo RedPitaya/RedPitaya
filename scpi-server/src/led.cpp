@@ -8,9 +8,13 @@
  * (c) Red Pitaya  http://www.redpitaya.com
  */
 
+#include <fcntl.h>
+#include <linux/i2c-dev.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "led.h"
@@ -18,6 +22,21 @@
 #include "scpi/parser.h"
 
 const scpi_choice_def_t scpi_LED_state[] = {{"OFF", 0}, {"ON", 1}, SCPI_CHOICE_LIST_END};
+
+#define E3_EXPANDER_ADDR 0x10
+
+// The E3 extension module resets the board when the heartbeat line stops toggling.
+static bool isE3ModuleConnected() {
+    if (!rp_HPGetIsE3PresentOrDefault())
+        return false;
+    int fd = open("/dev/i2c-0", O_RDWR);
+    if (fd < 0)
+        return false;
+    char buf;
+    bool connected = ioctl(fd, I2C_SLAVE_FORCE, E3_EXPANDER_ADDR) >= 0 && read(fd, &buf, 1) >= 0;
+    close(fd);
+    return connected;
+}
 
 scpi_result_t RP_LED_MMC(scpi_t* context) {
     int32_t value = 0;
@@ -60,6 +79,10 @@ scpi_result_t RP_LED_HB(scpi_t* context) {
     int32_t value = 0;
     if (!SCPI_ParamChoice(context, scpi_LED_state, &value, true)) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
+        return SCPI_RES_ERR;
+    }
+    if (!value && isE3ModuleConnected()) {
+        SCPI_LOG_ERR(SCPI_ERROR_EXECUTION_ERROR, "Turning off the heartbeat LED reboots the board with the E3 extension module connected.")
         return SCPI_RES_ERR;
     }
     auto result = rp_SetLEDHeartBeatState((bool)value);

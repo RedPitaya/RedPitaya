@@ -321,6 +321,9 @@ int rp_GetLEDHeartBeatState(bool* _out_value);
 
 /**
 * The function enables or disables the red LED indicator
+* On E3 boards with the extension module connected, the module watches the heartbeat
+* and resets the board when it stops, so disabling the LED reboots the board.
+* The function does not check for this, the caller must.
 * @param enable Flag enabling LED.
 * @return If the function is successful, the return value is RP_OK.
 * If the function is unsuccessful, the return value is any of RP_HW_E* values that indicate an error.
