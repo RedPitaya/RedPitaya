@@ -4,8 +4,10 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include <chrono>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "logger_lib/file_logger.h"
 
@@ -262,8 +264,12 @@ auto CGenerator::stop() -> void {
     if (m_Map != nullptr) {
         // Stop EVENT
         setRegister(m_Map, &(m_Map->event_status), 0x4);
-        // Stop DMA
+        // Stop DMA. The normal mode repeats until a reset; a reset is safe while reading only on
+        // an FPGA with that mode, so the streaming mode keeps the old stop.
+        if (m_loopMode)
+            setRegister(m_Map, &(m_Map->dma_control), 0x0202, "Reset DMA");
         setRegister(m_Map, &(m_Map->dma_control), 0);
+        m_loopMode = false;
         m_running = false;
     } else {
         FATAL("Memory map not initialized")
@@ -309,6 +315,54 @@ auto CGenerator::isRunning() -> bool {
     return m_running;
 }
 
+auto CGenerator::hasLoopMode() -> bool {
+    return m_Map != nullptr && (m_Map->features & 0x1);
+}
+
+auto CGenerator::startLoop(uint32_t ch1, uint32_t ch2, uint32_t size, uint32_t count) -> void {
+    const std::lock_guard lock(m_waitLock);
+    // Normal mode with a reset, then buffer 1 and the repeats
+    setRegister(m_Map, &(m_Map->dma_control), 0x1212, "Normal DMA, reset");
+    if (ch1)
+        setRegister(m_Map, &(m_Map->chA_dma_addr1), ch1, "Address chA buff 1");
+    if (ch2)
+        setRegister(m_Map, &(m_Map->chB_dma_addr1), ch2, "Address chB buff 1");
+    setRegister(m_Map, &(m_Map->dma_size), size, "Buffer size");
+    setRegister(m_Map, &(m_Map->loop_count), count, "Repeats");
+    m_loopMode = true;
+    m_loopCh[0] = ch1 != 0;
+    m_loopCh[1] = ch2 != 0;
+}
+
+auto CGenerator::isLoopDone() -> bool {
+    uint32_t status = m_Map->ch_dma_status;
+    GenDMAStatus_t* sts = (GenDMAStatus_t*)&status;
+    return (!m_loopCh[0] || sts->loop_done_chA) && (!m_loopCh[1] || sts->loop_done_chB);
+}
+
+auto CGenerator::getLoopPlayed() -> uint32_t {
+    return m_loopCh[0] ? m_Map->loop_played_chA : m_Map->loop_played_chB;
+}
+
+auto CGenerator::waitPlayed(uint32_t timeoutMs) -> bool {
+    // Both buffers free: the DMA has read the last one given and waits for the next
+    auto end = std::chrono::steady_clock::now() + std::chrono::milliseconds(timeoutMs);
+    while (std::chrono::steady_clock::now() < end) {
+        uint32_t status = m_Map->ch_dma_status;
+        GenDMAStatus_t* sts = (GenDMAStatus_t*)&status;
+        bool freeA = sts->read_done_buff1_chA && sts->read_done_buff2_chA;
+        bool freeB = sts->read_done_buff1_chB && sts->read_done_buff2_chB;
+        if (freeA && freeB) {
+            // and the FIFO behind it: 256 words of 4 samples (8 of 8 bit) at the DAC rate
+            uint32_t hz = m_dacSpeedHz ? m_dacSpeedHz : 1;
+            std::this_thread::sleep_for(std::chrono::microseconds(2048ull * 1000000 / hz + 100));
+            return true;
+        }
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+    return false;
+}
+
 auto CGenerator::printReg() -> void {
     uint32_t* config = (uint32_t*)&(m_Map->config);
     fprintf(stderr, "printReg\n");
@@ -330,4 +384,8 @@ auto CGenerator::printReg() -> void {
     fprintf(stderr, "0x40 chB_dma_addr1 = 0x%X\n", m_Map->chB_dma_addr1);
     fprintf(stderr, "0x44 chB_dma_addr2 = 0x%X\n", m_Map->chB_dma_addr2);
     fprintf(stderr, "0x68 trig_mode = 0x%X\n", m_Map->trig_mode);
+    fprintf(stderr, "0x90 features = 0x%X\n", m_Map->features);
+    fprintf(stderr, "0x94 loop_count = 0x%X\n", m_Map->loop_count);
+    fprintf(stderr, "0x98 loop_played_chA = 0x%X\n", m_Map->loop_played_chA);
+    fprintf(stderr, "0x9C loop_played_chB = 0x%X\n", m_Map->loop_played_chB);
 }

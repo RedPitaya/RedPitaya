@@ -67,6 +67,12 @@ void CDACStreamingApplication::genWorker() {
         while (m_GenThreadRun) {
             int64_t repeatInOpenPackMode = 0;
             bool one_pack_inf_mode = false;
+            if (!onePackMode && m_streamingManager->isLocalMode() && !m_streamingManager->isRunned() && m_streamingManager->isEmptyBuffer()) {
+                // a file from the SD card has ended: every block went to the FPGA, let it play them
+                // (checked before getBuffer(), which would wait a second for a block)
+                m_gen->waitPlayed(1000);
+                break;
+            }
             buffer = (!onePackMode || buffer == nullptr) ? m_streamingManager->getBuffer() : buffer;
             if (buffer) {
                 auto ch1 = buffer->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
@@ -107,6 +113,26 @@ void CDACStreamingApplication::genWorker() {
                 }
 
                 if (onePackMode && repeatInOpenPackMode == 0 && one_pack_inf_mode == false) {
+                    // the buffers given last are still in the FPGA
+                    m_gen->waitPlayed(1000);
+                    break;
+                }
+
+                if (onePackMode && m_gen->hasLoopMode()) {
+                    // The DMA repeats the buffer itself: given once, nothing to do until the end
+                    m_gen->startLoop(ch1Address, ch2Address, chSize, one_pack_inf_mode ? 0 : repeatInOpenPackMode);
+                    m_gen->setDataBits(ch18Bit, ch28Bit);
+                    m_gen->start(ch1Address, ch2Address);
+                    while (m_GenThreadRun && !m_gen->isLoopDone()) {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                        if (m_verbMode) {
+                            auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+                            if (now - timeBegin >= 5000) {
+                                aprintf(stdout, "[DAC] Repeats: %u\n", m_gen->getLoopPlayed());
+                                timeBegin = now;
+                            }
+                        }
+                    }
                     break;
                 }
                 // buffer->debugPackDAC();

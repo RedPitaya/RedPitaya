@@ -157,6 +157,7 @@ auto CDACStreamingManager::run() -> void {
     } else {
         std::lock_guard lock(m_mtx);
         m_isRun = true;
+        m_isThreadRun = true;  // before the thread: the application takes a stopped reader for the end of the file
         m_Thread = std::thread(&CDACStreamingManager::threadFunc, this);
     }
 }

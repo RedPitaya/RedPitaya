@@ -329,14 +329,15 @@ auto startDACServer(bool verbMode, dac_channels_t activeChannels) -> void {
         g_dac_app = std::make_shared<CDACStreamingApplication>(g_dac_manger, g_gen);
         g_dac_app->setVerboseMode(g_dac_verbMode);
         g_gen->setDataSize(settings.getMemoryBlockSize());
-        g_dac_app->runNonBlock();
 
-        // Send appropriate started notification
+        // Started goes out before the playback: a short file can end at once, and the stop
+        // (which also drops g_dac_manger) must not reach the client first
         if (g_dac_manger->isLocalMode()) {
             g_serverDACNetConfig->sendDACServerStartedSD();
         } else {
             g_serverDACNetConfig->sendDACServerStarted();
         }
+        g_dac_app->runNonBlock();
 
         if (g_dac_verbMode) {
             printWithLog(LOG_ERR, stderr, "[Streaming] Start dac server\n");

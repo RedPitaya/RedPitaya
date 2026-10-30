@@ -1201,13 +1201,15 @@ auto startDACServer(__attribute__((unused)) bool testMode, dac_channels_t active
         // Create and start DAC application
         g_dac_app = std::make_shared<dac_streaming_lib::CDACStreamingApplication>(g_dac_manger, g_gen);
         g_dac_manger->getBufferManager()->generateBuffersEmptyDAC(activeChannels, memmanager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
-        g_dac_app->runNonBlock();
 
+        // Started goes out before the playback: a short file can end at once, and the stop
+        // (which also drops g_dac_manger) must not reach the client first
         if (g_dac_manger->isLocalMode()) {
             g_serverNetConfig->sendDACServerStartedSD();
         } else {
             g_serverNetConfig->sendDACServerStarted();
         }
+        g_dac_app->runNonBlock();
 
         ss_dac_status.SendValue(1);
         ss_dac_data_pass.SendValue(1);

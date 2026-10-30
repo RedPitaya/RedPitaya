@@ -1,6 +1,7 @@
 #ifndef UIO_LIB_GENERATOR_H
 #define UIO_LIB_GENERATOR_H
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -38,7 +39,8 @@ typedef struct GenDMAStatus {
     uint32_t read_done_buff1_chA : 1;    //  Buffer 1 may be written to
 
     uint32_t read_done_buff2_chA : 1;  //  Buffer 2 may be written to
-    uint32_t : 7;
+    uint32_t loop_done_chA : 1;        //  Normal mode: the last repeat has been put out
+    uint32_t : 6;
 
     uint32_t wait_FIFO_buff1_chB : 1;  //  Wait for receive FIFO to empty out buffer 1
     uint32_t wait_Fill_buff1_chB : 1;  //  Wait for buffer 1 to fill up
@@ -51,7 +53,8 @@ typedef struct GenDMAStatus {
     uint32_t read_done_buff1_chB : 1;    //  Buffer 1 may be written to
 
     uint32_t read_done_buff2_chB : 1;  //  Buffer 2 may be written to
-    uint32_t : 7;
+    uint32_t loop_done_chB : 1;        //  Normal mode: the last repeat has been put out
+    uint32_t : 6;
 } GenDMAStatus_t;
 
 struct GeneratorMapT {
@@ -87,7 +90,14 @@ struct GeneratorMapT {
     uint32_t diag_reg2;  // 114  - offset 0x74
     uint32_t diag_reg3;  // 118  - offset 0x78
     uint32_t diag_reg4;  // 122  - offset 0x7C
+    uint32_t reserv2[4];        // 128  - offset 0x80
+    uint32_t features;          // 144  - offset 0x90: bit 0 normal mode (buffer 1 repeated by the DMA)
+    uint32_t loop_count;        // 148  - offset 0x94: repeats in the normal mode, 0 - until reset
+    uint32_t loop_played_chA;   // 152  - offset 0x98: repeats read since the start
+    uint32_t loop_played_chB;   // 156  - offset 0x9C
 };
+
+static_assert(offsetof(GeneratorMapT, features) == 0x90, "DAC register map");
 
 class CGenerator {
    public:
@@ -110,6 +120,16 @@ class CGenerator {
     auto start(bool enableCh1, bool enableCh2) -> void;
     auto stop() -> void;
     auto printReg() -> void;
+
+    // Normal mode: the DMA repeats buffer 1 itself, count times or (0) until stop(); start()
+    // follows. Only when hasLoopMode(), an older FPGA has no such mode.
+    auto hasLoopMode() -> bool;
+    auto startLoop(uint32_t ch1, uint32_t ch2, uint32_t size, uint32_t count) -> void;
+    // The last of the count repeats has been put out
+    auto isLoopDone() -> bool;
+    auto getLoopPlayed() -> uint32_t;
+    // Streaming mode: waits until the buffers given to the DMA have been played, up to timeoutMs
+    auto waitPlayed(uint32_t timeoutMs) -> bool;
 
     // Trigger mode per channel: the channel fills its FIFO, arms and starts on the
     // next trigger edge. The setters apply on the next prepare() and fail while running.
@@ -148,6 +168,8 @@ class CGenerator {
     uint32_t m_dacSpeedHz;
     bool m_is8Bit[2];
     bool m_running;
+    bool m_loopMode = false;
+    bool m_loopCh[2] = {false, false};
     bool m_trigMode[2];
     uint32_t m_trigMask;
     uint32_t m_eventSource;

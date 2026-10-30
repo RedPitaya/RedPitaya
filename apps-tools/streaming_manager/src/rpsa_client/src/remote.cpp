@@ -367,8 +367,25 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
     return true;
 }
 
+// The end of a file played from the SD card can come at any time after the start: the host leaves
+// the lists, so a start-stop does not wait for the timeout and sends it no stop
+auto connectDACFileEnd(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>& masterHosts, std::list<std::string>& slaveHosts) -> void {
+    auto ended = [&masterHosts, &slaveHosts](std::string host, const char* what) {
+        const std::lock_guard lock(g_rmutex);
+        if (g_roption.verbous)
+            aprintf(stdout, "%s DAC streaming stopped: %s %s [OK]\n", getTS(": ").c_str(), host.c_str(), what);
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+    };
+    cl->serverDacStoppedSDDoneNofiy.connect([ended](std::string host) { ended(host, "SD done"); });
+    cl->serverDacStoppedSDBrokenNofiy.connect([ended](std::string host) { ended(host, "SD File broken"); });
+    cl->serverDacStoppedSDEmptyNofiy.connect([ended](std::string host) { ended(host, "SD File empty"); });
+    cl->serverDacStoppedSDMissingNofiy.connect([ended](std::string host) { ended(host, "SD File missing"); });
+}
+
 auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>& masterHosts, std::list<std::string>& slaveHosts,
                        std::map<std::string, dac_channels_t>* activeChannels, std::map<std::string, StateRunnedHosts>* runned_hosts) -> bool {
+    connectDACFileEnd(cl, masterHosts, slaveHosts);
     std::atomic<int> rstart_counter;
 
     cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, std::error_code err) {
@@ -437,7 +454,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
 
     rstart_counter = slaveHosts.size();
 
-    for (auto& host : slaveHosts) {
+    for (auto host : std::list<std::string>(slaveHosts)) {
         dac_channels_t ac;
         if (activeChannels != nullptr) {
             if (activeChannels->count(host)) {
@@ -459,7 +476,8 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
     }
 
     rstart_counter = masterHosts.size();
-    for (auto& host : masterHosts) {
+    // a copy: a host leaves the list when its file ends
+    for (auto host : std::list<std::string>(masterHosts)) {
         dac_channels_t ac;
         if (activeChannels != nullptr) {
             if (activeChannels->count(host)) {
@@ -688,6 +706,7 @@ auto startStopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list
         return false;
     }
 
+    connectDACFileEnd(cl, masterHosts, slaveHosts);
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
     auto curTime = beginTime;
     g_roption.timeout = g_roption.timeout == 0 ? 1000 : g_roption.timeout;
@@ -697,6 +716,7 @@ auto startStopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list
             break;
         curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
     }
+    cl->removeHadlers();
 
     if (!stopDACStreaming(cl, masterHosts, slaveHosts, runned_hosts)) {
         return false;

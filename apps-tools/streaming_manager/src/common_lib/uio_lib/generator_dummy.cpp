@@ -82,3 +82,21 @@ auto CGenerator::softwareTrigger() -> void {}
 auto CGenerator::isRunning() -> bool {
     return false;
 }
+
+auto CGenerator::hasLoopMode() -> bool {
+    return false;
+}
+
+auto CGenerator::startLoop(uint32_t, uint32_t, uint32_t, uint32_t) -> void {}
+
+auto CGenerator::isLoopDone() -> bool {
+    return true;
+}
+
+auto CGenerator::getLoopPlayed() -> uint32_t {
+    return 0;
+}
+
+auto CGenerator::waitPlayed(uint32_t) -> bool {
+    return true;
+}
