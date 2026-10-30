@@ -492,6 +492,10 @@ auto COscilloscope::getOSCRate() -> uint32_t {
     return m_adcMaxSpeed / m_dec_factor;
 }
 
+auto COscilloscope::getADCClock() -> uint32_t {
+    return m_adcMaxSpeed;
+}
+
 auto COscilloscope::isMaster() -> BoardMode {
     if (m_OscMap != nullptr) {
         usleep(100);

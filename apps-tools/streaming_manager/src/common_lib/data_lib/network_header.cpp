@@ -29,6 +29,7 @@ auto DataLib::initHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t oscRat
     nph.adc.triggerCount = 0;
     nph.adc.triggerBlocks = 0;
     nph.adc.flags = 0;
+    nph.adc.adcClock = 0;
 
     memcpy(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
 }
@@ -60,6 +61,7 @@ auto DataLib::setHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t _id) ->
     header->adc.triggerCount = buffer->getTriggerCount();
     header->adc.triggerBlocks = buffer->getTriggerBlocks();
     header->adc.flags = buffer->getADCFlags();
+    header->adc.adcClock = buffer->getADCClock();
 }
 
 auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount, uint8_t bits) -> void {
@@ -100,6 +102,7 @@ auto DataLib::printADCHeader(uint8_t* data) -> void {
     printf("adc.triggerCount: %u\n", nph.adc.triggerCount);
     printf("adc.triggerBlocks: %u\n", nph.adc.triggerBlocks);
     printf("adc.flags: 0x%X\n", nph.adc.flags);
+    printf("adc.adcClock: %u\n", nph.adc.adcClock);
 }
 
 auto DataLib::printDACHeader(uint8_t* data) -> void {

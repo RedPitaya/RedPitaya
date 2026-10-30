@@ -48,10 +48,10 @@ auto HeaderOf(const CDataBufferDMA::Ptr& buffer) -> const NetworkPackHeader* {
 }  // namespace
 
 TEST(NetworkHeader, TheWireLayoutIsFixed) {
-    static_assert(sizeof(ADCHeader) == 51, "ADC view: 8+8+4+1+1+1+1+8, then 8+4+4+2+1");
+    static_assert(sizeof(ADCHeader) == 55, "ADC view: 8+8+4+1+1+1+1+8, then 8+4+4+2+1, then 4");
     static_assert(sizeof(DACHeader) == 25, "DAC view: 1+1+4+8+1+1+8+1");
     static_assert(sizeof(DataLib::GPIOHeader) == 1);
-    static_assert(sizeof(NetworkPackHeader) == 83, "16 id + 8 size + 8 packId + 51 union");
+    static_assert(sizeof(NetworkPackHeader) == 87, "16 id + 8 size + 8 packId + 55 union");
 
     static_assert(offsetof(NetworkPackHeader, ID_PACK) == 0);
     static_assert(offsetof(NetworkPackHeader, bufferSize) == 16, "packed: no padding after the 16-byte id");
@@ -70,6 +70,7 @@ TEST(NetworkHeader, TheWireLayoutIsFixed) {
     static_assert(offsetof(ADCHeader, triggerCount) == 44);
     static_assert(offsetof(ADCHeader, triggerBlocks) == 48);
     static_assert(offsetof(ADCHeader, flags) == 50);
+    static_assert(offsetof(ADCHeader, adcClock) == 51);
     static_assert(DataLib::ADC_FLAG_TRIGGER_MODE == 0x01 && DataLib::ADC_FLAG_WAIT_COUNTER == 0x02);
 
     static_assert(offsetof(DACHeader, channels) == 0);
@@ -112,6 +113,7 @@ TEST(NetworkHeader, TheDefaultConstructedHeaderIsZeroedExceptTheDacWidth) {
     EXPECT_EQ(adc.triggerCount, 0u);
     EXPECT_EQ(adc.triggerBlocks, 0);
     EXPECT_EQ(adc.flags, 0);
+    EXPECT_EQ(adc.adcClock, 0u);
 
     const DACHeader dac;
     EXPECT_EQ(dac.channels, 0);
@@ -146,6 +148,7 @@ TEST(NetworkHeader, InitHeaderAdcWritesTheAdcViewIntoTheMappedBlock) {
     EXPECT_EQ(header->adc.triggerCount, 0u);
     EXPECT_EQ(header->adc.triggerBlocks, 0);
     EXPECT_EQ(header->adc.flags, 0);
+    EXPECT_EQ(header->adc.adcClock, 0u);
 
     // Only the header area is touched; the data area is left alone.
     EXPECT_EQ(static_cast<uint8_t*>(buffer->getMappedDataMemory())[0], 0);
@@ -173,6 +176,7 @@ TEST(NetworkHeader, SetHeaderAdcStampsTheIdAndTheRuntimeCounters) {
     buffer->setTriggerCount(0xFFFFFFFEu);
     buffer->setTriggerBlocks(0xFFFF);
     buffer->setADCFlags(DataLib::ADC_FLAG_TRIGGER_MODE | DataLib::ADC_FLAG_WAIT_COUNTER);
+    buffer->setADCClock(122880000);
     DataLib::setHeaderADC(buffer, 0xAABBCCDDEEFF0011ull);
 
     const NetworkPackHeader* header = HeaderOf(buffer);
@@ -184,6 +188,7 @@ TEST(NetworkHeader, SetHeaderAdcStampsTheIdAndTheRuntimeCounters) {
     EXPECT_EQ(header->adc.triggerCount, 0xFFFFFFFEu);
     EXPECT_EQ(header->adc.triggerBlocks, 0xFFFF);
     EXPECT_EQ(header->adc.flags, 0x03);
+    EXPECT_EQ(header->adc.adcClock, 122880000u) << "the ADC clock before the decimation";
     // The fields initHeaderADC wrote are untouched.
     EXPECT_EQ(header->adc.baseRateOSC, 125000000u);
     EXPECT_EQ(header->adc.channel, 1);
@@ -246,6 +251,7 @@ TEST(NetworkHeader, GetInfoFromHeaderAdcCopiesTheWireValuesBackIntoThePack) {
         buffer->setTriggerCount(3);
         buffer->setTriggerBlocks(4);
         buffer->setADCFlags(DataLib::ADC_FLAG_WAIT_COUNTER);
+        buffer->setADCClock(62500000);
         DataLib::setHeaderADC(buffer, 99);
     }
 
@@ -262,6 +268,7 @@ TEST(NetworkHeader, GetInfoFromHeaderAdcCopiesTheWireValuesBackIntoThePack) {
         buffer->setTriggerCount(0);
         buffer->setTriggerBlocks(0);
         buffer->setADCFlags(0);
+        buffer->setADCClock(0);
     }
 
     pack->getInfoFromHeaderADC();
@@ -278,6 +285,7 @@ TEST(NetworkHeader, GetInfoFromHeaderAdcCopiesTheWireValuesBackIntoThePack) {
         EXPECT_EQ(buffer->getTriggerCount(), 3u);
         EXPECT_EQ(buffer->getTriggerBlocks(), 4);
         EXPECT_EQ(buffer->getADCFlags(), DataLib::ADC_FLAG_WAIT_COUNTER);
+        EXPECT_EQ(buffer->getADCClock(), 62500000u);
     }
 }
 

@@ -1,10 +1,12 @@
 #include <unistd.h>
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <functional>
 
 #include "logger_lib/file_logger.h"
 #include "logger_lib/profiler.h"
+#include "data_lib/network_header.h"
 #include "streaming_fpga.h"
 
 using namespace streaming_lib;
@@ -19,6 +21,13 @@ CStreamingFPGA::CStreamingFPGA(uio_lib::COscilloscope::Ptr _osc, bool _saveCaptu
       m_testMode(false),
       m_verbMode(false),
       m_printDebugBuffer(false),
+      m_overFlowSumm{0, 0, 0, 0},
+      m_overFlowSummCount(0),
+      m_waitSumm(0),
+      m_decimation(0),
+      m_adcClock(0),
+      m_triggerBlocks(0),
+      m_adcFlags(0),
       m_mappedBuffers{nullptr, nullptr} {
     m_passRate = 0;
     m_OscThreadRun = false;
@@ -116,6 +125,10 @@ void CStreamingFPGA::oscWorker() {
     }
     m_mappedBuffers[0] = pack;
     m_mappedBuffers[1] = pack2;
+    m_decimation = m_Osc_ch->getDecimation();
+    m_adcClock = m_Osc_ch->getADCClock();
+    m_triggerBlocks = m_Osc_ch->getTriggerBlocks();
+    m_adcFlags = (m_Osc_ch->getTriggerMode() ? DataLib::ADC_FLAG_TRIGGER_MODE : 0) | (m_Osc_ch->hasWaitCounter() ? DataLib::ADC_FLAG_WAIT_COUNTER : 0);
     m_Osc_ch->prepare();
 
     try {
@@ -125,6 +138,7 @@ void CStreamingFPGA::oscWorker() {
         for (auto& s : m_overFlowSumm)
             s = 0;
         m_overFlowSummCount = 0;
+        m_waitSumm = 0;
         while (m_OscThreadRun) {
             bool state = true;
             profiler::setTimePoint("FPGA");
@@ -170,21 +184,17 @@ void CStreamingFPGA::oscWorker() {
 
 auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPackDMA::Ptr {
     int64_t time = m_Osc_ch->getBufferTime(m_currentBuffer);
-    // the 64 bit counter of each channel, latched when this buffer started: the samples lost
-    // right before it (with the block mode also the series gap)
+    // The 64 bit counter of each channel, latched when this buffer started: the samples missing
+    // right before it. The part not written while waiting for a trigger (the series gap of the
+    // block mode) is a pause, not a loss: it goes apart, the loss keeps the overflow only.
+    uint64_t wait = m_Osc_ch->getBufferWait(m_currentBuffer);
     uint64_t lost[4];
-    for (uint8_t ch = 0; ch < 4; ch++)
-        lost[ch] = m_Osc_ch->getBufferLost(m_currentBuffer, ch);
+    for (uint8_t ch = 0; ch < 4; ch++) {
+        uint64_t all = m_Osc_ch->getBufferLost(m_currentBuffer, ch);
+        lost[ch] = all - std::min(all, wait);
+    }
 
     if (m_printDebugBuffer) {
-        // short *wb2_1 = (short*)buffer_ch1;
-        // short *wb2_2 = (short*)buffer_ch2;
-        // short *wb2_3 = (short*)buffer_ch3;
-        // short *wb2_4 = (short*)buffer_ch4;
-
-        // for(int i = 0 ;i < 16 ;i ++){
-        //     aprintf(stdout,"%X - %X - %X - %X \n",(wb2_1 ? (static_cast<int>(wb2_1[i]/ 4)) : 0) , (wb2_2 ?  (static_cast<int>(wb2_2[i]/ 4)) : 0), (wb2_3 ?  (static_cast<int>(wb2_3[i]/ 4)) : 0), (wb2_4 ?  (static_cast<int>(wb2_4[i]/ 4)) : 0));
-        // }
         exit(1);
     }
 
@@ -197,34 +207,27 @@ auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPackDMA::Ptr {
     if (packNew) {
         if (!m_saveCaptureTime)
             time = 0;
+        uint32_t triggerCount = m_Osc_ch->getTriggerCount();
         pack = m_mappedBuffers[m_currentBuffer];
-        auto bCh1 = pack->getBuffer(DataLib::CH1);
-        if (bCh1) {
-            bCh1->setLostSamples(DataLib::FPGA, lost[0] + m_overFlowSumm[0] + bCh1->getSamplesCount() * m_overFlowSummCount);
-            bCh1->setTimeCapture(time);
-        }
-
-        auto bCh2 = pack->getBuffer(DataLib::CH2);
-        if (bCh2) {
-            bCh2->setLostSamples(DataLib::FPGA, lost[1] + m_overFlowSumm[1] + bCh2->getSamplesCount() * m_overFlowSummCount);
-            bCh2->setTimeCapture(time);
-        }
-
-        auto bCh3 = pack->getBuffer(DataLib::CH3);
-        if (bCh3) {
-            bCh3->setLostSamples(DataLib::FPGA, lost[2] + m_overFlowSumm[2] + bCh3->getSamplesCount() * m_overFlowSummCount);
-            bCh3->setTimeCapture(time);
-        }
-
-        auto bCh4 = pack->getBuffer(DataLib::CH4);
-        if (bCh4) {
-            bCh4->setLostSamples(DataLib::FPGA, lost[3] + m_overFlowSumm[3] + bCh4->getSamplesCount() * m_overFlowSummCount);
-            bCh4->setTimeCapture(time);
+        for (uint8_t ch = 0; ch < 4; ch++) {
+            auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)ch);
+            if (!buff)
+                continue;
+            // a dropped buffer is lost as a whole, its wait stays a pause
+            buff->setLostSamples(DataLib::FPGA, lost[ch] + m_overFlowSumm[ch] + buff->getSamplesCount() * m_overFlowSummCount);
+            buff->setLostSamples(DataLib::WAIT, wait + m_waitSumm);
+            buff->setTimeCapture(time);
+            buff->setDecimation(m_decimation);
+            buff->setADCClock(m_adcClock);
+            buff->setTriggerCount(triggerCount);
+            buff->setTriggerBlocks(m_triggerBlocks);
+            buff->setADCFlags(m_adcFlags);
         }
 
         for (auto& s : m_overFlowSumm)
             s = 0;
         m_overFlowSummCount = 0;
+        m_waitSumm = 0;
         unlockBuffF();
         m_mappedBuffers[m_currentBuffer] = packNew;
         if (!m_testMode) {
@@ -238,6 +241,7 @@ auto CStreamingFPGA::passCh() -> DataLib::CDataBuffersPackDMA::Ptr {
         for (uint8_t ch = 0; ch < 4; ch++)
             m_overFlowSumm[ch] += lost[ch];
         m_overFlowSummCount++;
+        m_waitSumm += wait;
     }
     m_Osc_ch->clearBuffer(m_currentBuffer);
     m_currentBuffer = m_currentBuffer ? 0 : 1;

@@ -86,6 +86,8 @@ class CDataBufferDMA final {
     auto getTriggerBlocks() const -> uint16_t;
     auto setADCFlags(uint8_t flags) -> void;  // ADC_FLAG_* of network_header.h
     auto getADCFlags() const -> uint8_t;
+    auto setADCClock(uint32_t hz) -> void;  // the ADC clock before the decimation, 0 when not known
+    auto getADCClock() const -> uint32_t;
 
     auto reset() -> void;
 
@@ -126,6 +128,7 @@ class CDataBufferDMA final {
     uint32_t m_triggerCount = 0;
     uint16_t m_triggerBlocks = 0;
     uint8_t m_adcFlags = 0;
+    uint32_t m_adcClock = 0;
 };
 
 }  // namespace DataLib

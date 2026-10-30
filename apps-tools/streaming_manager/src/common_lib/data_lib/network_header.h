@@ -28,6 +28,7 @@ struct __attribute__((packed)) ADCHeader {
     uint32_t triggerCount = {0};  // FPGA trigger counter read after the buffer, informative
     uint16_t triggerBlocks = {0};
     uint8_t flags = {0};
+    uint32_t adcClock = {0};  // ADC clock before the decimation, Hz: the exact rate is adcClock / decimation
     ADCHeader(){};
 };
 

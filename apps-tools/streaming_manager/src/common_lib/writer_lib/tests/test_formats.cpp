@@ -326,5 +326,35 @@ TEST(StreamingFile, TheTdmsTimeColumnStopsAtTheSampleLimit) {
     EXPECT_EQ(f.channel("Group", "time")->count, 40u) << "a time per sample written, not per sample of the packs";
 }
 
+// 62.5 MHz / 64: the integer rate of the pack is 976562, the header has the ADC clock and the
+// decimation, the file the exact rate
+TEST(StreamingFile, TheTdmsRateIsExactFromTheAdcClockAndTheDecimation) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/exact_rate.tdms";
+    Arena arena(8, kBlock);
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 0, false, false);
+    file->setTDMSTimeColumn(true);
+    file->run("", path);
+    for (int n = 0; n < 2; n++) {
+        auto pack = MakePack(arena, n);
+        pack->setOSCRate(976562);
+        for (auto ch : {DataLib::CH1, DataLib::CH2}) {
+            pack->getBuffer(ch)->setADCClock(62500000);
+            pack->getBuffer(ch)->setDecimation(64);
+        }
+        file->passBuffers(pack);
+    }
+    file->stopAndFlush();
+    TDMS::FileReader f;
+    ASSERT_TRUE(f.open(path)) << f.error();
+    EXPECT_EQ(TDMS::getProperty<double>(f.groupProperties("Group"), "sample_rate"), 976562.5);
+    EXPECT_EQ(TDMS::getProperty<double>(f.groupProperties("Group"), "adc_rate"), 62.5e6);
+    EXPECT_EQ(TDMS::getProperty<uint32_t>(f.groupProperties("Group"), "decimation"), 64u);
+    auto wf = TDMS::waveformOf(*f.channel("Group", "ch1"));
+    ASSERT_TRUE(wf);
+    EXPECT_DOUBLE_EQ(wf->increment, 1.024e-6);
+    EXPECT_EQ(f.read<int64_t>("Group", "time", 31, 1), (std::vector<int64_t>{1000000 + 31744})) << "31 x 1024 ns";
+}
+
 INSTANTIATE_TEST_SUITE_P(Formats, StreamingFileTest,
                          ::testing::Values(CStreamSettings::DataFormat::BIN, CStreamSettings::DataFormat::TDMS, CStreamSettings::DataFormat::WAV));

@@ -149,6 +149,7 @@ class COscilloscope {
     auto printReg() -> void;
     auto getDecimation() -> uint32_t;
     auto getOSCRate() -> uint32_t;
+    auto getADCClock() -> uint32_t;  // the ADC rate before the decimation, Hz
     auto isMaster() -> BoardMode;
 
     // Trigger mode: after the start the core waits for a trigger and writes nothing until then.

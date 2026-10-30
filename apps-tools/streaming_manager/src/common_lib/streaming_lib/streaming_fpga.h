@@ -59,6 +59,13 @@ class CStreamingFPGA {
 
     uint64_t m_overFlowSumm[4];  // per channel, of the buffers dropped for want of a free pack
     uint64_t m_overFlowSummCount;
+    uint64_t m_waitSumm;  // the trigger wait before the dropped buffers
+
+    // the same for every buffer of a run
+    uint32_t m_decimation;
+    uint32_t m_adcClock;
+    uint16_t m_triggerBlocks;
+    uint8_t m_adcFlags;
 
     DataLib::CDataBuffersPackDMA::Ptr m_mappedBuffers[2];
     uint8_t m_currentBuffer;

@@ -3,8 +3,18 @@
 #include <string.h>
 #include <unistd.h>
 #include "oscilloscope.h"
+#include "oscilloscope_dummy.h"
 
 using namespace uio_lib;
+
+auto uio_lib::dummy::oscState() -> OscState& {
+    static OscState state;
+    return state;
+}
+
+auto uio_lib::dummy::resetOscState() -> void {
+    oscState() = OscState();
+}
 
 auto COscilloscope::create(const UioT&, uint32_t _dec_factor, bool _isMaster, uint32_t _adcMaxSpeed, bool _isADCFilterPresent, uint8_t _fpgaBits,
                            uint8_t _maxChannels) -> COscilloscope::Ptr {
@@ -53,8 +63,9 @@ auto COscilloscope::getBufferTime(uint8_t) -> int64_t {
     return 0;
 }
 
-auto COscilloscope::getBufferWait(uint8_t) -> uint64_t {
-    return 0;
+auto COscilloscope::getBufferWait(uint8_t index) -> uint64_t {
+    auto& s = dummy::oscState();
+    return s.waitCount ? s.waitCount(index) : 0;
 }
 
 auto COscilloscope::getFeatures() -> uint32_t {
@@ -62,7 +73,7 @@ auto COscilloscope::getFeatures() -> uint32_t {
 }
 
 auto COscilloscope::hasWaitCounter() -> bool {
-    return false;
+    return dummy::oscState().waitCounter;
 }
 
 auto COscilloscope::getDecimation() -> uint32_t {
@@ -73,12 +84,17 @@ auto COscilloscope::getOSCRate() -> uint32_t {
     return m_dec_factor;
 }
 
+auto COscilloscope::getADCClock() -> uint32_t {
+    return m_adcMaxSpeed;
+}
+
 auto COscilloscope::clearBuffer(uint8_t) -> bool {
     return true;
 }
 
 auto COscilloscope::wait() -> bool {
-    return true;
+    auto& s = dummy::oscState();
+    return s.wait ? s.wait() : true;
 }
 
 auto COscilloscope::clearInterrupt() -> bool {
@@ -100,7 +116,7 @@ auto COscilloscope::setTriggerMode(bool) -> bool {
 }
 
 auto COscilloscope::getTriggerMode() -> bool {
-    return false;
+    return dummy::oscState().triggerMode;
 }
 
 auto COscilloscope::isArmed() -> bool {
@@ -142,13 +158,15 @@ auto COscilloscope::setTriggerBlocks(uint16_t) -> bool {
 }
 
 auto COscilloscope::getTriggerBlocks() -> uint16_t {
-    return 0;
+    return dummy::oscState().triggerBlocks;
 }
 
 auto COscilloscope::getTriggerCount() -> uint32_t {
-    return 0;
+    auto& s = dummy::oscState();
+    return s.triggerCount ? s.triggerCount() : 0;
 }
 
-auto COscilloscope::getBufferLost(uint8_t, uint8_t) -> uint64_t {
-    return 0;
+auto COscilloscope::getBufferLost(uint8_t index, uint8_t ch) -> uint64_t {
+    auto& s = dummy::oscState();
+    return s.lost ? s.lost(index, ch) : 0;
 }

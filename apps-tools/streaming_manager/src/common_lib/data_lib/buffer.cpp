@@ -211,6 +211,14 @@ auto CDataBufferDMA::getADCFlags() const -> uint8_t {
     return m_adcFlags;
 }
 
+auto CDataBufferDMA::setADCClock(uint32_t hz) -> void {
+    m_adcClock = hz;
+}
+
+auto CDataBufferDMA::getADCClock() const -> uint32_t {
+    return m_adcClock;
+}
+
 auto CDataBufferDMA::initHeaderAddress(size_t headerSize) -> void {
     m_headerAddress = m_bufferAddress;
     m_dataAddress = m_bufferAddress + headerSize;

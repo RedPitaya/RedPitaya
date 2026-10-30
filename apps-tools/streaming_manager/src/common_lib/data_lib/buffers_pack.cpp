@@ -227,6 +227,7 @@ auto CDataBuffersPackDMA::getInfoFromHeaderADC() -> void {
         item.second->setTriggerCount(header->adc.triggerCount);
         item.second->setTriggerBlocks(header->adc.triggerBlocks);
         item.second->setADCFlags(header->adc.flags);
+        item.second->setADCClock(header->adc.adcClock);
     }
 }
 

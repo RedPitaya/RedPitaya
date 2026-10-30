@@ -246,6 +246,17 @@ namespace {
 
 const char* const kTDMSChannels[4] = {"ch1", "ch2", "ch3", "ch4"};
 
+// The sample rate: exact from the ADC clock and the decimation when the header has them, else
+// the integer rate (62.5 MHz / 64 gives 976562 there)
+auto sampleRate(DataLib::CDataBuffersPackDMA::Ptr pack) -> double {
+    for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
+        auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)i);
+        if (buff && buff->getADCClock() && buff->getDecimation())
+            return static_cast<double>(buff->getADCClock()) / buff->getDecimation();
+    }
+    return static_cast<double>(pack->getOSCRate());
+}
+
 // The first channel of a pack, CH4 + 1 when it has none
 auto firstChannel(DataLib::CDataBuffersPackDMA::Ptr pack) -> int {
     int i = (int)DataLib::CH1;
@@ -265,14 +276,14 @@ auto CStreamingFile::addTDMSProperties(TDMS::SegmentBuilder& segment, DataLib::C
     m_tdmsStarted = true;
     auto first = pack->getBuffer((DataLib::EDataBuffersPackChannel)firstCh);
     const int64_t timeCapture = pack->getTimeCapture();
-    const uint64_t rate = pack->getOSCRate();  // the sample rate, after the decimation
+    const double rate = sampleRate(pack);  // after the decimation
 
-    segment.setGroupProperty("Group", "sample_rate", static_cast<double>(rate));
+    segment.setGroupProperty("Group", "sample_rate", rate);
     segment.setGroupProperty("Group", "data_type", m_volt_mode ? "Volt" : "Raw");
     segment.setGroupProperty("Group", "resolution_bits", first->getBitBySample());
     if (first->getDecimation()) {
         segment.setGroupProperty("Group", "decimation", first->getDecimation());
-        segment.setGroupProperty("Group", "adc_rate", static_cast<double>(rate) * first->getDecimation());
+        segment.setGroupProperty("Group", "adc_rate", first->getADCClock() ? static_cast<double>(first->getADCClock()) : rate * first->getDecimation());
         segment.setGroupProperty("Group", "trigger_mode", (first->getADCFlags() & DataLib::ADC_FLAG_TRIGGER_MODE) != 0);
     }
     for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
@@ -281,7 +292,7 @@ auto CStreamingFile::addTDMSProperties(TDMS::SegmentBuilder& segment, DataLib::C
         if (!buff || !map[ch].bufferLen)
             continue;
         if (rate)
-            segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::Increment, 1.0 / static_cast<double>(rate));
+            segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::Increment, 1.0 / rate);
         if (timeCapture) {
             segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::StartTime, TDMS::TimeStamp::fromUnixNs(timeCapture));
             segment.setChannelProperty("Group", kTDMSChannels[i], TDMS::WaveformProperty::StartOffset, 0.0);
@@ -390,7 +401,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
             if (m_tdmsTimeColumn && time_cap != 0 && bufSamples != 0) {
                 time = std::make_shared<std::vector<int64_t>>();
                 time->resize(bufSamples);
-                double frequency_hz = pack->getOSCRate();
+                double frequency_hz = sampleRate(pack);
                 double period_ns = (frequency_hz > 0) ? (1.0 / frequency_hz) * 1e9 : 0;
                 for (auto idx = 0u; idx < bufSamples; idx++) {
                     time->at(idx) = time_cap + (uint64_t)(period_ns * idx);

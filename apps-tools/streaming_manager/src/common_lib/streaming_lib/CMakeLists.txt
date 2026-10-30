@@ -60,3 +60,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}"
     COMMENT "Copying ${PROJECT_NAME} public headers to ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}"
     VERBATIM)
+
+## The tests drive CStreamingFPGA through the dummy COscilloscope of the host build.
+if(NOT RP_PLATFORM AND NOT CMAKE_CROSSCOMPILING AND BUILD_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+
+    ## The suite runs as part of the build, so a regression fails the build.
+    add_custom_target(rp_streaming_lib_run_tests ALL
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Running streaming_lib unit tests (ctest) - the build fails if any test fails"
+        VERBATIM)
+    add_dependencies(rp_streaming_lib_run_tests streaming_lib_tests)
+endif()
