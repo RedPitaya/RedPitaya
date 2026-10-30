@@ -207,6 +207,31 @@ TEST(WavChunk, TheHeaderComesWithTheFirstChunkThenInterleavedSamples) {
     EXPECT_EQ(samples, (std::vector<int16_t>{1, -1, 2, -2}));
 }
 
+// 8 bit WAV samples are unsigned with 0x80 for zero (Microsoft RIFF/WAVE): the signed samples are
+// offset by 0x80, a channel shorter than the others is filled with silence (0x80)
+TEST(WavChunk, EightBitSamplesAreUnsignedWithZeroAt0x80) {
+    const std::vector<int8_t> a{0, 127, -128, -1};
+    const std::vector<int8_t> b{5};
+    auto pass8 = [](const std::vector<int8_t>& x) {
+        SBuffPass p;
+        p.buffer = net_lib::createBuffer(reinterpret_cast<const char*>(x.data()), x.size());
+        p.bufferLen = x.size();
+        p.samplesCount = x.size();
+        p.bitsBySample = 8;
+        p.adcSpeed = 125000000;
+        return p;
+    };
+    std::map<DataLib::EDataBuffersPackChannel, SBuffPass> map{{DataLib::CH1, pass8(a)}, {DataLib::CH2, pass8(b)}};
+    CWaveWriter wav;
+    const std::string first = Bytes(*wav.BuildWAVChunk(map));
+    ASSERT_EQ(first.size(), 44u + 8u);
+    uint16_t bits = 0;
+    std::memcpy(&bits, first.data() + 34, 2);
+    EXPECT_EQ(bits, 8u);
+    const std::string data = first.substr(44);
+    EXPECT_EQ(std::vector<uint8_t>(data.begin(), data.end()), (std::vector<uint8_t>{0x80, 0x85, 0xFF, 0x80, 0x00, 0x80, 0x7F, 0x80}));
+}
+
 class StreamingFileTest : public ::testing::TestWithParam<CStreamSettings::DataFormat::_enumerated> {};
 
 // The whole way: packs into CStreamingFile, through the file thread, into the file
@@ -280,6 +305,25 @@ TEST(StreamingFile, TheTdmsTimeColumnIsThereWhenAskedFor) {
     ASSERT_NE(f.channel("Group", "time"), nullptr);
     EXPECT_EQ(f.channel("Group", "time")->count, 96u);
     EXPECT_EQ(f.read<int64_t>("Group", "time", 32, 2), (std::vector<int64_t>{1000001, 1000009})) << "every segment its own time, 8 ns a sample";
+}
+
+// With a sample limit the channels stop in the middle of a pack: the time column stops with them
+TEST(StreamingFile, TheTdmsTimeColumnStopsAtTheSampleLimit) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/time_limit.tdms";
+    Arena arena(8, kBlock);
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 40, false, false);
+    file->setTDMSTimeColumn(true);
+    file->run("", path);
+    for (int n = 0; n < 3; n++)
+        file->passBuffers(MakePack(arena, n));
+    file->stopAndFlush();
+    TDMS::FileReader f;
+    ASSERT_TRUE(f.open(path)) << f.error();
+    ASSERT_NE(f.channel("Group", "ch1"), nullptr);
+    ASSERT_NE(f.channel("Group", "time"), nullptr);
+    EXPECT_EQ(f.channel("Group", "ch1")->count, 40u);
+    EXPECT_EQ(f.channel("Group", "time")->count, 40u) << "a time per sample written, not per sample of the packs";
 }
 
 INSTANTIATE_TEST_SUITE_P(Formats, StreamingFileTest,

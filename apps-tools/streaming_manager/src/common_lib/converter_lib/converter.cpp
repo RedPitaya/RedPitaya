@@ -148,7 +148,7 @@ bool CConverter::convertToWAV(std::string _file_name, int32_t start_seg, int32_t
         aprintf(stdout, "%s Started converting to WAV\n", _prefix.c_str());
         std::string wav_file = _file_name.substr(0, _file_name.size() - 4);
         std::string dir = ".";
-        CStreamingFile::Ptr file_writer = CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
+        file_writer = CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
         file_writer->stopNotify.connect([&](CStreamingFile::EStopReason r) {
             if (r == CStreamingFile::OUT_SPACE) {
                 aprintf(stdout, "%s Disk is full\n", _prefix.c_str());
@@ -257,7 +257,7 @@ bool CConverter::convertToTDMS(std::string _file_name, int32_t start_seg, int32_
         aprintf(stdout, "%s Started converting to TDMS\n", _file_name.c_str());
         std::string tdms_file = _file_name.substr(0, _file_name.size() - 4);
         std::string dir = ".";
-        CStreamingFile::Ptr file_writer = CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 0, false, false);
+        file_writer = CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 0, false, false);
         file_writer->stopNotify.connect([&](CStreamingFile::EStopReason r) {
             if (r == CStreamingFile::OUT_SPACE) {
                 aprintf(stdout, "%s Disk is full\n", _prefix.c_str());

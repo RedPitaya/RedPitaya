@@ -131,10 +131,11 @@ auto CWaveWriter::BuildWAVChunk(std::map<DataLib::EDataBuffersPackChannel, SBuff
         for (size_t i = 0; i < maxSamples; i++) {
             for (uint8_t ch = 0; ch < m_numChannels; ch++) {
                 if (m_bitDepth == 8) {
+                    // 8 bit WAV samples are unsigned, 0x80 is zero; ours are signed
                     if (channelsSamples[ch] > i) {
-                        cross_buff[i * m_numChannels + ch] = channels[ch].get()[i];
+                        cross_buff[i * m_numChannels + ch] = channels[ch].get()[i] ^ 0x80;
                     } else {
-                        cross_buff[i * m_numChannels + ch] = 0;
+                        cross_buff[i * m_numChannels + ch] = 0x80;
                     }
                 }
 

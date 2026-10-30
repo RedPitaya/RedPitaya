@@ -1,4 +1,5 @@
 #include <time.h>
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 
@@ -378,7 +379,10 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
                 }
             }
 
-            uint64_t bufSamples = pack->getBuffersSamples();
+            // the time column has a value per sample written: past the sample limit there are fewer
+            uint64_t bufSamples = 0;
+            for (auto& kv : map)
+                bufSamples = std::max<uint64_t>(bufSamples, kv.second.samplesCount);
             auto time_cap = pack->getTimeCapture();
 
             // A vector per segment: the queued segment references it until the file thread writes it
