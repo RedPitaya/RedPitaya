@@ -203,6 +203,8 @@ auto CGpio::start(bool in, bool out) -> void {
 
 auto CGpio::stop() -> void {
     std::lock_guard lock(m_lock);
+    // the stop is taken from the selected event source only (0, the DAC, after the bitstream load)
+    m_Map->event_sel = gpio_event_id;
     m_Map->event = GPIO_EVENT_STOP;
     m_Map->dma_ctrl_out = 0;
     m_running = false;

@@ -374,6 +374,9 @@ auto COscilloscope::clearInterrupt() -> bool {
 auto COscilloscope::stop() -> void {
     std::lock_guard lock(m_waitLock);
     if (m_OscMap != nullptr) {
+        // The stop is taken from the selected event source only: another one (0, the DAC, after
+        // the bitstream load) would leave the acquisition running, and a later start ignored.
+        setRegister(m_OscMap, &(m_OscMap->event_sel), EVENT_SRC_OSC1);
         setRegister(m_OscMap, &(m_OscMap->event_sts), UINT32_C(0x00000004));
         m_running = false;
     } else {
