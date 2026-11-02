@@ -175,6 +175,16 @@ auto COscilloscope::setTriggerSources(uint32_t mask) -> bool {
     if (s.running || (mask & ~TRIG_SRC_ALL))
         return false;
     s.triggerSources = mask;
+    s.triggerSourcesDefault = false;
+    return true;
+}
+
+auto COscilloscope::resetTriggerSources() -> bool {
+    auto& s = dummy::oscState();
+    if (s.running)
+        return false;
+    s.triggerSources = 0;
+    s.triggerSourcesDefault = true;
     return true;
 }
 

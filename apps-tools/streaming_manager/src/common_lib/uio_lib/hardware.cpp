@@ -182,16 +182,27 @@ auto CHardware::adcSetTrigger(const ADCTrigger& trig) -> bool {
     std::lock_guard lock(p.adcMtx);
     if (!p.osc || p.osc->isRunning())
         return false;
-    if (trig.blocks && !p.features.adcBlockMode)
+    // The sources, the level and the blocks are of the trigger mode. Outside it the sources go
+    // back to the default: a daisy chain slave starts its DMA on the external trigger.
+    ADCTrigger t = trig;
+    if (!t.enable) {
+        t.sources = 0;
+        t.blocks = 0;
+    }
+    if (t.blocks && !p.features.adcBlockMode)
         return false;
-    bool ok = p.osc->setTriggerMode(trig.enable);
-    ok = p.osc->setTriggerSources(trig.sources) && ok;
-    ok = p.osc->setTriggerLevel(trig.low, trig.high) && ok;
-    ok = p.osc->setTriggerEdge(trig.falling) && ok;
-    ok = p.osc->setEventSource(eventId(trig.events, EVENT_SRC_OSC1)) && ok;
-    ok = p.osc->setTriggerBlocks(trig.blocks) && ok;
+    bool ok = p.osc->setTriggerMode(t.enable);
+    if (t.enable) {
+        ok = p.osc->setTriggerSources(t.sources) && ok;
+        ok = p.osc->setTriggerLevel(t.low, t.high) && ok;
+        ok = p.osc->setTriggerEdge(t.falling) && ok;
+    } else {
+        ok = p.osc->resetTriggerSources() && ok;
+    }
+    ok = p.osc->setTriggerBlocks(t.blocks) && ok;
+    ok = p.osc->setEventSource(eventId(t.events, EVENT_SRC_OSC1)) && ok;
     if (ok)
-        p.adcTrig = trig;
+        p.adcTrig = t;
     return ok;
 }
 
@@ -317,8 +328,11 @@ auto CHardware::dacSetTrigger(const DACTrigger& trig) -> bool {
     std::lock_guard lock(p.dacMtx);
     if (!p.gen || p.gen->isRunning())
         return false;
+    // outside the trigger mode the trigger swaps the buffers of the streaming mode: the default
+    // source then, the own channel A
+    bool any = trig.enable[0] || trig.enable[1];
     bool ok = p.gen->setTriggerMode(trig.enable[0], trig.enable[1]);
-    ok = p.gen->setTriggerSources(trig.sources) && ok;
+    ok = p.gen->setTriggerSources(any ? trig.sources : TRIG_SRC_GEN_A) && ok;
     ok = p.gen->setEventSource(eventId(trig.events, gen0_event_id)) && ok;
     return ok;
 }

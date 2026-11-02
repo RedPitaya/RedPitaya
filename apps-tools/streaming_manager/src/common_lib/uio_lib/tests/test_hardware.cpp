@@ -147,9 +147,11 @@ TEST_F(Hardware, TheTriggerSettingsReachTheScope) {
 TEST_F(Hardware, BadTriggerSettingsAreRefused) {
     auto hw = make();  // no block mode in this FPGA
     ADCTrigger blocks;
+    blocks.enable = true;
     blocks.blocks = 2;
     EXPECT_FALSE(hw->adcSetTrigger(blocks));
     ADCTrigger levels;
+    levels.enable = true;
     levels.low = 10;
     levels.high = -10;
     EXPECT_FALSE(hw->adcSetTrigger(levels)) << "low above high";
@@ -195,4 +197,27 @@ TEST_F(Hardware, TheDACGainIsSwitchedOnlyWhereTheBoardHasIt) {
     ASSERT_TRUE(hw->dacConfigure(cfg));
     EXPECT_EQ(board->dacGain[0], 1);
     EXPECT_EQ(board->dacGain[1], 0);
+}
+
+TEST_F(Hardware, OutsideTheTriggerModeTheSourcesAreTheDefaultOnes) {
+    dummy::oscState().blockMode = true;
+    auto hw = make();
+    ADCTrigger on;
+    on.enable = true;
+    on.sources = TRIG_SRC_LA;
+    on.blocks = 3;
+    ASSERT_TRUE(hw->adcSetTrigger(on));
+    EXPECT_FALSE(dummy::oscState().triggerSourcesDefault);
+
+    ADCTrigger off = on;  // the settings kept, the mode off
+    off.enable = false;
+    off.low = 10;
+    off.high = -10;  // not a trigger level outside the trigger mode
+    off.events = EventSource::GEN_B;
+    ASSERT_TRUE(hw->adcSetTrigger(off));
+    auto& s = dummy::oscState();
+    EXPECT_TRUE(s.triggerSourcesDefault) << "a daisy chain slave starts on the external trigger";
+    EXPECT_EQ(s.triggerBlocks, 0);
+    EXPECT_EQ(hw->adcTrigger().blocks, 0) << "no blocks in the buffer headers";
+    EXPECT_EQ(s.eventSource, EVENT_SRC_GEN_B) << "a start following another block works outside the trigger mode";
 }

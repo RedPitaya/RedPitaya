@@ -74,6 +74,7 @@ struct ADCConfig {
     uint32_t bufferBytes = 0;  // DMA buffer of one channel
 };
 
+// The sources, the level and the blocks apply in the trigger mode only; the event source always
 struct ADCTrigger {
     bool enable = false;      // wait for a trigger before writing
     uint32_t sources = 0;     // TRIG_SRC_* mask
@@ -93,7 +94,7 @@ struct DACConfig {
 
 struct DACTrigger {
     std::array<bool, 2> enable = {false, false};  // per channel: play on a trigger
-    uint32_t sources = 0;
+    uint32_t sources = 0;                         // with a channel in the trigger mode
     EventSource events = EventSource::OWN;
 };
 

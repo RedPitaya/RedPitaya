@@ -413,6 +413,13 @@ auto COscilloscope::setTriggerSources(uint32_t mask) -> bool {
     return true;
 }
 
+auto COscilloscope::resetTriggerSources() -> bool {
+    if (m_running)
+        return false;
+    m_trigMaskSet = false;
+    return true;
+}
+
 auto COscilloscope::getTriggerSources() -> uint32_t {
     if (m_trigMaskSet)
         return m_trigMask;

@@ -34,6 +34,7 @@ struct OscState {
     uint32_t dataSize = 0;
     bool triggerMode = false;
     uint32_t triggerSources = 0;
+    bool triggerSourcesDefault = true;
     int32_t triggerLow = 0;
     int32_t triggerHigh = 0;
     bool triggerFalling = false;

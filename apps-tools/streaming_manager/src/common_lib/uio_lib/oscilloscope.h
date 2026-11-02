@@ -162,6 +162,9 @@ class COscilloscope {
     auto getTriggerMode() -> bool;
     auto isArmed() -> bool;
     auto setTriggerSources(uint32_t mask) -> bool;
+    // back to the default: the own CH1 on a master, the daisy chain trigger on a slave (its
+    // DMA starts on it outside the trigger mode)
+    auto resetTriggerSources() -> bool;
     auto getTriggerSources() -> uint32_t;
     auto setTriggerLevel(int32_t low, int32_t high) -> bool;
     auto setTriggerEdge(bool falling) -> bool;
