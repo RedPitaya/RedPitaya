@@ -143,6 +143,9 @@ class COscilloscope {
     auto setFilterBypass(bool _state) -> void;
     auto set8BitMode(bool mode) -> void;
     auto clearBuffer(uint8_t index) -> bool;
+    // the DMA buffer `index` is written and waits for clearBuffer() (the status register: the
+    // interrupt is a level, a second buffer done before its acknowledge gives no new one)
+    auto isBufferFull(uint8_t index) -> bool;
     auto wait() -> bool;
     auto clearInterrupt() -> bool;
     auto stop() -> void;

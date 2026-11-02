@@ -337,6 +337,11 @@ auto COscilloscope::clearBuffer(uint8_t index) -> bool {
     return true;
 }
 
+auto COscilloscope::isBufferFull(uint8_t index) -> bool {
+    uint32_t sts = m_OscMap->dma_sts_addr;
+    return sts & (index == 0 ? 0x1 : 0x2);
+}
+
 auto COscilloscope::wait() -> bool {
     int32_t cnt = 1;
     constexpr size_t cnt_size = sizeof(cnt);

@@ -113,13 +113,24 @@ auto COscilloscope::getADCClock() -> uint32_t {
     return m_adcMaxSpeed;
 }
 
+// a full buffer per wait() that reported one, until it is cleared
 auto COscilloscope::clearBuffer(uint8_t) -> bool {
+    auto& s = dummy::oscState();
+    if (s.fullBuffers > 0)
+        s.fullBuffers--;
     return true;
+}
+
+auto COscilloscope::isBufferFull(uint8_t) -> bool {
+    return dummy::oscState().fullBuffers > 0;
 }
 
 auto COscilloscope::wait() -> bool {
     auto& s = dummy::oscState();
-    return s.wait ? s.wait() : true;
+    bool full = s.wait ? s.wait() : true;
+    if (full)
+        s.fullBuffers++;
+    return full;
 }
 
 auto COscilloscope::clearInterrupt() -> bool {

@@ -43,6 +43,7 @@ struct OscState {
     int prepares = 0;
     int stops = 0;
     int softwareTriggers = 0;
+    int fullBuffers = 0;  // reported by wait(), not cleared yet
 };
 
 auto oscState() -> OscState&;

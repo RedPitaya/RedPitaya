@@ -206,7 +206,8 @@ class CHardware {
     auto adcSetSkipBuffer(uint32_t address) -> void;  // where the data goes while no buffer is free
     auto adcSetBuffer(uint8_t index, const std::array<uint32_t, 4>& addresses) -> void;
     auto adcStart() -> void;
-    auto adcWait() -> bool;                            // a buffer is full; false after 1 s without
+    auto adcWait() -> bool;                            // an interrupt; false after 1 s without
+    auto adcBufferFull(uint8_t index) -> bool;         // written, not released yet
     auto adcBuffer(uint8_t index) -> ADCBufferInfo;    // read before adcReleaseBuffer
     auto adcReleaseBuffer(uint8_t index) -> void;
     auto adcStop() -> void;

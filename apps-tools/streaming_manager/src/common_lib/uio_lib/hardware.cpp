@@ -232,6 +232,11 @@ auto CHardware::adcWait() -> bool {
     return p.osc && p.osc->wait();
 }
 
+auto CHardware::adcBufferFull(uint8_t index) -> bool {
+    auto& p = *m_pimpl;
+    return p.osc && p.osc->isBufferFull(index);
+}
+
 auto CHardware::adcBuffer(uint8_t index) -> ADCBufferInfo {
     auto& p = *m_pimpl;
     ADCBufferInfo r;

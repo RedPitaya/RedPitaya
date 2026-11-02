@@ -145,7 +145,12 @@ void CStreamingFPGA::oscWorker() {
         while (m_OscThreadRun) {
             bool state = true;
             profiler::setTimePoint("FPGA");
-            state = m_hw->adcWait();
+            // The interrupt is a level: a buffer done before the previous one is acknowledged gives
+            // no new interrupt, and both wait for the software. The buffer status decides; an
+            // interrupt left from a buffer read without it wakes up for nothing.
+            state = m_hw->adcBufferFull(m_currentBuffer);
+            if (!state)
+                state = m_hw->adcWait() && m_hw->adcBufferFull(m_currentBuffer);
             profiler::printuS("FPGA", "Time write buffer %d", m_currentBuffer);
             if (state) {
                 pack = this->passCh();

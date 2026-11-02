@@ -7,7 +7,9 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <chrono>
+#include <thread>
 #include <condition_variable>
 #include <mutex>
 #include <vector>
@@ -194,4 +196,42 @@ TEST(StreamingFPGA, WithoutTheTriggerModeAndTheWaitCounterTheFlagsAreClear) {
     EXPECT_EQ(seen[0].flags, 0);
     EXPECT_EQ(seen[0].lost[0], 3u) << "an older bitstream: the whole counter is the loss";
     EXPECT_EQ(seen[0].wait[0], 0u);
+}
+
+// The scope interrupt is a level: two buffers done before the acknowledge give one interrupt.
+// Both are read, the second one from the buffer status; then no interrupt comes again.
+TEST(StreamingFPGA, TwoBuffersInOneInterruptAreBothRead) {
+    uio_lib::dummy::resetOscState();
+    auto& s = uio_lib::dummy::oscState();
+    std::atomic<int> waits{0};
+    s.wait = [&s, &waits]() {
+        if (waits++ == 0) {
+            s.fullBuffers++;  // the second buffer, its interrupt merged into the first one
+            return true;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        return false;
+    };
+    auto hw = uio_lib::CHardware::create(std::make_shared<board_lib::CDummyBoard>());
+    ASSERT_TRUE(hw->adcConfigure(uio_lib::ADCConfig()));
+    data_test::Arena arena(16, kHeader + kSamples * 2);
+    int packs = 0;
+    auto fpga = std::make_shared<streaming_lib::CStreamingFPGA>(hw, false);
+    fpga->setTestMode(true);
+    fpga->getBuffF = [&]() -> CDataBuffersPackDMA::Ptr {
+        auto pack = CDataBuffersPackDMA::Create();
+        pack->addBuffer(DataLib::CH1, data_test::MakeBuffer(arena, packs++ % 16, 16, kHeader));
+        return pack;
+    };
+    fpga->unlockBuffF = []() {};
+    std::atomic<int> delivered{0};
+    fpga->oscNotify.connect([&](CDataBuffersPackDMA::Ptr pack) {
+        if (pack)
+            delivered++;
+    });
+    fpga->runNonBlock();
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    fpga->stop();
+    EXPECT_EQ(delivered, 2) << "the second buffer waits in the FPGA for the software";
+    uio_lib::dummy::resetOscState();
 }
