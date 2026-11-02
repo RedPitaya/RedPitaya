@@ -10,6 +10,7 @@
 #include <condition_variable>
 #include <filesystem>
 #include <mutex>
+#include <thread>
 #include <vector>
 
 #include "board_lib/board.h"
@@ -152,6 +153,19 @@ TEST_F(ADCServer, AStopInTheMiddleEndsTheRun) {
     ASSERT_EQ(recorder->reasons.size(), 1u);
     EXPECT_EQ(recorder->reasons[0], ADCStopReason::NORMAL);
     EXPECT_FALSE(uio_lib::dummy::oscState().running);
+}
+
+TEST_F(ADCServer, ASecondStartOfTheADCIsIgnored) {
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(fileSettings(s, 0), options));
+    server->startADC();
+    server->startADC();  // a client that repeats the FPGA start command
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    EXPECT_TRUE(server->isRunning());
+    server->stop(ADCStopReason::NORMAL);
+    EXPECT_FALSE(server->isRunning());
+    ASSERT_EQ(recorder->reasons.size(), 1u);
+    EXPECT_EQ(recorder->reasons[0], ADCStopReason::NORMAL);
 }
 
 TEST_F(ADCServer, TheTriggerSettingsReachTheScope) {

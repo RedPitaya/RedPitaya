@@ -36,6 +36,7 @@ struct ADCStreamServer::Impl {
     CBuffersCached::Ptr buffer;
     CStreamingNet::Ptr net;
     CStreamingFile::Ptr file;
+    bool adcStarted = false;  // startADC() taken: the FPGA thread of this run exists
 
     auto teardown() -> void;
     auto stop(ADCStopReason reason) -> void;
@@ -63,6 +64,7 @@ auto ADCStreamServer::Impl::teardown() -> void {
         fpga->stop();
         fpga = nullptr;
     }
+    adcStarted = false;
     if (file)
         file->stopAndFlush();
     buffer = nullptr;
@@ -321,8 +323,13 @@ auto ADCStreamServer::startADC() -> void {
     auto& p = *m_pimpl;
     try {
         std::lock_guard lock(p.mtx);
-        if (p.fpga)
+        // once per run: a second thread over the joinable one would end the process
+        if (p.fpga && !p.adcStarted) {
             p.fpga->runNonBlock();
+            p.adcStarted = true;
+        } else if (p.adcStarted) {
+            ERROR_LOG("The ADC already runs, the start is ignored")
+        }
     } catch (std::exception& e) {
         ERROR_LOG("ADCStreamServer::startADC() %s", e.what())
     }
