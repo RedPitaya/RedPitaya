@@ -168,6 +168,30 @@ TEST_F(ADCServer, ASecondStartOfTheADCIsIgnored) {
     EXPECT_EQ(recorder->reasons[0], ADCStopReason::NORMAL);
 }
 
+TEST_F(ADCServer, AStopLeftFromAnEarlierSessionDoesNotStopTheNextOne) {
+    // a start that fails stops from a thread of its own; the next start comes at once
+    for (int i = 0; i < 20; i++) {
+        CStreamSettings bad;
+        fileSettings(bad, 0);
+        bad.setADCChannels(1, CStreamSettings::State::OFF);
+        EXPECT_FALSE(server->start(bad, options));
+        CStreamSettings s;
+        ASSERT_TRUE(server->start(fileSettings(s, 0), options));
+        server->startADC();
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        ASSERT_TRUE(server->isRunning()) << "run " << i << ": the stop of the failed start ended the new session";
+        {
+            std::lock_guard lock(recorder->mtx);
+            for (auto r : recorder->reasons)
+                EXPECT_NE(r, ADCStopReason::NORMAL) << "run " << i;
+        }
+        server->stop(ADCStopReason::NORMAL);
+        std::lock_guard lock(recorder->mtx);
+        recorder->reasons.clear();
+        recorder->events.clear();
+    }
+}
+
 TEST_F(ADCServer, TheTriggerSettingsReachTheScope) {
     uio_lib::dummy::oscState().blockMode = true;
     recreate();

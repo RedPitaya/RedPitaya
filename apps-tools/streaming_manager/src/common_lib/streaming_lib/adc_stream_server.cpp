@@ -1,9 +1,11 @@
 #include "adc_stream_server.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <ctime>
 #include <mutex>
+#include <optional>
 #include <thread>
 
 #ifndef _WIN32
@@ -37,9 +39,13 @@ struct ADCStreamServer::Impl {
     CStreamingNet::Ptr net;
     CStreamingFile::Ptr file;
     bool adcStarted = false;  // startADC() taken: the FPGA thread of this run exists
+    // Every start() is a new session. A stop from a thread of its own belongs to the session it
+    // was asked in; atomic: stopNonBlocking() is also called from start() under mtx.
+    std::atomic<uint64_t> session{0};
 
     auto teardown() -> void;
-    auto stop(ADCStopReason reason) -> void;
+    // of: the session the stop was asked in, none for a stop of whatever runs
+    auto stop(ADCStopReason reason, std::optional<uint64_t> of = std::nullopt) -> void;
     auto stopNonBlocking(ADCStopReason reason) -> void;
     auto notifyStopped(ADCStopReason reason) -> void;
     template <typename F>
@@ -75,10 +81,17 @@ auto ADCStreamServer::Impl::teardown() -> void {
     memory->releaseMemory(uio_lib::MM_ADC_RESERVE_SKIP);
 }
 
-auto ADCStreamServer::Impl::stop(ADCStopReason reason) -> void {
+// A stop asked in an earlier session neither tears down nor reports: the session it was for is
+// gone with the start that followed, and its reason (a failed start) is not the new one's.
+auto ADCStreamServer::Impl::stop(ADCStopReason reason, std::optional<uint64_t> of) -> void {
     try {
         {
             std::lock_guard lock(mtx);
+            if (of && session != *of) {
+                if (verbose)
+                    aprintf(stdout, "[Streaming] A stop of an earlier session is ignored\n");
+                return;
+            }
             teardown();
         }
         notify([&](ADCServerCallback* cb) { cb->stopped(owner, reason); });
@@ -97,8 +110,9 @@ auto ADCStreamServer::Impl::stopNonBlocking(ADCStopReason reason) -> void {
     // from the threads of the pipeline itself (the end of a file): it cannot join them
     try {
         auto impl = self.lock();
+        uint64_t of = session;
         if (impl)
-            std::thread([impl, reason]() { impl->stop(reason); }).detach();
+            std::thread([impl, reason, of]() { impl->stop(reason, of); }).detach();
     } catch (std::exception& e) {
         ERROR_LOG("ADCStreamServer::stopNonBlocking() %s", e.what())
     }
@@ -121,6 +135,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
     try {
         std::lock_guard lock(p.mtx);
         p.teardown();
+        p.session++;
         if (!p.hw)
             return false;
 
