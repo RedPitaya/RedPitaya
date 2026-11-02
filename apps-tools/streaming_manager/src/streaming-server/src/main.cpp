@@ -36,6 +36,7 @@
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "config_net_lib/server_net_config_manager.h"
 #include "streaming_lib/streaming_file.h"
+#include "streaming_lib/trigger_commands.h"
 
 #include "dac_streaming.h"
 #include "options.h"
@@ -209,6 +210,7 @@ int main(int argc, char* argv[]) {
         uio_lib::CMemoryManager::instance()->reallocateBlocks();
         setServer(con_server);
         setDACServer(con_server);
+        streaming_lib::connectTriggerCommands(con_server, hw);
         con_server->startBroadcast(model, ClientOpt::getMACAddress(), ip_cur, NET_BROADCAST_PORT);
         con_server->getNewSettingsNofiy.connect([verbMode]() {
             std::lock_guard lock(g_print_mtx);

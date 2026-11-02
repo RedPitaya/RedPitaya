@@ -19,7 +19,7 @@ if(NOT TARGET GTest::gtest_main)
     FetchContent_MakeAvailable(googletest)
 endif()
 
-add_executable(streaming_lib_tests test_streaming_fpga.cpp)
+add_executable(streaming_lib_tests test_streaming_fpga.cpp test_adc_stream_server.cpp)
 
 target_include_directories(streaming_lib_tests PRIVATE ${COMMON_LIB_DIR})
 

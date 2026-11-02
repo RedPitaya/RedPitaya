@@ -17,7 +17,9 @@
 #include "dac_streaming_lib/dac_streaming_application.h"
 #include "dac_streaming_lib/dac_streaming_manager.h"
 #include "data_lib/buffers_cached.h"
+#include "streaming_lib/adc_stream_server.h"
 #include "streaming_lib/streaming_file.h"
+#include "streaming_lib/trigger_commands.h"
 #include "streaming_lib/streaming_fpga.h"
 #include "streaming_lib/streaming_net.h"
 #include "board_lib/board.h"
@@ -38,6 +40,7 @@ auto startDACServer(bool testMode, dac_channels_t) -> bool;
 auto stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> void;
 auto stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> void;
 void startADC();
+auto makeADCCallback() -> std::shared_ptr<streaming_lib::ADCServerCallback>;
 
 auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
@@ -143,11 +146,9 @@ CBooleanParameter ss_gpio_data_pass("SS_GPIO_DATA_PASS", CBaseParameter::RW, fal
 
 uio_lib::CHardware::Ptr g_hw = nullptr;
 
-streaming_lib::CStreamingFPGA::Ptr g_s_fpga = nullptr;
-streaming_lib::CStreamingNet::Ptr g_s_net = nullptr;
-streaming_lib::CStreamingFile::Ptr g_s_file = nullptr;
-
-DataLib::CBuffersCached::Ptr g_s_buffer = nullptr;
+streaming_lib::ADCStreamServer::Ptr g_adc = nullptr;
+std::atomic_bool g_adcPrepared(false);  // started, waits for the start of the ADC or runs
+std::atomic_bool g_adcFile(false);      // writes a file: its statistics go to the page
 
 dac_streaming_lib::CDACStreamingApplication::Ptr g_dac_app = nullptr;
 dac_streaming_lib::CDACStreamingManager::Ptr g_dac_manger = nullptr;
@@ -296,6 +297,8 @@ auto rp_app_init(void) -> int {
                 FATAL("Can't open the FPGA blocks")
             }
             g_isMaster = g_hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
+            g_adc = std::make_shared<streaming_lib::ADCStreamServer>(g_hw);
+            g_adc->setCallback(makeADCCallback());
             WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
 
             // Initialize network config manager
@@ -314,6 +317,7 @@ auto rp_app_init(void) -> int {
             g_serverNetConfig->startDacStreamingNofiy.connect([](auto channels) { startDACServer(false, channels); });
             g_serverNetConfig->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_STOP); });
             g_serverNetConfig->startADCNofiy.connect([]() { startADC(); });
+            streaming_lib::connectTriggerCommands(g_serverNetConfig, g_hw);
             g_serverNetConfig->memoryBlockSizeChangeNofiy.connect([]() {
                 stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
                 stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_MEM_MODIFY);
@@ -364,6 +368,7 @@ auto rp_app_exit(void) -> int {
     stopServer(ServerNetConfigManager::EStopReason::NORMAL);
     stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_STOP);
     // the module stays loaded, the next start may find another bitstream
+    g_adc = nullptr;
     g_hw = nullptr;
     aprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
@@ -690,9 +695,9 @@ void UpdateParamsFromWeb(void) {
         }
 
         // Update statistics
-        if (g_s_file) {
-            ss_pass_samples.SendValue(g_s_file->getPassSamples());
-            ss_writed_size.SendValue(g_s_file->getWritedSize());
+        if (g_adc && g_adcFile) {
+            ss_pass_samples.SendValue(g_adc->getPassSamples());
+            ss_writed_size.SendValue(g_adc->getWritedSize());
         }
     } catch (std::exception& e) {
         FATAL("%s", e.what());
@@ -707,296 +712,113 @@ void OnNewParams(void) {
 // ADC Server functions
 // ============================================================================
 
-bool startServer(bool testMode) {
-    try {
-        std::lock_guard guard(g_adc_mutex);
+namespace {
 
-        // Reset state
-        g_s_fpga = nullptr;
-        g_s_buffer = nullptr;
-        g_s_file = nullptr;
-        g_s_net = nullptr;
-
-        CStreamSettings settings = g_serverNetConfig->getSettings();
-
-        // Extract settings
-        auto resolution = settings.getADCResolution();
-        auto format = settings.getADCFormat();
-        auto sock_port = NET_ADC_STREAMING_PORT;
-        auto use_file = settings.getADCPassMode();
-        auto rate = settings.getADCDecimation();
-        auto ip_addr_host = ss_ip_addr.Value();
-        auto samples = settings.getADCSamples();
-        auto save_mode = settings.getADCType();
-        auto save_capture_time = settings.getADCCaptureTime();
-        auto use_calib = settings.getADCCalibration();
-        if (!g_hw)
-            return false;
-        auto board = g_hw->info();
-        auto max_channels = board.adcChannels;
-
-        // where the scope writes while no buffer is free
-        memmanager->releaseMemory(uio_lib::MM_ADC_RESERVE_SKIP);
-        auto reserved = memmanager->reserveMemory(uio_lib::MM_ADC_RESERVE_SKIP, 1, 1);
-        if (reserved != 1) {
-            TRACE_SHORT("Reserved: %d", reserved);
-            ERROR_LOG("Can't reserve memory via memory manager");
-            stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
-            return false;
-        }
-        g_hw->adcSetSkipBuffer(memmanager->getRegions(uio_lib::MM_ADC_RESERVE_SKIP)[0].start);
-
-        // Create buffer cache
-        g_s_buffer = DataLib::CBuffersCached::create();
-        auto g_s_buffer_w = std::weak_ptr<DataLib::CBuffersCached>(g_s_buffer);
-
-        // Create streaming handlers
-        if (use_file.value == CStreamSettings::PassMode::NET) {
-            g_s_net = streaming_lib::CStreamingNet::create(ip_addr_host, sock_port);
-            g_s_net->getBuffer = [g_s_buffer_w]() -> DataLib::CDataBuffersPackDMA::Ptr {
-                auto obj = g_s_buffer_w.lock();
-                return obj ? obj->readBuffer() : nullptr;
-            };
-            g_s_net->unlockBufferF = [g_s_buffer_w]() {
-                auto obj = g_s_buffer_w.lock();
-                if (obj)
-                    obj->unlockBufferRead();
-            };
-        }
-
-        if (use_file.value == CStreamSettings::PassMode::FILE) {
-            auto path = std::string(FILE_PATH);
-            g_s_file = streaming_lib::CStreamingFile::create(format, path, samples, save_mode.value == CStreamSettings::DataType::VOLT, testMode, true);
-            g_s_file->setTDMSTimeColumn(settings.getTDMSTimeColumn().value == CStreamSettings::State::ON);
-            g_s_file->stopNotify.connect([](streaming_lib::CStreamingFile::EStopReason r) {
-                switch (r) {
-                    case streaming_lib::CStreamingFile::EStopReason::NORMAL:
-                        stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL);
-                        break;
-                    case streaming_lib::CStreamingFile::EStopReason::OUT_SPACE:
-                        stopNonBlocking(ServerNetConfigManager::EStopReason::SD_FULL);
-                        break;
-                    case streaming_lib::CStreamingFile::EStopReason::REACH_LIMIT:
-                        stopNonBlocking(ServerNetConfigManager::EStopReason::DONE);
-                        break;
-                }
-            });
-        }
-
-        // Create FPGA streaming
-        uint8_t bits = (resolution.value == CStreamSettings::Resolution::BIT_8 ? 8 : 16);
-        TRACE_SHORT("Set channels resolution %d", bits);
-
-        // Configure channels
-        uint8_t channelsActive = 0;
-        for (int i = 0; i < max_channels; i++) {
-            if (settings.getADCChannels(i + 1).value == CStreamSettings::State::ON) {
-                g_s_buffer->addChannel(
-                    (DataLib::EDataBuffersPackChannel)i,
-                    bits,
-                    settings.getADCAttenuator(i + 1).value == CStreamSettings::Attenuator::A_1_20 ? DataLib::CDataBufferDMA::ATT_1_20 : DataLib::CDataBufferDMA::ATT_1_1);
-                channelsActive++;
-            }
-        }
-
-        // Allocate memory
-        memmanager->releaseMemory(uio_lib::MM_ADC);
-        auto mbSize = memmanager->getMemoryBlockSize();
-        auto ramSize = memmanager->getReserverdMemory(uio_lib::MM_ADC);
-
-        if (ramSize < memmanager->getMinRAMSize(uio_lib::MM_ADC)) {
-            ERROR_LOG("Not enough memory for ADC mode");
-            stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
-            return false;
-        }
-
-        auto freeblocks = ramSize / mbSize;
-        if (testMode) {
-            freeblocks = std::min(freeblocks, 100u);
-        }
-        auto reservedBlocks = memmanager->reserveMemory(uio_lib::MM_ADC, freeblocks, channelsActive);
-
-        if (channelsActive == 0) {
-            WARNING("No active channels");
-            stopNonBlocking(ServerNetConfigManager::EStopReason::NO_CHANNELS);
-            return false;
-        }
-
-        if (reservedBlocks == 0) {
-            WARNING("Can't reserve memory via memory manager");
-            stopNonBlocking(ServerNetConfigManager::EStopReason::MEM_ERROR);
-            return false;
-        }
-
-        WARNING("Reserved memory blocks: %d size: %d", reservedBlocks, reservedBlocks * memmanager->getMemoryBlockSize());
-
-        // Generate buffers
-        g_s_buffer->generateBuffers(memmanager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader(), testMode);
-        g_s_buffer->setADCBits(board.adcBits);
-        g_s_buffer->setOSCRate(board.adcRate / rate);
-        if (use_file.value == CStreamSettings::PassMode::NET) {
-            g_s_buffer->initHeadersADC();
-        }
-
-        uio_lib::ADCConfig adc;
-        adc.decimation = rate;
-        adc.eightBit = bits == 8;
-        adc.calibration = use_calib;
-        adc.bufferBytes = g_s_buffer->getDataSize();
-        for (uint8_t ch = 0; ch < max_channels && ch < 4; ch++) {
-            adc.channels[ch] = settings.getADCChannels(ch + 1).value == CStreamSettings::State::ON;
-            adc.att1_20[ch] = settings.getADCAttenuator(ch + 1).value == CStreamSettings::Attenuator::A_1_20;
-            adc.dc[ch] = settings.getADCAC_DC(ch + 1).value == CStreamSettings::AC_DC::DC;
-        }
-        if (!g_hw->adcConfigure(adc)) {
-            ERROR_LOG("Can't configure the ADC");
-            stopNonBlocking(ServerNetConfigManager::EStopReason::CONFIG_ERROR);
-            return false;
-        }
-
-        g_s_fpga = std::make_shared<streaming_lib::CStreamingFPGA>(g_hw, save_capture_time);
-        g_s_fpga->setTestMode(testMode);
-
-        // Setup FPGA callbacks
-        auto weak_obj = std::weak_ptr<DataLib::CBuffersCached>(g_s_buffer);
-        g_s_fpga->getBuffF = [weak_obj]() -> DataLib::CDataBuffersPackDMA::Ptr {
-            auto obj = weak_obj.lock();
-            return obj ? obj->writeBuffer() : nullptr;
-        };
-        g_s_fpga->unlockBuffF = [weak_obj]() {
-            auto obj = weak_obj.lock();
-            if (obj)
-                obj->unlockBufferWrite();
-        };
-
-        auto g_s_file_w = std::weak_ptr<streaming_lib::CStreamingFile>(g_s_file);
-        g_s_fpga->oscNotify.connect([g_s_file_w, g_s_buffer_w](__attribute__((unused)) DataLib::CDataBuffersPackDMA::Ptr) {
-            auto f_obj = g_s_file_w.lock();
-            auto b_obj = g_s_buffer_w.lock();
-            if (f_obj && b_obj) {
-                auto p = b_obj->readBuffer();
-                if (p) {
-                    f_obj->passBuffers(p);
-                    b_obj->unlockBufferRead();
-                }
-            }
-        });
-
-        // Generate timestamp filename
-        char time_str[40];
-        time_t now = time(nullptr);
-        struct tm* timenow = gmtime(&now);
-        strftime(time_str, sizeof(time_str), "%Y-%m-%d_%H-%M-%S", timenow);
-        std::string filenameDate = time_str;
-
-        // Start streaming services
-        if (g_s_net) {
-            g_s_net->run();
-            usleep(1000);
-            g_serverNetConfig->sendADCServerStartedTCP();
-        }
-
-        if (g_s_file) {
-            g_s_file->run(filenameDate);
-            g_serverNetConfig->sendADCServerStartedSD();
-        }
-
-        ss_status.SendValue(1);
-        TRACE("Start server");
-        return true;
-    } catch (std::exception& e) {
-        ERROR_LOG("%s", e.what());
-    }
-    return false;
-}
-
-void startADC() {
-    try {
-        if (g_s_fpga) {
-            TRACE("start");
-            g_s_fpga->runNonBlock();
-            ss_adc_data_pass.SendValue(1);
-            g_serverNetConfig->sendADCStarted();
-        }
-    } catch (std::exception& e) {
-        ERROR_LOG("%s", e.what());
+auto toADC(ServerNetConfigManager::EStopReason reason) -> streaming_lib::ADCStopReason {
+    using R = streaming_lib::ADCStopReason;
+    switch (reason) {
+        case ServerNetConfigManager::EStopReason::SD_FULL:
+            return R::SD_FULL;
+        case ServerNetConfigManager::EStopReason::DONE:
+            return R::DONE;
+        case ServerNetConfigManager::EStopReason::MEM_ERROR:
+            return R::MEM_ERROR;
+        case ServerNetConfigManager::EStopReason::MEM_MODIFY:
+            return R::MEM_MODIFY;
+        case ServerNetConfigManager::EStopReason::NO_CHANNELS:
+            return R::NO_CHANNELS;
+        case ServerNetConfigManager::EStopReason::CONFIG_ERROR:
+            return R::CONFIG_ERROR;
+        default:
+            return R::NORMAL;
     }
 }
 
-// ============================================================================
-// ADC Server stop functions
-// ============================================================================
+// The events of the ADC streaming to the config protocol and to the page
+class WebADCCallback : public streaming_lib::ADCServerCallback {
+    void startedTCP(streaming_lib::ADCStreamServer*) override { g_serverNetConfig->sendADCServerStartedTCP(); }
 
-void stopNonBlocking(ServerNetConfigManager::EStopReason x) {
-    try {
-        std::thread th(stopServer, x);
-        th.detach();
-    } catch (std::exception& e) {
-        ERROR_LOG("%s", e.what());
-    }
-}
+    void startedSD(streaming_lib::ADCStreamServer*) override { g_serverNetConfig->sendADCServerStartedSD(); }
 
-void stopServer(ServerNetConfigManager::EStopReason x) {
-    try {
-        std::lock_guard guard(g_adc_mutex);
-
-        if (g_s_buffer)
-            g_s_buffer->notifyToDestory();
-        if (g_s_file)
-            g_s_file->disableNotify();
-
-        switch (x) {
-            case ServerNetConfigManager::EStopReason::NORMAL:
+    void stopped(streaming_lib::ADCStreamServer*, streaming_lib::ADCStopReason reason) override {
+        using R = streaming_lib::ADCStopReason;
+        g_adcPrepared = false;
+        g_adcFile = false;
+        switch (reason) {
+            case R::NORMAL:
                 g_serverNetConfig->sendServerStopped();
                 ss_status.SendValue(0);
                 break;
-            case ServerNetConfigManager::EStopReason::SD_FULL:
+            case R::SD_FULL:
                 g_serverNetConfig->sendServerStoppedSDFull();
                 ss_status.SendValue(2);
                 break;
-            case ServerNetConfigManager::EStopReason::DONE:
+            case R::DONE:
                 g_serverNetConfig->sendServerStoppedDone();
                 ss_status.SendValue(3);
                 break;
-            case ServerNetConfigManager::EStopReason::MEM_ERROR:
+            case R::MEM_ERROR:
                 g_serverNetConfig->sendServerMemoryErrorStopped();
                 ss_status.SendValue(4);
                 break;
-            case ServerNetConfigManager::EStopReason::MEM_MODIFY:
+            case R::MEM_MODIFY:
                 g_serverNetConfig->sendServerMemoryModifyStopped();
                 ss_status.SendValue(5);
                 break;
-            case ServerNetConfigManager::EStopReason::NO_CHANNELS:
+            case R::NO_CHANNELS:
                 g_serverNetConfig->sendServerNoChannelsStopped();
                 ss_status.SendValue(6);
                 break;
-            case ServerNetConfigManager::EStopReason::CONFIG_ERROR:
+            case R::CONFIG_ERROR:
                 g_serverNetConfig->sendServerConfigErrorStopped();
                 ss_status.SendValue(0);
                 break;
-            default:
-                throw std::runtime_error("Unknown state");
         }
-
-        if (g_s_fpga) {
-            g_s_fpga->stop();
-            g_s_fpga = nullptr;
-        }
-        // The acquisition has stopped: what is queued for the SD card still goes into the file
-        if (g_s_file)
-            g_s_file->stopAndFlush();
-
-        g_s_buffer = nullptr;
-        g_s_net = nullptr;
-        g_s_file = nullptr;
         ss_adc_data_pass.SendValue(0);
-
-        memmanager->releaseMemory(uio_lib::MM_ADC);
-        memmanager->releaseMemory(uio_lib::MM_ADC_RESERVE_SKIP);
         TRACE("Stop server");
-    } catch (std::exception& e) {
-        ERROR_LOG("%s", e.what());
     }
+};
+
+}  // namespace
+
+auto makeADCCallback() -> std::shared_ptr<streaming_lib::ADCServerCallback> {
+    return std::make_shared<WebADCCallback>();
+}
+
+bool startServer(bool testMode) {
+    std::lock_guard guard(g_adc_mutex);
+    if (!g_adc)
+        return false;
+    CStreamSettings settings = g_serverNetConfig->getSettings();
+    streaming_lib::ADCStreamOptions options;
+    options.host = ss_ip_addr.Value();
+    options.testMode = testMode;
+    g_adcFile = settings.getADCPassMode().value == CStreamSettings::PassMode::FILE;
+    if (!g_adc->start(settings, options))
+        return false;
+    g_adcPrepared = true;
+    ss_status.SendValue(1);
+    TRACE("Start server");
+    return true;
+}
+
+void startADC() {
+    if (!g_adc || !g_adcPrepared)
+        return;
+    g_adc->startADC();
+    ss_adc_data_pass.SendValue(1);
+    g_serverNetConfig->sendADCStarted();
+}
+
+void stopNonBlocking(ServerNetConfigManager::EStopReason x) {
+    if (g_adc)
+        g_adc->stopNonBlocking(toADC(x));
+}
+
+void stopServer(ServerNetConfigManager::EStopReason x) {
+    std::lock_guard guard(g_adc_mutex);
+    if (g_adc)
+        g_adc->stop(toADC(x));
 }
 
 // ============================================================================

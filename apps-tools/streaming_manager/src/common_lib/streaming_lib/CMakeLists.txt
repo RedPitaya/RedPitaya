@@ -38,18 +38,22 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/streaming_fpga.h
             ${PROJECT_SOURCE_DIR}/streaming_net.h
             ${PROJECT_SOURCE_DIR}/streaming_file.h
+            ${PROJECT_SOURCE_DIR}/adc_stream_server.h
+            ${PROJECT_SOURCE_DIR}/trigger_commands.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/streaming_fpga.cpp
             ${PROJECT_SOURCE_DIR}/streaming_net.cpp
             ${PROJECT_SOURCE_DIR}/streaming_file.cpp
+            ${PROJECT_SOURCE_DIR}/adc_stream_server.cpp
+            ${PROJECT_SOURCE_DIR}/trigger_commands.cpp
          )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC wav_lib writer_lib logger_lib net_lib uio_lib
+    PUBLIC wav_lib writer_lib logger_lib net_lib uio_lib config_net_lib
     PRIVATE pthread stdc++)
 
 
