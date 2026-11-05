@@ -66,6 +66,7 @@ include_directories(
 list(APPEND src
         ${PROJECT_SOURCE_DIR}/src/adc_streaming.cpp
         ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
+        ${PROJECT_SOURCE_DIR}/src/gpio_streaming.cpp
         ${PROJECT_SOURCE_DIR}/src/config_streaming.cpp
         ${PROJECT_SOURCE_DIR}/src/config.cpp
         ${PROJECT_SOURCE_DIR}/src/common.cpp
@@ -205,7 +206,7 @@ if(IS_INSTALL)
     install(TARGETS ${CPP_PROJ}
         RUNTIME DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ}
         LIBRARY DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ})
-    install(FILES src/adc_streaming.h src/dac_streaming.h src/config_streaming.h src/callbacks.h
+    install(FILES src/adc_streaming.h src/dac_streaming.h src/gpio_streaming.h src/config_streaming.h src/callbacks.h
             DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
     install(FILES examples/adc_example_1.cpp

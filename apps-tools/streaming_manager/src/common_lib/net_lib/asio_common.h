@@ -9,6 +9,8 @@
 #define NET_CONFIG_PORT 18901
 #define NET_BROADCAST_PORT 18902
 #define NET_DAC_STREAMING_PORT 18903
+#define NET_GPIO_IN_STREAMING_PORT 18904   // the input lines, board to client
+#define NET_GPIO_OUT_STREAMING_PORT 18905  // the output lines, client to board
 
 namespace net_lib {
 

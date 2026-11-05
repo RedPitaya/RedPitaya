@@ -107,6 +107,7 @@ CHardware::CHardware(std::shared_ptr<IBoard> board) : m_pimpl(new Impl()) {
         p.features.gpioTriggerMode = p.gpio->hasTriggerMode();
         p.features.gpioBlockMode = p.gpio->hasInputBlockMode();
         p.features.gpioWaitCounter = p.gpio->hasWaitCounter();
+        p.features.gpioOutRefill = p.gpio->getFeatures() & GPIO_FEATURE_OUT_FREE;
     }
     p.features.extTrigger = p.ext != nullptr;
 
@@ -422,6 +423,7 @@ auto CHardware::gpioConfigure(const GPIOConfig& cfg) -> bool {
     ok = p.gpio->setPolarity(cfg.polarity) && ok;
     ok = p.gpio->setDecimation(cfg.decimation) && ok;
     ok = p.gpio->setRLE(cfg.rle) && ok;
+    ok = p.gpio->setOutStep(cfg.outStep) && ok;
     if (cfg.bufferBytes)
         ok = p.gpio->setDataSize(cfg.bufferBytes) && ok;
     if (ok)

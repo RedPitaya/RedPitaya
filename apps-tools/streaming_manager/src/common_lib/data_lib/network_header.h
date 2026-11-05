@@ -9,6 +9,7 @@ namespace DataLib {
 
 extern const uint8_t ID_PACK_ADC[];
 extern const uint8_t ID_PACK_DAC[];
+extern const uint8_t ID_PACK_GPIO[];
 
 // ADCHeader::flags
 constexpr uint8_t ADC_FLAG_TRIGGER_MODE = 0x01;  // the acquisition waits for a trigger
@@ -44,8 +45,22 @@ struct __attribute__((packed)) DACHeader {
     DACHeader(){};
 };
 
+// GPIOHeader::flags
+constexpr uint8_t GPIO_FLAG_RLE = 0x01;           // a word carries its run length: count + 1 samples
+constexpr uint8_t GPIO_FLAG_TRIGGER_MODE = 0x02;  // the input waits for a trigger
+constexpr uint8_t GPIO_FLAG_WAIT_COUNTER = 0x04;  // the FPGA counts the wait apart from the loss
+
+// One buffer of 32 bit words: the input {N count, N lines, P count, P lines} from the board, the
+// output {P lines, N lines, 8 bit unused, count} to the board
 struct __attribute__((packed)) GPIOHeader {
-    uint8_t channels;
+    uint64_t lostFPGA = {0};  // input: samples lost right before this buffer (overflow, not the trigger wait)
+    uint64_t waitFPGA = {0};  // input: samples skipped right before this buffer while waiting for a trigger
+    uint32_t dataSize = {0};  // bytes of words in the buffer: the last output buffer may be filled in part
+    uint32_t decimation = {0};
+    uint32_t gpioClock = {0};  // Hz before the decimation
+    uint32_t triggerCount = {0};  // input: FPGA trigger counter read after the buffer, informative
+    uint16_t triggerBlocks = {0};
+    uint8_t flags = {0};
     GPIOHeader(){};
 };
 
@@ -69,6 +84,10 @@ auto initHeaderADC(CDataBufferDMA::Ptr buffer, uint64_t oscRate, uint64_t adcBit
 auto initHeaderDAC(CDataBufferDMA::Ptr buffer, uint64_t buffersSize, uint8_t channels) -> void;
 auto setHeaderADC(CDataBufferDMA::Ptr buffer, uint64_t _id) -> void;
 auto setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t channelSize, bool onePackMode, bool infMode, int64_t repeatCount, uint8_t bits) -> void;
+// The whole header of a GPIO buffer: the pack ID, the size and `gpio`
+auto setHeaderGPIO(CDataBufferDMA::Ptr buffer, uint64_t id, const GPIOHeader& gpio) -> void;
+// false when the buffer holds no GPIO header
+auto getHeaderGPIO(CDataBufferDMA::Ptr buffer, GPIOHeader& gpio, uint64_t* id = nullptr) -> bool;
 auto sizeHeader() -> uint16_t;
 auto printADCHeader(uint8_t* data) -> void;
 auto printDACHeader(uint8_t* data) -> void;

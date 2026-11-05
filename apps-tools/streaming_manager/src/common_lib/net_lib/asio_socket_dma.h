@@ -40,6 +40,9 @@ class CAsioSocketDMA {
     auto isConnected() -> bool;
     // Sends every channel buffer of the pack; false if the connection broke (it is then closed).
     auto sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool;
+    // The kind of the packs received (ID_PACK_*, 16 bytes, static); by default a client takes
+    // ADC packs and a server DAC packs. Set before start.
+    auto setPackID(const uint8_t* id) -> void;
 
     sigslot::signal<std::string&> connectServerNotify;
     sigslot::signal<std::string&> disconnectServerNotify;
@@ -97,6 +100,7 @@ class CAsioSocketDMA {
     CBuffersCached::Ptr m_buffers;
     CDataBuffersPackDMA::Ptr m_currentBuffer;
     std::atomic<bool> m_isStopReceive;
+    const uint8_t* m_packId = nullptr;
     uint8_t m_watchBuffer[256];
 };
 

@@ -16,22 +16,26 @@
 #include "callbacks.h"
 #include "adc_streaming.h"
 #include "dac_streaming.h"
+#include "gpio_streaming.h"
 #include "config_streaming.h"
 %}
 
 
 %feature("director") ADCCallback;
 %feature("director") DACCallback;
+%feature("director") GPIOCallback;
 %feature("director") ConfigCallback;
 
 %shared_ptr(ConfigCallback)
 %shared_ptr(DACCallback)
+%shared_ptr(GPIOCallback)
 %shared_ptr(ADCCallback)
 %shared_ptr(ConfigStreamClient)
 
 %template(StringVector) std::vector<std::string>;
 %template(Int16Vector) std::vector<int16_t>;
 %template(Int8Vector) std::vector<int8_t>;
+%template(UInt32Vector) std::vector<uint32_t>;
 %template(StringList) std::list<std::string>;
 %template(BoolArray4) std::array<bool, 4>;
 
@@ -95,5 +99,6 @@
 /* Parse the header file to generate wrappers */
 %include "adc_streaming.h"
 %include "dac_streaming.h"
+%include "gpio_streaming.h"
 %include "config_streaming.h"
 %include "callbacks.h"

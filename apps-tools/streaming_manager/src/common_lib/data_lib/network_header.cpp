@@ -7,6 +7,7 @@ using namespace DataLib;
 
 constexpr uint8_t DataLib::ID_PACK_ADC[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xA0, 0xA0, 0xA0, 0xA0, 0xFF, 0xFF, 0xFF, 0xFF, 0xA0, 0xA0, 0xA0, 0xA0};
 constexpr uint8_t DataLib::ID_PACK_DAC[] = {0xFF, 0xFF, 0xA0, 0xA0, 0xFF, 0xFF, 0xA0, 0xA0, 0xFF, 0xFF, 0xA0, 0xA0, 0xFF, 0xFF, 0xA0, 0xA0};
+constexpr uint8_t DataLib::ID_PACK_GPIO[] = {0xFF, 0xA0, 0xFF, 0xA0, 0xFF, 0xA0, 0xFF, 0xA0, 0xFF, 0xA0, 0xFF, 0xA0, 0xFF, 0xA0, 0xFF, 0xA0};
 
 auto DataLib::initHeaderADC(DataLib::CDataBufferDMA::Ptr buffer, uint64_t oscRate, uint64_t adcBits, uint64_t buffersSize, uint8_t channel) -> void {
     if (buffer->getHeaderLenght() != sizeHeader())
@@ -72,6 +73,30 @@ auto DataLib::setHeaderDAC(CDataBufferDMA::Ptr buffer, uint8_t channel, uint32_t
     header->dac.infMode = infMode;
     header->dac.repeatCount = repeatCount;
     header->dac.bits = bits;
+}
+
+auto DataLib::setHeaderGPIO(CDataBufferDMA::Ptr buffer, uint64_t id, const GPIOHeader& gpio) -> void {
+    if (buffer->getHeaderLenght() != sizeHeader())
+        FATAL("Header for network not init")
+    NetworkPackHeader nph;
+    memcpy(nph.ID_PACK, ID_PACK_GPIO, sizeof(ID_PACK_GPIO));
+    nph.bufferSize = buffer->getBufferFullLenght();
+    nph.packId = id;
+    nph.gpio = gpio;
+    memcpy(buffer->getMappedMemory(), &nph, sizeof(NetworkPackHeader));
+}
+
+auto DataLib::getHeaderGPIO(CDataBufferDMA::Ptr buffer, GPIOHeader& gpio, uint64_t* id) -> bool {
+    if (buffer->getHeaderLenght() != sizeHeader())
+        return false;
+    NetworkPackHeader nph;
+    memcpy(&nph, buffer->getMappedMemory(), sizeof(NetworkPackHeader));
+    if (memcmp(nph.ID_PACK, ID_PACK_GPIO, sizeof(ID_PACK_GPIO)) != 0)
+        return false;
+    gpio = nph.gpio;
+    if (id)
+        *id = nph.packId;
+    return true;
 }
 
 auto DataLib::sizeHeader() -> uint16_t {

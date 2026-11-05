@@ -495,3 +495,36 @@ auto requestStartDACStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std:
     cl->removeCallback(cb);
     return !timeout;
 }
+
+auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::string host, bool verbose) -> bool {
+    std::atomic<int> answers{1};
+    std::atomic<bool> started{false};
+
+    class LocalCb : public ConfigCallback {
+        void configError(ConfigStreamClient*, std::string, int) override { (*m_answers)--; }
+        void gpioServerStarted(ConfigStreamClient*, std::string) override {
+            *m_started = true;
+            (*m_answers)--;
+        }
+        void gpioServerStopped(ConfigStreamClient*, std::string) override { (*m_answers)--; }
+        void gpioServerStoppedMemError(ConfigStreamClient*, std::string) override { (*m_answers)--; }
+        void gpioServerStoppedConfigError(ConfigStreamClient*, std::string) override { (*m_answers)--; }
+
+        std::atomic<int>* m_answers;
+        std::atomic<bool>* m_started;
+
+       public:
+        LocalCb(std::atomic<int>* answers, std::atomic<bool>* started) : m_answers(answers), m_started(started) {}
+    };
+    auto cb = std::make_shared<LocalCb>(&answers, &started);
+    cl->addCallback(cb);
+    if (verbose)
+        aprintf(stdout, "%s Send GPIO start command to: %s\n", getTS(": ").c_str(), host.c_str());
+    if (!cl->requestGPIOServerStart(host))
+        answers--;
+    auto begin = std::chrono::steady_clock::now();
+    while (answers > 0 && std::chrono::steady_clock::now() - begin < std::chrono::seconds(5))
+        sleepMs(10);
+    cl->removeCallback(cb);
+    return started;
+}

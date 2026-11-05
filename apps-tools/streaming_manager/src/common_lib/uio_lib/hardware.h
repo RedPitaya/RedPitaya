@@ -107,6 +107,7 @@ struct GPIOConfig {
     uint16_t polarity = 0;     // inverted input lines
     uint32_t decimation = 1;
     bool rle = false;          // run length coded words, input and output
+    uint32_t outStep = 1;      // output: the read pointer step of its DMA (register 0xC0)
     uint32_t bufferBytes = 0;  // DMA buffer, the same for the input and the output
 };
 
@@ -141,6 +142,7 @@ struct HardwareFeatures {
     bool gpioTriggerMode = false;  // output trigger mode
     bool gpioBlockMode = false;    // input trigger and block mode
     bool gpioWaitCounter = false;
+    bool gpioOutRefill = false;    // the output tells its free buffers: it streams more than two
     bool extTrigger = false;
     bool slave = false;    // daisy chain slave board
 };

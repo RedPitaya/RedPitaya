@@ -27,6 +27,9 @@ class CAsioNet {
     auto disconnect() -> void;
 
     auto sendSyncData(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool;
+    // the kind of the packs received, DataLib::ID_PACK_*; by default a client takes ADC packs and
+    // a server DAC packs. Before start().
+    auto setPackID(const uint8_t* id) -> void;
     auto isConnected() -> bool;
 
     sigslot::signal<std::string&> serverConnectNotify;

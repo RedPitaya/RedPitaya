@@ -55,6 +55,10 @@ auto CAsioNet::disconnect() -> void {
     m_IsRun = false;
 }
 
+auto CAsioNet::setPackID(const uint8_t* id) -> void {
+    m_server->setPackID(id);
+}
+
 auto CAsioNet::sendSyncData(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool {
     if (m_server) {
         return m_server->sendSyncBuffer(_buffer);

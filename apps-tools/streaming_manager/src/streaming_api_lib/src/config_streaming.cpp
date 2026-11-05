@@ -185,6 +185,34 @@ ConfigStreamClient::ConfigStreamClient() {
             cl->dacServerStartedSD(this, host);
     });
 
+    m_pimpl->m_configClient->serverGpioStartedNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO streaming started: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioServerStarted(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioStoppedNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO streaming stopped: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioServerStopped(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioStoppedMemErrorNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO streaming stopped: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioServerStoppedMemError(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioStoppedConfigErrorNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO streaming stopped: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioServerStoppedConfigError(this, host);
+    });
+
     m_pimpl->m_configClient->successSendConfigNofiy.connect([&](std::string host) {
         if (m_pimpl->m_verbose) {
             aprintf(stdout, "%s SET: %s [OK]\n", getTS(": ").c_str(), host.c_str());
@@ -390,6 +418,14 @@ auto ConfigStreamClient::requestADCServerStop(const std::string host) -> bool {
 
 auto ConfigStreamClient::requestADCServerFPGAStart(const std::string host) -> bool {
     return m_pimpl->m_configClient->sendADCFPGAStart(host);
+}
+
+auto ConfigStreamClient::requestGPIOServerStart(const std::string host) -> bool {
+    return m_pimpl->m_configClient->sendGPIOServerStart(host);
+}
+
+auto ConfigStreamClient::requestGPIOServerStop(const std::string host) -> bool {
+    return m_pimpl->m_configClient->sendGPIOServerStop(host);
 }
 
 auto ConfigStreamClient::requestDACServerStart(const std::string host, bool ch1Enable, bool ch2Enable) -> bool {

@@ -39,6 +39,7 @@
 #include "streaming_lib/trigger_commands.h"
 
 #include "dac_streaming.h"
+#include "gpio_streaming.h"
 #include "options.h"
 #include "streaming.h"
 #include "streaming_lib/streaming_file.h"
@@ -202,6 +203,7 @@ int main(int argc, char* argv[]) {
         printWithLog(LOG_INFO, stdout, "Detected %s mode\n", isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
         setHardware(hw);
         setDACHardware(hw);
+        setGPIOHardware(hw);
         auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
         auto model = ClientOpt::getBroadcastModel();
 
@@ -210,6 +212,7 @@ int main(int argc, char* argv[]) {
         uio_lib::CMemoryManager::instance()->reallocateBlocks();
         setServer(con_server);
         setDACServer(con_server);
+        setGPIOServer(con_server);
         streaming_lib::connectTriggerCommands(con_server, hw);
         con_server->startBroadcast(model, ClientOpt::getMACAddress(), ip_cur, NET_BROADCAST_PORT);
         con_server->getNewSettingsNofiy.connect([verbMode]() {
@@ -232,6 +235,10 @@ int main(int argc, char* argv[]) {
 
         con_server->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL); });
 
+        con_server->startGpioStreamingNofiy.connect([verbMode]() { startGPIOServer(verbMode); });
+
+        con_server->stopGpioStreamingNofiy.connect([]() { stopGPIONonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
+
         con_server->startADCNofiy.connect([]() {
             startADC();
             con_server->sendADCStarted();
@@ -240,6 +247,7 @@ int main(int argc, char* argv[]) {
         con_server->memoryBlockSizeChangeNofiy.connect([]() {
             stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
             stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
+            stopGPIOServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
             uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
             uio_lib::CMemoryManager::instance()->reallocateBlocks();
         });
@@ -269,6 +277,7 @@ int main(int argc, char* argv[]) {
     try {
         stopServer(ServerNetConfigManager::NORMAL);
         stopDACServer(dac_streaming_lib::DACStopReason::NORMAL);
+        stopGPIOServer(gpio_streaming_lib::GPIOStopReason::NORMAL);
     } catch (std::exception& e) {
         printWithLog(LOG_ERR, stderr, "Error: main() %s\n", e.what());
     }

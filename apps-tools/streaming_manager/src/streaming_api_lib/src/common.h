@@ -25,4 +25,7 @@ auto requestStopStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::lis
 
 auto requestStartDACStreamingCommon(
 	std::shared_ptr<ConfigStreamClient> cl, std::string host, dac_channels_t ac, StateRunningHosts *runned_host, bool verbose) -> bool;
+// true when the server reports the GPIO streaming started within 5 s
+auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::string host, bool verbose) -> bool;
+
 #endif

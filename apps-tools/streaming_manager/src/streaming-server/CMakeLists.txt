@@ -48,12 +48,14 @@ target_include_directories(${PROJECT_NAME}
 
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/src/dac_streaming.h
+            ${PROJECT_SOURCE_DIR}/src/gpio_streaming.h
             ${PROJECT_SOURCE_DIR}/src/options.h
             ${PROJECT_SOURCE_DIR}/src/streaming.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
+            ${PROJECT_SOURCE_DIR}/src/gpio_streaming.cpp
             ${PROJECT_SOURCE_DIR}/src/options.cpp
             ${PROJECT_SOURCE_DIR}/src/streaming.cpp
             ${PROJECT_SOURCE_DIR}/src/main.cpp
@@ -67,7 +69,7 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/lib/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib streaming_lib settings_lib board_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib gpio_streaming_lib streaming_lib settings_lib board_lib)
 
 if(NOT WIN32 )
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++)

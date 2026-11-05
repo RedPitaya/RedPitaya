@@ -87,6 +87,7 @@ static_assert(offsetof(GpioMapT, in_wait) == 0xF0);
 constexpr uint32_t GPIO_FEATURE_IN_BLOCK_MODE = 0x1;
 constexpr uint32_t GPIO_FEATURE_LOST64 = 0x2;
 constexpr uint32_t GPIO_FEATURE_WAIT = 0x4;
+constexpr uint32_t GPIO_FEATURE_OUT_FREE = 0x8;  // 0x98 bits 7/8: an output buffer may take the next address
 
 // GPIO streaming block of stream_app (DIO0..7 P and N), present on the boards with rp_gpio
 // in their stream_app (not on the 250-12 and the low latency boards).
@@ -118,6 +119,8 @@ class CGpio {
 
     // Hands an output buffer to the DMA (also while running, once the buffer is played out).
     auto setOutAddress(uint8_t index, uint32_t addr) -> bool;
+    // The DMA reads the other buffer or waits for this one (GPIO_FEATURE_OUT_FREE; without it
+    // the bits read 0 and the output plays the two buffers handed over at the start only)
     auto isOutBufferDone(uint8_t index) -> bool;
 
     // prepare() selects the event source (the block's own events by default), resets the DMA

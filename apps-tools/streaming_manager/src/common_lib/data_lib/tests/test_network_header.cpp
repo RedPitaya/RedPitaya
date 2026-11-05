@@ -7,7 +7,7 @@
  * any target whose padding rules differ rather than producing packets nobody
  * can read.
  *
- * The ADC and DAC views share one union, so exactly one of them is meaningful
+ * The ADC, DAC and GPIO views share one union, so exactly one of them is meaningful
  * per packet - which one is decided by ID_PACK. That aliasing is pinned too,
  * because it is invisible at the call site.
  */
@@ -50,7 +50,15 @@ auto HeaderOf(const CDataBufferDMA::Ptr& buffer) -> const NetworkPackHeader* {
 TEST(NetworkHeader, TheWireLayoutIsFixed) {
     static_assert(sizeof(ADCHeader) == 55, "ADC view: 8+8+4+1+1+1+1+8, then 8+4+4+2+1, then 4");
     static_assert(sizeof(DACHeader) == 25, "DAC view: 1+1+4+8+1+1+8+1");
-    static_assert(sizeof(DataLib::GPIOHeader) == 1);
+    static_assert(sizeof(DataLib::GPIOHeader) == 35, "GPIO view: 8+8+4+4+4+4+2+1");
+    static_assert(offsetof(DataLib::GPIOHeader, lostFPGA) == 0);
+    static_assert(offsetof(DataLib::GPIOHeader, waitFPGA) == 8);
+    static_assert(offsetof(DataLib::GPIOHeader, dataSize) == 16);
+    static_assert(offsetof(DataLib::GPIOHeader, decimation) == 20);
+    static_assert(offsetof(DataLib::GPIOHeader, gpioClock) == 24);
+    static_assert(offsetof(DataLib::GPIOHeader, triggerCount) == 28);
+    static_assert(offsetof(DataLib::GPIOHeader, triggerBlocks) == 32);
+    static_assert(offsetof(DataLib::GPIOHeader, flags) == 34);
     static_assert(sizeof(NetworkPackHeader) == 87, "16 id + 8 size + 8 packId + 55 union");
 
     static_assert(offsetof(NetworkPackHeader, ID_PACK) == 0);
@@ -219,6 +227,41 @@ TEST(NetworkHeader, InitAndSetHeaderDacWriteTheDacView) {
     EXPECT_EQ(header->dac.repeatCount, -3);
     EXPECT_EQ(header->dac.bits, 8);
     EXPECT_EQ(header->dac.channels, 2) << "setHeaderDAC does not disturb the channel count";
+}
+
+TEST(NetworkHeader, TheGpioHeaderGoesThereAndBack) {
+    Arena arena(1, 4096);
+    auto buffer = MakeHeaderedBuffer(arena, 0, 8);
+    DataLib::GPIOHeader out;
+    EXPECT_FALSE(DataLib::getHeaderGPIO(buffer, out)) << "a buffer without the GPIO id holds no GPIO header";
+
+    DataLib::GPIOHeader in;
+    in.lostFPGA = 0x1122334455667788ull;
+    in.waitFPGA = 42;
+    in.dataSize = 400;
+    in.decimation = 8;
+    in.gpioClock = 125000000;
+    in.triggerCount = 7;
+    in.triggerBlocks = 3;
+    in.flags = DataLib::GPIO_FLAG_RLE | DataLib::GPIO_FLAG_WAIT_COUNTER;
+    DataLib::setHeaderGPIO(buffer, 99, in);
+    const NetworkPackHeader* header = HeaderOf(buffer);
+    EXPECT_EQ(std::memcmp(header->ID_PACK, DataLib::ID_PACK_GPIO, 16), 0);
+    EXPECT_EQ(header->bufferSize, 4096u);
+
+    uint64_t id = 0;
+    ASSERT_TRUE(DataLib::getHeaderGPIO(buffer, out, &id));
+    EXPECT_EQ(id, 99u);
+    EXPECT_EQ(out.lostFPGA, in.lostFPGA);
+    EXPECT_EQ(out.waitFPGA, 42u);
+    EXPECT_EQ(out.dataSize, 400u);
+    EXPECT_EQ(out.decimation, 8u);
+    EXPECT_EQ(out.gpioClock, 125000000u);
+    EXPECT_EQ(out.triggerCount, 7u);
+    EXPECT_EQ(out.triggerBlocks, 3);
+    EXPECT_EQ(out.flags, DataLib::GPIO_FLAG_RLE | DataLib::GPIO_FLAG_WAIT_COUNTER);
+    EXPECT_NE(std::memcmp(DataLib::ID_PACK_GPIO, DataLib::ID_PACK_ADC, 16), 0);
+    EXPECT_NE(std::memcmp(DataLib::ID_PACK_GPIO, DataLib::ID_PACK_DAC, 16), 0);
 }
 
 // adc and dac are members of the same anonymous union: writing one clobbers the

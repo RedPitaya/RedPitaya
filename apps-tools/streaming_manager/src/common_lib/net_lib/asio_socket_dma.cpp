@@ -233,6 +233,10 @@ auto CAsioSocketDMA::unlockBuffer() -> void {
     }
 }
 
+auto CAsioSocketDMA::setPackID(const uint8_t* id) -> void {
+    m_packId = id;
+}
+
 auto CAsioSocketDMA::isConnected() -> bool {
     std::lock_guard lock(m_mtx);
     return m_tcp_socket && m_connected;
@@ -361,7 +365,7 @@ auto CAsioSocketDMA::handlerReceive(const asio::error_code& _error, size_t bytes
         if (m_mode == net_lib::M_CLIENT) {
             // The ADC client: the handler consumes the pack and frees it with unlockBufferRead,
             // so the pack is taken from the ring as a read, which keeps both semaphores balanced.
-            m_currentBuffer->verifyPack(DataLib::ID_PACK_ADC);
+            m_currentBuffer->verifyPack(m_packId ? m_packId : DataLib::ID_PACK_ADC);
             unlockBuffer();
             auto pack = m_buffers->readBuffer();
             if (pack)
@@ -370,7 +374,7 @@ auto CAsioSocketDMA::handlerReceive(const asio::error_code& _error, size_t bytes
                 ERROR_LOG("The received pack is not in the ring")
         } else {
             // The DAC server: the generator reads the ring at its own pace.
-            m_currentBuffer->verifyPack(DataLib::ID_PACK_DAC);
+            m_currentBuffer->verifyPack(m_packId ? m_packId : DataLib::ID_PACK_DAC);
             recivedNotify(_error, m_currentBuffer);
             unlockBuffer();
         }

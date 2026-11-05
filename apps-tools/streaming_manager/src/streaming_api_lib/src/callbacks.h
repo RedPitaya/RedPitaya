@@ -26,8 +26,25 @@ struct ADCPack {
     ADCChannel channel4;
 };
 
+// A buffer of the GPIO input: 32 bit words {N count, N lines, P count, P lines}; with RLE a word
+// stands for count + 1 samples, else for one
+struct GPIOPack {
+    std::string host;
+    uint64_t packId = 0;
+    uint64_t fpgaLost = 0;  // samples lost right before this buffer (overflow)
+    uint64_t fpgaWait = 0;  // samples skipped right before this buffer while waiting for a trigger
+    uint32_t decimation = 0;
+    uint32_t baseRate = 0;  // Hz before the decimation
+    uint32_t triggerCount = 0;
+    uint16_t triggerBlocks = 0;
+    bool rle = false;
+    bool triggerMode = false;
+    std::vector<uint32_t> words;
+};
+
 class ADCStreamClient;
 class DACStreamClient;
+class GPIOStreamClient;
 class ConfigStreamClient;
 
 class ConfigCallback {
@@ -69,6 +86,11 @@ class ConfigCallback {
     virtual void dacServerStoppedSDBroken(ConfigStreamClient*, std::string) {}
     virtual void dacServerStoppedSDMissing(ConfigStreamClient*, std::string) {}
 
+    virtual void gpioServerStarted(ConfigStreamClient*, std::string) {}
+    virtual void gpioServerStopped(ConfigStreamClient*, std::string) {}
+    virtual void gpioServerStoppedMemError(ConfigStreamClient*, std::string) {}
+    virtual void gpioServerStoppedConfigError(ConfigStreamClient*, std::string) {}
+
     virtual void sigInt() {};
 };
 
@@ -99,4 +121,17 @@ class DACCallback {
     virtual bool streamData8Bit(DACStreamClient*, [[maybe_unused]] int8_t* ch1_8Bit, [[maybe_unused]] int8_t* ch2_8Bit, [[maybe_unused]] size_t size) { return true; }
     virtual bool streamData16Bit(DACStreamClient*, [[maybe_unused]] int16_t* ch1_16Bit, [[maybe_unused]] int16_t* ch2_16Bit, [[maybe_unused]] size_t size) { return true; }
 };
+class GPIOCallback {
+   public:
+    virtual ~GPIOCallback() {}
+    virtual void receivePack(GPIOStreamClient*, GPIOPack&) {}
+    virtual void sentPack(GPIOStreamClient*, [[maybe_unused]] uint32_t words) {}
+    virtual void connected(GPIOStreamClient*, std::string) {}
+    virtual void disconnected(GPIOStreamClient*, std::string) {}
+    virtual void error(GPIOStreamClient*, std::string, int) {}
+    // The output words {P lines, N lines, 8 bit unused, RLE count} when the client streams them
+    // itself (startStreaming without setOutputData): at most maxWords; none ends the output
+    virtual std::vector<uint32_t> outputData(GPIOStreamClient*, [[maybe_unused]] size_t maxWords) { return {}; }
+};
+
 #endif
