@@ -187,7 +187,15 @@ TEST_F(DACServer, APackStaysOutOfTheRingWhileTheFPGAHoldsIt) {
     CStreamSettings s;
 
     ASSERT_TRUE(server->start(fileSettings(s, "ramp.wav", CStreamSettings::DACRepeat::DAC_REP_INF), dac_channels_t(), options));
-    std::this_thread::sleep_for(500ms);
+    // several turns of the ring, however slow the machine
+    for (int i = 0; i < 1000; i++) {
+        {
+            std::lock_guard lock(mtx);
+            if (taken.size() > 3 * kPacks)
+                break;
+        }
+        std::this_thread::sleep_for(10ms);
+    }
     server->stop(DACStopReason::NORMAL);
 
     std::lock_guard lock(mtx);
