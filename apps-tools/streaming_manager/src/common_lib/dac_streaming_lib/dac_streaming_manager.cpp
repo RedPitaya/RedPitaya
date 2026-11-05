@@ -24,6 +24,8 @@ CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::st
       m_readerController(nullptr),
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
+      m_isThreadRun(false),
+      m_stopReported(false),
       m_verbose(verbose),
       m_blockSize(blockSize),
       m_remoteClientMode(false),
@@ -57,7 +59,10 @@ CDACStreamingManager::CDACStreamingManager(std::string _host, bool verbose)
       m_readerController(nullptr),
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
+      m_isThreadRun(false),
+      m_stopReported(false),
       m_verbose(verbose),
+      m_blockSize(0),
       m_remoteClientMode(false),
       m_memoryStream(false) {}
 
@@ -78,6 +83,8 @@ CDACStreamingManager::CDACStreamingManager(uint8_t* ch[2], uint64_t size[2], uin
       m_readerController(nullptr),
       m_buffer(DataLib::CBuffersCached::create()),
       m_isRun(false),
+      m_isThreadRun(false),
+      m_stopReported(false),
       m_verbose(verbose),
       m_blockSize(blockSize),
       m_remoteClientMode(false),
@@ -110,6 +117,8 @@ CDACStreamingManager::CDACStreamingManager(
 	, m_readerController(nullptr)
 	, m_buffer(DataLib::CBuffersCached::create())
 	, m_isRun(false)
+	, m_isThreadRun(false)
+	, m_stopReported(false)
 	, m_verbose(verbose)
 	, m_blockSize(blockSize)
 	, m_remoteClientMode(false)
@@ -157,6 +166,7 @@ auto CDACStreamingManager::run() -> void {
     } else {
         std::lock_guard lock(m_mtx);
         m_isRun = true;
+        m_stopReported = false;
         m_isThreadRun = true;  // before the thread: the application takes a stopped reader for the end of the file
         m_Thread = std::thread(&CDACStreamingManager::threadFunc, this);
     }
@@ -187,6 +197,15 @@ auto CDACStreamingManager::getChannels(dac_channels_t &dac) -> bool
 	return false;
 }
 
+auto CDACStreamingManager::getOpenResult() -> CReaderController::OpenResult {
+    return m_readerController ? m_readerController->isOpen() : CReaderController::OR_OK;
+}
+
+auto CDACStreamingManager::reportStop(NotifyResult result) -> void {
+    if (!m_stopReported.exchange(true))
+        notifyStop(result);
+}
+
 auto CDACStreamingManager::getBuffer() -> const DataLib::CDataBuffersPackDMA::Ptr {
 	auto buffer = m_buffer->readBuffer();
 	if (buffer)
@@ -208,7 +227,7 @@ auto CDACStreamingManager::isEmptyBuffer() -> bool {
 
 auto CDACStreamingManager::threadFunc() -> void {
     try {
-        m_isThreadRun = true;
+        // m_isThreadRun is set by run(): a stop() before this thread starts is not overwritten
         bool onePackMode = false;
         int64_t repeatCount = 0;
 
@@ -236,10 +255,9 @@ auto CDACStreamingManager::threadFunc() -> void {
             if (m_readerController) {
                 auto isOpen = m_readerController->isOpen();
                 if (isOpen != CReaderController::OR_OK) {
-                    if (isOpen == CReaderController::OR_CLOSE) {
-                        notifyStop(CDACStreamingManager::NR_MISSING_FILE);
-                    }
-                    notifyStop(CDACStreamingManager::NR_BROKEN);
+                    reportStop(isOpen == CReaderController::OR_CLOSE ? CDACStreamingManager::NR_MISSING_FILE : CDACStreamingManager::NR_BROKEN);
+                    m_isThreadRun = false;
+                    break;
                 }
                 // uint8_t *ch_buffers[2] = {nullptr, nullptr};
                 // size_t size_buffer[2] = {0, 0};
@@ -281,10 +299,10 @@ auto CDACStreamingManager::threadFunc() -> void {
                                 break;
                         }
                         if (res != CReaderController::BR_ENDED)  // Send end notify from dac streaming application
-                            notifyStop(sendRes);
+                            reportStop(sendRes);
                         else {
                             if (m_remoteClientMode) {
-                                notifyStop(CDACStreamingManager::NR_ENDED);
+                                reportStop(CDACStreamingManager::NR_ENDED);
                             }
                         }
                         m_isThreadRun = false;

@@ -3,8 +3,18 @@
 #include <string.h>
 #include <unistd.h>
 #include "generator.h"
+#include "generator_dummy.h"
 
 using namespace uio_lib;
+
+auto uio_lib::dummy::genState() -> GenState& {
+    static GenState state;
+    return state;
+}
+
+auto uio_lib::dummy::resetGenState() -> void {
+    genState() = GenState();
+}
 
 auto CGenerator::create(const UioT&, bool _channel1Enable, bool _channel2Enable, uint32_t dacHz, uint32_t maxDacHz) -> CGenerator::Ptr {
     return std::make_shared<CGenerator>(_channel1Enable, _channel2Enable, 0, nullptr, 0, dacHz, maxDacHz);
@@ -43,7 +53,12 @@ auto CGenerator::prepare() -> void {}
 
 auto CGenerator::setCalibration(int32_t, float, int32_t, float) -> void {}
 
-auto CGenerator::setDataAddress(uint8_t, uint32_t, uint32_t, uint32_t) -> bool {
+auto CGenerator::setDataAddress(uint8_t index, uint32_t ch1, uint32_t ch2, uint32_t size) -> bool {
+    auto& s = dummy::genState();
+    if (s.slotFree && !s.slotFree(index))
+        return false;
+    if (s.taken)
+        s.taken(index, ch1, ch2, size);
     return true;
 }
 
@@ -51,9 +66,15 @@ auto CGenerator::setDataBits(bool, bool) -> void {}
 
 auto CGenerator::setDataSize(uint32_t) -> void {}
 
-auto CGenerator::start(bool, bool) -> void {}
+auto CGenerator::start(bool, bool) -> void {
+    dummy::genState().running = true;
+    dummy::genState().starts++;
+}
 
-auto CGenerator::stop() -> void {}
+auto CGenerator::stop() -> void {
+    dummy::genState().running = false;
+    dummy::genState().stops++;
+}
 
 auto CGenerator::printReg() -> void {}
 

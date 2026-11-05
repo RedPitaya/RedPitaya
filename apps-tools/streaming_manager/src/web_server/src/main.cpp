@@ -14,8 +14,7 @@
 
 // Streaming/Config includes
 #include "config_net_lib/server_net_config_manager.h"
-#include "dac_streaming_lib/dac_streaming_application.h"
-#include "dac_streaming_lib/dac_streaming_manager.h"
+#include "dac_streaming_lib/dac_stream_server.h"
 #include "data_lib/buffers_cached.h"
 #include "streaming_lib/adc_stream_server.h"
 #include "streaming_lib/streaming_file.h"
@@ -36,11 +35,12 @@ bool startServer(bool testMode);
 void stopServer(ServerNetConfigManager::EStopReason x);
 void stopNonBlocking(ServerNetConfigManager::EStopReason x);
 
-auto startDACServer(bool testMode, dac_channels_t) -> bool;
-auto stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> void;
-auto stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> void;
+auto startDACServer(dac_channels_t channels) -> bool;
+auto stopDACNonBlocking(dac_streaming_lib::DACStopReason x) -> void;
+auto stopDACServer(dac_streaming_lib::DACStopReason x) -> void;
 void startADC();
 auto makeADCCallback() -> std::shared_ptr<streaming_lib::ADCServerCallback>;
+auto makeDACCallback() -> std::shared_ptr<dac_streaming_lib::DACServerCallback>;
 
 auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
@@ -59,7 +59,6 @@ void updateUI();
 // ============================================================================
 
 static std::mutex g_adc_mutex;
-static std::mutex g_dac_mutex;
 static constexpr char config_file[] = "/root/.config/redpitaya/apps/streaming/streaming_config.json";
 
 auto memmanager = uio_lib::CMemoryManager::instance();
@@ -150,14 +149,12 @@ streaming_lib::ADCStreamServer::Ptr g_adc = nullptr;
 std::atomic_bool g_adcPrepared(false);  // started, waits for the start of the ADC or runs
 std::atomic_bool g_adcFile(false);      // writes a file: its statistics go to the page
 
-dac_streaming_lib::CDACStreamingApplication::Ptr g_dac_app = nullptr;
-dac_streaming_lib::CDACStreamingManager::Ptr g_dac_manger = nullptr;
+dac_streaming_lib::DACStreamServer::Ptr g_dac = nullptr;
 ServerNetConfigManager::Ptr g_serverNetConfig = nullptr;
 
 uio_lib::BoardMode g_isMaster = uio_lib::BoardMode::UNKNOWN;
 
 std::atomic_bool g_serverRun(false);
-std::atomic_bool g_dac_serverRun(false);
 
 // ============================================================================
 // Hardware detection functions
@@ -299,6 +296,8 @@ auto rp_app_init(void) -> int {
             g_isMaster = g_hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
             g_adc = std::make_shared<streaming_lib::ADCStreamServer>(g_hw);
             g_adc->setCallback(makeADCCallback());
+            g_dac = std::make_shared<dac_streaming_lib::DACStreamServer>(g_hw);
+            g_dac->setCallback(makeDACCallback());
             WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
 
             // Initialize network config manager
@@ -314,13 +313,13 @@ auto rp_app_init(void) -> int {
             g_serverNetConfig->getNewSettingsNofiy.connect([]() { updateUI(); });
             g_serverNetConfig->startStreamingNofiy.connect([]() { startServer(false); });
             g_serverNetConfig->stopStreamingNofiy.connect([]() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
-            g_serverNetConfig->startDacStreamingNofiy.connect([](auto channels) { startDACServer(false, channels); });
-            g_serverNetConfig->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_STOP); });
+            g_serverNetConfig->startDacStreamingNofiy.connect([](auto channels) { startDACServer(channels); });
+            g_serverNetConfig->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL); });
             g_serverNetConfig->startADCNofiy.connect([]() { startADC(); });
             streaming_lib::connectTriggerCommands(g_serverNetConfig, g_hw);
             g_serverNetConfig->memoryBlockSizeChangeNofiy.connect([]() {
                 stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-                stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_MEM_MODIFY);
+                stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
                 uio_lib::CMemoryManager::instance()->setMemoryBlockSize(g_serverNetConfig->getSettings().getMemoryBlockSize());
                 uio_lib::CMemoryManager::instance()->reallocateBlocks();
             });
@@ -360,15 +359,16 @@ auto rp_app_init(void) -> int {
 
 void stopAll() {
     stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-    stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult::NR_MEM_MODIFY);
+    stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
 }
 
 auto rp_app_exit(void) -> int {
     g_serverNetConfig->stop();
     stopServer(ServerNetConfigManager::EStopReason::NORMAL);
-    stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_STOP);
+    stopDACServer(dac_streaming_lib::DACStopReason::NORMAL);
     // the module stays loaded, the next start may find another bitstream
     g_adc = nullptr;
+    g_dac = nullptr;
     g_hw = nullptr;
     aprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
@@ -682,10 +682,10 @@ void UpdateParamsFromWeb(void) {
         if (ss_dac_start.IsNewValue()) {
             ss_dac_start.Update();
             if (ss_dac_start.Value() == 1) {
-                startDACServer(false, dac_channels_t());
+                startDACServer(dac_channels_t());
             } else {
                 WARNING("Stop command");
-                stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_STOP);
+                stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL);
             }
         }
 
@@ -825,190 +825,92 @@ void stopServer(ServerNetConfigManager::EStopReason x) {
 // DAC Server functions
 // ============================================================================
 
-auto startDACServer(__attribute__((unused)) bool testMode, dac_channels_t activeChannels) -> bool {
-    if (!g_serverNetConfig)
-        return false;
+namespace {
 
-    g_dac_app = nullptr;
-    g_dac_manger = nullptr;
-    if (!g_hw)
-        return false;
+// The events of the DAC streaming to the config protocol and to the page
+class WebDACCallback : public dac_streaming_lib::DACServerCallback {
+    // before the playback: the stop of a short file comes after them
+    void startedTCP(dac_streaming_lib::DACStreamServer*) override {
+        g_serverNetConfig->sendDACServerStarted();
+        started();
+    }
 
-    try {
-        std::lock_guard guard(g_dac_mutex);
-        CStreamSettings settings = g_serverNetConfig->getSettings();
+    void startedSD(dac_streaming_lib::DACStreamServer*) override {
+        g_serverNetConfig->sendDACServerStartedSD();
+        started();
+    }
 
-        auto use_file = settings.getDACPassMode();
-        auto dac_speed = settings.getDACSpeed();
-        auto ip_addr_host = "127.0.0.1";
-
-        // The rate, the calibration and the gain of the outputs
-        uio_lib::DACConfig dac;
-        dac.rate = dac_speed;
-        dac.gain5x = {settings.getDACGain(1).value == CStreamSettings::DACGain::X5, settings.getDACGain(2).value == CStreamSettings::DACGain::X5};
-        if (!g_hw->dacConfigure(dac)) {
-            ERROR_LOG("DAC rate cannot be set.");
-            stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_SETTINGS_ERROR);
-            return false;
+    void stopped(dac_streaming_lib::DACStreamServer*, dac_streaming_lib::DACStopReason reason) override {
+        using R = dac_streaming_lib::DACStopReason;
+        switch (reason) {
+            case R::NORMAL:
+                g_serverNetConfig->sendDACServerStopped();
+                ss_dac_status.SendValue(0);
+                break;
+            case R::DONE:
+                g_serverNetConfig->sendDACServerStoppedSDDone();
+                ss_dac_status.SendValue(2);
+                break;
+            case R::EMPTY:
+                g_serverNetConfig->sendDACServerStoppedSDEmpty();
+                ss_dac_status.SendValue(3);
+                break;
+            case R::BROKEN:
+                g_serverNetConfig->sendDACServerStoppedSDBroken();
+                ss_dac_status.SendValue(4);
+                break;
+            case R::MISSING_FILE:
+                g_serverNetConfig->sendDACServerStoppedSDMissingFile();
+                ss_dac_status.SendValue(5);
+                break;
+            case R::MEM_ERROR:
+                g_serverNetConfig->sendDACServerMemoryErrorStopped();
+                ss_dac_status.SendValue(6);
+                break;
+            case R::MEM_MODIFY:
+                g_serverNetConfig->sendDACServerMemoryModifyStopped();
+                ss_dac_status.SendValue(7);
+                break;
+            case R::NO_CHANNELS:
+                g_serverNetConfig->sendDACServerMemoryErrorStopped();
+                ss_dac_status.SendValue(8);
+                break;
+            case R::CONFIG_ERROR:
+                g_serverNetConfig->sendDACServerConfigErrorStopped();
+                ss_dac_status.SendValue(2);
+                break;
         }
+        ss_dac_data_pass.SendValue(0);
+        TRACE("Stop dac server");
+    }
 
-        // Create streaming manager
-        if (use_file.value == CStreamSettings::DACPassMode::DAC_NET) {
-            g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(ip_addr_host, false);
-        } else if (use_file.value == CStreamSettings::DACPassMode::DAC_FILE) {
-            auto format = settings.getDACFileType();
-            auto filePath = settings.getDACFile();
-            auto dacRepeatMode = settings.getDACRepeat();
-            auto dacRepeatCount = settings.getDACRepeatCount();
-
-            if (format.value == CStreamSettings::DataFormat::WAV) {
-                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::WAV_TYPE,
-                                                                               CStreamSettings::getDACDirPath() + "/" + filePath,
-                                                                               dacRepeatMode,
-                                                                               dacRepeatCount,
-                                                                               settings.getMemoryBlockSize(),
-                                                                               false);
-            } else if (format.value == CStreamSettings::DataFormat::TDMS) {
-                g_dac_manger = dac_streaming_lib::CDACStreamingManager::Create(dac_streaming_lib::CDACStreamingManager::TDMS_TYPE,
-                                                                               CStreamSettings::getDACDirPath() + "/" + filePath,
-                                                                               dacRepeatMode,
-                                                                               dacRepeatCount,
-                                                                               settings.getMemoryBlockSize(),
-                                                                               false);
-            } else {
-                stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_BROKEN);
-                return false;
-            }
-
-            g_dac_manger->notifyStop.connect([](dac_streaming_lib::CDACStreamingManager::NotifyResult status) { stopDACNonBlocking(status); });
-
-            if (!g_dac_manger->getChannels(activeChannels)) {
-                ERROR_LOG("There are no channels in the file.\n");
-                stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_EMPTY);
-                return false;
-            }
-        }
-
-        // Allocate memory
-        memmanager->releaseMemory(uio_lib::MM_DAC);
-        auto mbSize = memmanager->getMemoryBlockSize();
-        auto ramSize = memmanager->getReserverdMemory(uio_lib::MM_DAC);
-
-        if (ramSize < memmanager->getMinRAMSize(uio_lib::MM_DAC)) {
-            ERROR_LOG("Not enough memory for DAC mode");
-            stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR);
-            return false;
-        }
-
-        if (activeChannels.count() == 0) {
-            WARNING("No active channels");
-            stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_NO_ACTIVE_CNAHHELS);
-            return false;
-        }
-
-        auto freeblocks = ramSize / mbSize;
-        auto reservedBlocks = memmanager->reserveMemory(uio_lib::MM_DAC, freeblocks, activeChannels.count());
-
-        if (reservedBlocks == 0) {
-            WARNING("Can't reserve memory via memory manager");
-            stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR);
-            return false;
-        }
-
-        WARNING("Reserved memory blocks: %d size: %d", reservedBlocks, reservedBlocks * memmanager->getMemoryBlockSize());
-
-        // Create and start DAC application
-        g_dac_app = std::make_shared<dac_streaming_lib::CDACStreamingApplication>(g_dac_manger, g_hw);
-        g_dac_manger->getBufferManager()->generateBuffersEmptyDAC(activeChannels, memmanager->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
-
-        // Started goes out before the playback: a short file can end at once, and the stop
-        // (which also drops g_dac_manger) must not reach the client first
-        if (g_dac_manger->isLocalMode()) {
-            g_serverNetConfig->sendDACServerStartedSD();
-        } else {
-            g_serverNetConfig->sendDACServerStarted();
-        }
-        g_dac_app->runNonBlock();
-
+    static void started() {
         ss_dac_status.SendValue(1);
         ss_dac_data_pass.SendValue(1);
         TRACE("Start dac server");
-        return true;
-    } catch (std::exception& e) {
-        ERROR_LOG("Error: startDACServer() %s", e.what());
     }
-    return false;
+};
+
+}  // namespace
+
+auto makeDACCallback() -> std::shared_ptr<dac_streaming_lib::DACServerCallback> {
+    return std::make_shared<WebDACCallback>();
 }
 
-// ============================================================================
-// DAC Server stop functions
-// ============================================================================
-
-auto stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> void {
-    try {
-        std::thread th(stopDACServer, x);
-        th.detach();
-    } catch (std::exception& e) {
-        ERROR_LOG("Error: stopDACNonBlocking() %s", e.what());
-    }
+auto startDACServer(dac_channels_t channels) -> bool {
+    if (!g_serverNetConfig || !g_dac)
+        return false;
+    CStreamSettings settings = g_serverNetConfig->getSettings();
+    memmanager->setReserverdMemory(uio_lib::MM_DAC, settings.getDACSize());
+    return g_dac->start(settings, channels);
 }
 
-auto stopDACServer(dac_streaming_lib::CDACStreamingManager::NotifyResult x) -> void {
-    try {
-        std::lock_guard guard(g_dac_mutex);
+auto stopDACNonBlocking(dac_streaming_lib::DACStopReason x) -> void {
+    if (g_dac)
+        g_dac->stopNonBlocking(x);
+}
 
-        if (g_serverNetConfig) {
-            switch (x) {
-                case dac_streaming_lib::CDACStreamingManager::NR_STOP:
-                    g_serverNetConfig->sendDACServerStopped();
-                    ss_dac_status.SendValue(0);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_ENDED:
-                    g_serverNetConfig->sendDACServerStoppedSDDone();
-                    ss_dac_status.SendValue(2);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_EMPTY:
-                    g_serverNetConfig->sendDACServerStoppedSDEmpty();
-                    ss_dac_status.SendValue(3);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_BROKEN:
-                    g_serverNetConfig->sendDACServerStoppedSDBroken();
-                    ss_dac_status.SendValue(4);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_MISSING_FILE:
-                    g_serverNetConfig->sendDACServerStoppedSDMissingFile();
-                    ss_dac_status.SendValue(5);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_MEM_ERROR:
-                    g_serverNetConfig->sendDACServerMemoryErrorStopped();
-                    ss_dac_status.SendValue(6);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_MEM_MODIFY:
-                    g_serverNetConfig->sendDACServerMemoryModifyStopped();
-                    ss_dac_status.SendValue(7);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_NO_ACTIVE_CNAHHELS:
-                    g_serverNetConfig->sendDACServerMemoryErrorStopped();
-                    ss_dac_status.SendValue(8);
-                    break;
-                case dac_streaming_lib::CDACStreamingManager::NR_SETTINGS_ERROR:
-                    g_serverNetConfig->sendDACServerConfigErrorStopped();
-                    ss_dac_status.SendValue(2);
-                    break;
-                default:
-                    throw std::runtime_error("Unknown state");
-            }
-        }
-
-        if (g_dac_app) {
-            g_dac_app->stop();
-            g_dac_app = nullptr;
-        }
-
-        memmanager->releaseMemory(uio_lib::MM_DAC);
-        ss_dac_data_pass.SendValue(0);
-        TRACE("Stop dac server");
-    } catch (std::exception& e) {
-        ERROR_LOG("%s", e.what());
-    }
+auto stopDACServer(dac_streaming_lib::DACStopReason x) -> void {
+    if (g_dac)
+        g_dac->stop(x);
 }

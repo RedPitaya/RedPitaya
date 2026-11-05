@@ -230,7 +230,7 @@ int main(int argc, char* argv[]) {
 
 		con_server->stopStreamingNofiy.connect([]() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
 
-        con_server->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::CDACStreamingManager::NR_STOP); });
+        con_server->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL); });
 
         con_server->startADCNofiy.connect([]() {
             startADC();
@@ -239,7 +239,7 @@ int main(int argc, char* argv[]) {
 
         con_server->memoryBlockSizeChangeNofiy.connect([]() {
             stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-            stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_MEM_MODIFY);
+            stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
             uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
             uio_lib::CMemoryManager::instance()->reallocateBlocks();
         });
@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
 
     try {
         stopServer(ServerNetConfigManager::NORMAL);
-        stopDACServer(dac_streaming_lib::CDACStreamingManager::NR_STOP);
+        stopDACServer(dac_streaming_lib::DACStopReason::NORMAL);
     } catch (std::exception& e) {
         printWithLog(LOG_ERR, stderr, "Error: main() %s\n", e.what());
     }

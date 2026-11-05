@@ -4,7 +4,7 @@
 using namespace dac_streaming_lib;
 
 CDACStreamingApplication::CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CHardware::Ptr _hw)
-    : m_hw(_hw), m_streamingManager(_streamingManager), m_Thread(), mtx(), m_ReadyToPass(0), m_isRun(false), m_isRunNonBloking(false), m_verbMode(false) {}
+    : m_hw(_hw), m_streamingManager(_streamingManager), m_Thread(), mtx(), m_GenThreadRun(false), m_ReadyToPass(0), m_isRun(false), m_isRunNonBloking(false), m_verbMode(false) {}
 
 CDACStreamingApplication::~CDACStreamingApplication() {
     stop();
@@ -13,6 +13,7 @@ CDACStreamingApplication::~CDACStreamingApplication() {
 auto CDACStreamingApplication::run() -> void {
     m_isRun = true;
     m_isRunNonBloking = false;
+    m_GenThreadRun = true;  // before the thread: a stop() that comes first is not overwritten
     try {
         m_streamingManager->run();
         m_Thread = std::thread(&CDACStreamingApplication::genWorker, this);
@@ -27,6 +28,7 @@ auto CDACStreamingApplication::run() -> void {
 auto CDACStreamingApplication::runNonBlock() -> void {
     m_isRun = true;
     m_isRunNonBloking = true;
+    m_GenThreadRun = true;  // before the thread: a stop() that comes first is not overwritten
     try {
         m_streamingManager->run();  // MUST BE INIT FIRST for thread logic
         m_Thread = std::thread(&CDACStreamingApplication::genWorker, this);
@@ -60,8 +62,10 @@ void CDACStreamingApplication::genWorker() {
     DataLib::CDataBuffersPackDMA::Ptr buffer = nullptr;
     bool onePackMode = false;
     bool notRun = true;
+    // The FPGA holds two buffers, one playing and one queued: a pack goes back to the ring only
+    // when its slot takes the next but one pack, the DMA has read it then
+    int handedOver = 0;
     m_hw->dacPrepare();
-    m_GenThreadRun = true;
     try {
         while (m_GenThreadRun) {
             int64_t repeatInOpenPackMode = 0;
@@ -144,10 +148,17 @@ void CDACStreamingApplication::genWorker() {
                     if (!m_GenThreadRun)
                         break;
                 } while (!ret);
+                if (!ret) {
+                    // stopped before the pack was handed over: it goes back with the rest
+                    if (!onePackMode)
+                        handedOver++;
+                    break;
+                }
                 indexForWrite = indexForWrite == 0 ? 1 : 0;
 
-                if (!onePackMode) {
+                if (!onePackMode && ++handedOver > 2) {
                     m_streamingManager->unlockBuffer();
+                    handedOver--;
                 }
                 if (m_verbMode) {
                     timeNow = std::chrono::system_clock::now();
@@ -164,15 +175,18 @@ void CDACStreamingApplication::genWorker() {
                 }
             }
         }
-        if (onePackMode) {
-            m_streamingManager->unlockBuffer();
-        }
     } catch (std::exception& e) {
         ERROR_LOG("%s", e.what())
     }
     m_hw->dacStop();
+    // the DMA does not read any more: the packs still held go back
+    if (onePackMode)
+        m_streamingManager->unlockBuffer();
+    else
+        for (; handedOver > 0; handedOver--)
+            m_streamingManager->unlockBuffer();
     if (!m_streamingManager->isRunned())  // Send notification that generation is complete at application level
-        m_streamingManager->notifyStop(CDACStreamingManager::NR_ENDED);
+        m_streamingManager->reportStop(CDACStreamingManager::NR_ENDED);
     m_isRun = false;
 }
 

@@ -75,8 +75,9 @@ auto CMemoryManager::reallocateBlocks() -> bool {
     m_heap.resize(blockCount);
     for (auto i = 0u; i < blockCount; i++) {
         MemoryRegionT itm;
-        itm.start = 0;
-        itm.end = 0;
+        // no DMA here: distinct addresses tell the blocks apart (and from 0, no channel)
+        itm.start = 0x10000000u + i * getMemoryBlockSize();
+        itm.end = itm.start + getMemoryBlockSize() - 1;
         itm.startMemory = new uint8_t[getMemoryBlockSize()];
         memset(itm.startMemory, 0, getMemoryBlockSize());
         itm.size = getMemoryBlockSize();

@@ -23,23 +23,10 @@ Found in a review of the code at e26c75a5f. Paths are relative to `src/` unless 
 
 ## DAC
 
-To be done with the DAC server class of streaming_lib (the DAC counterpart of
-`ADCStreamServer`).
-
-- **A stop before the worker thread starts is lost.** `CDACStreamingApplication::genWorker` sets
-  `m_GenThreadRun = true` inside the thread, `CDACStreamingManager::threadFunc` sets
-  `m_isThreadRun = true` inside its thread: a `stop()` that comes first is overwritten and its
-  `join()` waits for the end of the file or for ever. `m_GenThreadRun` is not initialised in the
-  constructor.
-- **A pack goes back to the ring while the DMA still reads it.**
-  `common_lib/dac_streaming_lib/dac_streaming_application.cpp`: `unlockBuffer()` right after
-  `dacSetBuffer()`. The FPGA holds two buffers (one playing, one queued); with a full ring the
-  writer's next slot is the pack just handed over. Release pack k-2 when pack k is handed over,
-  the rest after the end.
-- **A detached DAC stop can end the next session.** `stopDACNonBlocking` in
-  `streaming-server/src/dac_streaming.cpp` and `web_server/src/main.cpp` (the fix of
-  `ADCStreamServer`, a session counter, applies). The globals `g_dac_app` / `g_dac_manger` of the
-  console server have no mutex.
+- **The DAC trigger settings have no consumer.** `CStreamSettings` keeps the DAC trigger keys,
+  `CHardware::dacSetTrigger` exists, `DACStreamServer::start` does not pass them on.
+- **A network DAC client that disconnects is not reported.** The playback goes on with what the
+  ring holds and waits for data until a stop comes over the config port.
 
 ## Configuration
 

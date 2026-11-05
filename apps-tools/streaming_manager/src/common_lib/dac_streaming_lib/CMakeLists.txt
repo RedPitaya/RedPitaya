@@ -37,17 +37,19 @@ target_compile_definitions(${PROJECT_NAME}
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/dac_streaming_manager.h
             ${PROJECT_SOURCE_DIR}/dac_streaming_application.h
+            ${PROJECT_SOURCE_DIR}/dac_stream_server.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/dac_streaming_manager.cpp
             ${PROJECT_SOURCE_DIR}/dac_streaming_application.cpp
+            ${PROJECT_SOURCE_DIR}/dac_stream_server.cpp
          )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC reader_lib
+    PUBLIC reader_lib uio_lib
     PRIVATE pthread stdc++)
 
 
@@ -58,3 +60,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         "${CMAKE_BINARY_DIR}/bin/include/${PROJECT_NAME}"
     COMMENT "Copying ${PROJECT_NAME} public headers to ${CMAKE_BINARY_DIR}/include/${PROJECT_NAME}"
     VERBATIM)
+
+## The tests play files through the dummy CGenerator of the host build.
+if(NOT RP_PLATFORM AND NOT CMAKE_CROSSCOMPILING AND BUILD_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+
+    ## The suite runs as part of the build, so a regression fails the build.
+    add_custom_target(rp_dac_streaming_lib_run_tests ALL
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Running dac_streaming_lib unit tests (ctest) - the build fails if any test fails"
+        VERBATIM)
+    add_dependencies(rp_dac_streaming_lib_run_tests dac_streaming_lib_tests)
+endif()

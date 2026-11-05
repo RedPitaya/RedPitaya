@@ -61,6 +61,11 @@ class CDACStreamingManager {
     auto isRunned() -> bool;
 
 	auto getChannels(dac_channels_t &dac) -> bool;
+    // of the file or memory to play; OR_OK in the network mode
+    auto getOpenResult() -> CReaderController::OpenResult;
+
+    // emits notifyStop once per run: the first reason is the one that counts
+    auto reportStop(NotifyResult result) -> void;
 
 	sigslot::signal<NotifyResult> notifyStop;
 
@@ -83,6 +88,7 @@ class CDACStreamingManager {
     std::thread m_Thread;
     std::atomic_bool m_isRun;
     std::atomic_bool m_isThreadRun;
+    std::atomic_bool m_stopReported;
     std::mutex m_mtx;
     bool m_verbose;
     uint32_t m_blockSize;
