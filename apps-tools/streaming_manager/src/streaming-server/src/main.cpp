@@ -235,9 +235,13 @@ int main(int argc, char* argv[]) {
 
         con_server->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL); });
 
-        con_server->startGpioStreamingNofiy.connect([verbMode]() { startGPIOServer(verbMode); });
+        con_server->startGpioInStreamingNofiy.connect([verbMode]() { startGPIOInServer(verbMode); });
 
-        con_server->stopGpioStreamingNofiy.connect([]() { stopGPIONonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
+        con_server->stopGpioInStreamingNofiy.connect([]() { stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
+
+        con_server->startGpioOutStreamingNofiy.connect([verbMode]() { startGPIOOutServer(verbMode); });
+
+        con_server->stopGpioOutStreamingNofiy.connect([]() { stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
 
         con_server->startADCNofiy.connect([]() {
             startADC();
@@ -247,7 +251,8 @@ int main(int argc, char* argv[]) {
         con_server->memoryBlockSizeChangeNofiy.connect([]() {
             stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
             stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
-            stopGPIOServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
+            stopGPIOInServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
+            stopGPIOOutServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
             uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
             uio_lib::CMemoryManager::instance()->reallocateBlocks();
         });
@@ -277,7 +282,8 @@ int main(int argc, char* argv[]) {
     try {
         stopServer(ServerNetConfigManager::NORMAL);
         stopDACServer(dac_streaming_lib::DACStopReason::NORMAL);
-        stopGPIOServer(gpio_streaming_lib::GPIOStopReason::NORMAL);
+        stopGPIOInServer(gpio_streaming_lib::GPIOStopReason::NORMAL);
+        stopGPIOOutServer(gpio_streaming_lib::GPIOStopReason::NORMAL);
     } catch (std::exception& e) {
         printWithLog(LOG_ERR, stderr, "Error: main() %s\n", e.what());
     }

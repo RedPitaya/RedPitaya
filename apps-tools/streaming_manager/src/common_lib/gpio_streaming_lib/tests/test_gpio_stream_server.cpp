@@ -1,8 +1,10 @@
 /**
- * GPIOStreamServer, the GPIO streaming of a board over CHardware: the server of the host build runs
- * on the dummy GPIO block, its clients connect to the data ports over TCP on localhost. The input
- * buffers reach the client in order with their header, the output buffers of the client reach the
- * block in order, a pack stays out of the ring while the block holds it, and what is reported.
+ * GPIOInStreamServer and GPIOOutStreamServer, the GPIO input and output of a board over CHardware:
+ * the servers of the host build run on the dummy GPIO block, their clients connect to the data
+ * ports over TCP on localhost. The input buffers reach the client in order with their header,
+ * the output buffers of the client reach the block in order once they filled the ring, a pack
+ * stays out of the ring while the block holds it, the stop tells the clocks the output waited,
+ * and the two directions run on their own.
  */
 
 #include <gtest/gtest.h>
@@ -18,7 +20,8 @@
 #include "board_lib/board.h"
 #include "data_lib/buffers_cached.h"
 #include "data_lib/network_header.h"
-#include "gpio_streaming_lib/gpio_stream_server.h"
+#include "gpio_streaming_lib/gpio_in_stream_server.h"
+#include "gpio_streaming_lib/gpio_out_stream_server.h"
 #include "net_lib/asio_net.h"
 #include "uio_lib/gpio.h"
 #include "uio_lib/gpio_dummy.h"
@@ -33,19 +36,14 @@ namespace {
 
 constexpr uint32_t kBlock = 4096;
 constexpr uint32_t kWords = kBlock / 4;
+constexpr uint32_t kOutPacks = 12;  // the ring of the output
 
-class Recorder : public GPIOServerCallback {
-   public:
-    void started(GPIOStreamServer*) override {
-        std::lock_guard lock(mtx);
-        events.push_back("started");
-    }
-    void stopped(GPIOStreamServer*, GPIOStopReason r) override {
-        std::lock_guard lock(mtx);
-        reasons.push_back(r);
-        events.push_back("stopped");
-        cv.notify_all();
-    }
+// What a server reports
+struct Recorder : public GPIOInServerCallback, public GPIOOutServerCallback {
+    void started(GPIOInStreamServer*) override { add("in started"); }
+    void stopped(GPIOInStreamServer*, GPIOStopReason r) override { stop("in stopped", r, 0); }
+    void started(GPIOOutStreamServer*) override { add("out started"); }
+    void stopped(GPIOOutStreamServer*, GPIOStopReason r, uint64_t w) override { stop("out stopped", r, w); }
 
     auto waitStopped(int seconds = 10) -> bool {
         std::unique_lock lock(mtx);
@@ -61,11 +59,33 @@ class Recorder : public GPIOServerCallback {
     std::condition_variable cv;
     std::vector<std::string> events;
     std::vector<GPIOStopReason> reasons;
+    uint64_t wait = 0;
+
+   private:
+    void add(const std::string& e) {
+        std::lock_guard lock(mtx);
+        events.push_back(e);
+    }
+    void stop(const std::string& e, GPIOStopReason r, uint64_t w) {
+        std::lock_guard lock(mtx);
+        events.push_back(e);
+        reasons.push_back(r);
+        wait = w;
+        cv.notify_all();
+    }
 };
+
+auto regionsOf() -> std::vector<uio_lib::MemoryRegionT> {
+    auto memory = uio_lib::CMemoryManager::instance();
+    auto in = memory->getRegions(uio_lib::MM_GPIO_IN);
+    auto out = memory->getRegions(uio_lib::MM_GPIO_OUT);
+    in.insert(in.end(), out.begin(), out.end());
+    return in;
+}
 
 // The words of a buffer of the server by its DMA address
 auto wordsAt(uint32_t address) -> uint32_t* {
-    for (const auto& r : uio_lib::CMemoryManager::instance()->getRegions(uio_lib::MM_GPIO)) {
+    for (const auto& r : regionsOf()) {
         if (address == r.start + DataLib::sizeHeader())
             return reinterpret_cast<uint32_t*>(r.startMemory + DataLib::sizeHeader());
     }
@@ -91,10 +111,10 @@ struct ClientRing {
     ClientRing() {
         memory.setMemoryBlockSize(kBlock);
         memory.reallocateBlocks();
-        memory.reserveMemory(uio_lib::MM_GPIO, 16, 1);
+        memory.reserveMemory(uio_lib::MM_GPIO_IN, 16, 1);
         adc_channels_t one;
         one[ADCChannels::ADC_CH1] = true;
-        ring->generateBuffersEmptyADC(one, memory.getRegions(uio_lib::MM_GPIO), DataLib::sizeHeader());
+        ring->generateBuffersEmptyADC(one, memory.getRegions(uio_lib::MM_GPIO_IN), DataLib::sizeHeader());
     }
 };
 
@@ -183,107 +203,100 @@ class GPIOServer : public ::testing::Test {
     void SetUp() override {
         uio_lib::dummy::resetGpioState();
         uio_lib::dummy::gpioState().present = true;
-        uio_lib::dummy::gpioState().features = uio_lib::GPIO_FEATURE_OUT_FREE;
+        uio_lib::dummy::gpioState().features = uio_lib::GPIO_FEATURE_OUT_FREE | uio_lib::GPIO_FEATURE_OUT_WAIT;
         auto memory = uio_lib::CMemoryManager::instance();
         memory->setMemoryBlockSize(kBlock);
         memory->reallocateBlocks();
-        memory->setReserverdMemory(uio_lib::MM_GPIO, 24 * memory->getMemoryBlockSize());
+        memory->setReserverdMemory(uio_lib::MM_GPIO_IN, 12 * memory->getMemoryBlockSize());
+        memory->setReserverdMemory(uio_lib::MM_GPIO_OUT, kOutPacks * memory->getMemoryBlockSize());
         board = std::make_shared<board_lib::CDummyBoard>();
-        hw = uio_lib::CHardware::create(board);
-        server = std::make_shared<GPIOStreamServer>(hw);
-        recorder = std::make_shared<Recorder>();
-        server->setCallback(recorder);
+        recreate();
         settings.setMemoryBlockSize(kBlock);
     }
 
     void TearDown() override {
-        server = nullptr;
+        in = nullptr;
+        out = nullptr;
         uio_lib::dummy::resetGpioState();
     }
 
-    auto directions(bool in, bool out) -> void {
-        settings.setGPIOInStreaming(in ? CStreamSettings::State::ON : CStreamSettings::State::OFF);
-        settings.setGPIOOutStreaming(out ? CStreamSettings::State::ON : CStreamSettings::State::OFF);
+    // a new hardware object, after a change of the dummy state its features depend on
+    void recreate() {
+        in = nullptr;
+        out = nullptr;
+        hw = uio_lib::CHardware::create(board);
+        in = std::make_shared<GPIOInStreamServer>(hw);
+        out = std::make_shared<GPIOOutStreamServer>(hw);
+        in->setCallback(std::shared_ptr<GPIOInServerCallback>(recorder, recorder.get()));
+        out->setCallback(std::shared_ptr<GPIOOutServerCallback>(recorder, recorder.get()));
+    }
+
+    // the input fills a buffer every millisecond with a counter
+    void countingInput() {
+        uio_lib::dummy::gpioState().inFill = [this](uint8_t, uint32_t address) {
+            std::this_thread::sleep_for(1ms);
+            auto w = wordsAt(address);
+            if (!w)
+                return false;
+            for (uint32_t i = 0; i < kWords; i++)
+                w[i] = next++;
+            return true;
+        };
     }
 
     std::shared_ptr<board_lib::CDummyBoard> board;
     uio_lib::CHardware::Ptr hw;
-    GPIOStreamServer::Ptr server;
-    std::shared_ptr<Recorder> recorder;
+    GPIOInStreamServer::Ptr in;
+    GPIOOutStreamServer::Ptr out;
+    std::shared_ptr<Recorder> recorder = std::make_shared<Recorder>();
     CStreamSettings settings;
+    std::atomic<uint32_t> next{0};
 };
 
 }  // namespace
 
+// --- the input
+
 TEST_F(GPIOServer, WithoutAGPIOBlockTheStartIsAConfigurationError) {
     uio_lib::dummy::gpioState().present = false;
-    hw = uio_lib::CHardware::create(board);
-    server = std::make_shared<GPIOStreamServer>(hw);
-    server->setCallback(recorder);
-    directions(true, false);
-    EXPECT_FALSE(server->start(settings));
+    recreate();
+    EXPECT_FALSE(in->start(settings));
     ASSERT_TRUE(recorder->waitStopped());
-    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::CONFIG_ERROR});
-}
-
-TEST_F(GPIOServer, NeitherDirectionIsAConfigurationError) {
-    directions(false, false);
-    EXPECT_FALSE(server->start(settings));
-    ASSERT_TRUE(recorder->waitStopped());
-    EXPECT_EQ(recorder->events, (std::vector<std::string>{"stopped"}));
     EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::CONFIG_ERROR});
 }
 
 TEST_F(GPIOServer, NoMemoryIsAMemoryError) {
-    uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_GPIO, 0);
-    directions(true, false);
-    EXPECT_FALSE(server->start(settings));
+    uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_GPIO_IN, 0);
+    EXPECT_FALSE(in->start(settings));
     ASSERT_TRUE(recorder->waitStopped());
     EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::MEM_ERROR});
 }
 
-TEST_F(GPIOServer, TheSettingsReachTheBlock) {
-    directions(true, true);
-    settings.setGPIOOutputsP(0x0F);
-    settings.setGPIOOutputsN(0x81);
+TEST_F(GPIOServer, TheInputSettingsReachTheBlock) {
     settings.setGPIOPolarity(0x0102);
     settings.setGPIODecimation(4);
     settings.setGPIORLE(CStreamSettings::State::ON);
-    settings.setGPIOOutStep(2);
-    ASSERT_TRUE(server->start(settings));
+    ASSERT_TRUE(in->start(settings));
     auto& s = uio_lib::dummy::gpioState();
-    EXPECT_EQ(s.outputsP, 0x0F);
-    EXPECT_EQ(s.outputsN, 0x81);
     EXPECT_EQ(s.polarity, 0x0102);
     EXPECT_EQ(s.decimation, 4u);
     EXPECT_TRUE(s.rle);
-    EXPECT_EQ(s.outStep, 2u);
     EXPECT_EQ(s.dataSize, kBlock);
-    EXPECT_EQ(s.prepares, 1);
-    EXPECT_EQ(s.starts, 0) << "with the output the block waits for its first buffer";
-    EXPECT_EQ(recorder->events, std::vector<std::string>{"started"});
+    EXPECT_EQ(s.inPrepares, 1);
+    EXPECT_EQ(s.inStarts, 1) << "the input starts at once";
+    EXPECT_EQ(s.outStarts, 0);
+    EXPECT_EQ(recorder->events, std::vector<std::string>{"in started"});
 }
 
 TEST_F(GPIOServer, TheInputReachesTheClientInOrder) {
-    directions(true, false);
     settings.setGPIODecimation(8);
-    std::atomic<uint32_t> next{0};
-    uio_lib::dummy::gpioState().inFill = [&](uint8_t, uint32_t address) {
-        std::this_thread::sleep_for(1ms);
-        auto w = wordsAt(address);
-        if (!w)
-            return false;
-        for (uint32_t i = 0; i < kWords; i++)
-            w[i] = next++;
-        return true;
-    };
+    countingInput();
     uio_lib::dummy::gpioState().inLost = [](uint8_t) { return uint64_t(3); };
     InputClient client;
-    ASSERT_TRUE(server->start(settings));
-    EXPECT_EQ(uio_lib::dummy::gpioState().starts, 1) << "the input starts at once";
+    ASSERT_TRUE(in->start(settings));
     client.start();
     ASSERT_TRUE(waitFor([&]() { return client.packs() >= 20; }));
-    server->stop(GPIOStopReason::NORMAL);
+    in->stop(GPIOStopReason::NORMAL);
 
     std::lock_guard lock(client.mtx);
     for (size_t i = 0; i < client.headers.size(); i++) {
@@ -298,8 +311,79 @@ TEST_F(GPIOServer, TheInputReachesTheClientInOrder) {
         ASSERT_EQ(client.words[i], client.words[i - 1] + 1) << "word " << i;
 }
 
-TEST_F(GPIOServer, TheOutputReachesTheBlockInOrderAndStartsIt) {
-    directions(false, true);
+TEST_F(GPIOServer, AStopIsReportedAlsoWhenNothingRuns) {
+    in->stop(GPIOStopReason::NORMAL);
+    out->stop(GPIOStopReason::NORMAL);
+    EXPECT_EQ(recorder->stops(), (std::vector<GPIOStopReason>{GPIOStopReason::NORMAL, GPIOStopReason::NORMAL}));
+}
+
+TEST_F(GPIOServer, ASecondStartOpensThePortAgain) {
+    countingInput();
+    for (int run = 0; run < 3; run++) {
+        ASSERT_TRUE(in->start(settings)) << "run " << run;
+        InputClient client;
+        client.start();
+        ASSERT_TRUE(waitFor([&]() { return client.packs() >= 3; })) << "run " << run;
+    }
+    in->stop(GPIOStopReason::NORMAL);
+}
+
+// --- the output
+
+// An FPGA whose output does not tell its free buffers can't stream the output; the input it can
+TEST_F(GPIOServer, AnOutputWithoutTheFreeFlagsIsAConfigurationError) {
+    uio_lib::dummy::gpioState().features = 0;
+    recreate();
+    EXPECT_FALSE(out->start(settings));
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::CONFIG_ERROR});
+    EXPECT_TRUE(in->start(settings));
+}
+
+TEST_F(GPIOServer, TheOutputSettingsReachTheBlock) {
+    settings.setGPIOOutputsP(0x0F);
+    settings.setGPIOOutputsN(0x81);
+    settings.setGPIORLE(CStreamSettings::State::ON);
+    settings.setGPIOOutStep(2);
+    ASSERT_TRUE(out->start(settings));
+    auto& s = uio_lib::dummy::gpioState();
+    EXPECT_EQ(s.outputsP, 0x0F);
+    EXPECT_EQ(s.outputsN, 0x81);
+    EXPECT_TRUE(s.rle);
+    EXPECT_EQ(s.outStep, 2u);
+    EXPECT_EQ(s.dataSize, kBlock);
+    EXPECT_EQ(s.outPrepares, 1);
+    EXPECT_EQ(s.outStarts, 0) << "the output waits for its first buffers";
+    EXPECT_EQ(s.inStarts, 0);
+    EXPECT_EQ(recorder->events, std::vector<std::string>{"out started"});
+}
+
+// A few buffers play 100 ms after the last came; a full ring plays at once
+TEST_F(GPIOServer, TheOutputFillsItsRingBeforeItPlays) {
+    std::atomic<int> taken{0};
+    uio_lib::dummy::gpioState().outTaken = [&](uint8_t, uint32_t) { taken++; };
+    ASSERT_TRUE(out->start(settings));
+    OutputClient client;
+    ASSERT_TRUE(client.start());
+    for (uint32_t k = 0; k < 3; k++)
+        ASSERT_TRUE(client.send(outBuffer(k)));
+    auto sent = std::chrono::steady_clock::now();
+    ASSERT_TRUE(waitFor([&]() { return uio_lib::dummy::gpioState().outStarts == 1; }));
+    EXPECT_GE(std::chrono::steady_clock::now() - sent, 90ms);
+    out->stop(GPIOStopReason::NORMAL);
+
+    taken = 0;
+    uio_lib::dummy::gpioState().outDone = [](uint8_t) { return false; };  // nothing plays out
+    ASSERT_TRUE(out->start(settings));
+    OutputClient client2;
+    ASSERT_TRUE(client2.start());
+    for (uint32_t k = 0; k < kOutPacks - 1; k++)
+        ASSERT_TRUE(client2.send(outBuffer(k)));
+    ASSERT_TRUE(waitFor([&]() { return uio_lib::dummy::gpioState().outStarts == 2; }, 80ms)) << "a full ring plays at once";
+    out->stop(GPIOStopReason::NORMAL);
+}
+
+TEST_F(GPIOServer, TheOutputReachesTheBlockInOrder) {
     std::mutex mtx;
     std::vector<uint32_t> firsts;
     std::vector<uint32_t> lasts;
@@ -307,11 +391,11 @@ TEST_F(GPIOServer, TheOutputReachesTheBlockInOrderAndStartsIt) {
     uio_lib::dummy::gpioState().outTaken = [&](uint8_t, uint32_t address) {
         auto w = wordsAt(address);
         std::lock_guard lock(mtx);
-        running.push_back(uio_lib::dummy::gpioState().running);
+        running.push_back(uio_lib::dummy::gpioState().outRunning);
         firsts.push_back(w ? w[0] : 0);
         lasts.push_back(w ? w[kWords - 1] : 0);
     };
-    ASSERT_TRUE(server->start(settings));
+    ASSERT_TRUE(out->start(settings));
     OutputClient client;
     ASSERT_TRUE(client.start());
     for (uint32_t k = 0; k < 5; k++)
@@ -321,7 +405,6 @@ TEST_F(GPIOServer, TheOutputReachesTheBlockInOrderAndStartsIt) {
         std::lock_guard lock(mtx);
         return firsts.size() == 6;
     }));
-    EXPECT_EQ(uio_lib::dummy::gpioState().starts, 1);
     std::lock_guard lock(mtx);
     for (uint32_t k = 0; k < 6; k++)
         EXPECT_EQ(firsts[k], outBuffer(k)[0]) << "buffer " << k;
@@ -332,36 +415,9 @@ TEST_F(GPIOServer, TheOutputReachesTheBlockInOrderAndStartsIt) {
     EXPECT_TRUE(running[1]);
 }
 
-TEST_F(GPIOServer, AnOutputOfOneBufferPlaysToo) {
-    directions(false, true);
-    std::atomic<int> taken{0};
-    uio_lib::dummy::gpioState().outTaken = [&](uint8_t, uint32_t) { taken++; };
-    ASSERT_TRUE(server->start(settings));
-    OutputClient client;
-    ASSERT_TRUE(client.start());
-    ASSERT_TRUE(client.send(outBuffer(0)));
-    EXPECT_TRUE(waitFor([&]() { return uio_lib::dummy::gpioState().starts == 1; }, 3000ms));
-    EXPECT_EQ(taken, 1);
-}
-
-// An FPGA whose output does not tell its free buffers can't stream the output; the input it can
-TEST_F(GPIOServer, AnOutputWithoutTheFreeFlagsIsAConfigurationError) {
-    uio_lib::dummy::gpioState().features = 0;
-    hw = uio_lib::CHardware::create(board);
-    server = std::make_shared<GPIOStreamServer>(hw);
-    server->setCallback(recorder);
-    directions(true, true);
-    EXPECT_FALSE(server->start(settings));
-    ASSERT_TRUE(recorder->waitStopped());
-    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::CONFIG_ERROR});
-    directions(true, false);
-    EXPECT_TRUE(server->start(settings));
-}
-
 // The block reads the buffer of a slot until the slot takes the next but one: the client's next
 // buffers must not be written into the two packs taken last
 TEST_F(GPIOServer, AnOutputPackStaysOutOfTheRingWhileTheBlockHoldsIt) {
-    directions(false, true);
     struct Taken {
         const uint32_t* data;
         std::vector<uint32_t> copy;
@@ -381,7 +437,7 @@ TEST_F(GPIOServer, AnOutputPackStaysOutOfTheRingWhileTheBlockHoldsIt) {
         if (w)
             taken.push_back({w, std::vector<uint32_t>(w, w + kWords)});
     };
-    ASSERT_TRUE(server->start(settings));
+    ASSERT_TRUE(out->start(settings));
     OutputClient client;
     ASSERT_TRUE(client.start());
     for (uint32_t k = 0; k < 100; k++)
@@ -390,48 +446,60 @@ TEST_F(GPIOServer, AnOutputPackStaysOutOfTheRingWhileTheBlockHoldsIt) {
         std::lock_guard lock(mtx);
         return taken.size() >= 90;
     }));
-    server->stop(GPIOStopReason::NORMAL);
+    out->stop(GPIOStopReason::NORMAL);
     std::lock_guard lock(mtx);
     EXPECT_EQ(overwritten, 0);
 }
 
-TEST_F(GPIOServer, AStopIsReportedAlsoWhenNothingRuns) {
-    server->stop(GPIOStopReason::NORMAL);
-    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::NORMAL});
+// The clocks the output waited for the client's data come with the stop
+TEST_F(GPIOServer, TheStopOfTheOutputTellsItsWait) {
+    uio_lib::dummy::gpioState().outWait = []() { return uint64_t(0x123456789); };
+    ASSERT_TRUE(out->start(settings));
+    OutputClient client;
+    ASSERT_TRUE(client.start());
+    ASSERT_TRUE(client.send(outBuffer(0)));
+    ASSERT_TRUE(waitFor([&]() { return uio_lib::dummy::gpioState().outStarts == 1; }));
+    EXPECT_EQ(out->waitClocks(), 0x123456789u);
+    out->stop(GPIOStopReason::NORMAL);
+    EXPECT_EQ(recorder->wait, 0x123456789u);
+    EXPECT_FALSE(uio_lib::dummy::gpioState().outRunning);
 }
 
-TEST_F(GPIOServer, AStopEndsBothDirections) {
-    directions(true, true);
-    uio_lib::dummy::gpioState().inFill = [&](uint8_t, uint32_t) {
-        std::this_thread::sleep_for(1ms);
-        return true;
-    };
-    ASSERT_TRUE(server->start(settings));
-    InputClient in;
-    in.start();
-    OutputClient out;
-    ASSERT_TRUE(out.start());
+// --- both
+
+// Each starts and stops without the other: the output stops, the input goes on
+TEST_F(GPIOServer, TheInputAndTheOutputRunOnTheirOwn) {
+    countingInput();
+    ASSERT_TRUE(in->start(settings));
+    InputClient inClient;
+    inClient.start();
+    ASSERT_TRUE(out->start(settings));
+    OutputClient outClient;
+    ASSERT_TRUE(outClient.start());
     for (uint32_t k = 0; k < 4; k++)
-        ASSERT_TRUE(out.send(outBuffer(k)));
-    ASSERT_TRUE(waitFor([&]() { return in.packs() >= 5; }));
-    EXPECT_TRUE(server->isRunning());
-    server->stop(GPIOStopReason::NORMAL);
-    EXPECT_FALSE(server->isRunning());
-    EXPECT_FALSE(uio_lib::dummy::gpioState().running);
-    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::NORMAL});
+        ASSERT_TRUE(outClient.send(outBuffer(k)));
+    ASSERT_TRUE(waitFor([&]() { return uio_lib::dummy::gpioState().outRunning; }));
+    const int inStops = uio_lib::dummy::gpioState().inStops;
+    out->stop(GPIOStopReason::NORMAL);
+    EXPECT_FALSE(uio_lib::dummy::gpioState().outRunning);
+    EXPECT_TRUE(uio_lib::dummy::gpioState().inRunning);
+    EXPECT_EQ(uio_lib::dummy::gpioState().inStops, inStops) << "the stop of the output leaves the input";
+    auto packs = inClient.packs();
+    EXPECT_TRUE(waitFor([&]() { return inClient.packs() >= packs + 5; })) << "the input goes on";
+    EXPECT_TRUE(in->isRunning());
+    in->stop(GPIOStopReason::NORMAL);
+    EXPECT_FALSE(uio_lib::dummy::gpioState().inRunning);
 }
 
-TEST_F(GPIOServer, ASecondStartOpensThePortsAgain) {
-    directions(true, false);
-    uio_lib::dummy::gpioState().inFill = [&](uint8_t, uint32_t) {
-        std::this_thread::sleep_for(1ms);
-        return true;
-    };
-    for (int run = 0; run < 3; run++) {
-        ASSERT_TRUE(server->start(settings)) << "run " << run;
-        InputClient client;
-        client.start();
-        ASSERT_TRUE(waitFor([&]() { return client.packs() >= 3; })) << "run " << run;
-    }
-    server->stop(GPIOStopReason::NORMAL);
+// What both use is set by the first; the second takes it only as it is
+TEST_F(GPIOServer, ASharedSettingThatDiffersIsRefusedWhileTheOtherRuns) {
+    settings.setGPIORLE(CStreamSettings::State::ON);
+    ASSERT_TRUE(in->start(settings));
+    CStreamSettings other = settings;
+    other.setGPIORLE(CStreamSettings::State::OFF);
+    EXPECT_FALSE(out->start(other));
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::CONFIG_ERROR});
+    EXPECT_TRUE(out->start(settings));
+    EXPECT_TRUE(in->isRunning());
 }

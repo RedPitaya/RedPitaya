@@ -237,6 +237,16 @@ auto CBuffersCached::isEmpty() -> bool {
     return sval == 0;
 }
 
+auto CBuffersCached::filled() -> uint32_t {
+    int sval;
+    sem_getvalue(&m_countsem, &sval);
+    return sval > 0 ? sval : 0;
+}
+
+auto CBuffersCached::ringSize() -> uint32_t {
+    return m_ringSize;
+}
+
 inline auto CBuffersCached::getFreeSize() -> uint32_t {
     if (m_ringSize == 0) {
         return 0;

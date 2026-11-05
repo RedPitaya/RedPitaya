@@ -13,6 +13,7 @@ struct TriggerStatus {
     bool gpioInArmed = false;
     bool gpioOutArmed = false;
     uint32_t gpioInTriggerCount = 0;
+    uint64_t gpioOutWait = 0;  // clocks the GPIO output waited for a buffer of the client since its start
 
     auto toJson() const -> std::string;
     // False on a document that is not a status (including an empty one); _status is then unchanged.

@@ -78,7 +78,8 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setMemoryBlockSize(0x20000);
     s.setADCSize(111);
     s.setDACSize(222);
-    s.setGPIOSize(333);
+    s.setGPIOInSize(333);
+    s.setGPIOOutSize(444);
     s.setADCTriggerMode(State::ON);
     s.setADCTriggerSources(0x21);
     s.setADCTriggerLevelLow(-1000);
@@ -94,8 +95,6 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setExtTrigEdge(TriggerEdge::FALLING);
     s.setExtTrigDebounce(1000);
     s.setExtTrigDio0(State::OFF);
-    s.setGPIOInStreaming(State::ON);
-    s.setGPIOOutStreaming(State::ON);
     s.setGPIOOutputsP(0x0F);
     s.setGPIOOutputsN(0xF0);
     s.setGPIOPolarity(0x0101);
@@ -184,7 +183,8 @@ TEST(StreamSettingsJson, EveryFieldSurvivesToJsonThenParseJson) {
     EXPECT_EQ(target.getMemoryBlockSize(), 0x20000u);
     EXPECT_EQ(target.getADCSize(), 111u);
     EXPECT_EQ(target.getDACSize(), 222u);
-    EXPECT_EQ(target.getGPIOSize(), 333u);
+    EXPECT_EQ(target.getGPIOInSize(), 333u);
+    EXPECT_EQ(target.getGPIOOutSize(), 444u);
 
     EXPECT_EQ(target.getADCTriggerMode(), State::ON);
     EXPECT_EQ(target.getADCTriggerSources(), 0x21u);
@@ -201,8 +201,6 @@ TEST(StreamSettingsJson, EveryFieldSurvivesToJsonThenParseJson) {
     EXPECT_EQ(target.getExtTrigEdge(), TriggerEdge::FALLING);
     EXPECT_EQ(target.getExtTrigDebounce(), 1000u);
     EXPECT_EQ(target.getExtTrigDio0(), State::OFF);
-    EXPECT_EQ(target.getGPIOInStreaming(), State::ON);
-    EXPECT_EQ(target.getGPIOOutStreaming(), State::ON);
     EXPECT_EQ(target.getGPIOOutputsP(), 0x0Fu);
     EXPECT_EQ(target.getGPIOOutputsN(), 0xF0u);
     EXPECT_EQ(target.getGPIOPolarity(), 0x0101u);

@@ -98,26 +98,26 @@ struct DACTrigger {
     EventSource events = EventSource::OWN;
 };
 
-// GPIO streaming of the DIO lines: bits 7:0 the P lines, 15:8 the N lines
+// GPIO streaming of the DIO lines: bits 7:0 the P lines, 15:8 the N lines. The input takes the
+// input fields and the shared ones, the output the output fields and the shared ones.
 struct GPIOConfig {
-    bool input = false;        // stream the lines in
-    bool output = false;       // play a stream on the lines
-    uint8_t outputsP = 0;      // lines driven by the output stream
+    uint8_t outputsP = 0;      // output: lines driven by the output stream
     uint8_t outputsN = 0;
-    uint16_t polarity = 0;     // inverted input lines
-    uint32_t decimation = 1;
-    bool rle = false;          // run length coded words, input and output
+    uint16_t polarity = 0;     // input: inverted lines
+    uint32_t decimation = 1;   // input
+    bool rle = false;          // shared: run length coded words
     uint32_t outStep = 1;      // output: the read pointer step of its DMA (register 0xC0)
-    uint32_t bufferBytes = 0;  // DMA buffer, the same for the input and the output
+    uint32_t bufferBytes = 0;  // shared: the DMA buffer
 };
 
+// The trigger of the input (input, blocks) or of the output (output) with the shared part
 struct GPIOTrigger {
     bool input = false;        // the input waits for a trigger before writing
     bool output = false;       // the output plays from a trigger
-    uint32_t sources = 0;      // TRIG_SRC_* mask
-    EventSource events = EventSource::OWN;
+    uint32_t sources = 0;      // shared: TRIG_SRC_* mask
+    EventSource events = EventSource::OWN;  // shared
     uint16_t blocks = 0;       // input buffers per trigger, 0 - continuous after the trigger
-    // pattern trigger (the LA trigger source)
+    // shared: pattern trigger (the LA trigger source)
     uint16_t patternMask = 0;
     uint16_t patternValue = 0;
     uint16_t patternPosEdge = 0;
@@ -143,6 +143,7 @@ struct HardwareFeatures {
     bool gpioBlockMode = false;    // input trigger and block mode
     bool gpioWaitCounter = false;
     bool gpioOutRefill = false;    // the output tells its free buffers: it streams more than two
+    bool gpioOutWait = false;      // the output counts the clocks it waited for a buffer
     bool extTrigger = false;
     bool slave = false;    // daisy chain slave board
 };
@@ -174,7 +175,10 @@ struct DACStatus {
 };
 
 struct GPIOStatus {
-    bool running = false;
+    bool running = false;  // either direction
+    bool inputRunning = false;
+    bool outputRunning = false;
+    uint64_t outputWait = 0;  // clocks the output waited for a buffer since its start
     bool inputArmed = false;
     bool outputArmed = false;
     uint32_t triggerCount = 0;
@@ -233,17 +237,24 @@ class CHardware {
     auto dacSoftwareTrigger() -> void;
     auto dacStatus() -> DACStatus;
 
-    // GPIO: gpioPrepare(), the buffers, gpioStart()
-    auto gpioConfigure(const GPIOConfig& cfg) -> bool;
-    auto gpioSetTrigger(const GPIOTrigger& trig) -> bool;
-    auto gpioPrepare() -> void;
+    // GPIO: the input and the output run on their own, each prepare, the buffers, start. What
+    // both use (RLE, the buffer size, the trigger sources, the event source, the pattern) is set
+    // while neither runs; while one runs the other takes it only as it is.
+    auto gpioConfigureInput(const GPIOConfig& cfg) -> bool;
+    auto gpioConfigureOutput(const GPIOConfig& cfg) -> bool;
+    auto gpioSetInputTrigger(const GPIOTrigger& trig) -> bool;
+    auto gpioSetOutputTrigger(const GPIOTrigger& trig) -> bool;
+    auto gpioPrepareInput() -> void;
+    auto gpioPrepareOutput() -> void;
     auto gpioSetInBuffer(uint8_t index, uint32_t address) -> void;
     auto gpioSetOutBuffer(uint8_t index, uint32_t address) -> bool;  // false: still playing
-    auto gpioStart() -> void;
+    auto gpioStartInput() -> void;
+    auto gpioStartOutput() -> void;
     auto gpioWaitIn(uint8_t index, int timeoutMs) -> bool;  // input buffer `index` is full
     auto gpioInBuffer(uint8_t index) -> GPIOBufferInfo;
     auto gpioReleaseInBuffer(uint8_t index) -> void;
-    auto gpioStop() -> void;
+    auto gpioStopInput() -> void;
+    auto gpioStopOutput() -> void;
     auto gpioSoftwareTrigger() -> void;
     auto gpioStatus() -> GPIOStatus;
 

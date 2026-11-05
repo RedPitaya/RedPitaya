@@ -850,21 +850,38 @@ function promptFile(contentType, multiple) {
             $("#DAC_SIZE_TITLE").removeClass('red')
     }
 
-    SM.setGPIOSize = function(param) {
-        var value = param["MM_GPIO_SIZE"].value;
-        var max = param["MM_GPIO_SIZE"].max;
+    SM.setGPIOInSize = function(param) {
+        var value = param["MM_GPIO_IN_SIZE"].value;
+        var max = param["MM_GPIO_IN_SIZE"].max;
 
-        $("#GPIO_SIZE_TITLE").html("GPIO: " + SM.calcSize(value))
-        $("#MM_GPIO_SIZE").prop('max',max)
-        $("#MM_GPIO_SIZE").prop('value',value)
+        $("#GPIO_IN_SIZE_TITLE").html("GPIO in: " + SM.calcSize(value))
+        $("#MM_GPIO_IN_SIZE").prop('max',max)
+        $("#MM_GPIO_IN_SIZE").prop('value',value)
     }
 
-    SM.setGPIOValid = function(param) {
-        var value = param["MM_GPIO_VALID"].value;
+    SM.setGPIOInValid = function(param) {
+        var value = param["MM_GPIO_IN_VALID"].value;
         if (value == false)
-            $("#GPIO_SIZE_TITLE").addClass('red')
+            $("#GPIO_IN_SIZE_TITLE").addClass('red')
         else
-            $("#GPIO_SIZE_TITLE").removeClass('red')
+            $("#GPIO_IN_SIZE_TITLE").removeClass('red')
+    }
+
+    SM.setGPIOOutSize = function(param) {
+        var value = param["MM_GPIO_OUT_SIZE"].value;
+        var max = param["MM_GPIO_OUT_SIZE"].max;
+
+        $("#GPIO_OUT_SIZE_TITLE").html("GPIO out: " + SM.calcSize(value))
+        $("#MM_GPIO_OUT_SIZE").prop('max',max)
+        $("#MM_GPIO_OUT_SIZE").prop('value',value)
+    }
+
+    SM.setGPIOOutValid = function(param) {
+        var value = param["MM_GPIO_OUT_VALID"].value;
+        if (value == false)
+            $("#GPIO_OUT_SIZE_TITLE").addClass('red')
+        else
+            $("#GPIO_OUT_SIZE_TITLE").removeClass('red')
     }
 
     SM.param_callbacks["SS_STATUS"] = SM.change_status;
@@ -908,8 +925,10 @@ function promptFile(contentType, multiple) {
     SM.param_callbacks["MM_ADC_VALID"] = SM.setADCValid;
     SM.param_callbacks["MM_DAC_SIZE"] = SM.setDACSize;
     SM.param_callbacks["MM_DAC_VALID"] = SM.setDACValid;
-    SM.param_callbacks["MM_GPIO_SIZE"] = SM.setGPIOSize;
-    SM.param_callbacks["MM_GPIO_VALID"] = SM.setGPIOValid;
+    SM.param_callbacks["MM_GPIO_IN_SIZE"] = SM.setGPIOInSize;
+    SM.param_callbacks["MM_GPIO_IN_VALID"] = SM.setGPIOInValid;
+    SM.param_callbacks["MM_GPIO_OUT_SIZE"] = SM.setGPIOOutSize;
+    SM.param_callbacks["MM_GPIO_OUT_VALID"] = SM.setGPIOOutValid;
 
 
 

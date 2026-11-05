@@ -19,6 +19,7 @@ auto streaming_lib::triggerStatusOf(uio_lib::CHardware& hw) -> TriggerStatus {
         st.gpioInArmed = g.inputArmed;
         st.gpioOutArmed = g.outputArmed;
         st.gpioInTriggerCount = g.triggerCount;
+        st.gpioOutWait = g.outputWait;
     }
     return st;
 }

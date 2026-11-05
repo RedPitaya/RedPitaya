@@ -168,12 +168,18 @@ TEST(NetConfigProtocol, TheCommandNumbersAreFixed) {
         {Cmd::CS_RESPONSE_SOFTWARE_TRIGGER_FAIL, 49},
         {Cmd::CS_REQUEST_TRIGGER_STATUS, 50},
         {Cmd::CS_RESPONSE_TRIGGER_STATUS, 51},
-        {Cmd::CS_REQUEST_GPIO_SERVER_START, 52},
-        {Cmd::CS_REQUEST_GPIO_SERVER_STOP, 53},
-        {Cmd::CS_RESPONSE_GPIO_SERVER_STARTED, 54},
-        {Cmd::CS_RESPONSE_GPIO_SERVER_STOPPED, 55},
-        {Cmd::CS_RESPONSE_GPIO_SERVER_STOPPED_MEM_ERROR, 56},
-        {Cmd::CS_RESPONSE_GPIO_SERVER_STOPPED_CONFIG_ERROR, 57},
+        {Cmd::CS_REQUEST_GPIO_IN_SERVER_START, 52},
+        {Cmd::CS_REQUEST_GPIO_IN_SERVER_STOP, 53},
+        {Cmd::CS_RESPONSE_GPIO_IN_SERVER_STARTED, 54},
+        {Cmd::CS_RESPONSE_GPIO_IN_SERVER_STOPPED, 55},
+        {Cmd::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_MEM_ERROR, 56},
+        {Cmd::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_CONFIG_ERROR, 57},
+        {Cmd::CS_REQUEST_GPIO_OUT_SERVER_START, 58},
+        {Cmd::CS_REQUEST_GPIO_OUT_SERVER_STOP, 59},
+        {Cmd::CS_RESPONSE_GPIO_OUT_SERVER_STARTED, 60},
+        {Cmd::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED, 61},
+        {Cmd::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_MEM_ERROR, 62},
+        {Cmd::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR, 63},
     };
     for (size_t i = 0; i < numbers.size(); i++) {
         EXPECT_EQ(static_cast<uint32_t>(numbers[i].first), numbers[i].second);
@@ -339,34 +345,72 @@ TEST_F(NetConfig, NoTriggerStatusWithoutAHandler) {
 TEST_F(NetConfig, GpioStreamingWithoutAHandlerIsAConfigError) {
     connectClient();
     std::atomic<bool> error{false}, stopped{false};
-    m_client->serverGpioStoppedConfigErrorNofiy.connect([&](std::string&) { error = true; });
-    m_client->serverGpioStoppedNofiy.connect([&](std::string&) { stopped = true; });
-    ASSERT_TRUE(m_client->sendGPIOServerStart(m_host));
+    m_client->serverGpioInStoppedConfigErrorNofiy.connect([&](std::string&) { error = true; });
+    m_client->serverGpioInStoppedNofiy.connect([&](std::string&) { stopped = true; });
+    ASSERT_TRUE(m_client->sendGPIOInServerStart(m_host));
     ASSERT_TRUE(WaitFor([&] { return error.load(); }));
-    ASSERT_TRUE(m_client->sendGPIOServerStop(m_host));
+    ASSERT_TRUE(m_client->sendGPIOInServerStop(m_host));
     ASSERT_TRUE(WaitFor([&] { return stopped.load(); })) << "a stop is always confirmed";
 }
 
 TEST_F(NetConfig, GpioStreamingStartAndStopReachTheHandlers) {
     std::atomic<int> starts{0}, stops{0};
-    m_server->startGpioStreamingNofiy.connect([&]() {
+    m_server->startGpioInStreamingNofiy.connect([&]() {
         starts++;
-        m_server->sendGPIOServerStarted();
+        m_server->sendGPIOInServerStarted();
     });
-    m_server->stopGpioStreamingNofiy.connect([&]() {
+    m_server->stopGpioInStreamingNofiy.connect([&]() {
         stops++;
-        m_server->sendGPIOServerMemoryErrorStopped();
+        m_server->sendGPIOInServerMemoryErrorStopped();
     });
     connectClient();
     std::atomic<bool> started{false}, memError{false};
-    m_client->serverGpioStartedNofiy.connect([&](std::string&) { started = true; });
-    m_client->serverGpioStoppedMemErrorNofiy.connect([&](std::string&) { memError = true; });
-    ASSERT_TRUE(m_client->sendGPIOServerStart(m_host));
+    m_client->serverGpioInStartedNofiy.connect([&](std::string&) { started = true; });
+    m_client->serverGpioInStoppedMemErrorNofiy.connect([&](std::string&) { memError = true; });
+    ASSERT_TRUE(m_client->sendGPIOInServerStart(m_host));
     ASSERT_TRUE(WaitFor([&] { return started.load(); }));
-    ASSERT_TRUE(m_client->sendGPIOServerStop(m_host));
+    ASSERT_TRUE(m_client->sendGPIOInServerStop(m_host));
     ASSERT_TRUE(WaitFor([&] { return memError.load(); }));
     EXPECT_EQ(starts, 1);
     EXPECT_EQ(stops, 1);
+}
+
+TEST_F(NetConfig, GpioOutputWithoutAHandlerIsAConfigError) {
+    connectClient();
+    std::atomic<bool> error{false}, stopped{false};
+    m_client->serverGpioOutStoppedConfigErrorNofiy.connect([&](std::string&) { error = true; });
+    m_client->serverGpioOutStoppedNofiy.connect([&](std::string&, uint64_t) { stopped = true; });
+    ASSERT_TRUE(m_client->sendGPIOOutServerStart(m_host));
+    ASSERT_TRUE(WaitFor([&] { return error.load(); }));
+    ASSERT_TRUE(m_client->sendGPIOOutServerStop(m_host));
+    ASSERT_TRUE(WaitFor([&] { return stopped.load(); })) << "a stop is always confirmed";
+}
+
+// The input and the output have their own commands; the stop of the output tells its wait
+TEST_F(NetConfig, GpioOutputStartAndStopReachTheirHandlersWithTheWait) {
+    std::atomic<int> inStarts{0}, outStarts{0}, outStops{0};
+    m_server->startGpioInStreamingNofiy.connect([&]() { inStarts++; });
+    m_server->startGpioOutStreamingNofiy.connect([&]() {
+        outStarts++;
+        m_server->sendGPIOOutServerStarted();
+    });
+    m_server->stopGpioOutStreamingNofiy.connect([&]() {
+        outStops++;
+        m_server->sendGPIOOutServerStopped(0x123456789ull);
+    });
+    connectClient();
+    std::atomic<bool> started{false};
+    std::atomic<uint64_t> wait{0};
+    m_client->serverGpioOutStartedNofiy.connect([&](std::string&) { started = true; });
+    m_client->serverGpioOutStoppedNofiy.connect([&](std::string&, uint64_t w) { wait = w; });
+    ASSERT_TRUE(m_client->sendGPIOOutServerStart(m_host));
+    ASSERT_TRUE(WaitFor([&] { return started.load(); }));
+    ASSERT_TRUE(m_client->sendGPIOOutServerStop(m_host));
+    ASSERT_TRUE(WaitFor([&] { return wait.load() != 0; }));
+    EXPECT_EQ(wait, 0x123456789ull);
+    EXPECT_EQ(inStarts, 0);
+    EXPECT_EQ(outStarts, 1);
+    EXPECT_EQ(outStops, 1);
 }
 
 TEST_F(NetConfig, AnAdcConfigErrorReachesTheClient) {

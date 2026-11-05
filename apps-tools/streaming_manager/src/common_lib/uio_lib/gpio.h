@@ -35,7 +35,7 @@ struct GpioMapT {
     uint32_t trig_time_hi;  // 0x2C
     uint32_t stop_time_lo;  // 0x30
     uint32_t stop_time_hi;  // 0x34
-    uint32_t reserv1[2];    // 0x38
+    uint32_t out_wait[2];   // 0x38 clocks the output waited for a word since it began to play {lo, hi}
     uint32_t cmp_mask;      // 0x40 pattern trigger: compared bits (7:0 P, 15:8 N)
     uint32_t cmp_value;     // 0x44 pattern trigger: value of the compared bits
     uint32_t edge_pos;      // 0x48 rising edge trigger bits
@@ -78,6 +78,7 @@ struct GpioMapT {
     uint32_t in_wait[2][2]; // 0xF0 the part of in_lost not written while waiting for a trigger, 0xF8 buffer 2
 };
 
+static_assert(offsetof(GpioMapT, out_wait) == 0x38);
 static_assert(offsetof(GpioMapT, reserv_b0) == 0xB0);
 static_assert(offsetof(GpioMapT, features) == 0xDC);
 static_assert(offsetof(GpioMapT, in_lost) == 0xE0);
@@ -88,6 +89,7 @@ constexpr uint32_t GPIO_FEATURE_IN_BLOCK_MODE = 0x1;
 constexpr uint32_t GPIO_FEATURE_LOST64 = 0x2;
 constexpr uint32_t GPIO_FEATURE_WAIT = 0x4;
 constexpr uint32_t GPIO_FEATURE_OUT_FREE = 0x8;  // 0x98 bits 7/8: an output buffer may take the next address
+constexpr uint32_t GPIO_FEATURE_OUT_WAIT = 0x10;  // 0x38: the clocks the output waited for a buffer
 
 // GPIO streaming block of stream_app (DIO0..7 P and N), present on the boards with rp_gpio
 // in their stream_app (not on the 250-12 and the low latency boards).
@@ -104,7 +106,9 @@ class CGpio {
     CGpio(int _fd, void* _regset, size_t _regsetSize);
     ~CGpio();
 
-    // Configuration is written at once and refused while the DMA runs.
+    // Configuration is written at once. The input and the output run on their own: a setting of
+    // one direction is refused while that direction runs, a setting both use (RLE, buffer size,
+    // trigger sources, event source, pattern) while either runs.
     auto setOutputs(uint8_t p, uint8_t n) -> bool;  // 1 - the line is driven by the output stream
     auto setPolarity(uint16_t mask) -> bool;  // inverted input lines: bits 7:0 P, 15:8 N
     auto setDecimation(uint32_t dec) -> bool;
@@ -123,14 +127,26 @@ class CGpio {
     // the bits read 0 and the output plays the two buffers handed over at the start only)
     auto isOutBufferDone(uint8_t index) -> bool;
 
-    // prepare() selects the event source (the block's own events by default), resets the DMA
-    // engines and selects streaming mode, it clears the output buffers handed over before;
-    // start() sends the start event and starts the engines.
+    // prepare*() stops the direction, selects the event source (the block's own events by
+    // default), resets its DMA engine in streaming mode (the output forgets the buffers handed
+    // over before); start*() starts it (the input with the start event). The stop of the output
+    // resets its DMA: it reads no memory after it, the lines keep the last word.
+    auto prepareInput() -> void;
+    auto prepareOutput() -> void;
+    auto startInput() -> void;
+    auto startOutput() -> void;
+    auto stopInput() -> void;
+    auto stopOutput() -> void;
+    // both directions at once
     auto prepare(bool in, bool out) -> void;
     auto start(bool in, bool out) -> void;
     auto stop() -> void;
     auto softwareTrigger() -> void;
-    auto isRunning() -> bool;
+    auto isRunning() -> bool;  // either direction
+    auto isInputRunning() -> bool;
+    auto isOutputRunning() -> bool;
+    // the clocks the output waited for a buffer since its start (GPIO_FEATURE_OUT_WAIT, else 0)
+    auto getOutWait64() -> uint64_t;
 
     // Trigger mode of the output: once its FIFO is full it plays from the next rising edge of
     // the trigger (mask 0x84 or the trigger event), as the DAC does. Refused while running.
@@ -180,7 +196,8 @@ class CGpio {
     size_t m_RegsetSize;
     volatile GpioMapT* m_Map;
     std::mutex m_lock;
-    bool m_running;
+    bool m_inRunning;
+    bool m_outRunning;
     uint32_t m_eventSource;
 };
 

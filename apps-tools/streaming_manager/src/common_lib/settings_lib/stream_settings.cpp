@@ -154,15 +154,14 @@ auto CStreamSettings::toJson() const -> std::string {
     memory_config["block_size"] = getMemoryBlockSize();
     memory_config["adc_size"] = getADCSize();
     memory_config["dac_size"] = getDACSize();
-    memory_config["gpio_size"] = getGPIOSize();
+    memory_config["gpio_in_size"] = getGPIOInSize();
+    memory_config["gpio_out_size"] = getGPIOOutSize();
 
     ext_trig_config["ext_trig_conditioner"] = getExtTrigConditioner().name();
     ext_trig_config["ext_trig_edge"] = getExtTrigEdge().name();
     ext_trig_config["ext_trig_debounce"] = getExtTrigDebounce();
     ext_trig_config["ext_trig_dio0"] = getExtTrigDio0().name();
 
-    gpio_config["gpio_in_streaming"] = getGPIOInStreaming().name();
-    gpio_config["gpio_out_streaming"] = getGPIOOutStreaming().name();
     gpio_config["gpio_outputs_p"] = getGPIOOutputsP();
     gpio_config["gpio_outputs_n"] = getGPIOOutputsN();
     gpio_config["gpio_polarity"] = getGPIOPolarity();
@@ -310,8 +309,10 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setADCSize(memory_config["adc_size"].asUInt());
         if (memory_config.isMember("dac_size"))
             setDACSize(memory_config["dac_size"].asUInt());
-        if (memory_config.isMember("gpio_size"))
-            setGPIOSize(memory_config["gpio_size"].asUInt());
+        if (memory_config.isMember("gpio_in_size"))
+            setGPIOInSize(memory_config["gpio_in_size"].asUInt());
+        if (memory_config.isMember("gpio_out_size"))
+            setGPIOOutSize(memory_config["gpio_out_size"].asUInt());
 
         if (ext_trig_config.isMember("ext_trig_conditioner"))
             setExtTrigConditioner(State::from_string(ext_trig_config["ext_trig_conditioner"].asString()));
@@ -322,10 +323,6 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
         if (ext_trig_config.isMember("ext_trig_dio0"))
             setExtTrigDio0(State::from_string(ext_trig_config["ext_trig_dio0"].asString()));
 
-        if (gpio_config.isMember("gpio_in_streaming"))
-            setGPIOInStreaming(State::from_string(gpio_config["gpio_in_streaming"].asString()));
-        if (gpio_config.isMember("gpio_out_streaming"))
-            setGPIOOutStreaming(State::from_string(gpio_config["gpio_out_streaming"].asString()));
         if (gpio_config.isMember("gpio_outputs_p"))
             setGPIOOutputsP(gpio_config["gpio_outputs_p"].asUInt());
         if (gpio_config.isMember("gpio_outputs_n"))
@@ -417,7 +414,8 @@ auto CStreamSettings::toString() const -> std::string {
     str += "Block size:\t\t" + std::to_string(getMemoryBlockSize()) + "\n";
     str += "ADC size:\t\t" + std::to_string(getADCSize()) + "\n";
     str += "DAC size:\t\t" + std::to_string(getDACSize()) + "\n";
-    str += "GPIO size:\t\t" + std::to_string(getGPIOSize()) + "\n";
+    str += "GPIO input size:\t" + std::to_string(getGPIOInSize()) + "\n";
+    str += "GPIO output size:\t" + std::to_string(getGPIOOutSize()) + "\n";
 
     str += "\n******************* External trigger ******************\n";
     str += "Conditioner:\t\t" + std::string(getExtTrigConditioner().to_string()) + "\n";
@@ -426,8 +424,6 @@ auto CStreamSettings::toString() const -> std::string {
     str += "DIO0_P input:\t\t" + std::string(getExtTrigDio0().to_string()) + "\n";
 
     str += "\n******************** GPIO streaming *******************\n";
-    str += "Input streaming:\t\t" + std::string(getGPIOInStreaming().to_string()) + "\n";
-    str += "Output streaming:\t\t" + std::string(getGPIOOutStreaming().to_string()) + "\n";
     str += "Outputs P/N:\t\t" + hex(getGPIOOutputsP()) + " / " + hex(getGPIOOutputsN()) + "\n";
     str += "Input polarity:\t\t" + hex(getGPIOPolarity()) + "\n";
     str += "Decimation:\t\t" + std::to_string(getGPIODecimation()) + "\n";
@@ -785,22 +781,6 @@ auto CStreamSettings::getExtTrigDio0() const -> State {
     return m_exttrigsettings.m_dio0;
 }
 
-auto CStreamSettings::setGPIOInStreaming(State _value) -> void {
-    m_gpiosettings.m_inStreaming = _value;
-}
-
-auto CStreamSettings::getGPIOInStreaming() const -> State {
-    return m_gpiosettings.m_inStreaming;
-}
-
-auto CStreamSettings::setGPIOOutStreaming(State _value) -> void {
-    m_gpiosettings.m_outStreaming = _value;
-}
-
-auto CStreamSettings::getGPIOOutStreaming() const -> State {
-    return m_gpiosettings.m_outStreaming;
-}
-
 auto CStreamSettings::setGPIOOutputsP(uint32_t _mask) -> bool {
     if (_mask > 0xFF)
         return false;
@@ -978,12 +958,20 @@ auto CStreamSettings::getDACSize() const -> uint32_t {
     return m_memorysettings.m_DACSize;
 }
 
-auto CStreamSettings::setGPIOSize(uint32_t count) -> void {
-    m_memorysettings.m_GPIOSize = count;
+auto CStreamSettings::setGPIOInSize(uint32_t count) -> void {
+    m_memorysettings.m_GPIOInSize = count;
 }
 
-auto CStreamSettings::getGPIOSize() const -> uint32_t {
-    return m_memorysettings.m_GPIOSize;
+auto CStreamSettings::getGPIOInSize() const -> uint32_t {
+    return m_memorysettings.m_GPIOInSize;
+}
+
+auto CStreamSettings::setGPIOOutSize(uint32_t count) -> void {
+    m_memorysettings.m_GPIOOutSize = count;
+}
+
+auto CStreamSettings::getGPIOOutSize() const -> uint32_t {
+    return m_memorysettings.m_GPIOOutSize;
 }
 
 auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
@@ -1142,8 +1130,13 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return true;
         }
 
-        if (key == "gpio_size") {
-            setGPIOSize(to_uint(value.c_str()));
+        if (key == "gpio_in_size") {
+            setGPIOInSize(to_uint(value.c_str()));
+            return true;
+        }
+
+        if (key == "gpio_out_size") {
+            setGPIOOutSize(to_uint(value.c_str()));
             return true;
         }
 
@@ -1163,16 +1156,6 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
 
         if (key == "ext_trig_dio0") {
             setExtTrigDio0(State::from_string(value));
-            return true;
-        }
-
-        if (key == "gpio_in_streaming") {
-            setGPIOInStreaming(State::from_string(value));
-            return true;
-        }
-
-        if (key == "gpio_out_streaming") {
-            setGPIOOutStreaming(State::from_string(value));
             return true;
         }
 
@@ -1382,9 +1365,12 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
             ;
         }
 
-        if (key == "gpio_size") {
-            return std::to_string(getGPIOSize());
-            ;
+        if (key == "gpio_in_size") {
+            return std::to_string(getGPIOInSize());
+        }
+
+        if (key == "gpio_out_size") {
+            return std::to_string(getGPIOOutSize());
         }
 
         if (key == "ext_trig_conditioner") {
@@ -1401,14 +1387,6 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
 
         if (key == "ext_trig_dio0") {
             return getExtTrigDio0().name();
-        }
-
-        if (key == "gpio_in_streaming") {
-            return getGPIOInStreaming().name();
-        }
-
-        if (key == "gpio_out_streaming") {
-            return getGPIOOutStreaming().name();
         }
 
         if (key == "gpio_outputs_p") {
@@ -1535,15 +1513,14 @@ auto CStreamSettings::getHelp() -> std::string {
          "default, 32MB is allocated, the allowed maximum value is 2MB.\n";
     s += "adc_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";
     s += "dac_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";
-    s += "gpio_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";
+    s += "gpio_in_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";
+    s += "gpio_out_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";
 
     s += "ext_trig_conditioner\t: " + states + ". ON - the external trigger goes through the edge detector and the debounce.\n";
     s += "ext_trig_edge\t\t: " + concat(CStreamSettings::TriggerEdge::names(), CStreamSettings::TriggerEdge::count) + "\n";
     s += "ext_trig_debounce\t: An unsigned integer value: 0-65535 clocks, 0 - off. Some boards allow up to 255.\n";
     s += "ext_trig_dio0\t\t: " + states + ". ON - DIO0_P drives the external trigger.\n";
 
-    s += "gpio_in_streaming\t: " + states + "\n";
-    s += "gpio_out_streaming\t: " + states + "\n";
     s += "gpio_outputs_p\t\t: An unsigned integer value: 0-255. Bit mask of DIO_P lines driven by the output stream.\n";
     s += "gpio_outputs_n\t\t: An unsigned integer value: 0-255. Bit mask of DIO_N lines driven by the output stream.\n";
     s += "gpio_polarity\t\t: An unsigned integer value: 0-65535. Inverted input lines, bits 7:0 P, 15:8 N.\n";

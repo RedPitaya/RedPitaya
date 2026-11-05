@@ -78,8 +78,11 @@ CMemoryManager::CMemoryManager()
     if (!setReserverdMemory(MM_DAC, MIN_DAC_BLOCK * m_blockSize)) {
         FATAL("Can't reserve memory for DAC")
     }
-    if (!setReserverdMemory(MM_GPIO, MIN_GPIO_BLOCK * m_blockSize)) {
-        FATAL("Can't reserve memory for GPIO")
+    if (!setReserverdMemory(MM_GPIO_IN, MIN_GPIO_BLOCK * m_blockSize)) {
+        FATAL("Can't reserve memory for the GPIO input")
+    }
+    if (!setReserverdMemory(MM_GPIO_OUT, MIN_GPIO_BLOCK * m_blockSize)) {
+        FATAL("Can't reserve memory for the GPIO output")
     }
 }
 
@@ -209,7 +212,8 @@ auto CMemoryManager::getMinRAMSize(uint32_t _blockSize, MemoryTAG _tag) -> uint3
             return _blockSize * MIN_ADC_BLOCK;
         case MM_DAC:
             return _blockSize * MIN_DAC_BLOCK;
-        case MM_GPIO:
+        case MM_GPIO_IN:
+        case MM_GPIO_OUT:
             return _blockSize * MIN_GPIO_BLOCK;
         default:
             break;

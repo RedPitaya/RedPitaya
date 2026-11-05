@@ -62,10 +62,14 @@ class ServerNetConfigManager {
     auto sendDACServerStoppedSDBroken() -> bool;
     auto sendDACServerStoppedSDMissingFile() -> bool;
 
-    auto sendGPIOServerStarted() -> bool;
-    auto sendGPIOServerStopped() -> bool;
-    auto sendGPIOServerMemoryErrorStopped() -> bool;
-    auto sendGPIOServerConfigErrorStopped() -> bool;
+    auto sendGPIOInServerStarted() -> bool;
+    auto sendGPIOInServerStopped() -> bool;
+    auto sendGPIOInServerMemoryErrorStopped() -> bool;
+    auto sendGPIOInServerConfigErrorStopped() -> bool;
+    auto sendGPIOOutServerStarted() -> bool;
+    auto sendGPIOOutServerStopped(uint64_t waitClocks) -> bool;
+    auto sendGPIOOutServerMemoryErrorStopped() -> bool;
+    auto sendGPIOOutServerConfigErrorStopped() -> bool;
 
     auto sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool;
     auto sendSoftwareTriggerFail(CNetConfigManager::ETriggerTarget target) -> bool;
@@ -96,8 +100,10 @@ class ServerNetConfigManager {
 
     sigslot::signal<> memoryBlockSizeChangeNofiy;
 
-    sigslot::signal<> startGpioStreamingNofiy;
-    sigslot::signal<> stopGpioStreamingNofiy;
+    sigslot::signal<> startGpioInStreamingNofiy;
+    sigslot::signal<> stopGpioInStreamingNofiy;
+    sigslot::signal<> startGpioOutStreamingNofiy;
+    sigslot::signal<> stopGpioOutStreamingNofiy;
 
     // The handler answers with sendSoftwareTriggerDone/Fail and sendTriggerStatus. Without a
     // handler the request is answered here: trigger fail, empty status, GPIO config error.

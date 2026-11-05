@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cstring>
 #include <mutex>
 #include <thread>
@@ -22,74 +23,105 @@ struct Ring {
     uio_lib::CMemoryManager memory;
     DataLib::CBuffersCached::Ptr buffers = DataLib::CBuffersCached::create();
 
-    explicit Ring(uint32_t blockSize) {
+    Ring(uint32_t blockSize, uio_lib::MemoryTAG tag) {
         memory.setMemoryBlockSize(blockSize);
         memory.reallocateBlocks();
-        memory.reserveMemory(uio_lib::MM_GPIO, memory.getFreeBlockCount(), 1);
+        memory.reserveMemory(tag, memory.getFreeBlockCount(), 1);
         adc_channels_t one;
         one[ADCChannels::ADC_CH1] = true;
-        buffers->generateBuffersEmptyADC(one, memory.getRegions(uio_lib::MM_GPIO), DataLib::sizeHeader());
+        buffers->generateBuffersEmptyADC(one, memory.getRegions(tag), DataLib::sizeHeader());
     }
 };
 
 }  // namespace
 
-class GPIOCb : public ConfigCallback {
-    void configError(ConfigStreamClient*, std::string, int) override { *m_terminate = true; }
-    void gpioServerStopped(ConfigStreamClient*, std::string) override { *m_terminate = true; }
-    void gpioServerStoppedMemError(ConfigStreamClient*, std::string) override { *m_terminate = true; }
-    void gpioServerStoppedConfigError(ConfigStreamClient*, std::string) override { *m_terminate = true; }
-
-    std::atomic<bool>* m_terminate;
-
-   public:
-    explicit GPIOCb(std::atomic<bool>* terminate) : m_terminate(terminate) {}
-};
-
 struct GPIOStreamClient::Impl {
+    GPIOStreamClient* owner = nullptr;
     std::shared_ptr<ConfigStreamClient> m_configClient;
-    std::shared_ptr<GPIOCb> m_configCallback;
+    std::shared_ptr<ConfigCallback> m_configCallback;
     std::shared_ptr<GPIOCallback> m_callback;
     std::mutex m_smutex;
     bool m_verbose = false;
-    std::string m_host;
-    std::atomic<bool> m_terminate{false};
+    std::string m_inHost;
+    std::string m_outHost;
+    std::atomic<bool> m_inTerminate{true};
+    std::atomic<bool> m_outTerminate{true};
+    std::atomic<bool> m_outStopped{false};  // the board answered the stop of the output
+    std::atomic<uint64_t> m_outWait{0};
     std::vector<uint32_t> m_words;
     uint64_t m_repeat = 1;
     bool m_memory = false;
     std::thread m_input;
     std::thread m_output;
 
-    auto runInput(GPIOStreamClient* client, uint32_t blockSize) -> void;
-    auto runOutput(GPIOStreamClient* client, uint32_t blockSize) -> void;
-    auto join() -> void;
+    auto runInput(uint32_t blockSize) -> void;
+    auto runOutput(uint32_t blockSize) -> void;
+    auto joinInput() -> void;
+    auto joinOutput() -> void;
+
+    class ConfigCb;
 };
 
-auto GPIOStreamClient::Impl::runInput(GPIOStreamClient* client, uint32_t blockSize) -> void {
-    Ring ring(blockSize);
-    auto net = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_host, NET_GPIO_IN_STREAMING_PORT, ring.buffers);
+// The board's answers that end a direction
+class GPIOStreamClient::Impl::ConfigCb : public ConfigCallback {
+    void configError(ConfigStreamClient*, std::string, int) override {
+        m_p->m_inTerminate = true;
+        m_p->m_outTerminate = true;
+    }
+    void gpioInServerStopped(ConfigStreamClient*, std::string host) override { endInput(host); }
+    void gpioInServerStoppedMemError(ConfigStreamClient*, std::string host) override { endInput(host); }
+    void gpioInServerStoppedConfigError(ConfigStreamClient*, std::string host) override { endInput(host); }
+    void gpioOutServerStopped(ConfigStreamClient*, std::string host, uint64_t waitClocks) override { endOutput(host, waitClocks); }
+    void gpioOutServerStoppedMemError(ConfigStreamClient*, std::string host) override { endOutput(host, 0); }
+    void gpioOutServerStoppedConfigError(ConfigStreamClient*, std::string host) override { endOutput(host, 0); }
+
+    auto endInput(const std::string& host) -> void {
+        if (host == m_p->m_inHost)
+            m_p->m_inTerminate = true;
+    }
+
+    auto endOutput(const std::string& host, uint64_t waitClocks) -> void {
+        if (host != m_p->m_outHost)
+            return;
+        m_p->m_outWait = waitClocks;
+        m_p->m_outTerminate = true;
+        m_p->m_outStopped = true;
+        const std::lock_guard lock(m_p->m_smutex);
+        if (m_p->m_callback)
+            m_p->m_callback->outputStopped(m_p->owner, host, waitClocks);
+    }
+
+    GPIOStreamClient::Impl* m_p;
+
+   public:
+    explicit ConfigCb(GPIOStreamClient::Impl* p) : m_p(p) {}
+};
+
+auto GPIOStreamClient::Impl::runInput(uint32_t blockSize) -> void {
+    Ring ring(blockSize, uio_lib::MM_GPIO_IN);
+    auto net = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_inHost, NET_GPIO_IN_STREAMING_PORT, ring.buffers);
     net->setPackID(DataLib::ID_PACK_GPIO);
     net->clientConnectNotify.connect([&](std::string host) {
         const std::lock_guard lock(m_smutex);
         if (m_verbose)
             aprintf(stdout, "%s GPIO input connected %s\n", getTS(": ").c_str(), host.c_str());
         if (m_callback)
-            m_callback->connected(client, host);
+            m_callback->connected(owner, host);
     });
     net->clientDisconnectNotify.connect([&](std::string host) {
         const std::lock_guard lock(m_smutex);
         if (m_callback)
-            m_callback->disconnected(client, host);
+            m_callback->disconnected(owner, host);
     });
     net->clientErrorNotify.connect([&](std::error_code err) {
         const std::lock_guard lock(m_smutex);
-        if (m_terminate)
+        if (m_inTerminate)
             return;  // the connection closed by the stop
         if (m_verbose)
-            aprintf(stdout, "%s GPIO input error %s %s\n", getTS(": ").c_str(), m_host.c_str(), err.message().c_str());
+            aprintf(stdout, "%s GPIO input error %s %s\n", getTS(": ").c_str(), m_inHost.c_str(), err.message().c_str());
         if (m_callback)
-            m_callback->error(client, m_host, err.value());
-        m_terminate = true;
+            m_callback->error(owner, m_inHost, err.value());
+        m_inTerminate = true;
     });
     net->reciveNotify.connect([&](std::error_code error, DataLib::CDataBuffersPackDMA::Ptr pack) {
         const std::lock_guard lock(m_smutex);
@@ -98,7 +130,7 @@ auto GPIOStreamClient::Impl::runInput(GPIOStreamClient* client, uint32_t blockSi
             DataLib::GPIOHeader h;
             GPIOPack out;
             if (DataLib::getHeaderGPIO(buffer, h, &out.packId)) {
-                out.host = m_host;
+                out.host = m_inHost;
                 out.fpgaLost = h.lostFPGA;
                 out.fpgaWait = h.waitFPGA;
                 out.decimation = h.decimation;
@@ -110,45 +142,45 @@ auto GPIOStreamClient::Impl::runInput(GPIOStreamClient* client, uint32_t blockSi
                 auto words = std::min<size_t>(h.dataSize, buffer->getDataLenght()) / 4;
                 auto data = static_cast<const uint32_t*>(buffer->getMappedDataMemory());
                 out.words.assign(data, data + words);
-                m_callback->receivePack(client, out);
+                m_callback->receivePack(owner, out);
             }
         }
         ring.buffers->unlockBufferRead();
     });
     net->start();
-    while (!m_terminate)
+    while (!m_inTerminate)
         sleepMs(100);
     net->stop();
 }
 
 // The words go out in buffers of the board's block size; the last one says how much of it holds
 // words. The connection stays until the stop: the board keeps the lines of the last word.
-auto GPIOStreamClient::Impl::runOutput(GPIOStreamClient* client, uint32_t blockSize) -> void {
-    Ring ring(blockSize);
+auto GPIOStreamClient::Impl::runOutput(uint32_t blockSize) -> void {
+    Ring ring(blockSize, uio_lib::MM_GPIO_OUT);
     std::atomic<bool> connected{false};
-    auto net = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_host, NET_GPIO_OUT_STREAMING_PORT, nullptr);
+    auto net = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_outHost, NET_GPIO_OUT_STREAMING_PORT, nullptr);
     net->clientConnectNotify.connect([&](std::string host) {
         const std::lock_guard lock(m_smutex);
         if (m_callback)
-            m_callback->connected(client, host);
+            m_callback->connected(owner, host);
         connected = true;
     });
     net->clientDisconnectNotify.connect([&](std::string host) {
         const std::lock_guard lock(m_smutex);
         if (m_callback)
-            m_callback->disconnected(client, host);
-        m_terminate = true;
+            m_callback->disconnected(owner, host);
+        m_outTerminate = true;
     });
     net->clientErrorNotify.connect([&](std::error_code err) {
         const std::lock_guard lock(m_smutex);
-        if (m_terminate)
+        if (m_outTerminate)
             return;  // the connection closed by the stop
         if (m_callback)
-            m_callback->error(client, m_host, err.value());
-        m_terminate = true;
+            m_callback->error(owner, m_outHost, err.value());
+        m_outTerminate = true;
     });
     net->start();
-    for (int i = 0; i < 500 && !connected && !m_terminate; i++)
+    for (int i = 0; i < 500 && !connected && !m_outTerminate; i++)
         sleepMs(10);
 
     auto pack = ring.buffers->writeBuffer(true);
@@ -158,7 +190,7 @@ auto GPIOStreamClient::Impl::runOutput(GPIOStreamClient* client, uint32_t blockS
     uint64_t id = 0;
     size_t position = 0;  // memory mode: the next word
     uint64_t played = 0;  // memory mode: the repeats done
-    while (connected && !m_terminate && buffer) {
+    while (connected && !m_outTerminate && buffer) {
         size_t count = 0;
         if (m_memory) {
             while (count < maxWords && !m_words.empty() && (m_repeat == 0 || played < m_repeat)) {
@@ -176,7 +208,7 @@ auto GPIOStreamClient::Impl::runOutput(GPIOStreamClient* client, uint32_t blockS
             {
                 const std::lock_guard lock(m_smutex);
                 if (m_callback)
-                    words = m_callback->outputData(client, maxWords);
+                    words = m_callback->outputData(owner, maxWords);
             }
             count = std::min(words.size(), maxWords);
             std::memcpy(data, words.data(), count * 4);
@@ -190,29 +222,36 @@ auto GPIOStreamClient::Impl::runOutput(GPIOStreamClient* client, uint32_t blockS
             break;
         const std::lock_guard lock(m_smutex);
         if (m_callback)
-            m_callback->sentPack(client, count);
+            m_callback->sentPack(owner, count);
     }
-    while (connected && !m_terminate)
+    while (connected && !m_outTerminate)
         sleepMs(100);
     net->stop();
 }
 
-auto GPIOStreamClient::Impl::join() -> void {
-    for (auto t : {&m_input, &m_output})
-        if (t->joinable())
-            t->join();
+auto GPIOStreamClient::Impl::joinInput() -> void {
+    if (m_input.joinable())
+        m_input.join();
+}
+
+auto GPIOStreamClient::Impl::joinOutput() -> void {
+    if (m_output.joinable())
+        m_output.join();
 }
 
 GPIOStreamClient::GPIOStreamClient(std::shared_ptr<ConfigStreamClient> configClient) {
     m_pimpl = new Impl();
+    m_pimpl->owner = this;
     m_pimpl->m_configClient = configClient;
-    m_pimpl->m_configCallback = std::make_shared<GPIOCb>(&m_pimpl->m_terminate);
+    m_pimpl->m_configCallback = std::make_shared<Impl::ConfigCb>(m_pimpl);
     m_pimpl->m_configClient->addCallback(m_pimpl->m_configCallback);
 }
 
 GPIOStreamClient::~GPIOStreamClient() {
-    m_pimpl->m_terminate = true;
-    m_pimpl->join();
+    m_pimpl->m_inTerminate = true;
+    m_pimpl->m_outTerminate = true;
+    m_pimpl->joinInput();
+    m_pimpl->joinOutput();
     removeCallback();
     m_pimpl->m_configClient->removeCallback(m_pimpl->m_configCallback);
     delete m_pimpl;
@@ -229,50 +268,86 @@ auto GPIOStreamClient::clearOutputData() -> void {
     m_pimpl->m_memory = false;
 }
 
-auto GPIOStreamClient::startStreaming(std::string host, bool input, bool output) -> bool {
+auto GPIOStreamClient::startInput(std::string host) -> bool {
     auto& p = *m_pimpl;
-    p.m_terminate = true;
-    p.join();
-    p.m_terminate = false;
-    p.m_host = host;
-    if (!input && !output)
-        return false;
-    if (!p.m_configClient->sendConfig(host, "gpio_in_streaming", input ? "ON" : "OFF") ||
-        !p.m_configClient->sendConfig(host, "gpio_out_streaming", output ? "ON" : "OFF")) {
-        aprintf(stderr, "%s Can't set the GPIO directions of %s\n", getTS(": ").c_str(), host.c_str());
-        return false;
-    }
+    p.m_inTerminate = true;
+    p.joinInput();
+    p.m_inHost = host;
     std::map<std::string, uint32_t> blockSizes;
     if (!requestMemoryBlockSizeCommon(p.m_configClient, {host}, &blockSizes, p.m_verbose)) {
         aprintf(stderr, "%s Can't get block sizes\n", getTS(": ").c_str());
         return false;
     }
-    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, p.m_verbose)) {
-        aprintf(stderr, "%s Can't start the GPIO streaming of %s\n", getTS(": ").c_str(), host.c_str());
+    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, false, p.m_verbose)) {
+        aprintf(stderr, "%s Can't start the GPIO input of %s\n", getTS(": ").c_str(), host.c_str());
         return false;
     }
-    p.m_terminate = false;  // a stop reply of an earlier session may have come with the start
-    if (input)
-        p.m_input = std::thread(&Impl::runInput, m_pimpl, this, blockSizes[host]);
-    if (output)
-        p.m_output = std::thread(&Impl::runOutput, m_pimpl, this, blockSizes[host]);
+    p.m_inTerminate = false;  // a stop reply of an earlier session may have come with the start
+    p.m_input = std::thread(&Impl::runInput, m_pimpl, blockSizes[host]);
     return true;
 }
 
-// The client lets its connections go first: the board's stop closes them from its side
+auto GPIOStreamClient::startOutput(std::string host) -> bool {
+    auto& p = *m_pimpl;
+    p.m_outTerminate = true;
+    p.joinOutput();
+    p.m_outHost = host;
+    std::map<std::string, uint32_t> blockSizes;
+    if (!requestMemoryBlockSizeCommon(p.m_configClient, {host}, &blockSizes, p.m_verbose)) {
+        aprintf(stderr, "%s Can't get block sizes\n", getTS(": ").c_str());
+        return false;
+    }
+    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, true, p.m_verbose)) {
+        aprintf(stderr, "%s Can't start the GPIO output of %s\n", getTS(": ").c_str(), host.c_str());
+        return false;
+    }
+    p.m_outTerminate = false;
+    p.m_outStopped = false;
+    p.m_outWait = 0;
+    p.m_output = std::thread(&Impl::runOutput, m_pimpl, blockSizes[host]);
+    return true;
+}
+
+// The client lets its connection go first: the board's stop closes it from its side
+auto GPIOStreamClient::stopInput() -> void {
+    auto& p = *m_pimpl;
+    p.m_inTerminate = true;
+    p.joinInput();
+    if (!p.m_inHost.empty())
+        p.m_configClient->requestGPIOInServerStop(p.m_inHost);
+}
+
+// The board answers the stop with the clocks its output waited: waited for here up to 3 s
+auto GPIOStreamClient::stopOutput() -> void {
+    auto& p = *m_pimpl;
+    p.m_outTerminate = true;
+    p.joinOutput();
+    if (p.m_outHost.empty())
+        return;
+    p.m_outStopped = false;
+    if (p.m_configClient->requestGPIOOutServerStop(p.m_outHost)) {
+        for (int i = 0; i < 300 && !p.m_outStopped; i++)
+            sleepMs(10);
+    }
+}
+
 auto GPIOStreamClient::stopStreaming() -> void {
-    m_pimpl->m_terminate = true;
-    m_pimpl->join();
-    if (!m_pimpl->m_host.empty())
-        m_pimpl->m_configClient->requestGPIOServerStop(m_pimpl->m_host);
+    stopOutput();
+    stopInput();
+}
+
+auto GPIOStreamClient::outputWaitClocks() -> uint64_t {
+    return m_pimpl->m_outWait;
 }
 
 auto GPIOStreamClient::wait() -> void {
-    m_pimpl->join();
+    m_pimpl->joinInput();
+    m_pimpl->joinOutput();
 }
 
 auto GPIOStreamClient::notifyStop() -> void {
-    m_pimpl->m_terminate = true;
+    m_pimpl->m_inTerminate = true;
+    m_pimpl->m_outTerminate = true;
 }
 
 auto GPIOStreamClient::setVerbose(bool enable) -> void {

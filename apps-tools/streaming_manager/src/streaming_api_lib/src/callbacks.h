@@ -86,10 +86,16 @@ class ConfigCallback {
     virtual void dacServerStoppedSDBroken(ConfigStreamClient*, std::string) {}
     virtual void dacServerStoppedSDMissing(ConfigStreamClient*, std::string) {}
 
-    virtual void gpioServerStarted(ConfigStreamClient*, std::string) {}
-    virtual void gpioServerStopped(ConfigStreamClient*, std::string) {}
-    virtual void gpioServerStoppedMemError(ConfigStreamClient*, std::string) {}
-    virtual void gpioServerStoppedConfigError(ConfigStreamClient*, std::string) {}
+    virtual void gpioInServerStarted(ConfigStreamClient*, std::string) {}
+    virtual void gpioInServerStopped(ConfigStreamClient*, std::string) {}
+    virtual void gpioInServerStoppedMemError(ConfigStreamClient*, std::string) {}
+    virtual void gpioInServerStoppedConfigError(ConfigStreamClient*, std::string) {}
+    virtual void gpioOutServerStarted(ConfigStreamClient*, std::string) {}
+    // waitClocks: the clocks the output waited for the client's data since it began to play
+    // (the network was too slow), the time after the last buffer up to the stop included
+    virtual void gpioOutServerStopped(ConfigStreamClient*, std::string, [[maybe_unused]] uint64_t waitClocks) {}
+    virtual void gpioOutServerStoppedMemError(ConfigStreamClient*, std::string) {}
+    virtual void gpioOutServerStoppedConfigError(ConfigStreamClient*, std::string) {}
 
     virtual void sigInt() {};
 };
@@ -129,6 +135,8 @@ class GPIOCallback {
     virtual void connected(GPIOStreamClient*, std::string) {}
     virtual void disconnected(GPIOStreamClient*, std::string) {}
     virtual void error(GPIOStreamClient*, std::string, int) {}
+    // the board stopped the output: the clocks it waited for this client's data (see ConfigCallback)
+    virtual void outputStopped(GPIOStreamClient*, std::string, [[maybe_unused]] uint64_t waitClocks) {}
     // The output words {P lines, N lines, 8 bit unused, RLE count} when the client streams them
     // itself (startStreaming without setOutputData): at most maxWords; none ends the output
     virtual std::vector<uint32_t> outputData(GPIOStreamClient*, [[maybe_unused]] size_t maxWords) { return {}; }

@@ -15,7 +15,8 @@
 // Streaming/Config includes
 #include "config_net_lib/server_net_config_manager.h"
 #include "dac_streaming_lib/dac_stream_server.h"
-#include "gpio_streaming_lib/gpio_stream_server.h"
+#include "gpio_streaming_lib/gpio_in_stream_server.h"
+#include "gpio_streaming_lib/gpio_out_stream_server.h"
 #include "data_lib/buffers_cached.h"
 #include "streaming_lib/adc_stream_server.h"
 #include "streaming_lib/streaming_file.h"
@@ -42,10 +43,13 @@ auto stopDACServer(dac_streaming_lib::DACStopReason x) -> void;
 void startADC();
 auto makeADCCallback() -> std::shared_ptr<streaming_lib::ADCServerCallback>;
 auto makeDACCallback() -> std::shared_ptr<dac_streaming_lib::DACServerCallback>;
-auto startGPIOServer() -> bool;
-auto stopGPIONonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void;
-auto stopGPIOServer(gpio_streaming_lib::GPIOStopReason x) -> void;
-auto makeGPIOCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOServerCallback>;
+auto startGPIOInServer() -> bool;
+auto stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void;
+auto startGPIOOutServer() -> bool;
+auto stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void;
+auto stopGPIOServers(gpio_streaming_lib::GPIOStopReason x) -> void;
+auto makeGPIOInCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOInServerCallback>;
+auto makeGPIOOutCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOOutServerCallback>;
 
 auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
@@ -130,11 +134,13 @@ CDoubleParameter ss_writed_size("SS_WRITED_SIZE", CBaseParameter::RW, 0, 0, 0, 1
 CIntParameter mem_block_size("MM_BLOCK_SIZE", CBaseParameter::RW, 0, 0, 0, memmanager->getMaxBlockSize());
 CIntParameter mem_adc_size("MM_ADC_SIZE", CBaseParameter::RW, 0, 0, 0, memmanager->getRAMSize());
 CIntParameter mem_dac_size("MM_DAC_SIZE", CBaseParameter::RW, 0, 0, 0, memmanager->getRAMSize());
-CIntParameter mem_gpio_size("MM_GPIO_SIZE", CBaseParameter::RW, 0, 0, 0, memmanager->getRAMSize());
+CIntParameter mem_gpio_in_size("MM_GPIO_IN_SIZE", CBaseParameter::RW, 0, 0, 0, memmanager->getRAMSize());
+CIntParameter mem_gpio_out_size("MM_GPIO_OUT_SIZE", CBaseParameter::RW, 0, 0, 0, memmanager->getRAMSize());
 
 CBooleanParameter mem_adc_size_valid("MM_ADC_VALID", CBaseParameter::RW, false, 0);
 CBooleanParameter mem_dac_size_valid("MM_DAC_VALID", CBaseParameter::RW, false, 0);
-CBooleanParameter mem_gpio_size_valid("MM_GPIO_VALID", CBaseParameter::RW, false, 0);
+CBooleanParameter mem_gpio_in_size_valid("MM_GPIO_IN_VALID", CBaseParameter::RW, false, 0);
+CBooleanParameter mem_gpio_out_size_valid("MM_GPIO_OUT_VALID", CBaseParameter::RW, false, 0);
 
 // ============================================================================
 // GPIO Parameters
@@ -155,7 +161,8 @@ std::atomic_bool g_adcPrepared(false);  // started, waits for the start of the A
 std::atomic_bool g_adcFile(false);      // writes a file: its statistics go to the page
 
 dac_streaming_lib::DACStreamServer::Ptr g_dac = nullptr;
-gpio_streaming_lib::GPIOStreamServer::Ptr g_gpio = nullptr;
+gpio_streaming_lib::GPIOInStreamServer::Ptr g_gpioIn = nullptr;
+gpio_streaming_lib::GPIOOutStreamServer::Ptr g_gpioOut = nullptr;
 ServerNetConfigManager::Ptr g_serverNetConfig = nullptr;
 
 uio_lib::BoardMode g_isMaster = uio_lib::BoardMode::UNKNOWN;
@@ -304,8 +311,10 @@ auto rp_app_init(void) -> int {
             g_adc->setCallback(makeADCCallback());
             g_dac = std::make_shared<dac_streaming_lib::DACStreamServer>(g_hw);
             g_dac->setCallback(makeDACCallback());
-            g_gpio = std::make_shared<gpio_streaming_lib::GPIOStreamServer>(g_hw);
-            g_gpio->setCallback(makeGPIOCallback());
+            g_gpioIn = std::make_shared<gpio_streaming_lib::GPIOInStreamServer>(g_hw);
+            g_gpioIn->setCallback(makeGPIOInCallback());
+            g_gpioOut = std::make_shared<gpio_streaming_lib::GPIOOutStreamServer>(g_hw);
+            g_gpioOut->setCallback(makeGPIOOutCallback());
             WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
 
             // Initialize network config manager
@@ -323,14 +332,16 @@ auto rp_app_init(void) -> int {
             g_serverNetConfig->stopStreamingNofiy.connect([]() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
             g_serverNetConfig->startDacStreamingNofiy.connect([](auto channels) { startDACServer(channels); });
             g_serverNetConfig->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL); });
-            g_serverNetConfig->startGpioStreamingNofiy.connect([]() { startGPIOServer(); });
-            g_serverNetConfig->stopGpioStreamingNofiy.connect([]() { stopGPIONonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
+            g_serverNetConfig->startGpioInStreamingNofiy.connect([]() { startGPIOInServer(); });
+            g_serverNetConfig->stopGpioInStreamingNofiy.connect([]() { stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
+            g_serverNetConfig->startGpioOutStreamingNofiy.connect([]() { startGPIOOutServer(); });
+            g_serverNetConfig->stopGpioOutStreamingNofiy.connect([]() { stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
             g_serverNetConfig->startADCNofiy.connect([]() { startADC(); });
             streaming_lib::connectTriggerCommands(g_serverNetConfig, g_hw);
             g_serverNetConfig->memoryBlockSizeChangeNofiy.connect([]() {
                 stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
                 stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
-                stopGPIOServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
+                stopGPIOServers(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
                 uio_lib::CMemoryManager::instance()->setMemoryBlockSize(g_serverNetConfig->getSettings().getMemoryBlockSize());
                 uio_lib::CMemoryManager::instance()->reallocateBlocks();
             });
@@ -371,18 +382,19 @@ auto rp_app_init(void) -> int {
 void stopAll() {
     stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
     stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
-    stopGPIOServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
+    stopGPIOServers(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
 }
 
 auto rp_app_exit(void) -> int {
     g_serverNetConfig->stop();
     stopServer(ServerNetConfigManager::EStopReason::NORMAL);
     stopDACServer(dac_streaming_lib::DACStopReason::NORMAL);
-    stopGPIOServer(gpio_streaming_lib::GPIOStopReason::NORMAL);
+    stopGPIOServers(gpio_streaming_lib::GPIOStopReason::NORMAL);
     // the module stays loaded, the next start may find another bitstream
     g_adc = nullptr;
     g_dac = nullptr;
-    g_gpio = nullptr;
+    g_gpioIn = nullptr;
+    g_gpioOut = nullptr;
     g_hw = nullptr;
     aprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
@@ -453,12 +465,15 @@ void updateUI() {
     memmanager->setReserverdMemory(uio_lib::MM_ADC, g_serverNetConfig->getSettingsRef().getADCSize());
     mem_dac_size.SendValue(g_serverNetConfig->getSettingsRef().getDACSize());
     memmanager->setReserverdMemory(uio_lib::MM_DAC, g_serverNetConfig->getSettingsRef().getDACSize());
-    mem_gpio_size.SendValue(g_serverNetConfig->getSettingsRef().getGPIOSize());
-    memmanager->setReserverdMemory(uio_lib::MM_GPIO, g_serverNetConfig->getSettingsRef().getGPIOSize());
+    mem_gpio_in_size.SendValue(g_serverNetConfig->getSettingsRef().getGPIOInSize());
+    memmanager->setReserverdMemory(uio_lib::MM_GPIO_IN, g_serverNetConfig->getSettingsRef().getGPIOInSize());
+    mem_gpio_out_size.SendValue(g_serverNetConfig->getSettingsRef().getGPIOOutSize());
+    memmanager->setReserverdMemory(uio_lib::MM_GPIO_OUT, g_serverNetConfig->getSettingsRef().getGPIOOutSize());
 
     mem_adc_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_ADC));
     mem_dac_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_DAC));
-    mem_gpio_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO));
+    mem_gpio_in_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_IN));
+    mem_gpio_out_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_OUT));
 }
 
 // ============================================================================
@@ -641,7 +656,8 @@ void setConfig(bool _force) {
             memmanager->reallocateBlocks();
             mem_adc_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_ADC));
             mem_dac_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_DAC));
-            mem_gpio_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO));
+            mem_gpio_in_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_IN));
+            mem_gpio_out_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_OUT));
         }
         needUpdate = true;
     }
@@ -662,11 +678,19 @@ void setConfig(bool _force) {
         needUpdate = true;
     }
 
-    if (mem_gpio_size.IsNewValue() || _force) {
-        mem_gpio_size.Update();
-        g_serverNetConfig->getSettingsRef().setGPIOSize(mem_gpio_size.Value());
-        memmanager->setReserverdMemory(uio_lib::MM_GPIO, mem_gpio_size.Value());
-        mem_gpio_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO));
+    if (mem_gpio_in_size.IsNewValue() || _force) {
+        mem_gpio_in_size.Update();
+        g_serverNetConfig->getSettingsRef().setGPIOInSize(mem_gpio_in_size.Value());
+        memmanager->setReserverdMemory(uio_lib::MM_GPIO_IN, mem_gpio_in_size.Value());
+        mem_gpio_in_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_IN));
+        needUpdate = true;
+    }
+
+    if (mem_gpio_out_size.IsNewValue() || _force) {
+        mem_gpio_out_size.Update();
+        g_serverNetConfig->getSettingsRef().setGPIOOutSize(mem_gpio_out_size.Value());
+        memmanager->setReserverdMemory(uio_lib::MM_GPIO_OUT, mem_gpio_out_size.Value());
+        mem_gpio_out_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_OUT));
         needUpdate = true;
     }
 
@@ -706,9 +730,9 @@ void UpdateParamsFromWeb(void) {
         if (ss_gpio_start.IsNewValue()) {
             ss_gpio_start.Update();
             if (ss_gpio_start.Value() == 1) {
-                startGPIOServer();
+                startGPIOInServer();
             } else {
-                stopGPIONonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL);
+                stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL);
             }
         }
 
@@ -939,61 +963,102 @@ auto stopDACServer(dac_streaming_lib::DACStopReason x) -> void {
 
 namespace {
 
-// The events of the GPIO streaming to the config protocol and to the page; SS_GPIO_STATUS:
-// 0 stopped, 1 running, 6 memory error, 7 memory changed, 8 configuration error
-class WebGPIOCallback : public gpio_streaming_lib::GPIOServerCallback {
-    void started(gpio_streaming_lib::GPIOStreamServer*) override {
-        g_serverNetConfig->sendGPIOServerStarted();
+// The events of the GPIO input to the config protocol and to the page; SS_GPIO_STATUS:
+// 0 stopped, 1 running, 6 memory error, 7 memory changed, 8 configuration error. The page
+// starts the input only: the output plays what a client sends over the network.
+class WebGPIOInCallback : public gpio_streaming_lib::GPIOInServerCallback {
+    void started(gpio_streaming_lib::GPIOInStreamServer*) override {
+        g_serverNetConfig->sendGPIOInServerStarted();
         ss_gpio_status.SendValue(1);
         ss_gpio_data_pass.SendValue(1);
-        TRACE("Start gpio server");
+        TRACE("Start gpio input server");
     }
 
-    void stopped(gpio_streaming_lib::GPIOStreamServer*, gpio_streaming_lib::GPIOStopReason reason) override {
+    void stopped(gpio_streaming_lib::GPIOInStreamServer*, gpio_streaming_lib::GPIOStopReason reason) override {
         using R = gpio_streaming_lib::GPIOStopReason;
         switch (reason) {
             case R::NORMAL:
-                g_serverNetConfig->sendGPIOServerStopped();
+                g_serverNetConfig->sendGPIOInServerStopped();
                 ss_gpio_status.SendValue(0);
                 break;
             case R::MEM_ERROR:
-                g_serverNetConfig->sendGPIOServerMemoryErrorStopped();
+                g_serverNetConfig->sendGPIOInServerMemoryErrorStopped();
                 ss_gpio_status.SendValue(6);
                 break;
             case R::MEM_MODIFY:
-                g_serverNetConfig->sendGPIOServerStopped();
+                g_serverNetConfig->sendGPIOInServerStopped();
                 ss_gpio_status.SendValue(7);
                 break;
             case R::CONFIG_ERROR:
-                g_serverNetConfig->sendGPIOServerConfigErrorStopped();
+                g_serverNetConfig->sendGPIOInServerConfigErrorStopped();
                 ss_gpio_status.SendValue(8);
                 break;
         }
         ss_gpio_data_pass.SendValue(0);
-        TRACE("Stop gpio server");
+        TRACE("Stop gpio input server");
+    }
+};
+
+class WebGPIOOutCallback : public gpio_streaming_lib::GPIOOutServerCallback {
+    void started(gpio_streaming_lib::GPIOOutStreamServer*) override { g_serverNetConfig->sendGPIOOutServerStarted(); }
+
+    void stopped(gpio_streaming_lib::GPIOOutStreamServer*, gpio_streaming_lib::GPIOStopReason reason, uint64_t waitClocks) override {
+        using R = gpio_streaming_lib::GPIOStopReason;
+        switch (reason) {
+            case R::NORMAL:
+            case R::MEM_MODIFY:
+                g_serverNetConfig->sendGPIOOutServerStopped(waitClocks);
+                break;
+            case R::MEM_ERROR:
+                g_serverNetConfig->sendGPIOOutServerMemoryErrorStopped();
+                break;
+            case R::CONFIG_ERROR:
+                g_serverNetConfig->sendGPIOOutServerConfigErrorStopped();
+                break;
+        }
+        TRACE("Stop gpio output server");
     }
 };
 
 }  // namespace
 
-auto makeGPIOCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOServerCallback> {
-    return std::make_shared<WebGPIOCallback>();
+auto makeGPIOInCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOInServerCallback> {
+    return std::make_shared<WebGPIOInCallback>();
 }
 
-auto startGPIOServer() -> bool {
-    if (!g_serverNetConfig || !g_gpio)
+auto makeGPIOOutCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOOutServerCallback> {
+    return std::make_shared<WebGPIOOutCallback>();
+}
+
+auto startGPIOInServer() -> bool {
+    if (!g_serverNetConfig || !g_gpioIn)
         return false;
     CStreamSettings settings = g_serverNetConfig->getSettings();
-    memmanager->setReserverdMemory(uio_lib::MM_GPIO, settings.getGPIOSize());
-    return g_gpio->start(settings);
+    memmanager->setReserverdMemory(uio_lib::MM_GPIO_IN, settings.getGPIOInSize());
+    return g_gpioIn->start(settings);
 }
 
-auto stopGPIONonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void {
-    if (g_gpio)
-        g_gpio->stopNonBlocking(x);
+auto stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void {
+    if (g_gpioIn)
+        g_gpioIn->stopNonBlocking(x);
 }
 
-auto stopGPIOServer(gpio_streaming_lib::GPIOStopReason x) -> void {
-    if (g_gpio)
-        g_gpio->stop(x);
+auto startGPIOOutServer() -> bool {
+    if (!g_serverNetConfig || !g_gpioOut)
+        return false;
+    CStreamSettings settings = g_serverNetConfig->getSettings();
+    memmanager->setReserverdMemory(uio_lib::MM_GPIO_OUT, settings.getGPIOOutSize());
+    return g_gpioOut->start(settings);
+}
+
+auto stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void {
+    if (g_gpioOut)
+        g_gpioOut->stopNonBlocking(x);
+}
+
+auto stopGPIOServers(gpio_streaming_lib::GPIOStopReason x) -> void {
+    if (g_gpioIn)
+        g_gpioIn->stop(x);
+    if (g_gpioOut)
+        g_gpioOut->stop(x);
 }

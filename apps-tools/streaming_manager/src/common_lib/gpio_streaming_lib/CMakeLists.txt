@@ -35,11 +35,14 @@ target_compile_definitions(${PROJECT_NAME}
     PUBLIC ASIO_STANDALONE)
 
 list(APPEND headers
-            ${PROJECT_SOURCE_DIR}/gpio_stream_server.h
+            ${PROJECT_SOURCE_DIR}/gpio_stop_reason.h
+            ${PROJECT_SOURCE_DIR}/gpio_in_stream_server.h
+            ${PROJECT_SOURCE_DIR}/gpio_out_stream_server.h
         )
 
 list(APPEND src
-            ${PROJECT_SOURCE_DIR}/gpio_stream_server.cpp
+            ${PROJECT_SOURCE_DIR}/gpio_in_stream_server.cpp
+            ${PROJECT_SOURCE_DIR}/gpio_out_stream_server.cpp
          )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})

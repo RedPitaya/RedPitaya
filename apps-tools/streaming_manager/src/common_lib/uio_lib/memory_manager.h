@@ -9,7 +9,8 @@
 
 namespace uio_lib {
 
-enum MemoryTAG { MM_NONE = 0, MM_ADC_RESERVE_SKIP = 1, MM_ADC = 2, MM_DAC = 3, MM_GPIO = 4 };
+// the GPIO input and output stream independently, each in memory of its own
+enum MemoryTAG { MM_NONE = 0, MM_ADC_RESERVE_SKIP = 1, MM_ADC = 2, MM_DAC = 3, MM_GPIO_IN = 4, MM_GPIO_OUT = 5 };
 
 struct MemoryRegionT {
     MemoryTAG tag{MM_NONE};

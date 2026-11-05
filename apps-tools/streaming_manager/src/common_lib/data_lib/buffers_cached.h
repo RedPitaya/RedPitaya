@@ -42,6 +42,8 @@ class CBuffersCached {
     auto isWaitToDestory() -> bool;
     auto getDataSize() -> uint32_t;
     auto isEmpty() -> bool;
+    auto filled() -> uint32_t;    // packs written and not read yet
+    auto ringSize() -> uint32_t;  // packs in the ring
 
     auto setOSCRate(uint64_t rate) -> void;
     auto setADCBits(uint8_t bits) -> void;

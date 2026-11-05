@@ -60,8 +60,20 @@ struct CHardware::Impl {
     ADCConfig adcCfg;
     ADCTrigger adcTrig;
     DACConfig dacCfg;
-    GPIOConfig gpioCfg;
-    GPIOTrigger gpioTrig;
+    // what the input and the output share, as written last
+    struct GPIOShared {
+        bool rle = false;
+        uint32_t bufferBytes = 0;
+        uint32_t sources = 0;
+        EventSource events = EventSource::OWN;
+        uint16_t patternMask = 0;
+        uint16_t patternValue = 0;
+        uint16_t patternPosEdge = 0;
+        uint16_t patternNegEdge = 0;
+        bool operator==(const GPIOShared&) const = default;
+    };
+    GPIOShared gpioSharedNow;
+    auto gpioShared(const GPIOShared& want) -> bool;
 };
 
 auto CHardware::create(std::shared_ptr<IBoard> board) -> Ptr {
@@ -108,6 +120,7 @@ CHardware::CHardware(std::shared_ptr<IBoard> board) : m_pimpl(new Impl()) {
         p.features.gpioBlockMode = p.gpio->hasInputBlockMode();
         p.features.gpioWaitCounter = p.gpio->hasWaitCounter();
         p.features.gpioOutRefill = p.gpio->getFeatures() & GPIO_FEATURE_OUT_FREE;
+        p.features.gpioOutWait = p.gpio->getFeatures() & GPIO_FEATURE_OUT_WAIT;
     }
     p.features.extTrigger = p.ext != nullptr;
 
@@ -414,49 +427,103 @@ auto CHardware::dacStatus() -> DACStatus {
 // GPIO
 // ---------------------------------------------------------------------------------------------
 
-auto CHardware::gpioConfigure(const GPIOConfig& cfg) -> bool {
-    auto& p = *m_pimpl;
-    std::lock_guard lock(p.gpioMtx);
-    if (!p.gpio || p.gpio->isRunning())
-        return false;
-    bool ok = p.gpio->setOutputs(cfg.outputsP, cfg.outputsN);
-    ok = p.gpio->setPolarity(cfg.polarity) && ok;
-    ok = p.gpio->setDecimation(cfg.decimation) && ok;
-    ok = p.gpio->setRLE(cfg.rle) && ok;
-    ok = p.gpio->setOutStep(cfg.outStep) && ok;
-    if (cfg.bufferBytes)
-        ok = p.gpio->setDataSize(cfg.bufferBytes) && ok;
+// The settings both directions use: written while neither runs, else they must be the same
+auto CHardware::Impl::gpioShared(const GPIOShared& want) -> bool {
+    if (gpio->isRunning())
+        return want == gpioSharedNow;
+    bool ok = gpio->setRLE(want.rle);
+    if (want.bufferBytes)
+        ok = gpio->setDataSize(want.bufferBytes) && ok;
+    ok = gpio->setTriggerSources(want.sources) && ok;
+    ok = gpio->setEventSource(eventId(want.events, gpio_event_id)) && ok;
+    ok = gpio->setPattern(want.patternMask, want.patternValue, want.patternPosEdge, want.patternNegEdge) && ok;
     if (ok)
-        p.gpioCfg = cfg;
+        gpioSharedNow = want;
     return ok;
 }
 
-auto CHardware::gpioSetTrigger(const GPIOTrigger& trig) -> bool {
+auto CHardware::gpioConfigureInput(const GPIOConfig& cfg) -> bool {
     auto& p = *m_pimpl;
     std::lock_guard lock(p.gpioMtx);
-    if (!p.gpio || p.gpio->isRunning())
+    if (!p.gpio || p.gpio->isInputRunning())
         return false;
-    if ((trig.output && !p.features.gpioTriggerMode) || ((trig.input || trig.blocks) && !p.features.gpioBlockMode))
+    auto shared = p.gpioSharedNow;
+    shared.rle = cfg.rle;
+    shared.bufferBytes = cfg.bufferBytes ? cfg.bufferBytes : shared.bufferBytes;
+    bool ok = p.gpioShared(shared);
+    ok = ok && p.gpio->setPolarity(cfg.polarity);
+    ok = ok && p.gpio->setDecimation(cfg.decimation);
+    return ok;
+}
+
+auto CHardware::gpioConfigureOutput(const GPIOConfig& cfg) -> bool {
+    auto& p = *m_pimpl;
+    std::lock_guard lock(p.gpioMtx);
+    if (!p.gpio || p.gpio->isOutputRunning())
         return false;
-    bool ok = p.gpio->setTriggerSources(trig.sources);
-    ok = p.gpio->setEventSource(eventId(trig.events, gpio_event_id)) && ok;
-    ok = p.gpio->setPattern(trig.patternMask, trig.patternValue, trig.patternPosEdge, trig.patternNegEdge) && ok;
-    if (p.features.gpioTriggerMode)
-        ok = p.gpio->setOutputTriggerMode(trig.output) && ok;
-    if (p.features.gpioBlockMode) {
-        ok = p.gpio->setInputTriggerMode(trig.input) && ok;
+    auto shared = p.gpioSharedNow;
+    shared.rle = cfg.rle;
+    shared.bufferBytes = cfg.bufferBytes ? cfg.bufferBytes : shared.bufferBytes;
+    bool ok = p.gpioShared(shared);
+    ok = ok && p.gpio->setOutputs(cfg.outputsP, cfg.outputsN);
+    ok = ok && p.gpio->setOutStep(cfg.outStep);
+    return ok;
+}
+
+auto CHardware::gpioSetInputTrigger(const GPIOTrigger& trig) -> bool {
+    auto& p = *m_pimpl;
+    std::lock_guard lock(p.gpioMtx);
+    if (!p.gpio || p.gpio->isInputRunning())
+        return false;
+    if ((trig.input || trig.blocks) && !p.features.gpioBlockMode)
+        return false;
+    auto shared = p.gpioSharedNow;
+    shared.sources = trig.sources;
+    shared.events = trig.events;
+    shared.patternMask = trig.patternMask;
+    shared.patternValue = trig.patternValue;
+    shared.patternPosEdge = trig.patternPosEdge;
+    shared.patternNegEdge = trig.patternNegEdge;
+    bool ok = p.gpioShared(shared);
+    if (ok && p.features.gpioBlockMode) {
+        ok = p.gpio->setInputTriggerMode(trig.input);
         ok = p.gpio->setTriggerBlocks(trig.blocks) && ok;
     }
-    if (ok)
-        p.gpioTrig = trig;
     return ok;
 }
 
-auto CHardware::gpioPrepare() -> void {
+auto CHardware::gpioSetOutputTrigger(const GPIOTrigger& trig) -> bool {
+    auto& p = *m_pimpl;
+    std::lock_guard lock(p.gpioMtx);
+    if (!p.gpio || p.gpio->isOutputRunning())
+        return false;
+    if (trig.output && !p.features.gpioTriggerMode)
+        return false;
+    auto shared = p.gpioSharedNow;
+    shared.sources = trig.sources;
+    shared.events = trig.events;
+    shared.patternMask = trig.patternMask;
+    shared.patternValue = trig.patternValue;
+    shared.patternPosEdge = trig.patternPosEdge;
+    shared.patternNegEdge = trig.patternNegEdge;
+    bool ok = p.gpioShared(shared);
+    if (ok && p.features.gpioTriggerMode)
+        ok = p.gpio->setOutputTriggerMode(trig.output);
+    return ok;
+}
+
+auto CHardware::gpioPrepareInput() -> void {
     auto& p = *m_pimpl;
     std::lock_guard lock(p.gpioMtx);
     if (p.gpio)
-        p.gpio->prepare(p.gpioCfg.input, p.gpioCfg.output);
+        p.gpio->prepareInput();
+}
+
+auto CHardware::gpioPrepareOutput() -> void {
+    auto& p = *m_pimpl;
+    std::lock_guard lock(p.gpioMtx);
+    if (p.gpio)
+        p.gpio->prepareOutput();
 }
 
 auto CHardware::gpioSetInBuffer(uint8_t index, uint32_t address) -> void {
@@ -469,16 +536,23 @@ auto CHardware::gpioSetOutBuffer(uint8_t index, uint32_t address) -> bool {
     auto& p = *m_pimpl;
     if (!p.gpio)
         return false;
-    if (p.gpio->isRunning() && !p.gpio->isOutBufferDone(index))
+    if (p.gpio->isOutputRunning() && !p.gpio->isOutBufferDone(index))
         return false;
     return p.gpio->setOutAddress(index, address);
 }
 
-auto CHardware::gpioStart() -> void {
+auto CHardware::gpioStartInput() -> void {
     auto& p = *m_pimpl;
     std::lock_guard lock(p.gpioMtx);
     if (p.gpio)
-        p.gpio->start(p.gpioCfg.input, p.gpioCfg.output);
+        p.gpio->startInput();
+}
+
+auto CHardware::gpioStartOutput() -> void {
+    auto& p = *m_pimpl;
+    std::lock_guard lock(p.gpioMtx);
+    if (p.gpio)
+        p.gpio->startOutput();
 }
 
 auto CHardware::gpioWaitIn(uint8_t index, int timeoutMs) -> bool {
@@ -504,11 +578,18 @@ auto CHardware::gpioReleaseInBuffer(uint8_t index) -> void {
         p.gpio->clearInBuffer(index);
 }
 
-auto CHardware::gpioStop() -> void {
+auto CHardware::gpioStopInput() -> void {
     auto& p = *m_pimpl;
     std::lock_guard lock(p.gpioMtx);
     if (p.gpio)
-        p.gpio->stop();
+        p.gpio->stopInput();
+}
+
+auto CHardware::gpioStopOutput() -> void {
+    auto& p = *m_pimpl;
+    std::lock_guard lock(p.gpioMtx);
+    if (p.gpio)
+        p.gpio->stopOutput();
 }
 
 auto CHardware::gpioSoftwareTrigger() -> void {
@@ -522,9 +603,12 @@ auto CHardware::gpioStatus() -> GPIOStatus {
     GPIOStatus s;
     if (!p.gpio)
         return s;
-    s.running = p.gpio->isRunning();
+    s.inputRunning = p.gpio->isInputRunning();
+    s.outputRunning = p.gpio->isOutputRunning();
+    s.running = s.inputRunning || s.outputRunning;
     s.inputArmed = p.features.gpioBlockMode && p.gpio->isInputArmed();
     s.outputArmed = p.features.gpioTriggerMode && p.gpio->isOutputArmed();
     s.triggerCount = p.gpio->getInputTriggerCount();
+    s.outputWait = p.gpio->getOutWait64();
     return s;
 }

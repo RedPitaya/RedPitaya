@@ -27,7 +27,7 @@ auto CGpio::create(const std::vector<UioT>&) -> Ptr {
     return S().present ? std::make_shared<CGpio>(0, nullptr, 0) : Ptr();
 }
 
-CGpio::CGpio(int _fd, void* _regset, size_t _regsetSize) : m_Fd(_fd), m_Regset(_regset), m_RegsetSize(_regsetSize), m_Map(nullptr), m_lock(), m_running(false), m_eventSource(gpio_event_id) {}
+CGpio::CGpio(int _fd, void* _regset, size_t _regsetSize) : m_Fd(_fd), m_Regset(_regset), m_RegsetSize(_regsetSize), m_Map(nullptr), m_lock(), m_inRunning(false), m_outRunning(false), m_eventSource(gpio_event_id) {}
 
 CGpio::~CGpio() {}
 
@@ -90,22 +90,54 @@ auto CGpio::isOutBufferDone(uint8_t index) -> bool {
     return !S().outDone || S().outDone(index);
 }
 
-auto CGpio::prepare(bool, bool) -> void {
-    stop();
-    S().prepares++;
+auto CGpio::prepareInput() -> void {
+    stopInput();
+    S().inPrepares++;
     S().inFull = {false, false};
 }
 
+auto CGpio::prepareOutput() -> void {
+    stopOutput();
+    S().outPrepares++;
+}
+
+auto CGpio::startInput() -> void {
+    S().inRunning = true;
+    S().inStarts++;
+}
+
+auto CGpio::startOutput() -> void {
+    S().outRunning = true;
+    S().outStarts++;
+}
+
+auto CGpio::stopInput() -> void {
+    S().inRunning = false;
+    S().inStops++;
+}
+
+auto CGpio::stopOutput() -> void {
+    S().outRunning = false;
+    S().outStops++;
+}
+
+auto CGpio::prepare(bool in, bool out) -> void {
+    if (in)
+        prepareInput();
+    if (out)
+        prepareOutput();
+}
+
 auto CGpio::start(bool in, bool out) -> void {
-    S().in = in;
-    S().out = out;
-    S().running = in || out;
-    S().starts++;
+    if (out)
+        startOutput();
+    if (in)
+        startInput();
 }
 
 auto CGpio::stop() -> void {
-    S().running = false;
-    S().stops++;
+    stopInput();
+    stopOutput();
 }
 
 auto CGpio::softwareTrigger() -> void {
@@ -113,7 +145,19 @@ auto CGpio::softwareTrigger() -> void {
 }
 
 auto CGpio::isRunning() -> bool {
-    return S().running;
+    return S().inRunning || S().outRunning;
+}
+
+auto CGpio::isInputRunning() -> bool {
+    return S().inRunning;
+}
+
+auto CGpio::isOutputRunning() -> bool {
+    return S().outRunning;
+}
+
+auto CGpio::getOutWait64() -> uint64_t {
+    return S().outWait ? S().outWait() : 0;
 }
 
 auto CGpio::hasTriggerMode() -> bool {
@@ -175,7 +219,7 @@ auto CGpio::hasWaitCounter() -> bool {
 auto CGpio::waitIn(uint8_t index, int) -> bool {
     auto& s = S();
     index &= 1;
-    if (!s.inFull[index] && s.running && s.in && s.inFill)
+    if (!s.inFull[index] && s.inRunning && s.inFill)
         s.inFull[index] = s.inFill(index, s.inAddress[index]);
     if (!s.inFull[index])
         std::this_thread::sleep_for(std::chrono::milliseconds(1));

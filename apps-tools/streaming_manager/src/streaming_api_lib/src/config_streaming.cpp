@@ -185,32 +185,60 @@ ConfigStreamClient::ConfigStreamClient() {
             cl->dacServerStartedSD(this, host);
     });
 
-    m_pimpl->m_configClient->serverGpioStartedNofiy.connect([&](std::string host) {
+    m_pimpl->m_configClient->serverGpioInStartedNofiy.connect([&](std::string host) {
         if (m_pimpl->m_verbose)
-            aprintf(stdout, "%s GPIO streaming started: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+            aprintf(stdout, "%s GPIO input started: %s [OK]\n", getTS(": ").c_str(), host.c_str());
         for (auto cl : m_pimpl->m_callback)
-            cl->gpioServerStarted(this, host);
+            cl->gpioInServerStarted(this, host);
     });
 
-    m_pimpl->m_configClient->serverGpioStoppedNofiy.connect([&](std::string host) {
+    m_pimpl->m_configClient->serverGpioInStoppedNofiy.connect([&](std::string host) {
         if (m_pimpl->m_verbose)
-            aprintf(stdout, "%s GPIO streaming stopped: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+            aprintf(stdout, "%s GPIO input stopped: %s [OK]\n", getTS(": ").c_str(), host.c_str());
         for (auto cl : m_pimpl->m_callback)
-            cl->gpioServerStopped(this, host);
+            cl->gpioInServerStopped(this, host);
     });
 
-    m_pimpl->m_configClient->serverGpioStoppedMemErrorNofiy.connect([&](std::string host) {
+    m_pimpl->m_configClient->serverGpioInStoppedMemErrorNofiy.connect([&](std::string host) {
         if (m_pimpl->m_verbose)
-            aprintf(stdout, "%s GPIO streaming stopped: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+            aprintf(stdout, "%s GPIO input stopped: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
         for (auto cl : m_pimpl->m_callback)
-            cl->gpioServerStoppedMemError(this, host);
+            cl->gpioInServerStoppedMemError(this, host);
     });
 
-    m_pimpl->m_configClient->serverGpioStoppedConfigErrorNofiy.connect([&](std::string host) {
+    m_pimpl->m_configClient->serverGpioInStoppedConfigErrorNofiy.connect([&](std::string host) {
         if (m_pimpl->m_verbose)
-            aprintf(stdout, "%s GPIO streaming stopped: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+            aprintf(stdout, "%s GPIO input stopped: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
         for (auto cl : m_pimpl->m_callback)
-            cl->gpioServerStoppedConfigError(this, host);
+            cl->gpioInServerStoppedConfigError(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStartedNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output started: %s [OK]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStarted(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStoppedNofiy.connect([&](std::string host, uint64_t waitClocks) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output stopped: %s, waited %llu clocks for data [OK]\n", getTS(": ").c_str(), host.c_str(), (unsigned long long)waitClocks);
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStopped(this, host, waitClocks);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStoppedMemErrorNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output stopped: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStoppedMemError(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStoppedConfigErrorNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output stopped: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStoppedConfigError(this, host);
     });
 
     m_pimpl->m_configClient->successSendConfigNofiy.connect([&](std::string host) {
@@ -420,12 +448,20 @@ auto ConfigStreamClient::requestADCServerFPGAStart(const std::string host) -> bo
     return m_pimpl->m_configClient->sendADCFPGAStart(host);
 }
 
-auto ConfigStreamClient::requestGPIOServerStart(const std::string host) -> bool {
-    return m_pimpl->m_configClient->sendGPIOServerStart(host);
+auto ConfigStreamClient::requestGPIOInServerStart(const std::string host) -> bool {
+    return m_pimpl->m_configClient->sendGPIOInServerStart(host);
 }
 
-auto ConfigStreamClient::requestGPIOServerStop(const std::string host) -> bool {
-    return m_pimpl->m_configClient->sendGPIOServerStop(host);
+auto ConfigStreamClient::requestGPIOInServerStop(const std::string host) -> bool {
+    return m_pimpl->m_configClient->sendGPIOInServerStop(host);
+}
+
+auto ConfigStreamClient::requestGPIOOutServerStart(const std::string host) -> bool {
+    return m_pimpl->m_configClient->sendGPIOOutServerStart(host);
+}
+
+auto ConfigStreamClient::requestGPIOOutServerStop(const std::string host) -> bool {
+    return m_pimpl->m_configClient->sendGPIOOutServerStop(host);
 }
 
 auto ConfigStreamClient::requestDACServerStart(const std::string host, bool ch1Enable, bool ch2Enable) -> bool {

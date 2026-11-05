@@ -58,8 +58,10 @@ class ClientNetConfigManager : public CStreamSettings {
     auto sendDACFPGAStart(const std::string& host) -> bool;
     auto sendGetServerMode(const std::string& host) -> bool;
     auto sendActiveDACChannels(const std::string& host, std::string& count) -> bool;
-    auto sendGPIOServerStart(const std::string& host) -> bool;
-    auto sendGPIOServerStop(const std::string& host) -> bool;
+    auto sendGPIOInServerStart(const std::string& host) -> bool;
+    auto sendGPIOInServerStop(const std::string& host) -> bool;
+    auto sendGPIOOutServerStart(const std::string& host) -> bool;
+    auto sendGPIOOutServerStop(const std::string& host) -> bool;
     auto sendSoftwareTrigger(const std::string& host, CNetConfigManager::ETriggerTarget target) -> bool;
 
     auto requestConfig(const std::string& host) -> bool;
@@ -100,10 +102,15 @@ class ClientNetConfigManager : public CStreamSettings {
     sigslot::signal<std::string&> serverDacStoppedSDBrokenNofiy;
     sigslot::signal<std::string&> serverDacStoppedSDMissingNofiy;
 
-    sigslot::signal<std::string&> serverGpioStartedNofiy;
-    sigslot::signal<std::string&> serverGpioStoppedNofiy;
-    sigslot::signal<std::string&> serverGpioStoppedMemErrorNofiy;
-    sigslot::signal<std::string&> serverGpioStoppedConfigErrorNofiy;
+    sigslot::signal<std::string&> serverGpioInStartedNofiy;
+    sigslot::signal<std::string&> serverGpioInStoppedNofiy;
+    sigslot::signal<std::string&> serverGpioInStoppedMemErrorNofiy;
+    sigslot::signal<std::string&> serverGpioInStoppedConfigErrorNofiy;
+    sigslot::signal<std::string&> serverGpioOutStartedNofiy;
+    // the clocks the output waited for a buffer of the client
+    sigslot::signal<std::string&, uint64_t> serverGpioOutStoppedNofiy;
+    sigslot::signal<std::string&> serverGpioOutStoppedMemErrorNofiy;
+    sigslot::signal<std::string&> serverGpioOutStoppedConfigErrorNofiy;
 
     sigslot::signal<std::string&, CNetConfigManager::ETriggerTarget> softwareTriggerDoneNofiy;
     sigslot::signal<std::string&, CNetConfigManager::ETriggerTarget> softwareTriggerFailNofiy;

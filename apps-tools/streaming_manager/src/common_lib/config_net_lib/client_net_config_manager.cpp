@@ -1,4 +1,6 @@
 #include "client_net_config_manager.h"
+
+#include <cstdlib>
 #include <algorithm>
 #include <functional>
 #include <mutex>
@@ -59,10 +61,14 @@ auto ClientNetConfigManager::removeHadlers() -> void {
     serverDacStoppedSDBrokenNofiy.disconnect_all();
     serverDacStoppedSDMissingNofiy.disconnect_all();
 
-    serverGpioStartedNofiy.disconnect_all();
-    serverGpioStoppedNofiy.disconnect_all();
-    serverGpioStoppedMemErrorNofiy.disconnect_all();
-    serverGpioStoppedConfigErrorNofiy.disconnect_all();
+    serverGpioInStartedNofiy.disconnect_all();
+    serverGpioInStoppedNofiy.disconnect_all();
+    serverGpioInStoppedMemErrorNofiy.disconnect_all();
+    serverGpioInStoppedConfigErrorNofiy.disconnect_all();
+    serverGpioOutStartedNofiy.disconnect_all();
+    serverGpioOutStoppedNofiy.disconnect_all();
+    serverGpioOutStoppedMemErrorNofiy.disconnect_all();
+    serverGpioOutStoppedConfigErrorNofiy.disconnect_all();
 
     softwareTriggerDoneNofiy.disconnect_all();
     softwareTriggerFailNofiy.disconnect_all();
@@ -293,20 +299,36 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
         serverStoppedConfigErrorNofiy(sender->m_manager->getHost());
     }
 
-    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STARTED) {
-        serverGpioStartedNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STARTED) {
+        serverGpioInStartedNofiy(sender->m_manager->getHost());
     }
 
-    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED) {
-        serverGpioStoppedNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED) {
+        serverGpioInStoppedNofiy(sender->m_manager->getHost());
     }
 
-    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_MEM_ERROR) {
-        serverGpioStoppedMemErrorNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_MEM_ERROR) {
+        serverGpioInStoppedMemErrorNofiy(sender->m_manager->getHost());
     }
 
-    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_CONFIG_ERROR) {
-        serverGpioStoppedConfigErrorNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_CONFIG_ERROR) {
+        serverGpioInStoppedConfigErrorNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STARTED) {
+        serverGpioOutStartedNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED) {
+        serverGpioOutStoppedNofiy(sender->m_manager->getHost(), strtoull(tag.c_str(), nullptr, 10));
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_MEM_ERROR) {
+        serverGpioOutStoppedMemErrorNofiy(sender->m_manager->getHost());
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR) {
+        serverGpioOutStoppedConfigErrorNofiy(sender->m_manager->getHost());
     }
 
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_DONE || c == CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_FAIL) {
@@ -540,14 +562,24 @@ auto ClientNetConfigManager::sendDACFPGAStart(const std::string& host) -> bool {
     return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_DAC_FPGA_START);
 }
 
-auto ClientNetConfigManager::sendGPIOServerStart(const std::string& host) -> bool {
+auto ClientNetConfigManager::sendGPIOInServerStart(const std::string& host) -> bool {
     auto c = findClient(host, false);
-    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_START);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_IN_SERVER_START);
 }
 
-auto ClientNetConfigManager::sendGPIOServerStop(const std::string& host) -> bool {
+auto ClientNetConfigManager::sendGPIOInServerStop(const std::string& host) -> bool {
     auto c = findClient(host, false);
-    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_STOP);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_IN_SERVER_STOP);
+}
+
+auto ClientNetConfigManager::sendGPIOOutServerStart(const std::string& host) -> bool {
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_OUT_SERVER_START);
+}
+
+auto ClientNetConfigManager::sendGPIOOutServerStop(const std::string& host) -> bool {
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_GPIO_OUT_SERVER_STOP);
 }
 
 auto ClientNetConfigManager::sendSoftwareTrigger(const std::string& host, CNetConfigManager::ETriggerTarget target) -> bool {

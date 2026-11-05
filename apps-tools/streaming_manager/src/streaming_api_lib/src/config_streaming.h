@@ -28,8 +28,10 @@ class ConfigStreamClient {
     auto requestADCServerStop(const std::string host) -> bool;
     auto requestADCServerFPGAStart(const std::string host) -> bool;
 	auto requestDACServerStart(const std::string host, bool ch1Enable, bool ch2Enable) -> bool;
-    auto requestGPIOServerStart(const std::string host) -> bool;
-    auto requestGPIOServerStop(const std::string host) -> bool;
+    auto requestGPIOInServerStart(const std::string host) -> bool;
+    auto requestGPIOInServerStop(const std::string host) -> bool;
+    auto requestGPIOOutServerStart(const std::string host) -> bool;
+    auto requestGPIOOutServerStop(const std::string host) -> bool;
 
 	auto sendConfig(std::string key, std::string value) -> bool;
 	auto sendConfig(std::string host, std::string key, std::string value) -> bool;

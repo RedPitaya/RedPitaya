@@ -66,7 +66,8 @@ CGpio::CGpio(int _fd, void* _regset, size_t _regsetSize)
       m_RegsetSize(_regsetSize),
       m_Map(reinterpret_cast<volatile GpioMapT*>(_regset)),
       m_lock(),
-      m_running(false),
+      m_inRunning(false),
+      m_outRunning(false),
       m_eventSource(gpio_event_id) {}
 
 CGpio::~CGpio() {
@@ -77,7 +78,7 @@ CGpio::~CGpio() {
 
 auto CGpio::setOutputs(uint8_t p, uint8_t n) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running)
+    if (m_outRunning)
         return false;
     // the direction registers drive the IOBUF tristate input: 1 is high impedance
     m_Map->dir_p = (uint8_t)~p;
@@ -87,7 +88,7 @@ auto CGpio::setOutputs(uint8_t p, uint8_t n) -> bool {
 
 auto CGpio::setPolarity(uint16_t mask) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running)
+    if (m_inRunning)
         return false;
     m_Map->polarity = mask;
     return true;
@@ -95,7 +96,7 @@ auto CGpio::setPolarity(uint16_t mask) -> bool {
 
 auto CGpio::setDecimation(uint32_t dec) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running || dec == 0 || dec > MAX_DECIMATION)
+    if (m_inRunning || dec == 0 || dec > MAX_DECIMATION)
         return false;
     m_Map->decimation = dec - 1;  // the counter reloads with the value: period = value + 1
     return true;
@@ -103,7 +104,7 @@ auto CGpio::setDecimation(uint32_t dec) -> bool {
 
 auto CGpio::setRLE(bool enable) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running)
+    if (m_inRunning || m_outRunning)
         return false;
     m_Map->rle = enable ? 1 : 0;
     return true;
@@ -111,7 +112,7 @@ auto CGpio::setRLE(bool enable) -> bool {
 
 auto CGpio::setPattern(uint16_t mask, uint16_t value, uint16_t posEdge, uint16_t negEdge) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running)
+    if (m_inRunning || m_outRunning)
         return false;
     m_Map->cmp_mask = mask;
     m_Map->cmp_value = value;
@@ -122,7 +123,7 @@ auto CGpio::setPattern(uint16_t mask, uint16_t value, uint16_t posEdge, uint16_t
 
 auto CGpio::setTriggerSources(uint32_t mask) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running || (mask & ~TRIG_SRC_ALL))
+    if (m_inRunning || m_outRunning || (mask & ~TRIG_SRC_ALL))
         return false;
     m_Map->trig_mask = mask;
     return true;
@@ -130,7 +131,7 @@ auto CGpio::setTriggerSources(uint32_t mask) -> bool {
 
 auto CGpio::setEventSource(uint32_t source) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running || source > EVENT_SRC_MAX)
+    if (m_inRunning || m_outRunning || source > EVENT_SRC_MAX)
         return false;
     m_eventSource = source;
     return true;
@@ -138,7 +139,7 @@ auto CGpio::setEventSource(uint32_t source) -> bool {
 
 auto CGpio::setDataSize(uint32_t bytes) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running || bytes == 0 || (bytes % 128))
+    if (m_inRunning || m_outRunning || bytes == 0 || (bytes % 128))
         return false;
     m_Map->dma_size = bytes;
     return true;
@@ -157,7 +158,7 @@ auto CGpio::setInAddress(uint8_t index, uint32_t addr) -> bool {
 
 auto CGpio::setOutStep(uint32_t step) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running || step == 0)
+    if (m_outRunning || step == 0)
         return false;
     m_Map->out_step = step;
     return true;
@@ -181,33 +182,67 @@ auto CGpio::isOutBufferDone(uint8_t index) -> bool {
     return m_Map->dma_sts_out & (index == 0 ? OUT_STS_BUF1_DONE : OUT_STS_BUF2_DONE);
 }
 
-auto CGpio::prepare(bool in, bool out) -> void {
-    stop();
+auto CGpio::prepareInput() -> void {
+    stopInput();
     std::lock_guard lock(m_lock);
     m_Map->event_sel = m_eventSource;
-    if (in)
-        m_Map->dma_ctrl_in = IN_CTRL_MODE_STREAM | IN_CTRL_RESET | IN_CTRL_BUF2_ACK | IN_CTRL_BUF1_ACK | IN_CTRL_INTR_ACK;
-    if (out)
-        m_Map->dma_ctrl_out = OUT_CTRL_MODE_STREAM | OUT_CTRL_RESET;
+    m_Map->dma_ctrl_in = IN_CTRL_MODE_STREAM | IN_CTRL_RESET | IN_CTRL_BUF2_ACK | IN_CTRL_BUF1_ACK | IN_CTRL_INTR_ACK;
 }
 
-auto CGpio::start(bool in, bool out) -> void {
+auto CGpio::prepareOutput() -> void {
+    stopOutput();
+    std::lock_guard lock(m_lock);
+    m_Map->event_sel = m_eventSource;
+    m_Map->dma_ctrl_out = OUT_CTRL_MODE_STREAM | OUT_CTRL_RESET;
+}
+
+auto CGpio::startInput() -> void {
     std::lock_guard lock(m_lock);
     m_Map->event = GPIO_EVENT_START;
-    if (in)
-        m_Map->dma_ctrl_in = IN_CTRL_START;
-    if (out)
-        m_Map->dma_ctrl_out = OUT_CTRL_START;
-    m_running = in || out;
+    m_Map->dma_ctrl_in = IN_CTRL_START;
+    m_inRunning = true;
 }
 
-auto CGpio::stop() -> void {
+auto CGpio::startOutput() -> void {
+    std::lock_guard lock(m_lock);
+    m_Map->dma_ctrl_out = OUT_CTRL_START;
+    m_outRunning = true;
+}
+
+// The start and stop events reach the input only
+auto CGpio::stopInput() -> void {
     std::lock_guard lock(m_lock);
     // the stop is taken from the selected event source only (0, the DAC, after the bitstream load)
     m_Map->event_sel = gpio_event_id;
     m_Map->event = GPIO_EVENT_STOP;
-    m_Map->dma_ctrl_out = 0;
-    m_running = false;
+    if (m_outRunning)
+        m_Map->event_sel = m_eventSource;  // the trigger events of the running output
+    m_inRunning = false;
+}
+
+auto CGpio::stopOutput() -> void {
+    std::lock_guard lock(m_lock);
+    m_Map->dma_ctrl_out = OUT_CTRL_RESET;  // a write of 0 left the DMA reading
+    m_outRunning = false;
+}
+
+auto CGpio::prepare(bool in, bool out) -> void {
+    if (in)
+        prepareInput();
+    if (out)
+        prepareOutput();
+}
+
+auto CGpio::start(bool in, bool out) -> void {
+    if (out)
+        startOutput();
+    if (in)
+        startInput();
+}
+
+auto CGpio::stop() -> void {
+    stopInput();
+    stopOutput();
 }
 
 auto CGpio::softwareTrigger() -> void {
@@ -216,7 +251,27 @@ auto CGpio::softwareTrigger() -> void {
 }
 
 auto CGpio::isRunning() -> bool {
-    return m_running;
+    return m_inRunning || m_outRunning;
+}
+
+auto CGpio::isInputRunning() -> bool {
+    return m_inRunning;
+}
+
+auto CGpio::isOutputRunning() -> bool {
+    return m_outRunning;
+}
+
+auto CGpio::getOutWait64() -> uint64_t {
+    if (!(getFeatures() & GPIO_FEATURE_OUT_WAIT))
+        return 0;
+    // the pair moves on while the output waits: read again when the high word changed
+    uint32_t hi, lo;
+    do {
+        hi = m_Map->out_wait[1];
+        lo = m_Map->out_wait[0];
+    } while (hi != m_Map->out_wait[1]);
+    return (uint64_t)hi << 32 | lo;
 }
 
 auto CGpio::hasTriggerMode() -> bool {
@@ -231,7 +286,7 @@ auto CGpio::hasTriggerMode() -> bool {
 
 auto CGpio::setOutputTriggerMode(bool enable) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running)
+    if (m_outRunning)
         return false;
     uint32_t mode = m_Map->trig_mode & 0x3;
     m_Map->trig_mode = enable ? (mode | 0x2) : (mode & ~0x2u);
@@ -256,7 +311,7 @@ auto CGpio::hasInputBlockMode() -> bool {
 
 auto CGpio::setInputTriggerMode(bool enable) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running)
+    if (m_inRunning)
         return false;
     uint32_t mode = m_Map->trig_mode & 0x3;
     m_Map->trig_mode = enable ? (mode | 0x1) : (mode & ~0x1u);
@@ -269,7 +324,7 @@ auto CGpio::isInputArmed() -> bool {
 
 auto CGpio::setTriggerBlocks(uint16_t blocks) -> bool {
     std::lock_guard lock(m_lock);
-    if (m_running)
+    if (m_inRunning)
         return false;
     m_Map->trig_blocks = blocks;
     return true;

@@ -14,6 +14,7 @@ TEST(TriggerStatus, EveryFieldSurvivesTheRoundTrip) {
     source.gpioInArmed = true;
     source.gpioOutArmed = true;
     source.gpioInTriggerCount = 12345;
+    source.gpioOutWait = 0x123456789ull;  // above 32 bits
 
     TriggerStatus target;
     ASSERT_TRUE(TriggerStatus::fromJson(source.toJson(), target));

@@ -67,7 +67,8 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setMemoryBlockSize(0x20000);
     s.setADCSize(111);
     s.setDACSize(222);
-    s.setGPIOSize(333);
+    s.setGPIOInSize(333);
+    s.setGPIOOutSize(444);
     s.setADCTriggerMode(State::ON);
     s.setADCTriggerSources(0x21);
     s.setADCTriggerLevelLow(-1000);
@@ -83,8 +84,6 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setExtTrigEdge(TriggerEdge::FALLING);
     s.setExtTrigDebounce(1000);
     s.setExtTrigDio0(State::OFF);
-    s.setGPIOInStreaming(State::ON);
-    s.setGPIOOutStreaming(State::ON);
     s.setGPIOOutputsP(0x0F);
     s.setGPIOOutputsN(0xF0);
     s.setGPIOPolarity(0x0101);
@@ -142,7 +141,8 @@ TEST(StreamSettings, TheDefaultsAreTheOnesDeclaredInTheHeader) {
     const uint32_t expectedRegion = (0x10000u + DataLib::sizeHeader()) * 12u;
     EXPECT_EQ(s.getADCSize(), expectedRegion);
     EXPECT_EQ(s.getDACSize(), expectedRegion);
-    EXPECT_EQ(s.getGPIOSize(), expectedRegion);
+    EXPECT_EQ(s.getGPIOInSize(), expectedRegion);
+    EXPECT_EQ(s.getGPIOOutSize(), expectedRegion);
 
     // The trigger settings default to what the blocks do without them: no trigger, own events.
     EXPECT_EQ(s.getADCTriggerMode(), State::OFF);
@@ -161,9 +161,6 @@ TEST(StreamSettings, TheDefaultsAreTheOnesDeclaredInTheHeader) {
     EXPECT_EQ(s.getExtTrigEdge(), TriggerEdge::RISING);
     EXPECT_EQ(s.getExtTrigDebounce(), 0u);
     EXPECT_EQ(s.getExtTrigDio0(), State::ON);
-
-    EXPECT_EQ(s.getGPIOInStreaming(), State::OFF);
-    EXPECT_EQ(s.getGPIOOutStreaming(), State::OFF);
     EXPECT_EQ(s.getGPIOOutputsP(), 0u);
     EXPECT_EQ(s.getGPIOOutputsN(), 0u);
     EXPECT_EQ(s.getGPIOPolarity(), 0u);
@@ -357,11 +354,13 @@ TEST(StreamSettings, ScalarSettersStoreExactlyWhatTheyAreGiven) {
     s.setMemoryBlockSize(1);
     s.setADCSize(2);
     s.setDACSize(3);
-    s.setGPIOSize(4);
+    s.setGPIOInSize(4);
+    s.setGPIOOutSize(5);
     EXPECT_EQ(s.getMemoryBlockSize(), 1u);
     EXPECT_EQ(s.getADCSize(), 2u);
     EXPECT_EQ(s.getDACSize(), 3u);
-    EXPECT_EQ(s.getGPIOSize(), 4u);
+    EXPECT_EQ(s.getGPIOInSize(), 4u);
+    EXPECT_EQ(s.getGPIOOutSize(), 5u);
 }
 
 TEST(StreamSettings, ResetDefaultRestoresEveryGroup) {
@@ -452,10 +451,10 @@ TEST(StreamSettings, GetHelpNamesEveryKeyTheKeyValueInterfaceAccepts) {
     const std::string help = CStreamSettings::getHelp();
     for (const char* key : {"format_sd", "data_type_sd", "samples_limit_sd", "adc_pass_mode", "resolution", "adc_decimation", "use_calib",
                             "adc_capture_time", "tdms_time_column", "dac_rate", "file_sd", "file_type_sd", "dac_pass_mode", "repeat", "repeatCount", "block_size",
-                            "adc_size", "dac_size", "gpio_size", "adc_trigger_mode", "adc_trigger_sources", "adc_trigger_level_low",
+                            "adc_size", "dac_size", "gpio_in_size", "gpio_out_size", "adc_trigger_mode", "adc_trigger_sources", "adc_trigger_level_low",
                             "adc_trigger_level_high", "adc_trigger_edge", "adc_event_source", "adc_trigger_blocks", "dac_trigger_sources",
                             "dac_event_source", "ext_trig_conditioner", "ext_trig_edge", "ext_trig_debounce", "ext_trig_dio0",
-                            "gpio_in_streaming", "gpio_out_streaming", "gpio_outputs_p", "gpio_outputs_n", "gpio_polarity", "gpio_decimation",
+                            "gpio_outputs_p", "gpio_outputs_n", "gpio_polarity", "gpio_decimation",
                             "gpio_rle", "gpio_out_step", "gpio_pattern_mask", "gpio_pattern_value", "gpio_pattern_pos_edge",
                             "gpio_pattern_neg_edge", "gpio_trigger_sources", "gpio_event_source", "gpio_in_trigger_mode",
                             "gpio_out_trigger_mode", "gpio_trigger_blocks"}) {

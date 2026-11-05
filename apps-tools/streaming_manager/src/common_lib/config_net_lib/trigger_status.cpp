@@ -10,6 +10,7 @@ auto TriggerStatus::toJson() const -> std::string {
     root["gpio_in_armed"] = gpioInArmed;
     root["gpio_out_armed"] = gpioOutArmed;
     root["gpio_in_trigger_count"] = gpioInTriggerCount;
+    root["gpio_out_wait"] = Json::UInt64(gpioOutWait);
     Json::StreamWriterBuilder builder;
     builder["indentation"] = "";
     return Json::writeString(builder, root);
@@ -41,6 +42,8 @@ auto TriggerStatus::fromJson(const std::string& _json, TriggerStatus& _status) -
             status.gpioOutArmed = root["gpio_out_armed"].asBool();
         if (root.isMember("gpio_in_trigger_count"))
             status.gpioInTriggerCount = root["gpio_in_trigger_count"].asUInt();
+        if (root.isMember("gpio_out_wait"))
+            status.gpioOutWait = root["gpio_out_wait"].asUInt64();
         _status = status;
         return true;
     } catch (...) {

@@ -96,19 +96,35 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
         stopDacStreamingNofiy();
     }
 
-    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_START) {
-        if (startGpioStreamingNofiy.slot_count() == 0) {
-            sendGPIOServerConfigErrorStopped();
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_IN_SERVER_START) {
+        if (startGpioInStreamingNofiy.slot_count() == 0) {
+            sendGPIOInServerConfigErrorStopped();
         } else {
-            startGpioStreamingNofiy();
+            startGpioInStreamingNofiy();
         }
     }
 
-    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_SERVER_STOP) {
-        if (stopGpioStreamingNofiy.slot_count() == 0) {
-            sendGPIOServerStopped();
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_IN_SERVER_STOP) {
+        if (stopGpioInStreamingNofiy.slot_count() == 0) {
+            sendGPIOInServerStopped();
         } else {
-            stopGpioStreamingNofiy();
+            stopGpioInStreamingNofiy();
+        }
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_OUT_SERVER_START) {
+        if (startGpioOutStreamingNofiy.slot_count() == 0) {
+            sendGPIOOutServerConfigErrorStopped();
+        } else {
+            startGpioOutStreamingNofiy();
+        }
+    }
+
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_GPIO_OUT_SERVER_STOP) {
+        if (stopGpioOutStreamingNofiy.slot_count() == 0) {
+            sendGPIOOutServerStopped(0);
+        } else {
+            stopGpioOutStreamingNofiy();
         }
     }
 
@@ -332,20 +348,36 @@ auto ServerNetConfigManager::sendDACServerStoppedSDMissingFile() -> bool {
     return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_DAC_SERVER_STOPPED_SD_MISSING);
 }
 
-auto ServerNetConfigManager::sendGPIOServerStarted() -> bool {
-    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STARTED);
+auto ServerNetConfigManager::sendGPIOInServerStarted() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STARTED);
 }
 
-auto ServerNetConfigManager::sendGPIOServerStopped() -> bool {
-    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED);
+auto ServerNetConfigManager::sendGPIOInServerStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED);
 }
 
-auto ServerNetConfigManager::sendGPIOServerMemoryErrorStopped() -> bool {
-    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_MEM_ERROR);
+auto ServerNetConfigManager::sendGPIOInServerMemoryErrorStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_MEM_ERROR);
 }
 
-auto ServerNetConfigManager::sendGPIOServerConfigErrorStopped() -> bool {
-    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_SERVER_STOPPED_CONFIG_ERROR);
+auto ServerNetConfigManager::sendGPIOInServerConfigErrorStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_CONFIG_ERROR);
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerStarted() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STARTED);
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerStopped(uint64_t waitClocks) -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED, std::to_string(waitClocks));
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerMemoryErrorStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_MEM_ERROR);
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerConfigErrorStopped() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR);
 }
 
 auto ServerNetConfigManager::sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool {

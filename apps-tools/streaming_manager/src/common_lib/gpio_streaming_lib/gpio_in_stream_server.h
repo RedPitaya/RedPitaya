@@ -1,0 +1,59 @@
+#ifndef GPIO_STREAMING_LIB_GPIO_IN_STREAM_SERVER_H
+#define GPIO_STREAMING_LIB_GPIO_IN_STREAM_SERVER_H
+
+#include <memory>
+#include <string>
+
+#include "gpio_stop_reason.h"
+#include "settings_lib/stream_settings.h"
+#include "uio_lib/hardware.h"
+
+namespace gpio_streaming_lib {
+
+class GPIOInStreamServer;
+
+// Events of the server, called from its threads; the default does nothing
+class GPIOInServerCallback {
+   public:
+    virtual ~GPIOInServerCallback() {}
+    virtual void started(GPIOInStreamServer*) {}
+    // after every stop, also of a server that was not running (a client stops before it starts)
+    virtual void stopped(GPIOInStreamServer*, GPIOStopReason) {}
+};
+
+struct GPIOStreamOptions {
+    std::string host = "127.0.0.1";  // the address the data server listens on
+};
+
+// The GPIO input of a board (DIO0..7 P and N) through CHardware: the lines go to the client on
+// NET_GPIO_IN_STREAMING_PORT, a buffer is one pack of one channel of 32 bit words {N count,
+// N lines, P count, P lines} with a DataLib::GPIOHeader. It runs on its own, the output may run
+// or not. start() sets everything up, opens the data server and starts the input. The memory
+// (CMemoryManager MM_GPIO_IN) is set by the caller beforehand.
+class GPIOInStreamServer {
+   public:
+    using Ptr = std::shared_ptr<GPIOInStreamServer>;
+
+    explicit GPIOInStreamServer(uio_lib::CHardware::Ptr hw);
+    ~GPIOInStreamServer();
+
+    auto start(const CStreamSettings& settings, const GPIOStreamOptions& options = {}) -> bool;
+    auto stop(GPIOStopReason reason) -> void;
+    auto stopNonBlocking(GPIOStopReason reason) -> void;
+    auto isRunning() -> bool;
+
+    auto setVerbose(bool enable) -> void;
+    auto setCallback(std::shared_ptr<GPIOInServerCallback> callback) -> void;
+    auto removeCallback() -> void;
+
+   private:
+    GPIOInStreamServer(const GPIOInStreamServer&) = delete;
+    GPIOInStreamServer& operator=(const GPIOInStreamServer&) = delete;
+
+    struct Impl;
+    std::shared_ptr<Impl> m_pimpl;  // shared with the threads of stopNonBlocking()
+};
+
+}  // namespace gpio_streaming_lib
+
+#endif

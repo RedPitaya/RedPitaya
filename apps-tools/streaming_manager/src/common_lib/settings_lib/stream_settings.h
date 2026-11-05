@@ -135,11 +135,7 @@ class CStreamSettings {
     auto setExtTrigDio0(State _value) -> void;
     auto getExtTrigDio0() const -> State;
 
-    // GPIO streaming (DIO0..7 P and N)
-    auto setGPIOInStreaming(State _value) -> void;
-    auto getGPIOInStreaming() const -> State;
-    auto setGPIOOutStreaming(State _value) -> void;
-    auto getGPIOOutStreaming() const -> State;
+    // GPIO streaming (DIO0..7 P and N); the input and the output start with their own commands
     auto setGPIOOutputsP(uint32_t _mask) -> bool;
     auto getGPIOOutputsP() const -> uint32_t;
     auto setGPIOOutputsN(uint32_t _mask) -> bool;
@@ -177,8 +173,10 @@ class CStreamSettings {
     auto getADCSize() const -> uint32_t;
     auto setDACSize(uint32_t size) -> void;
     auto getDACSize() const -> uint32_t;
-    auto setGPIOSize(uint32_t size) -> void;
-    auto getGPIOSize() const -> uint32_t;
+    auto setGPIOInSize(uint32_t size) -> void;
+    auto getGPIOInSize() const -> uint32_t;
+    auto setGPIOOutSize(uint32_t size) -> void;
+    auto getGPIOOutSize() const -> uint32_t;
 
     static auto setDACDirPath(std::string& _path) -> void;
     static auto getDACDirPath() -> std::string;
@@ -214,7 +212,8 @@ class CStreamSettings {
         uint32_t m_memoryBlock = 0x10000;  // data size 0x10000 + header size;
         uint32_t m_ADCSize = (0x10000 + DataLib::sizeHeader()) * 12;
         uint32_t m_DACSize = (0x10000 + DataLib::sizeHeader()) * 12;
-        uint32_t m_GPIOSize = (0x10000 + DataLib::sizeHeader()) * 12;
+        uint32_t m_GPIOInSize = (0x10000 + DataLib::sizeHeader()) * 12;
+        uint32_t m_GPIOOutSize = (0x10000 + DataLib::sizeHeader()) * 12;
     };
 
     struct DACSettings {
@@ -239,8 +238,6 @@ class CStreamSettings {
     };
 
     struct GPIOSettings {
-        State m_inStreaming = State::OFF;
-        State m_outStreaming = State::OFF;
         uint32_t m_outputsP = 0;  // 1 - the line is driven by the output stream
         uint32_t m_outputsN = 0;
         uint32_t m_polarity = 0;  // inverted input lines: bits 7:0 P, 15:8 N

@@ -21,6 +21,7 @@ struct GpioState {
     std::function<uint64_t(uint8_t index)> inLost;
     std::function<uint64_t(uint8_t index)> inWait;
     std::function<bool(uint8_t index)> outDone;  // output buffer `index` played, default true
+    std::function<uint64_t()> outWait;            // getOutWait64()
 
     // given
     std::function<void(uint8_t index, uint32_t address)> outTaken;  // an output buffer handed over
@@ -37,12 +38,14 @@ struct GpioState {
     uint16_t triggerBlocks = 0;
     std::array<uint32_t, 2> inAddress{};
     std::array<bool, 2> inFull{};
-    bool running = false;
-    bool in = false;
-    bool out = false;
-    int prepares = 0;
-    int starts = 0;
-    int stops = 0;
+    bool inRunning = false;
+    bool outRunning = false;
+    int inPrepares = 0;
+    int outPrepares = 0;
+    int inStarts = 0;
+    int outStarts = 0;
+    int inStops = 0;
+    int outStops = 0;
     int softwareTriggers = 0;
 };
 

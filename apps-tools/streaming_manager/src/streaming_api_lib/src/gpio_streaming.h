@@ -9,9 +9,15 @@
 class GPIOCallback;
 class ConfigStreamClient;
 
-// The GPIO streaming of one board (DIO0..7 P and N): the input lines come in as GPIOPack, the
-// output lines go out from setOutputData() or from GPIOCallback::outputData(). The other GPIO
-// settings (outputs, decimation, RLE, trigger) are the board's, set with ConfigStreamClient.
+// The GPIO streaming of one board (DIO0..7 P and N). The input and the output start and stop on
+// their own: the input lines come in as GPIOPack, the output lines go out from setOutputData() or
+// from GPIOCallback::outputData(). The other GPIO settings (outputs, decimation, RLE, trigger,
+// gpio_in_size, gpio_out_size) are the board's, set with ConfigStreamClient.
+//
+// The output plays one word a clock, count + 1 clocks with RLE: without RLE that is 500 MB/s at
+// 125 MHz, far more than the network gives. When the data comes late the lines keep the last word
+// until it comes; the board counts these clocks and reports them with the stop
+// (GPIOCallback::outputStopped, outputWaitClocks()). The board fills its ring before it plays.
 class GPIOStreamClient {
    public:
     GPIOStreamClient(std::shared_ptr<ConfigStreamClient> configClient);
@@ -22,10 +28,15 @@ class GPIOStreamClient {
     auto setOutputData(std::vector<uint32_t> words, uint64_t repeat = 1) -> void;
     auto clearOutputData() -> void;
 
-    // Sets gpio_in_streaming / gpio_out_streaming on the board and starts its GPIO streaming
-    auto startStreaming(std::string host, bool input, bool output) -> bool;
-    // Stops the board's GPIO streaming and the client
-    auto stopStreaming() -> void;
+    auto startInput(std::string host) -> bool;
+    auto startOutput(std::string host) -> bool;
+    // stop the board's input or output and the client's side of it
+    auto stopInput() -> void;
+    auto stopOutput() -> void;
+    auto stopStreaming() -> void;  // both
+
+    // the clocks the board's output waited for this client's data, from its last stop
+    auto outputWaitClocks() -> uint64_t;
 
     auto wait() -> void;
     auto notifyStop() -> void;

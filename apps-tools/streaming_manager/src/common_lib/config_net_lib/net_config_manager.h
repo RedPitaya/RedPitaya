@@ -82,12 +82,21 @@ class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager>
         CS_REQUEST_TRIGGER_STATUS = 50,
         CS_RESPONSE_TRIGGER_STATUS = 51,
 
-        CS_REQUEST_GPIO_SERVER_START = 52,
-        CS_REQUEST_GPIO_SERVER_STOP = 53,
-        CS_RESPONSE_GPIO_SERVER_STARTED = 54,
-        CS_RESPONSE_GPIO_SERVER_STOPPED = 55,
-        CS_RESPONSE_GPIO_SERVER_STOPPED_MEM_ERROR = 56,
-        CS_RESPONSE_GPIO_SERVER_STOPPED_CONFIG_ERROR = 57
+        // the GPIO input and output start and stop on their own
+        CS_REQUEST_GPIO_IN_SERVER_START = 52,
+        CS_REQUEST_GPIO_IN_SERVER_STOP = 53,
+        CS_RESPONSE_GPIO_IN_SERVER_STARTED = 54,
+        CS_RESPONSE_GPIO_IN_SERVER_STOPPED = 55,
+        CS_RESPONSE_GPIO_IN_SERVER_STOPPED_MEM_ERROR = 56,
+        CS_RESPONSE_GPIO_IN_SERVER_STOPPED_CONFIG_ERROR = 57,
+
+        CS_REQUEST_GPIO_OUT_SERVER_START = 58,
+        CS_REQUEST_GPIO_OUT_SERVER_STOP = 59,
+        CS_RESPONSE_GPIO_OUT_SERVER_STARTED = 60,
+        // tag: the clocks the output waited for a buffer of the client (decimal)
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED = 61,
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_MEM_ERROR = 62,
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR = 63
     };
 
     // Block that a software trigger is sent to; wire values like ECommands.
@@ -155,6 +164,7 @@ static_assert(CNetConfigManager::CS_RESPONSE_SETTINGS_GET_SUCCESS == 0);
 static_assert(CNetConfigManager::CS_REQUEST_ADC_SERVER_START == 17);
 static_assert(CNetConfigManager::CS_REQUEST_DAC_SERVER_START == 31);
 static_assert(CNetConfigManager::CS_RESPONSE_SERVER_MODE_SD == 45);
-static_assert(CNetConfigManager::CS_RESPONSE_GPIO_SERVER_STOPPED_CONFIG_ERROR == 57);
+static_assert(CNetConfigManager::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_CONFIG_ERROR == 57);
+static_assert(CNetConfigManager::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR == 63);
 
 #endif
