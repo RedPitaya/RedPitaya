@@ -68,7 +68,7 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
         s.setADCAC_DC(ch, AC_DC::AC);
     }
     s.setDACSpeed(1000000);
-    s.setDACFile("/tmp/some.wav");
+    s.setDACFile("some.wav");
     s.setDACFileType(DataFormat::TDMS);
     s.setDACPassMode(DACPassMode::DAC_FILE);
     s.setDACRepeat(DACRepeat::DAC_REP_INF);
@@ -173,7 +173,7 @@ TEST(StreamSettingsJson, EveryFieldSurvivesToJsonThenParseJson) {
         EXPECT_EQ(target.getADCAC_DC(ch), AC_DC::AC);
     }
     EXPECT_EQ(target.getDACSpeed(), 1000000u);
-    EXPECT_EQ(target.getDACFile(), "/tmp/some.wav");
+    EXPECT_EQ(target.getDACFile(), "some.wav");
     EXPECT_EQ(target.getDACFileType(), DataFormat::TDMS);
     EXPECT_EQ(target.getDACPassMode(), DACPassMode::DAC_FILE);
     EXPECT_EQ(target.getDACRepeat(), DACRepeat::DAC_REP_INF);
@@ -453,4 +453,14 @@ TEST(StreamSettingsJson, ExtraMembersAreIgnored) {
     CStreamSettings s;
     EXPECT_TRUE(s.parseJson(R"({"adc_streaming":{"unknown_key":42},"dac_streaming":{},"memory_manager":{},"extra_section":{"x":1}})"));
     EXPECT_EQ(s.toJson(), CStreamSettings().toJson());
+}
+
+TEST(StreamSettingsJson, ABadBlockSizeOrDACFileInADocumentIsSkipped) {
+    CStreamSettings s;
+    ASSERT_TRUE(s.setMemoryBlockSize(4096));
+    ASSERT_TRUE(s.setDACFile("a.wav"));
+    // parseJson skips a value its setter refuses (applyConfigJson then fails the document)
+    s.parseJson(R"({"adc_streaming":{},"dac_streaming":{"file_sd":"../../etc/passwd"},"memory_manager":{"block_size":4294967168}})");
+    EXPECT_EQ(s.getMemoryBlockSize(), 4096u);
+    EXPECT_EQ(s.getDACFile(), "a.wav");
 }

@@ -173,14 +173,10 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
 	}
 
 	if (c == CNetConfigManager::ECommands::CS_REQUEST_LOAD_SETTING_FROM_FILE) {
-        bool loaded = false;
-        {
-            std::lock_guard lock(m_settingsMtx);
-            loaded = m_settings.readFromFile(m_file_settings);
-        }
+        // a file that does not read leaves the settings as they are
+        const bool loaded = changeSettings([this](CStreamSettings& s) { return s.readFromFile(m_file_settings); });
 		if (loaded) {
 			getNewSettingsNofiy();
-			memoryBlockSizeChangeNofiy();
             m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_LOAD_SETTING_FROM_FILE_SUCCES);
 		} else {
 			m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_LOAD_SETTING_FROM_FILE_FAIL);
@@ -219,30 +215,37 @@ auto ServerNetConfigManager::receiveValueStr(std::string key, std::string value)
     }
 }
 
-auto ServerNetConfigManager::setSettingsParameter(const std::string& key, const std::string& value) -> bool {
-    bool state = false;
+auto ServerNetConfigManager::changeSettings(const std::function<bool(CStreamSettings&)>& change) -> bool {
+    CStreamSettings before;
+    CStreamSettings after;
     {
         std::lock_guard lock(m_settingsMtx);
-        state = m_settings.setValue(key, value);
+        before = m_settings;
+        after = m_settings;
+        if (!change(after) || (m_validator && !m_validator(after)))
+            return false;
+        m_settings = after;
     }
-    if (state && key == "block_size") {
-        memoryBlockSizeChangeNofiy();
-    }
-    return state;
+    settingsChangedNofiy(before, after);
+    return true;
+}
+
+auto ServerNetConfigManager::setSettingsValidator(std::function<bool(const CStreamSettings&)> validator) -> void {
+    std::lock_guard lock(m_settingsMtx);
+    m_validator = std::move(validator);
+}
+
+auto ServerNetConfigManager::setSettingsParameter(const std::string& key, const std::string& value) -> bool {
+    return changeSettings([&](CStreamSettings& s) { return s.setValue(key, value); });
 }
 
 auto ServerNetConfigManager::receiveConfig(std::string value) -> void {
     // Applied over the current settings: a client that does not know some keys leaves them as
     // they are. A value that is not taken fails the whole document.
-    bool applied = false;
-    {
-        std::lock_guard lock(m_settingsMtx);
-        applied = applyConfigJson(value, m_settings);
-    }
+    const bool applied = changeSettings([&](CStreamSettings& s) { return applyConfigJson(value, s); });
     if (applied) {
         m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SETTINGS_GET_SUCCESS);
         getNewSettingsNofiy();
-        memoryBlockSizeChangeNofiy();
     } else {
         m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SETTINGS_GET_FAIL);
     }

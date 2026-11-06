@@ -1,8 +1,8 @@
 #include "trigger_commands.h"
 
-using namespace streaming_lib;
+using namespace session_lib;
 
-auto streaming_lib::triggerStatusOf(uio_lib::CHardware& hw) -> TriggerStatus {
+auto session_lib::triggerStatusOf(uio_lib::CHardware& hw) -> TriggerStatus {
     TriggerStatus st;
     auto f = hw.features();
     if (f.adc) {
@@ -24,7 +24,7 @@ auto streaming_lib::triggerStatusOf(uio_lib::CHardware& hw) -> TriggerStatus {
     return st;
 }
 
-auto streaming_lib::connectTriggerCommands(std::shared_ptr<ServerNetConfigManager> config, uio_lib::CHardware::Ptr hw) -> void {
+auto session_lib::connectTriggerCommands(std::shared_ptr<ServerNetConfigManager> config, uio_lib::CHardware::Ptr hw) -> void {
     if (!config)
         return;
     std::weak_ptr<ServerNetConfigManager> wc = config;

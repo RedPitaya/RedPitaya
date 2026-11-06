@@ -57,7 +57,7 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
         s.setADCAC_DC(ch, AC_DC::AC);
     }
     s.setDACSpeed(1000000);
-    s.setDACFile("/tmp/some.wav");
+    s.setDACFile("some.wav");
     s.setDACFileType(DataFormat::TDMS);
     s.setDACPassMode(DACPassMode::DAC_FILE);
     s.setDACRepeat(DACRepeat::DAC_REP_INF);
@@ -346,17 +346,20 @@ TEST(StreamSettings, ScalarSettersStoreExactlyWhatTheyAreGiven) {
     s.setDACRepeatCount(0xFFFFFFFFu);
     EXPECT_EQ(s.getDACRepeatCount(), 0xFFFFFFFFu);
 
-    s.setDACFile("/home/redpitaya/streaming_files/dac/x.wav");
-    EXPECT_EQ(s.getDACFile(), "/home/redpitaya/streaming_files/dac/x.wav");
+    EXPECT_TRUE(s.setDACFile("x.wav"));
+    EXPECT_EQ(s.getDACFile(), "x.wav");
+    EXPECT_FALSE(s.setDACFile("/home/redpitaya/streaming_files/dac/x.wav"));
+    EXPECT_EQ(s.getDACFile(), "x.wav");
     s.setDACFile("");
     EXPECT_EQ(s.getDACFile(), "");
 
-    s.setMemoryBlockSize(1);
+    EXPECT_FALSE(s.setMemoryBlockSize(1));
+    EXPECT_TRUE(s.setMemoryBlockSize(1024));
     s.setADCSize(2);
     s.setDACSize(3);
     s.setGPIOInSize(4);
     s.setGPIOOutSize(5);
-    EXPECT_EQ(s.getMemoryBlockSize(), 1u);
+    EXPECT_EQ(s.getMemoryBlockSize(), 1024u);
     EXPECT_EQ(s.getADCSize(), 2u);
     EXPECT_EQ(s.getDACSize(), 3u);
     EXPECT_EQ(s.getGPIOInSize(), 4u);

@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <type_traits>
 
 // Platform/Hardware includes
 #include "api250-12/rp-gpio-power.h"
@@ -13,16 +14,8 @@
 #include "web/rp_client.h"
 
 // Streaming/Config includes
-#include "config_net_lib/server_net_config_manager.h"
-#include "dac_streaming_lib/dac_stream_server.h"
-#include "gpio_streaming_lib/gpio_in_stream_server.h"
-#include "gpio_streaming_lib/gpio_out_stream_server.h"
-#include "data_lib/buffers_cached.h"
-#include "streaming_lib/adc_stream_server.h"
+#include "session_lib/stream_session.h"
 #include "streaming_lib/streaming_file.h"
-#include "streaming_lib/trigger_commands.h"
-#include "streaming_lib/streaming_fpga.h"
-#include "streaming_lib/streaming_net.h"
 #include "board_lib/board.h"
 #include "uio_lib/hardware.h"
 #include "uio_lib/oscilloscope.h"
@@ -32,24 +25,6 @@
 // ============================================================================
 // Forward declarations
 // ============================================================================
-
-bool startServer(bool testMode);
-void stopServer(ServerNetConfigManager::EStopReason x);
-void stopNonBlocking(ServerNetConfigManager::EStopReason x);
-
-auto startDACServer(dac_channels_t channels) -> bool;
-auto stopDACNonBlocking(dac_streaming_lib::DACStopReason x) -> void;
-auto stopDACServer(dac_streaming_lib::DACStopReason x) -> void;
-void startADC();
-auto makeADCCallback() -> std::shared_ptr<streaming_lib::ADCServerCallback>;
-auto makeDACCallback() -> std::shared_ptr<dac_streaming_lib::DACServerCallback>;
-auto startGPIOInServer() -> bool;
-auto stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void;
-auto startGPIOOutServer() -> bool;
-auto stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void;
-auto stopGPIOServers(gpio_streaming_lib::GPIOStopReason x) -> void;
-auto makeGPIOInCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOInServerCallback>;
-auto makeGPIOOutCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOOutServerCallback>;
 
 auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
@@ -67,7 +42,6 @@ void updateUI();
 // Global variables
 // ============================================================================
 
-static std::mutex g_adc_mutex;
 static constexpr char config_file[] = "/root/.config/redpitaya/apps/streaming/streaming_config.json";
 
 auto memmanager = uio_lib::CMemoryManager::instance();
@@ -156,14 +130,12 @@ CBooleanParameter ss_gpio_data_pass("SS_GPIO_DATA_PASS", CBaseParameter::RW, fal
 
 uio_lib::CHardware::Ptr g_hw = nullptr;
 
-streaming_lib::ADCStreamServer::Ptr g_adc = nullptr;
-std::atomic_bool g_adcPrepared(false);  // started, waits for the start of the ADC or runs
-std::atomic_bool g_adcFile(false);      // writes a file: its statistics go to the page
+// the streaming of the board: the settings, the config server and the streams
+session_lib::StreamSession::Ptr g_session = nullptr;
+std::atomic_bool g_adcFile(false);  // the ADC writes a file: its statistics go to the page
+std::atomic_bool g_pageChanges(false);  // the page changes the settings: no update of the page back
 
-dac_streaming_lib::DACStreamServer::Ptr g_dac = nullptr;
-gpio_streaming_lib::GPIOInStreamServer::Ptr g_gpioIn = nullptr;
-gpio_streaming_lib::GPIOOutStreamServer::Ptr g_gpioOut = nullptr;
-ServerNetConfigManager::Ptr g_serverNetConfig = nullptr;
+auto makeWebCallback() -> std::shared_ptr<session_lib::SessionCallback>;
 
 uio_lib::BoardMode g_isMaster = uio_lib::BoardMode::UNKNOWN;
 
@@ -307,48 +279,20 @@ auto rp_app_init(void) -> int {
                 FATAL("Can't open the FPGA blocks")
             }
             g_isMaster = g_hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
-            g_adc = std::make_shared<streaming_lib::ADCStreamServer>(g_hw);
-            g_adc->setCallback(makeADCCallback());
-            g_dac = std::make_shared<dac_streaming_lib::DACStreamServer>(g_hw);
-            g_dac->setCallback(makeDACCallback());
-            g_gpioIn = std::make_shared<gpio_streaming_lib::GPIOInStreamServer>(g_hw);
-            g_gpioIn->setCallback(makeGPIOInCallback());
-            g_gpioOut = std::make_shared<gpio_streaming_lib::GPIOOutStreamServer>(g_hw);
-            g_gpioOut->setCallback(makeGPIOOutCallback());
             WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
 
-            // Initialize network config manager
             TRACE("ss_ip_addr %s", ss_ip_addr.Value().c_str());
-            g_serverNetConfig =
-                std::make_shared<ServerNetConfigManager>(config_file,
-                                                         g_isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE,
-                                                         ss_ip_addr.Value(),
-                                                         NET_CONFIG_PORT,
-                                                         getADCChannels());
-
-            // Connect signals
-            g_serverNetConfig->getNewSettingsNofiy.connect([]() { updateUI(); });
-            g_serverNetConfig->startStreamingNofiy.connect([]() { startServer(false); });
-            g_serverNetConfig->stopStreamingNofiy.connect([]() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
-            g_serverNetConfig->startDacStreamingNofiy.connect([](auto channels) { startDACServer(channels); });
-            g_serverNetConfig->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL); });
-            g_serverNetConfig->startGpioInStreamingNofiy.connect([]() { startGPIOInServer(); });
-            g_serverNetConfig->stopGpioInStreamingNofiy.connect([]() { stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
-            g_serverNetConfig->startGpioOutStreamingNofiy.connect([]() { startGPIOOutServer(); });
-            g_serverNetConfig->stopGpioOutStreamingNofiy.connect([]() { stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
-            g_serverNetConfig->startADCNofiy.connect([]() { startADC(); });
-            streaming_lib::connectTriggerCommands(g_serverNetConfig, g_hw);
-            g_serverNetConfig->memoryBlockSizeChangeNofiy.connect([]() {
-                stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-                stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
-                stopGPIOServers(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
-                uio_lib::CMemoryManager::instance()->setMemoryBlockSize(g_serverNetConfig->getSettings().getMemoryBlockSize());
-                uio_lib::CMemoryManager::instance()->reallocateBlocks();
-            });
-
-            g_serverNetConfig->startBroadcast(getModel(), getMACAddress(), ss_ip_addr.Value(), NET_BROADCAST_PORT);
+            session_lib::SessionOptions options;
+            options.configFile = config_file;
+            options.host = ss_ip_addr.Value();
+            options.adcHost = ss_ip_addr.Value();
+            options.broadcastModel = getModel();
+            options.broadcastMac = getMACAddress();
+            options.broadcastHost = ss_ip_addr.Value();
+            g_session = session_lib::StreamSession::create(g_hw, options);
+            g_session->setCallback(makeWebCallback());
         } catch (std::exception& e) {
-            WARNING("Init ServerNetConfigManager() %s\n", e.what());
+            WARNING("Init the streaming session %s\n", e.what());
         }
 
         // Set initial parameter values
@@ -379,22 +323,13 @@ auto rp_app_init(void) -> int {
 // Application exit & cleanup
 // ============================================================================
 
-void stopAll() {
-    stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-    stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
-    stopGPIOServers(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
-}
-
 auto rp_app_exit(void) -> int {
-    g_serverNetConfig->stop();
-    stopServer(ServerNetConfigManager::EStopReason::NORMAL);
-    stopDACServer(dac_streaming_lib::DACStopReason::NORMAL);
-    stopGPIOServers(gpio_streaming_lib::GPIOStopReason::NORMAL);
+    if (g_session) {
+        g_session->removeCallback();
+        g_session->stop();
+    }
     // the module stays loaded, the next start may find another bitstream
-    g_adc = nullptr;
-    g_dac = nullptr;
-    g_gpioIn = nullptr;
-    g_gpioOut = nullptr;
+    g_session = nullptr;
     g_hw = nullptr;
     aprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
@@ -405,91 +340,101 @@ auto rp_app_exit(void) -> int {
 // ============================================================================
 
 auto saveConfigInFile() -> void {
-    if (!g_serverNetConfig->getSettingsRef().writeToFile(config_file)) {
+    if (!g_session || !g_session->saveSettings()) {
         ERROR_LOG("Error save to file (%s)", config_file);
     }
 }
 
-void updateUI() {
-    // Update DAC file list
-    auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-    auto files = CStreamSettings::getDACFiles();
-    ss_dac_file.SendValue(fileName + "*" + files);
-
-    // Update ADC settings
-    ss_use_localfile.SendValue(g_serverNetConfig->getSettingsRef().getADCPassMode());
-
-    int ch = 0, att = 0, ac_dc = 0;
-    for (int i = 1; i <= 4; i++) {
-        ch |= g_serverNetConfig->getSettingsRef().getADCChannels(i) ? 1 << (i - 1) : 0;
-        att |= g_serverNetConfig->getSettingsRef().getADCAttenuator(i) ? 1 << (i - 1) : 0;
-        ac_dc |= g_serverNetConfig->getSettingsRef().getADCAC_DC(i) ? 1 << (i - 1) : 0;
-    }
-
-    ss_channels.SendValue(ch);
-    ss_resolution.SendValue(g_serverNetConfig->getSettingsRef().getADCResolution());
-    ss_save_mode.SendValue(g_serverNetConfig->getSettingsRef().getADCType());
-    ss_save_capture_time.SendValue(g_serverNetConfig->getSettingsRef().getADCCaptureTime());
-    ss_format.SendValue(g_serverNetConfig->getSettingsRef().getADCFormat());
-    ss_attenuator.SendValue(att);
-    ss_ac_dc.SendValue(ac_dc);
-
-    // Update DAC settings
-    int dac_gain = 0;
-    for (int i = 1; i <= 2; i++) {
-        dac_gain |= g_serverNetConfig->getSettingsRef().getDACGain(i) ? 1 << (1 - i) : 0;
-    }
-
-    ss_dac_file_type.SendValue(g_serverNetConfig->getSettingsRef().getDACFileType());
-    ss_dac_gain.SendValue(dac_gain);
-    ss_dac_mode.SendValue(g_serverNetConfig->getSettingsRef().getDACPassMode());
-    ss_dac_repeat.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeat());
-    ss_dac_rep_count.SendValue(g_serverNetConfig->getSettingsRef().getDACRepeatCount());
-    ss_dac_speed.SendValue(g_serverNetConfig->getSettingsRef().getDACSpeed());
-
-    // Update common settings
-    ss_rate.SendValue(g_serverNetConfig->getSettingsRef().getADCDecimation());
-    ss_samples.SendValue(g_serverNetConfig->getSettingsRef().getADCSamples());
-    ss_calib.SendValue(g_serverNetConfig->getSettingsRef().getADCCalibration());
-
-    // Update memory settings
-    int new_block_size = g_serverNetConfig->getSettingsRef().getMemoryBlockSize();
-    if (mem_block_size.Value() != new_block_size) {
-        stopAll();
-        memmanager->setMemoryBlockSize(new_block_size);
-        memmanager->reallocateBlocks();
-    }
-
-    mem_block_size.SendValue(new_block_size);
-    mem_adc_size.SendValue(g_serverNetConfig->getSettingsRef().getADCSize());
-    memmanager->setReserverdMemory(uio_lib::MM_ADC, g_serverNetConfig->getSettingsRef().getADCSize());
-    mem_dac_size.SendValue(g_serverNetConfig->getSettingsRef().getDACSize());
-    memmanager->setReserverdMemory(uio_lib::MM_DAC, g_serverNetConfig->getSettingsRef().getDACSize());
-    mem_gpio_in_size.SendValue(g_serverNetConfig->getSettingsRef().getGPIOInSize());
-    memmanager->setReserverdMemory(uio_lib::MM_GPIO_IN, g_serverNetConfig->getSettingsRef().getGPIOInSize());
-    mem_gpio_out_size.SendValue(g_serverNetConfig->getSettingsRef().getGPIOOutSize());
-    memmanager->setReserverdMemory(uio_lib::MM_GPIO_OUT, g_serverNetConfig->getSettingsRef().getGPIOOutSize());
-
+auto sendMemoryValid() -> void {
     mem_adc_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_ADC));
     mem_dac_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_DAC));
     mem_gpio_in_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_IN));
     mem_gpio_out_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_OUT));
 }
 
-// ============================================================================
-// Parameter update handlers
-// ============================================================================
+// The page from the settings; the session has applied them to the memory already
+void updateUI() {
+    if (!g_session)
+        return;
+    auto s = g_session->settings();
+    // Update DAC file list
+    auto fileName = s.getDACFile();
+    auto files = CStreamSettings::getDACFiles();
+    ss_dac_file.SendValue(fileName + "*" + files);
+
+    // Update ADC settings
+    ss_use_localfile.SendValue(s.getADCPassMode());
+
+    int ch = 0, att = 0, ac_dc = 0;
+    for (int i = 1; i <= 4; i++) {
+        ch |= s.getADCChannels(i) ? 1 << (i - 1) : 0;
+        att |= s.getADCAttenuator(i) ? 1 << (i - 1) : 0;
+        ac_dc |= s.getADCAC_DC(i) ? 1 << (i - 1) : 0;
+    }
+
+    ss_channels.SendValue(ch);
+    ss_resolution.SendValue(s.getADCResolution());
+    ss_save_mode.SendValue(s.getADCType());
+    ss_save_capture_time.SendValue(s.getADCCaptureTime());
+    ss_format.SendValue(s.getADCFormat());
+    ss_attenuator.SendValue(att);
+    ss_ac_dc.SendValue(ac_dc);
+
+    // Update DAC settings
+    int dac_gain = 0;
+    for (int i = 1; i <= 2; i++) {
+        dac_gain |= s.getDACGain(i) ? 1 << (1 - i) : 0;
+    }
+
+    ss_dac_file_type.SendValue(s.getDACFileType());
+    ss_dac_gain.SendValue(dac_gain);
+    ss_dac_mode.SendValue(s.getDACPassMode());
+    ss_dac_repeat.SendValue(s.getDACRepeat());
+    ss_dac_rep_count.SendValue(s.getDACRepeatCount());
+    ss_dac_speed.SendValue(s.getDACSpeed());
+
+    // Update common settings
+    ss_rate.SendValue(s.getADCDecimation());
+    ss_samples.SendValue(s.getADCSamples());
+    ss_calib.SendValue(s.getADCCalibration());
+
+    // Update memory settings
+    mem_block_size.SendValue(s.getMemoryBlockSize());
+    mem_adc_size.SendValue(s.getADCSize());
+    mem_dac_size.SendValue(s.getDACSize());
+    mem_gpio_in_size.SendValue(s.getGPIOInSize());
+    mem_gpio_out_size.SendValue(s.getGPIOOutSize());
+    sendMemoryValid();
+}
+
+// A change of the page goes to the settings like a client's: checked, applied to the memory
+template <typename F>
+auto change(F&& f) -> bool {
+    return g_session && g_session->updateSettings([&](CStreamSettings& s) {
+        if constexpr (std::is_same_v<decltype(f(s)), bool>)
+            return f(s);
+        else {
+            f(s);
+            return true;
+        }
+    });
+}
+
+auto dacFileList() -> std::string {
+    return (g_session ? g_session->settings().getDACFile() : std::string()) + "*" + CStreamSettings::getDACFiles();
+}
 
 void setConfig(bool _force) {
+    if (!g_session)
+        return;
+    g_pageChanges = true;
     bool needUpdate = false;
 
     // DAC file management
     if (ss_dac_file.IsNewValue() || _force) {
         ss_dac_file.Update();
-        g_serverNetConfig->getSettingsRef().setDACFile(ss_dac_file.Value());
-        auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-        auto files = CStreamSettings::getDACFiles();
-        ss_dac_file.SendValue(fileName + "*" + files);
+        change([&](CStreamSettings& s) { return s.setDACFile(ss_dac_file.Value()); });
+        ss_dac_file.SendValue(dacFileList());
         needUpdate = true;
     }
 
@@ -497,21 +442,20 @@ void setConfig(bool _force) {
         ss_dac_file_ctr.Update();
         if (ss_dac_file_ctr.Value() == 1) {
             // Refresh file list
-            auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-            auto files = CStreamSettings::getDACFiles();
-            ss_dac_file.SendValue(fileName + "*" + files);
+            ss_dac_file.SendValue(dacFileList());
         }
         if (ss_dac_file_ctr.Value() == 2) {
             // Delete file
             auto path = CStreamSettings::getDACDirPath();
-            auto file = g_serverNetConfig->getSettingsRef().getDACFile();
-            try {
-                std::filesystem::remove(path + "/" + file);
-            } catch (const std::exception& e) {}
-            g_serverNetConfig->getSettingsRef().setDACFile("");
-            auto fileName = g_serverNetConfig->getSettingsRef().getDACFile();
-            auto files = CStreamSettings::getDACFiles();
-            ss_dac_file.SendValue(fileName + "*" + files);
+            auto file = g_session->settings().getDACFile();
+            // the setting holds a checked name, never a path: an empty one would be the directory
+            if (!file.empty() && CStreamSettings::isValidDACFileName(file)) {
+                try {
+                    std::filesystem::remove(path + "/" + file);
+                } catch (const std::exception& e) {}
+            }
+            change([](CStreamSettings& s) { return s.setDACFile(""); });
+            ss_dac_file.SendValue(dacFileList());
         }
         ss_dac_file_ctr.Value() = 0;
     }
@@ -519,13 +463,13 @@ void setConfig(bool _force) {
     // Network settings
     if (ss_ip_addr.IsNewValue() || _force) {
         ss_ip_addr.Update();
-        g_serverNetConfig->setBroadcastAddress(ss_ip_addr.Value());
+        g_session->setBroadcastAddress(ss_ip_addr.Value());
     }
 
     // ADC settings
     if (ss_use_localfile.IsNewValue() || _force) {
         ss_use_localfile.Update();
-        g_serverNetConfig->getSettingsRef().setADCPassMode(ss_use_localfile.Value() ? CStreamSettings::PassMode::FILE : CStreamSettings::PassMode::NET);
+        change([&](CStreamSettings& s) { s.setADCPassMode(ss_use_localfile.Value() ? CStreamSettings::PassMode::FILE : CStreamSettings::PassMode::NET); });
         needUpdate = true;
     }
 
@@ -533,50 +477,50 @@ void setConfig(bool _force) {
         ss_channels.Update();
         int value = ss_channels.Value();
         for (int i = 1; i <= 4; i++) {
-            g_serverNetConfig->getSettingsRef().setADCChannels(i, (value & (1 << (i - 1))) ? CStreamSettings::State::ON : CStreamSettings::State::OFF);
+            change([&](CStreamSettings& s) { s.setADCChannels(i, (value & (1 << (i - 1))) ? CStreamSettings::State::ON : CStreamSettings::State::OFF); });
         }
         needUpdate = true;
     }
 
     if (ss_resolution.IsNewValue() || _force) {
         ss_resolution.Update();
-        g_serverNetConfig->getSettingsRef().setADCResolution((CStreamSettings::Resolution::_enumerated)ss_resolution.Value());
+        change([&](CStreamSettings& s) { s.setADCResolution((CStreamSettings::Resolution::_enumerated)ss_resolution.Value()); });
         needUpdate = true;
     }
 
     if (ss_save_mode.IsNewValue() || _force) {
         ss_save_mode.Update();
-        g_serverNetConfig->getSettingsRef().setADCType((CStreamSettings::DataType::_enumerated)ss_save_mode.Value());
+        change([&](CStreamSettings& s) { s.setADCType((CStreamSettings::DataType::_enumerated)ss_save_mode.Value()); });
         needUpdate = true;
     }
 
     if (ss_save_capture_time.IsNewValue() || _force) {
         ss_save_capture_time.Update();
-        g_serverNetConfig->getSettingsRef().setADCCaptureTime((CStreamSettings::ADCCaptureTime::_enumerated)ss_save_capture_time.Value());
+        change([&](CStreamSettings& s) { s.setADCCaptureTime((CStreamSettings::ADCCaptureTime::_enumerated)ss_save_capture_time.Value()); });
         needUpdate = true;
     }
 
     if (ss_rate.IsNewValue() || _force) {
         ss_rate.Update();
-        g_serverNetConfig->getSettingsRef().setADCDecimation(ss_rate.Value());
+        change([&](CStreamSettings& s) { s.setADCDecimation(ss_rate.Value()); });
         needUpdate = true;
     }
 
     if (ss_format.IsNewValue() || _force) {
         ss_format.Update();
-        g_serverNetConfig->getSettingsRef().setADCFormat((CStreamSettings::DataFormat::_enumerated)ss_format.Value());
+        change([&](CStreamSettings& s) { s.setADCFormat((CStreamSettings::DataFormat::_enumerated)ss_format.Value()); });
         needUpdate = true;
     }
 
     if (ss_samples.IsNewValue() || _force) {
         ss_samples.Update();
-        g_serverNetConfig->getSettingsRef().setADCSamples(ss_samples.Value());
+        change([&](CStreamSettings& s) { s.setADCSamples(ss_samples.Value()); });
         needUpdate = true;
     }
 
     if (ss_calib.IsNewValue() || _force) {
         ss_calib.Update();
-        g_serverNetConfig->getSettingsRef().setADCCalibration((CStreamSettings::State::_enumerated)ss_calib.Value());
+        change([&](CStreamSettings& s) { s.setADCCalibration((CStreamSettings::State::_enumerated)ss_calib.Value()); });
         needUpdate = true;
     }
 
@@ -586,7 +530,7 @@ void setConfig(bool _force) {
             ss_attenuator.Update();
             int value = ss_attenuator.Value();
             for (int i = 1; i <= 4; i++) {
-                g_serverNetConfig->getSettingsRef().setADCAttenuator(i, (value & (1 << (i - 1))) ? CStreamSettings::Attenuator::A_1_20 : CStreamSettings::Attenuator::A_1_1);
+                change([&](CStreamSettings& s) { s.setADCAttenuator(i, (value & (1 << (i - 1))) ? CStreamSettings::Attenuator::A_1_20 : CStreamSettings::Attenuator::A_1_1); });
             }
             needUpdate = true;
         }
@@ -597,7 +541,7 @@ void setConfig(bool _force) {
             ss_ac_dc.Update();
             int value = ss_ac_dc.Value();
             for (int i = 1; i <= 4; i++) {
-                g_serverNetConfig->getSettingsRef().setADCAC_DC(i, (value & (1 << (i - 1))) ? CStreamSettings::AC_DC::AC : CStreamSettings::AC_DC::DC);
+                change([&](CStreamSettings& s) { s.setADCAC_DC(i, (value & (1 << (i - 1))) ? CStreamSettings::AC_DC::AC : CStreamSettings::AC_DC::DC); });
             }
             needUpdate = true;
         }
@@ -606,7 +550,7 @@ void setConfig(bool _force) {
     // DAC settings
     if (ss_dac_file_type.IsNewValue() || _force) {
         ss_dac_file_type.Update();
-        g_serverNetConfig->getSettingsRef().setDACFileType((CStreamSettings::DataFormat::_enumerated)ss_dac_file_type.Value());
+        change([&](CStreamSettings& s) { s.setDACFileType((CStreamSettings::DataFormat::_enumerated)ss_dac_file_type.Value()); });
         needUpdate = true;
     }
 
@@ -615,7 +559,7 @@ void setConfig(bool _force) {
             ss_dac_gain.Update();
             int value = ss_dac_gain.Value();
             for (int i = 1; i <= 2; i++) {
-                g_serverNetConfig->getSettingsRef().setDACGain(i, (value & (1 << (i - 1))) ? CStreamSettings::DACGain::X5 : CStreamSettings::DACGain::X1);
+                change([&](CStreamSettings& s) { s.setDACGain(i, (value & (1 << (i - 1))) ? CStreamSettings::DACGain::X5 : CStreamSettings::DACGain::X1); });
             }
             needUpdate = true;
         }
@@ -623,77 +567,67 @@ void setConfig(bool _force) {
 
     if (ss_dac_mode.IsNewValue() || _force) {
         ss_dac_mode.Update();
-        g_serverNetConfig->getSettingsRef().setDACPassMode((CStreamSettings::DACPassMode::_enumerated)ss_dac_mode.Value());
+        change([&](CStreamSettings& s) { s.setDACPassMode((CStreamSettings::DACPassMode::_enumerated)ss_dac_mode.Value()); });
         needUpdate = true;
     }
 
     if (ss_dac_repeat.IsNewValue() || _force) {
         ss_dac_repeat.Update();
-        g_serverNetConfig->getSettingsRef().setDACRepeat((CStreamSettings::DACRepeat::_enumerated)ss_dac_repeat.Value());
+        change([&](CStreamSettings& s) { s.setDACRepeat((CStreamSettings::DACRepeat::_enumerated)ss_dac_repeat.Value()); });
         needUpdate = true;
     }
 
     if (ss_dac_rep_count.IsNewValue() || _force) {
         ss_dac_rep_count.Update();
-        g_serverNetConfig->getSettingsRef().setDACRepeatCount(ss_dac_rep_count.Value());
+        change([&](CStreamSettings& s) { s.setDACRepeatCount(ss_dac_rep_count.Value()); });
         needUpdate = true;
     }
 
     if (ss_dac_speed.IsNewValue() || _force) {
         ss_dac_speed.Update();
-        g_serverNetConfig->getSettingsRef().setDACSpeed(ss_dac_speed.Value());
+        change([&](CStreamSettings& s) { s.setDACSpeed(ss_dac_speed.Value()); });
         needUpdate = true;
     }
 
-    // Memory settings
+    // Memory settings: a new block size stops the streams (the session splits the memory again)
     if (mem_block_size.IsNewValue() || _force) {
         mem_block_size.Update();
-        int block = g_serverNetConfig->getSettingsRef().getMemoryBlockSize();
-        g_serverNetConfig->getSettingsRef().setMemoryBlockSize(mem_block_size.Value());
-        if (mem_block_size.Value() != block) {
-            stopAll();
-            memmanager->setMemoryBlockSize(mem_block_size.Value());
-            memmanager->reallocateBlocks();
-            mem_adc_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_ADC));
-            mem_dac_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_DAC));
-            mem_gpio_in_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_IN));
-            mem_gpio_out_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_OUT));
-        }
+        const uint32_t block = mem_block_size.Value();
+        if (!change([&](CStreamSettings& s) { return s.setMemoryBlockSize(block); }))
+            mem_block_size.SendValue(g_session->settings().getMemoryBlockSize());
+        sendMemoryValid();
         needUpdate = true;
     }
 
     if (mem_adc_size.IsNewValue() || _force) {
         mem_adc_size.Update();
-        g_serverNetConfig->getSettingsRef().setADCSize(mem_adc_size.Value());
-        memmanager->setReserverdMemory(uio_lib::MM_ADC, mem_adc_size.Value());
-        mem_adc_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_ADC));
+        change([&](CStreamSettings& s) { s.setADCSize(mem_adc_size.Value()); });
+        sendMemoryValid();
         needUpdate = true;
     }
 
     if (mem_dac_size.IsNewValue() || _force) {
         mem_dac_size.Update();
-        g_serverNetConfig->getSettingsRef().setDACSize(mem_dac_size.Value());
-        memmanager->setReserverdMemory(uio_lib::MM_DAC, mem_dac_size.Value());
-        mem_dac_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_DAC));
+        change([&](CStreamSettings& s) { s.setDACSize(mem_dac_size.Value()); });
+        sendMemoryValid();
         needUpdate = true;
     }
 
     if (mem_gpio_in_size.IsNewValue() || _force) {
         mem_gpio_in_size.Update();
-        g_serverNetConfig->getSettingsRef().setGPIOInSize(mem_gpio_in_size.Value());
-        memmanager->setReserverdMemory(uio_lib::MM_GPIO_IN, mem_gpio_in_size.Value());
-        mem_gpio_in_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_IN));
+        change([&](CStreamSettings& s) { s.setGPIOInSize(mem_gpio_in_size.Value()); });
+        sendMemoryValid();
         needUpdate = true;
     }
 
     if (mem_gpio_out_size.IsNewValue() || _force) {
         mem_gpio_out_size.Update();
-        g_serverNetConfig->getSettingsRef().setGPIOOutSize(mem_gpio_out_size.Value());
-        memmanager->setReserverdMemory(uio_lib::MM_GPIO_OUT, mem_gpio_out_size.Value());
-        mem_gpio_out_size_valid.SendValue(memmanager->isValidSize(uio_lib::MM_GPIO_OUT));
+        change([&](CStreamSettings& s) { s.setGPIOOutSize(mem_gpio_out_size.Value()); });
+        sendMemoryValid();
         needUpdate = true;
     }
 
+    g_pageChanges = false;
     if (needUpdate) {
         saveConfigInFile();
     }
@@ -709,37 +643,40 @@ void UpdateParamsFromWeb(void) {
         if (ss_start.IsNewValue()) {
             ss_start.Update();
             if (ss_start.Value() == 1) {
-                if (startServer(false)) {
-                    startADC();
+                if (g_session && g_session->startADCStreaming()) {
+                    g_session->startADC();
                 }
-            } else {
-                stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL);
+            } else if (g_session) {
+                g_session->stopADCStreaming(streaming_lib::ADCStopReason::NORMAL);
             }
         }
 
         if (ss_dac_start.IsNewValue()) {
             ss_dac_start.Update();
             if (ss_dac_start.Value() == 1) {
-                startDACServer(dac_channels_t());
-            } else {
+                if (g_session)
+                    g_session->startDAC();
+            } else if (g_session) {
                 WARNING("Stop command");
-                stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL);
+                g_session->stopDAC(dac_streaming_lib::DACStopReason::NORMAL);
             }
         }
 
+        // the page starts the input only: the output plays what a client sends over the network
         if (ss_gpio_start.IsNewValue()) {
             ss_gpio_start.Update();
             if (ss_gpio_start.Value() == 1) {
-                startGPIOInServer();
-            } else {
-                stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL);
+                if (g_session)
+                    g_session->startGPIOIn();
+            } else if (g_session) {
+                g_session->stopGPIOIn(gpio_streaming_lib::GPIOStopReason::NORMAL);
             }
         }
 
         // Update statistics
-        if (g_adc && g_adcFile) {
-            ss_pass_samples.SendValue(g_adc->getPassSamples());
-            ss_writed_size.SendValue(g_adc->getWritedSize());
+        if (g_session && g_adcFile) {
+            ss_pass_samples.SendValue(g_session->adcPassSamples());
+            ss_writed_size.SendValue(g_session->adcWrittenSize());
         }
     } catch (std::exception& e) {
         FATAL("%s", e.what());
@@ -751,246 +688,116 @@ void OnNewParams(void) {
 }
 
 // ============================================================================
-// ADC Server functions
+// The events of the streams on the page (the session answers the config protocol)
 // ============================================================================
 
 namespace {
 
-auto toADC(ServerNetConfigManager::EStopReason reason) -> streaming_lib::ADCStopReason {
-    using R = streaming_lib::ADCStopReason;
-    switch (reason) {
-        case ServerNetConfigManager::EStopReason::SD_FULL:
-            return R::SD_FULL;
-        case ServerNetConfigManager::EStopReason::DONE:
-            return R::DONE;
-        case ServerNetConfigManager::EStopReason::MEM_ERROR:
-            return R::MEM_ERROR;
-        case ServerNetConfigManager::EStopReason::MEM_MODIFY:
-            return R::MEM_MODIFY;
-        case ServerNetConfigManager::EStopReason::NO_CHANNELS:
-            return R::NO_CHANNELS;
-        case ServerNetConfigManager::EStopReason::CONFIG_ERROR:
-            return R::CONFIG_ERROR;
-        default:
-            return R::NORMAL;
+// SS_STATUS (ADC): 0 stopped, 1 running, 2 SD full, 3 done, 4 memory error, 5 memory changed,
+// 6 no channels. SS_DAC_STATUS: 0 stopped, 1 running, 2 done, 3 empty, 4 broken, 5 missing file,
+// 6 memory error, 7 memory changed, 8 no channels. SS_GPIO_STATUS (the input): 0 stopped,
+// 1 running, 6 memory error, 7 memory changed, 8 configuration error.
+class WebCallback : public session_lib::SessionCallback {
+    void settingsChanged(const CStreamSettings&, const CStreamSettings&) override {
+        if (!g_pageChanges)
+            updateUI();
     }
-}
 
-// The events of the ADC streaming to the config protocol and to the page
-class WebADCCallback : public streaming_lib::ADCServerCallback {
-    void startedTCP(streaming_lib::ADCStreamServer*) override { g_serverNetConfig->sendADCServerStartedTCP(); }
+    void adcStarted(bool file) override {
+        g_adcFile = file;
+        ss_status.SendValue(1);
+        TRACE("Start server");
+    }
 
-    void startedSD(streaming_lib::ADCStreamServer*) override { g_serverNetConfig->sendADCServerStartedSD(); }
+    void adcRunning() override { ss_adc_data_pass.SendValue(1); }
 
-    void stopped(streaming_lib::ADCStreamServer*, streaming_lib::ADCStopReason reason) override {
+    void adcStopped(streaming_lib::ADCStopReason reason) override {
         using R = streaming_lib::ADCStopReason;
-        g_adcPrepared = false;
         g_adcFile = false;
         switch (reason) {
             case R::NORMAL:
-                g_serverNetConfig->sendServerStopped();
+            case R::CONFIG_ERROR:
                 ss_status.SendValue(0);
                 break;
             case R::SD_FULL:
-                g_serverNetConfig->sendServerStoppedSDFull();
                 ss_status.SendValue(2);
                 break;
             case R::DONE:
-                g_serverNetConfig->sendServerStoppedDone();
                 ss_status.SendValue(3);
                 break;
             case R::MEM_ERROR:
-                g_serverNetConfig->sendServerMemoryErrorStopped();
                 ss_status.SendValue(4);
                 break;
             case R::MEM_MODIFY:
-                g_serverNetConfig->sendServerMemoryModifyStopped();
                 ss_status.SendValue(5);
                 break;
             case R::NO_CHANNELS:
-                g_serverNetConfig->sendServerNoChannelsStopped();
                 ss_status.SendValue(6);
-                break;
-            case R::CONFIG_ERROR:
-                g_serverNetConfig->sendServerConfigErrorStopped();
-                ss_status.SendValue(0);
                 break;
         }
         ss_adc_data_pass.SendValue(0);
         TRACE("Stop server");
     }
-};
 
-}  // namespace
-
-auto makeADCCallback() -> std::shared_ptr<streaming_lib::ADCServerCallback> {
-    return std::make_shared<WebADCCallback>();
-}
-
-bool startServer(bool testMode) {
-    std::lock_guard guard(g_adc_mutex);
-    if (!g_adc)
-        return false;
-    CStreamSettings settings = g_serverNetConfig->getSettings();
-    streaming_lib::ADCStreamOptions options;
-    options.host = ss_ip_addr.Value();
-    options.testMode = testMode;
-    g_adcFile = settings.getADCPassMode().value == CStreamSettings::PassMode::FILE;
-    if (!g_adc->start(settings, options))
-        return false;
-    g_adcPrepared = true;
-    ss_status.SendValue(1);
-    TRACE("Start server");
-    return true;
-}
-
-void startADC() {
-    if (!g_adc || !g_adcPrepared)
-        return;
-    g_adc->startADC();
-    ss_adc_data_pass.SendValue(1);
-    g_serverNetConfig->sendADCStarted();
-}
-
-void stopNonBlocking(ServerNetConfigManager::EStopReason x) {
-    if (g_adc)
-        g_adc->stopNonBlocking(toADC(x));
-}
-
-void stopServer(ServerNetConfigManager::EStopReason x) {
-    std::lock_guard guard(g_adc_mutex);
-    if (g_adc)
-        g_adc->stop(toADC(x));
-}
-
-// ============================================================================
-// DAC Server functions
-// ============================================================================
-
-namespace {
-
-// The events of the DAC streaming to the config protocol and to the page
-class WebDACCallback : public dac_streaming_lib::DACServerCallback {
-    // before the playback: the stop of a short file comes after them
-    void startedTCP(dac_streaming_lib::DACStreamServer*) override {
-        g_serverNetConfig->sendDACServerStarted();
-        started();
+    // before the playback: the stop of a short file comes after it
+    void dacStarted(bool) override {
+        ss_dac_status.SendValue(1);
+        ss_dac_data_pass.SendValue(1);
+        TRACE("Start dac server");
     }
 
-    void startedSD(dac_streaming_lib::DACStreamServer*) override {
-        g_serverNetConfig->sendDACServerStartedSD();
-        started();
-    }
-
-    void stopped(dac_streaming_lib::DACStreamServer*, dac_streaming_lib::DACStopReason reason) override {
+    void dacStopped(dac_streaming_lib::DACStopReason reason) override {
         using R = dac_streaming_lib::DACStopReason;
         switch (reason) {
             case R::NORMAL:
-                g_serverNetConfig->sendDACServerStopped();
                 ss_dac_status.SendValue(0);
                 break;
             case R::DONE:
-                g_serverNetConfig->sendDACServerStoppedSDDone();
+            case R::CONFIG_ERROR:
                 ss_dac_status.SendValue(2);
                 break;
             case R::EMPTY:
-                g_serverNetConfig->sendDACServerStoppedSDEmpty();
                 ss_dac_status.SendValue(3);
                 break;
             case R::BROKEN:
-                g_serverNetConfig->sendDACServerStoppedSDBroken();
                 ss_dac_status.SendValue(4);
                 break;
             case R::MISSING_FILE:
-                g_serverNetConfig->sendDACServerStoppedSDMissingFile();
                 ss_dac_status.SendValue(5);
                 break;
             case R::MEM_ERROR:
-                g_serverNetConfig->sendDACServerMemoryErrorStopped();
                 ss_dac_status.SendValue(6);
                 break;
             case R::MEM_MODIFY:
-                g_serverNetConfig->sendDACServerMemoryModifyStopped();
                 ss_dac_status.SendValue(7);
                 break;
             case R::NO_CHANNELS:
-                g_serverNetConfig->sendDACServerMemoryErrorStopped();
                 ss_dac_status.SendValue(8);
-                break;
-            case R::CONFIG_ERROR:
-                g_serverNetConfig->sendDACServerConfigErrorStopped();
-                ss_dac_status.SendValue(2);
                 break;
         }
         ss_dac_data_pass.SendValue(0);
         TRACE("Stop dac server");
     }
 
-    static void started() {
-        ss_dac_status.SendValue(1);
-        ss_dac_data_pass.SendValue(1);
-        TRACE("Start dac server");
-    }
-};
-
-}  // namespace
-
-auto makeDACCallback() -> std::shared_ptr<dac_streaming_lib::DACServerCallback> {
-    return std::make_shared<WebDACCallback>();
-}
-
-auto startDACServer(dac_channels_t channels) -> bool {
-    if (!g_serverNetConfig || !g_dac)
-        return false;
-    CStreamSettings settings = g_serverNetConfig->getSettings();
-    memmanager->setReserverdMemory(uio_lib::MM_DAC, settings.getDACSize());
-    return g_dac->start(settings, channels);
-}
-
-auto stopDACNonBlocking(dac_streaming_lib::DACStopReason x) -> void {
-    if (g_dac)
-        g_dac->stopNonBlocking(x);
-}
-
-auto stopDACServer(dac_streaming_lib::DACStopReason x) -> void {
-    if (g_dac)
-        g_dac->stop(x);
-}
-
-// ============================================================================
-// GPIO Server functions
-// ============================================================================
-
-namespace {
-
-// The events of the GPIO input to the config protocol and to the page; SS_GPIO_STATUS:
-// 0 stopped, 1 running, 6 memory error, 7 memory changed, 8 configuration error. The page
-// starts the input only: the output plays what a client sends over the network.
-class WebGPIOInCallback : public gpio_streaming_lib::GPIOInServerCallback {
-    void started(gpio_streaming_lib::GPIOInStreamServer*) override {
-        g_serverNetConfig->sendGPIOInServerStarted();
+    void gpioInStarted() override {
         ss_gpio_status.SendValue(1);
         ss_gpio_data_pass.SendValue(1);
         TRACE("Start gpio input server");
     }
 
-    void stopped(gpio_streaming_lib::GPIOInStreamServer*, gpio_streaming_lib::GPIOStopReason reason) override {
+    void gpioInStopped(gpio_streaming_lib::GPIOStopReason reason) override {
         using R = gpio_streaming_lib::GPIOStopReason;
         switch (reason) {
             case R::NORMAL:
-                g_serverNetConfig->sendGPIOInServerStopped();
                 ss_gpio_status.SendValue(0);
                 break;
             case R::MEM_ERROR:
-                g_serverNetConfig->sendGPIOInServerMemoryErrorStopped();
                 ss_gpio_status.SendValue(6);
                 break;
             case R::MEM_MODIFY:
-                g_serverNetConfig->sendGPIOInServerStopped();
                 ss_gpio_status.SendValue(7);
                 break;
             case R::CONFIG_ERROR:
-                g_serverNetConfig->sendGPIOInServerConfigErrorStopped();
                 ss_gpio_status.SendValue(8);
                 break;
         }
@@ -999,66 +806,8 @@ class WebGPIOInCallback : public gpio_streaming_lib::GPIOInServerCallback {
     }
 };
 
-class WebGPIOOutCallback : public gpio_streaming_lib::GPIOOutServerCallback {
-    void started(gpio_streaming_lib::GPIOOutStreamServer*) override { g_serverNetConfig->sendGPIOOutServerStarted(); }
-
-    void stopped(gpio_streaming_lib::GPIOOutStreamServer*, gpio_streaming_lib::GPIOStopReason reason, uint64_t waitClocks) override {
-        using R = gpio_streaming_lib::GPIOStopReason;
-        switch (reason) {
-            case R::NORMAL:
-            case R::MEM_MODIFY:
-                g_serverNetConfig->sendGPIOOutServerStopped(waitClocks);
-                break;
-            case R::MEM_ERROR:
-                g_serverNetConfig->sendGPIOOutServerMemoryErrorStopped();
-                break;
-            case R::CONFIG_ERROR:
-                g_serverNetConfig->sendGPIOOutServerConfigErrorStopped();
-                break;
-        }
-        TRACE("Stop gpio output server");
-    }
-};
-
 }  // namespace
 
-auto makeGPIOInCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOInServerCallback> {
-    return std::make_shared<WebGPIOInCallback>();
-}
-
-auto makeGPIOOutCallback() -> std::shared_ptr<gpio_streaming_lib::GPIOOutServerCallback> {
-    return std::make_shared<WebGPIOOutCallback>();
-}
-
-auto startGPIOInServer() -> bool {
-    if (!g_serverNetConfig || !g_gpioIn)
-        return false;
-    CStreamSettings settings = g_serverNetConfig->getSettings();
-    memmanager->setReserverdMemory(uio_lib::MM_GPIO_IN, settings.getGPIOInSize());
-    return g_gpioIn->start(settings);
-}
-
-auto stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void {
-    if (g_gpioIn)
-        g_gpioIn->stopNonBlocking(x);
-}
-
-auto startGPIOOutServer() -> bool {
-    if (!g_serverNetConfig || !g_gpioOut)
-        return false;
-    CStreamSettings settings = g_serverNetConfig->getSettings();
-    memmanager->setReserverdMemory(uio_lib::MM_GPIO_OUT, settings.getGPIOOutSize());
-    return g_gpioOut->start(settings);
-}
-
-auto stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason x) -> void {
-    if (g_gpioOut)
-        g_gpioOut->stopNonBlocking(x);
-}
-
-auto stopGPIOServers(gpio_streaming_lib::GPIOStopReason x) -> void {
-    if (g_gpioIn)
-        g_gpioIn->stop(x);
-    if (g_gpioOut)
-        g_gpioOut->stop(x);
+auto makeWebCallback() -> std::shared_ptr<session_lib::SessionCallback> {
+    return std::make_shared<WebCallback>();
 }

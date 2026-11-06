@@ -225,6 +225,16 @@ auto CAsioSocketSimple::closeSocket() -> void {
         disconnectNotify(peer);
 }
 
+auto CAsioSocketSimple::closeConnection() -> void {
+    socket_ptr socket;
+    {
+        std::lock_guard lock(m_mtx);
+        socket = m_tcp_socket;
+    }
+    if (socket)
+        dropConnection(socket);
+}
+
 auto CAsioSocketSimple::dropConnection(socket_ptr socket) -> void {
     bool wasConnected = false;
     std::string peer;

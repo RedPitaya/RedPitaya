@@ -29,6 +29,8 @@ class CAsioSocketSimple {
     auto initServer() -> void;
     auto initClient() -> void;
     auto closeSocket() -> void;
+    // Closes the current connection only: a server goes on accepting.
+    auto closeConnection() -> void;
     // True only while a connection is established.
     auto isConnected() -> bool;
     auto runningInIoThread() -> bool;

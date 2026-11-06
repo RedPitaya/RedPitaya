@@ -573,8 +573,19 @@ auto CStreamSettings::getADCCalibration() const -> State {
     return m_adcsettings.m_useCalib;
 }
 
-auto CStreamSettings::setDACFile(std::string _value) -> void {
+auto CStreamSettings::isValidDACFileName(const std::string& _name) -> bool {
+    if (_name.empty())
+        return true;
+    if (_name.size() > 255 || _name == "." || _name == "..")
+        return false;
+    return _name.find_first_of(std::string("/\\\0", 3)) == std::string::npos;
+}
+
+auto CStreamSettings::setDACFile(std::string _value) -> bool {
+    if (!isValidDACFileName(_value))
+        return false;
     m_dacsettings.m_file = _value;
+    return true;
 }
 
 auto CStreamSettings::getDACFile() const -> std::string {
@@ -934,8 +945,11 @@ auto CStreamSettings::getGPIOTriggerBlocks() const -> uint32_t {
     return m_gpiosettings.m_trigBlocks;
 }
 
-auto CStreamSettings::setMemoryBlockSize(uint32_t size) -> void {
+auto CStreamSettings::setMemoryBlockSize(uint32_t size) -> bool {
+    if (size < MEMORY_BLOCK_ALIGN || size > MEMORY_BLOCK_MAX || size % MEMORY_BLOCK_ALIGN)
+        return false;
     m_memorysettings.m_memoryBlock = size;
+    return true;
 }
 
 auto CStreamSettings::getMemoryBlockSize() const -> uint32_t {
@@ -1070,8 +1084,7 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
         }
 
         if (key == "file_sd") {
-            setDACFile((value));
-            return true;
+            return setDACFile(value);
         }
 
         if (key == "file_type_sd") {
@@ -1116,8 +1129,7 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
         }
 
         if (key == "block_size") {
-            setMemoryBlockSize(to_uint(value.c_str()));
-            return true;
+            return setMemoryBlockSize(to_uint(value.c_str()));
         }
 
         if (key == "adc_size") {
@@ -1497,7 +1509,8 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "adc_trigger_blocks\t: An unsigned integer value: 0-65535. Blocks captured after a trigger, 0 - continuous.\n";
     s += "dac_rate\t\t: An unsigned integer value. Indicates the rate for signal generation. The maximum value should not be greater than "
          "the base frequency of the FPGA.\n";
-    s += "file_sd\t\t\t: Path to the file on the memory card in RP that will be used to generate the signal.\n";
+    s += "file_sd\t\t\t: The name of a file in the DAC directory of the memory card (" FILE_PATH ") to generate the signal from; "
+         "a name only, without a directory.\n";
     s += "file_type_sd\t\t: " + concat(CStreamSettings::DataFormat::names(), CStreamSettings::DataFormat::count) + "\n";
     s += "dac_pass_mode\t\t: " + concat(CStreamSettings::DACPassMode::names(), CStreamSettings::DACPassMode::count) + "\n";
     s += "repeat\t\t\t: " + concat(CStreamSettings::DACRepeat::names(), CStreamSettings::DACRepeat::count) + "\n";
@@ -1509,8 +1522,8 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "dac_trigger_sources\t: " + sources;
     s += "dac_event_source\t: " + events;
 
-    s += "block_size\t\t: An unsigned integer value. The value must be less than the reserved memory in the system divided by 16. By "
-         "default, 32MB is allocated, the allowed maximum value is 2MB.\n";
+    s += "block_size\t\t: The data bytes of a memory block: a multiple of " + std::to_string(CStreamSettings::MEMORY_BLOCK_ALIGN) +
+         ". The board needs 12 blocks (with the header) in the DMA memory.\n";
     s += "adc_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";
     s += "dac_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";
     s += "gpio_in_size\t\t: Minimum value 12 * (block_size + " + std::to_string(DataLib::sizeHeader()) + ")\n";

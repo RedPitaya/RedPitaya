@@ -33,23 +33,15 @@
 //#include <sys/prctl.h>
 //#endif
 
-#include "broadcast_lib/asio_broadcast_socket.h"
-#include "config_net_lib/server_net_config_manager.h"
-#include "streaming_lib/streaming_file.h"
-#include "streaming_lib/trigger_commands.h"
-
-#include "dac_streaming.h"
-#include "gpio_streaming.h"
-#include "options.h"
-#include "streaming.h"
-#include "streaming_lib/streaming_file.h"
 #include "board_lib/board.h"
+#include "options.h"
+#include "session_lib/stream_session.h"
+#include "streaming_lib/streaming_file.h"
 #include "uio_lib/hardware.h"
-#include "uio_lib/memory_manager.h"
 #include "uio_lib/oscilloscope.h"
 
 std::mutex g_print_mtx;
-std::shared_ptr<ServerNetConfigManager> con_server = nullptr;
+session_lib::StreamSession::Ptr g_session = nullptr;
 std::atomic_bool g_run(true);
 
 const char* g_argv0 = nullptr;
@@ -201,64 +193,17 @@ int main(int argc, char* argv[]) {
         }
         isMaster = hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
         printWithLog(LOG_INFO, stdout, "Detected %s mode\n", isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
-        setHardware(hw);
-        setDACHardware(hw);
-        setGPIOHardware(hw);
-        auto mode = isMaster != uio_lib::BoardMode::SLAVE ? broadcast_lib::EMode::AB_SERVER_MASTER : broadcast_lib::EMode::AB_SERVER_SLAVE;
-        auto model = ClientOpt::getBroadcastModel();
 
-        con_server = std::make_shared<ServerNetConfigManager>(opt.conf_file, mode, "127.0.0.1", NET_CONFIG_PORT, ClientOpt::getADCChannels());
-        uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
-        uio_lib::CMemoryManager::instance()->reallocateBlocks();
-        setServer(con_server);
-        setDACServer(con_server);
-        setGPIOServer(con_server);
-        streaming_lib::connectTriggerCommands(con_server, hw);
-        con_server->startBroadcast(model, ClientOpt::getMACAddress(), ip_cur, NET_BROADCAST_PORT);
-        con_server->getNewSettingsNofiy.connect([verbMode]() {
-            std::lock_guard lock(g_print_mtx);
-            if (verbMode) {
-                printWithLog(LOG_INFO, stdout, "Get new settings\n");
-                printWithLog(LOG_INFO, stdout, "%s", con_server->getSettings().toString().c_str());
-            }
-        });
-
-        //        con_server->clientConnectedNofiy.connect([verbMode](){
-        //            aprintf(stderr, "clientConnectedNofiy\n");
-        //        });
-
-        con_server->startStreamingNofiy.connect([verbMode]() { startServer(verbMode, false); });
-
-		con_server->startDacStreamingNofiy.connect([verbMode](auto activeChannels) { startDACServer(verbMode, activeChannels); });
-
-		con_server->stopStreamingNofiy.connect([]() { stopNonBlocking(ServerNetConfigManager::EStopReason::NORMAL); });
-
-        con_server->stopDacStreamingNofiy.connect([]() { stopDACNonBlocking(dac_streaming_lib::DACStopReason::NORMAL); });
-
-        con_server->startGpioInStreamingNofiy.connect([verbMode]() { startGPIOInServer(verbMode); });
-
-        con_server->stopGpioInStreamingNofiy.connect([]() { stopGPIOInNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
-
-        con_server->startGpioOutStreamingNofiy.connect([verbMode]() { startGPIOOutServer(verbMode); });
-
-        con_server->stopGpioOutStreamingNofiy.connect([]() { stopGPIOOutNonBlocking(gpio_streaming_lib::GPIOStopReason::NORMAL); });
-
-        con_server->startADCNofiy.connect([]() {
-            startADC();
-            con_server->sendADCStarted();
-        });
-
-        con_server->memoryBlockSizeChangeNofiy.connect([]() {
-            stopServer(ServerNetConfigManager::EStopReason::MEM_MODIFY);
-            stopDACServer(dac_streaming_lib::DACStopReason::MEM_MODIFY);
-            stopGPIOInServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
-            stopGPIOOutServer(gpio_streaming_lib::GPIOStopReason::MEM_MODIFY);
-            uio_lib::CMemoryManager::instance()->setMemoryBlockSize(con_server->getSettings().getMemoryBlockSize());
-            uio_lib::CMemoryManager::instance()->reallocateBlocks();
-        });
-
+        session_lib::SessionOptions options;
+        options.configFile = opt.conf_file;
+        options.host = "127.0.0.1";
+        options.broadcastModel = ClientOpt::getBroadcastModel();
+        options.broadcastMac = ClientOpt::getMACAddress();
+        options.broadcastHost = ip_cur;
+        options.verbose = verbMode;
+        g_session = session_lib::StreamSession::create(hw, options);
     } catch (std::exception& e) {
-        printWithLog(LOG_ERR, stderr, "Error: Init ServerNetConfigManager() %s\n", e.what());
+        printWithLog(LOG_ERR, stderr, "Error: Init the streaming session %s\n", e.what());
         exit(EXIT_FAILURE);
     }
     if (verbMode) {
@@ -280,14 +225,11 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        stopServer(ServerNetConfigManager::NORMAL);
-        stopDACServer(dac_streaming_lib::DACStopReason::NORMAL);
-        stopGPIOInServer(gpio_streaming_lib::GPIOStopReason::NORMAL);
-        stopGPIOOutServer(gpio_streaming_lib::GPIOStopReason::NORMAL);
+        g_session->stop();
+        g_session = nullptr;
     } catch (std::exception& e) {
         printWithLog(LOG_ERR, stderr, "Error: main() %s\n", e.what());
     }
-    con_server->stop();
     if (verbMode) {
         printWithLog(LOG_INFO, stdout, "streaming-server stopped.\n");
     }

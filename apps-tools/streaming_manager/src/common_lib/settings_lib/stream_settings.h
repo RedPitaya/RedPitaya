@@ -88,7 +88,9 @@ class CStreamSettings {
 
     auto setDACSpeed(uint32_t _value) -> bool;
     auto getDACSpeed() const -> uint32_t;
-    auto setDACFile(std::string _value) -> void;
+    // A file name in the DAC directory (getDACDirPath): no directory part, "" - none
+    auto setDACFile(std::string _value) -> bool;
+    static auto isValidDACFileName(const std::string& _name) -> bool;
     auto getDACFile() const -> std::string;
     auto setDACFileType(DataFormat _value) -> bool;
     auto getDACFileType() const -> DataFormat;
@@ -167,7 +169,12 @@ class CStreamSettings {
     auto setGPIOTriggerBlocks(uint32_t _blocks) -> bool;
     auto getGPIOTriggerBlocks() const -> uint32_t;
 
-    auto setMemoryBlockSize(uint32_t size) -> void;
+    // The data bytes of a memory block, a multiple of MEMORY_BLOCK_ALIGN (the DMA bursts) from
+    // MEMORY_BLOCK_ALIGN to MEMORY_BLOCK_MAX; whether the board's RAM holds it is the memory
+    // manager's check.
+    static constexpr uint32_t MEMORY_BLOCK_ALIGN = 128;
+    static constexpr uint32_t MEMORY_BLOCK_MAX = 256u * 1024 * 1024;
+    auto setMemoryBlockSize(uint32_t size) -> bool;
     auto getMemoryBlockSize() const -> uint32_t;
     auto setADCSize(uint32_t size) -> void;
     auto getADCSize() const -> uint32_t;

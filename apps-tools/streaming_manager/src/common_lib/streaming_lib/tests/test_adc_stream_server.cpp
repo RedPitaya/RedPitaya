@@ -15,7 +15,6 @@
 
 #include "board_lib/board.h"
 #include "streaming_lib/adc_stream_server.h"
-#include "streaming_lib/trigger_commands.h"
 #include "uio_lib/memory_manager.h"
 #include "uio_lib/oscilloscope_dummy.h"
 #include "uio_lib/trigger.h"
@@ -233,13 +232,4 @@ TEST_F(ADCServer, AWrongTriggerLevelIsAConfigurationError) {
     EXPECT_FALSE(server->start(s, options));
     ASSERT_TRUE(recorder->waitStopped());
     EXPECT_EQ(recorder->reasons[0], ADCStopReason::CONFIG_ERROR);
-}
-
-TEST_F(ADCServer, TheTriggerStatusComesFromTheHardware) {
-    auto& st = uio_lib::dummy::oscState();
-    st.armed = true;
-    st.triggerCount = []() -> uint32_t { return 5; };
-    auto status = triggerStatusOf(*hw);
-    EXPECT_TRUE(status.adcArmed);
-    EXPECT_EQ(status.adcTriggerCount, 5u);
 }

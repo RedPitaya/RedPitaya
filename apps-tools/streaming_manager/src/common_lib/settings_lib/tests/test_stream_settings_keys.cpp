@@ -47,7 +47,7 @@ const std::vector<KeyValue> kAllKeys = {
     {"channel_ac_dc_3", "AC"},
     {"channel_ac_dc_4", "AC"},
     {"dac_rate", "1000000"},
-    {"file_sd", "/tmp/generated.wav"},
+    {"file_sd", "generated.wav"},
     {"file_type_sd", "TDMS"},
     {"dac_pass_mode", "DAC_FILE"},
     {"repeat", "DAC_REP_INF"},
@@ -237,12 +237,33 @@ TEST(StreamSettingsKeys, TheTriggerLevelsTakeSignedValues) {
     EXPECT_EQ(s.getValue("dac_trigger_mode_3"), "ERROR");
 }
 
-TEST(StreamSettingsKeys, TheFilePathKeyTakesAnyString) {
+TEST(StreamSettingsKeys, TheDACFileKeyTakesANameOnly) {
     CStreamSettings s;
     EXPECT_TRUE(s.setValue("file_sd", ""));
     EXPECT_EQ(s.getValue("file_sd"), "");
-    EXPECT_TRUE(s.setValue("file_sd", "  a b/c.wav  "));
-    EXPECT_EQ(s.getValue("file_sd"), "  a b/c.wav  ") << "no trimming, no validation";
+    EXPECT_TRUE(s.setValue("file_sd", "  a b.c.wav  "));
+    EXPECT_EQ(s.getValue("file_sd"), "  a b.c.wav  ") << "no trimming";
+    EXPECT_TRUE(s.setValue("file_sd", "..x.wav"));
+    for (const char* bad : {"a b/c.wav", "/tmp/x.wav", "../x.wav", "..", ".", "dir\\x.wav"}) {
+        EXPECT_FALSE(s.setValue("file_sd", bad)) << bad;
+        EXPECT_EQ(s.getValue("file_sd"), "..x.wav") << bad;
+    }
+    EXPECT_FALSE(s.setValue("file_sd", std::string(256, 'a')));
+    EXPECT_TRUE(s.setValue("file_sd", std::string(255, 'a')));
+    EXPECT_FALSE(s.setDACFile(std::string("a\0b", 3)));
+}
+
+TEST(StreamSettingsKeys, TheBlockSizeIsAMultipleOf128) {
+    CStreamSettings s;
+    const auto before = s.getMemoryBlockSize();
+    for (const char* bad : {"0", "1", "127", "129", "65537", "268435584", "4294967168"}) {
+        EXPECT_FALSE(s.setValue("block_size", bad)) << bad;
+        EXPECT_EQ(s.getMemoryBlockSize(), before) << bad;
+    }
+    for (uint32_t good : {128u, 512u, 2048u, 65536u, 8388608u, CStreamSettings::MEMORY_BLOCK_MAX}) {
+        EXPECT_TRUE(s.setValue("block_size", std::to_string(good))) << good;
+        EXPECT_EQ(s.getMemoryBlockSize(), good);
+    }
 }
 
 TEST(StreamSettingsKeys, EveryChannelKeyAddressesItsOwnChannel) {

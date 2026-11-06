@@ -1,6 +1,7 @@
 #ifndef CONFIG_NET_LIB_SNCM_H
 #define CONFIG_NET_LIB_SNCM_H
 
+#include <functional>
 #include <mutex>
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
@@ -81,6 +82,12 @@ class ServerNetConfigManager {
     auto getSettingsRef() -> CStreamSettings&;
     auto setSettingsParameter(const std::string& key, const std::string& value) -> bool;
     auto getSettings() -> const CStreamSettings;
+    // Applies change to a copy of the settings; the copy is taken if change and the validator
+    // agree, then settingsChangedNofiy. Every change of the settings comes here, the network's
+    // and the application's.
+    auto changeSettings(const std::function<bool(CStreamSettings&)>& change) -> bool;
+    // What the board cannot take besides the settings' own checks (the RAM for the block size)
+    auto setSettingsValidator(std::function<bool(const CStreamSettings&)> validator) -> void;
 
     sigslot::signal<> getNewSettingsNofiy;
 
@@ -98,7 +105,9 @@ class ServerNetConfigManager {
     sigslot::signal<> startADCNofiy;
     sigslot::signal<> startDACNofiy;
 
-    sigslot::signal<> memoryBlockSizeChangeNofiy;
+    // Every accepted change (one key, a whole document, the file): the settings before and after.
+    // The handler decides what the change touches (block_size: the memory of every stream).
+    sigslot::signal<const CStreamSettings&, const CStreamSettings&> settingsChangedNofiy;
 
     sigslot::signal<> startGpioInStreamingNofiy;
     sigslot::signal<> stopGpioInStreamingNofiy;
@@ -131,6 +140,7 @@ class ServerNetConfigManager {
     CStreamSettings m_settings;
     // m_settings is changed on the asio thread and read from the streaming threads.
     std::mutex m_settingsMtx;
+    std::function<bool(const CStreamSettings&)> m_validator;
     uint8_t m_maxADCChannels = 0;
 };
 

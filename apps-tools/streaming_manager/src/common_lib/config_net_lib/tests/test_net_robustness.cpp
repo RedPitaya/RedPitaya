@@ -2,9 +2,8 @@
  * What the config channel does with input it did not expect, with connections that come and
  * go, and with sends and stops from any thread.
  *
- * A packet this protocol does not produce ends the server on purpose (a peer of another
- * version must not be served), so those cases are death tests: they pin that the process ends
- * at once instead of spinning on a zero size or reading past the packet.
+ * A packet this protocol does not produce closes that connection: the rest of its stream
+ * cannot be framed. The server goes on with the next client.
  */
 
 #include <gtest/gtest.h>
@@ -114,18 +113,6 @@ class RawPeer {
     std::string m_received;
 };
 
-// Starts a server, sends one packet from a raw peer and waits. For the death tests: if the
-// server survives, the process exits normally and the death test fails.
-[[noreturn]] auto ServeOnePacket(uint16_t port, const std::string& packet) -> void {
-    ServerNetConfigManager server(TempFile(port), broadcast_lib::AB_SERVER_MASTER, "127.0.0.1", port, 2);
-    RawPeer peer;
-    if (peer.connect(port)) {
-        peer.send(packet);
-        peer.readFor(std::chrono::milliseconds(2000));
-    }
-    std::_Exit(0);
-}
-
 class Robust : public ::testing::Test {
    protected:
     void SetUp() override {
@@ -149,29 +136,45 @@ class Robust : public ::testing::Test {
 
 // ---- packets this protocol does not produce ----
 
-TEST(NetConfigPacketDeathTest, AnUnknownHeaderEndsTheServer) {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
-    EXPECT_DEATH(ServeOnePacket(29380, Words({0x01020304, 16, 0, 0})), "Broken header");
+// A packet the protocol does not produce closes that connection only: the server lives on,
+// does not spin on a zero size or read past the packet, and serves the next client.
+class BrokenPacket : public Robust, public ::testing::WithParamInterface<std::pair<const char*, std::string>> {};
+
+TEST_P(BrokenPacket, ClosesTheConnectionAndServesTheNextClient) {
+    RawPeer peer;
+    ASSERT_TRUE(peer.connect(m_port));
+    ASSERT_TRUE(WaitFor([&] { return m_connected == 1; }));
+    peer.send(GetParam().second + KeyValue("adc_decimation", "8"));
+    EXPECT_TRUE(peer.readFor(std::chrono::milliseconds(2000))) << "the connection is closed";
+    ASSERT_TRUE(WaitFor([&] { return m_disconnected == 1; }));
+    EXPECT_NE(m_server->getSettings().getADCDecimation(), 8u) << "nothing after the broken packet is taken";
+
+    RawPeer next;
+    ASSERT_TRUE(next.connect(m_port));
+    next.send(KeyValue("adc_decimation", "16"));
+    EXPECT_TRUE(WaitFor([&] { return m_server->getSettings().getADCDecimation() == 16u; }));
 }
 
-TEST(NetConfigPacketDeathTest, AZeroSegmentSizeEndsTheServerInsteadOfSpinning) {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
-    EXPECT_DEATH(ServeOnePacket(29381, Words({0xABCDEB, 0, 4}) + "abcd"), "Broken segment size");
-}
+INSTANTIATE_TEST_SUITE_P(
+    NetConfigPacket,
+    BrokenPacket,
+    ::testing::Values(std::make_pair("UnknownHeader", Words({0x01020304, 16, 0, 0})),
+                      std::make_pair("ZeroSegmentSize", Words({0xABCDEB, 0, 4}) + "abcd"),
+                      std::make_pair("SegmentShorterThanItsHeader", Words({0xABCDED, 12, 3})),
+                      std::make_pair("KeySizePastTheSegment", Words({0xABCDEF, 16, 0x100000, 0x100000})),
+                      std::make_pair("PayloadSizeDisagreesWithTheSegment", Words({0xABCDEB, 20, 4}) + "abcdefgh"),
+                      std::make_pair("SegmentOverTheLimit", Words({0xABCDEB, CNetConfigManager::MAX_SEGMENT_SIZE + 1, CNetConfigManager::MAX_SEGMENT_SIZE - 11}))),
+    [](const auto& info) { return std::string(info.param.first); });
 
-TEST(NetConfigPacketDeathTest, ASegmentShorterThanItsHeaderEndsTheServer) {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
-    EXPECT_DEATH(ServeOnePacket(29382, Words({0xABCDED, 12, 3})), "Broken segment size");
-}
-
-TEST(NetConfigPacketDeathTest, AKeySizePastTheSegmentEndsTheServerWithoutReadingPastIt) {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
-    EXPECT_DEATH(ServeOnePacket(29383, Words({0xABCDEF, 16, 0x100000, 0x100000})), "Broken segment size");
-}
-
-TEST(NetConfigPacketDeathTest, APayloadSizeThatDisagreesWithTheSegmentEndsTheServer) {
-    GTEST_FLAG_SET(death_test_style, "threadsafe");
-    EXPECT_DEATH(ServeOnePacket(29384, Words({0xABCDEB, 20, 4}) + "abcdefgh"), "Broken segment size");
+TEST_F(Robust, APacketOfTheLargestSizeIsTaken) {
+    // a settings document padded with spaces up to the limit
+    std::string json = R"({"adc_streaming":{"adc_decimation":32},"dac_streaming":{},"memory_manager":{}})";
+    json.append(CNetConfigManager::MAX_SEGMENT_SIZE - 12 - json.size(), ' ');
+    RawPeer peer;
+    ASSERT_TRUE(peer.connect(m_port));
+    peer.send(Config(json));
+    EXPECT_TRUE(WaitFor([&] { return m_server->getSettings().getADCDecimation() == 32u; }));
+    EXPECT_TRUE(m_server->isConnected());
 }
 
 // ---- connections ----

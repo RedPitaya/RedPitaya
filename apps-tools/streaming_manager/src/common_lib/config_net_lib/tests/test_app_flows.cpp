@@ -48,7 +48,7 @@ auto NextPort() -> uint16_t {
 // The answers streaming-server gives, without the streaming behind them.
 struct FakeStreamingServer {
     std::unique_ptr<ServerNetConfigManager> config;
-    std::atomic<int> adcStarts{0}, adcStops{0}, dacStarts{0}, dacStops{0}, memChanges{0}, newSettings{0};
+    std::atomic<int> adcStarts{0}, adcStops{0}, dacStarts{0}, dacStops{0}, memChanges{0}, settingsChanges{0}, newSettings{0};
     std::mutex mutex;
     dac_channels_t dacChannels;
 
@@ -56,7 +56,12 @@ struct FakeStreamingServer {
         config = std::make_unique<ServerNetConfigManager>(file, mode, "127.0.0.1", port, 2);
         auto* c = config.get();
         c->getNewSettingsNofiy.connect([this]() { newSettings++; });
-        c->memoryBlockSizeChangeNofiy.connect([this]() { memChanges++; });
+        // streaming-server reallocates its blocks when the block size changes
+        c->settingsChangedNofiy.connect([this](const CStreamSettings& before, const CStreamSettings& after) {
+            settingsChanges++;
+            if (before.getMemoryBlockSize() != after.getMemoryBlockSize())
+                memChanges++;
+        });
         c->startStreamingNofiy.connect([this, c]() {
             adcStarts++;
             const auto s = c->getSettings();
@@ -254,7 +259,7 @@ TEST_F(AppFlow, ASaveThatCannotBeWrittenIsReported) {
     EXPECT_TRUE(step([&] { return m_client->sendSaveToFile(m_host); }, fail));
 }
 
-// What streaming-server does with block_size: reallocate. Other keys do not.
+// What streaming-server does with a new block_size: reallocate. Other keys and the same size do not.
 TEST_F(AppFlow, OnlyTheBlockSizeKeyReallocates) {
     connect();
     std::atomic<int> ok{0};
@@ -265,6 +270,27 @@ TEST_F(AppFlow, OnlyTheBlockSizeKeyReallocates) {
     ASSERT_TRUE(step([&] { return m_client->sendConfigVariable(m_host, "block_size", "131072"); }, ok, 2));
     EXPECT_EQ(m_server->memChanges, 1);
     EXPECT_EQ(m_server->newSettings, 2);
+    // the same block size again (adc_dac_example_1 sends it before every start): no reallocation
+    m_client->successSendConfigNofiy.connect([&](std::string&) { ok++; });
+    ASSERT_TRUE(step([&] { return m_client->sendConfigVariable(m_host, "block_size", "131072"); }, ok, 3));
+    EXPECT_EQ(m_server->memChanges, 1);
+    EXPECT_EQ(m_server->settingsChanges, 3);
+}
+
+// A whole document that keeps the block size does not reallocate either.
+TEST_F(AppFlow, AWholeConfigWithTheSameBlockSizeDoesNotReallocate) {
+    connect();
+    CStreamSettings wanted;
+    wanted.setADCDecimation(256);
+    const std::string file = (m_dir / "same_block.json").string();
+    ASSERT_TRUE(wanted.writeToFile(file));
+    ASSERT_TRUE(m_client->readFromFile(file));
+    std::atomic<int> ok{0};
+    m_client->successSendConfigNofiy.connect([&](std::string&) { ok++; });
+    ASSERT_TRUE(step([&] { return m_client->sendConfig(m_host); }, ok));
+    EXPECT_EQ(m_server->config->getSettings().getADCDecimation(), 256u);
+    EXPECT_EQ(m_server->settingsChanges, 1);
+    EXPECT_EQ(m_server->memChanges, 0);
 }
 
 // rpsa_client -r start / memory block / active channels / ADC FPGA start / stop.

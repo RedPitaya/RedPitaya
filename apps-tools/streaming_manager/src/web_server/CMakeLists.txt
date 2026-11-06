@@ -68,7 +68,7 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/lib/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib gpio_streaming_lib streaming_lib settings_lib board_lib pthread stdc++)
+target_link_libraries(${PROJECT_NAME} PUBLIC session_lib settings_lib board_lib pthread stdc++)
 
 if(IS_INSTALL)
        install(TARGETS ${PROJECT_NAME}

@@ -36,7 +36,9 @@ class CMemoryManager {
     auto getRegions(MemoryTAG tag) -> std::vector<MemoryRegionT>;
     auto getFreeBlockCount() -> uint32_t;
 
-    auto setMemoryBlockSize(uint32_t _size) -> void;
+    // _size - the data bytes of a block, without the header. Refused (the block size stays) for 0
+    // or when the RAM does not hold the blocks the streams need.
+    auto setMemoryBlockSize(uint32_t _size) -> bool;
     auto getMemoryBlockSize() -> uint32_t;
 
     auto getMinRAMSize(MemoryTAG _tag) -> uint32_t;

@@ -177,8 +177,15 @@ auto CMemoryManager::getReserverdMemory(MemoryTAG _tag) -> uint32_t {
     return m_reservedMemory[_tag];
 }
 
-auto CMemoryManager::setMemoryBlockSize(uint32_t _size) -> void {
-    m_blockSize = _size + DataLib::sizeHeader();
+auto CMemoryManager::setMemoryBlockSize(uint32_t _size) -> bool {
+    const uint64_t block = uint64_t(_size) + DataLib::sizeHeader();
+    const uint64_t need = block * std::max({MIN_ADC_BLOCK, MIN_DAC_BLOCK, MIN_GPIO_BLOCK});
+    if (_size == 0 || need > m_ramSize) {
+        WARNING("Wrong memory block size %u: %u blocks of it do not fit the RAM size %u", _size, std::max({MIN_ADC_BLOCK, MIN_DAC_BLOCK, MIN_GPIO_BLOCK}), m_ramSize)
+        return false;
+    }
+    m_blockSize = static_cast<uint32_t>(block);
+    return true;
 }
 
 auto CMemoryManager::getMemoryBlockSize() -> uint32_t {
@@ -195,4 +202,15 @@ auto CMemoryManager::getMinRAMSize(uint32_t, MemoryTAG) -> uint32_t {
 
 auto CMemoryManager::setDACMemoryStreamMode(bool enable) -> void {
     m_dacStreamMode = enable;
+}
+auto CMemoryManager::getMaxBlockSize() -> uint32_t {
+    return m_ramSize / std::max({MIN_ADC_BLOCK, MIN_DAC_BLOCK, MIN_GPIO_BLOCK});
+}
+
+auto CMemoryManager::getRAMSize() -> uint32_t {
+    return m_ramSize;
+}
+
+auto CMemoryManager::isValidSize(MemoryTAG _tag) -> bool {
+    return getReserverdMemory(_tag) >= getMinRAMSize(_tag);
 }

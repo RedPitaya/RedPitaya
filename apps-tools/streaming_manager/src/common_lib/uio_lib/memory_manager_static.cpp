@@ -188,8 +188,15 @@ auto CMemoryManager::getFreeBlockCount() -> uint32_t {
     return freeBlock;
 }
 
-auto CMemoryManager::setMemoryBlockSize(uint32_t _size) -> void {
-    m_blockSize = _size + DataLib::sizeHeader();
+auto CMemoryManager::setMemoryBlockSize(uint32_t _size) -> bool {
+    const uint64_t block = uint64_t(_size) + DataLib::sizeHeader();
+    const uint64_t need = block * std::max({MIN_ADC_BLOCK, MIN_DAC_BLOCK, MIN_GPIO_BLOCK});
+    if (_size == 0 || need > m_ramSize) {
+        WARNING("Wrong memory block size %u: %u blocks of it do not fit the RAM size %u", _size, std::max({MIN_ADC_BLOCK, MIN_DAC_BLOCK, MIN_GPIO_BLOCK}), m_ramSize)
+        return false;
+    }
+    m_blockSize = static_cast<uint32_t>(block);
+    return true;
 }
 
 auto CMemoryManager::getMemoryBlockSize() -> uint32_t {

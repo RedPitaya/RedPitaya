@@ -8,6 +8,9 @@
 
 class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager> {
    public:
+    // The largest packet taken: the settings document is a few kilobytes. A larger one, or one
+    // this protocol does not produce, closes the connection (a server goes on accepting).
+    static constexpr uint32_t MAX_SEGMENT_SIZE = 1024 * 1024;
     // The numbers are the wire protocol shared with older clients and servers: never change or
     // reuse a number, add new commands at the end with the next free one. A side that does not
     // know a command ignores it.
@@ -151,6 +154,7 @@ class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager>
     auto net() -> std::shared_ptr<net_lib::CAsioNetSimple>;
     // Throws on a packet this protocol does not produce: a peer of another version must not be served.
     auto receiveHandler(std::error_code error, uint8_t*, size_t) -> void;
+    auto rejectStream(const char* reason) -> void;
 
     std::string m_host;
     uint16_t m_port;

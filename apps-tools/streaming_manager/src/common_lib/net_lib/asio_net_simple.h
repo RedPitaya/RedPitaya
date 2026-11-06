@@ -20,6 +20,8 @@ class CAsioNetSimple {
 
     auto start() -> void;
     auto disconnect() -> void;
+    // Closes the current connection; a server goes on accepting.
+    auto closeConnection() -> void;
 
     sigslot::signal<std::string&> connectNotify;
     sigslot::signal<std::string&> disconnectNotify;

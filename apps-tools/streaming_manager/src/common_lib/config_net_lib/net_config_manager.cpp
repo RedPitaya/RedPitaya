@@ -181,21 +181,18 @@ auto CNetConfigManager::receiveHandler(std::error_code, uint8_t* _buff, size_t _
         } else if (header == HEADER_STR_STR || header == HEADER_COMMAND) {
             prefix_len = 16;
         } else {
-            TRACE_SHORT("Broken header")
-            throw std::runtime_error("Broken header");
+            return rejectStream("Broken header");
         }
         // The packers write exactly prefix + payload; anything else is not this protocol.
-        if (segment_size < prefix_len) {
-            TRACE_SHORT("Broken segment size")
-            throw std::runtime_error("Broken segment size");
-        }
+        if (segment_size < prefix_len || segment_size > MAX_SEGMENT_SIZE)
+            return rejectStream("Broken segment size");
         if (m_buffers.m_data_size < segment_size)
             break;
         const uint64_t payload = segment_size - prefix_len;
         if (header == HEADER_CONFIG) {
             uint32_t data_size = words[2];
             if (data_size != payload)
-                throw std::runtime_error("Broken segment size");
+                return rejectStream("Broken segment size");
             std::string data(reinterpret_cast<char const*>(&(m_buffers.m_buffers[12])), data_size);
             m_buffers.removeAtStart(segment_size);
             receivedConfigNotify(data);
@@ -203,7 +200,7 @@ auto CNetConfigManager::receiveHandler(std::error_code, uint8_t* _buff, size_t _
             uint32_t key_size = words[2];
             uint32_t data_size = words[3];
             if (uint64_t(key_size) + data_size != payload)
-                throw std::runtime_error("Broken segment size");
+                return rejectStream("Broken segment size");
             std::string key(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16])), key_size);
             std::string data(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16 + key_size])), data_size);
             m_buffers.removeAtStart(segment_size);
@@ -212,12 +209,20 @@ auto CNetConfigManager::receiveHandler(std::error_code, uint8_t* _buff, size_t _
             uint32_t command = words[2];
             uint32_t data_size = words[3];
             if (data_size != payload)
-                throw std::runtime_error("Broken segment size");
+                return rejectStream("Broken segment size");
             std::string key(reinterpret_cast<char const*>(&(m_buffers.m_buffers[16])), data_size);
             m_buffers.removeAtStart(segment_size);
             receivedCommandNotify(command, key);
         }
     }
+}
+
+auto CNetConfigManager::rejectStream(const char* reason) -> void {
+    // The rest of the stream cannot be framed: drop it with the connection.
+    ERROR_LOG("Config channel: %s, the connection is closed", reason)
+    m_buffers.clear();
+    if (auto asionet = net())
+        asionet->closeConnection();
 }
 
 auto CNetConfigManager::dyn_buffer::push_back(uint8_t* _src, uint32_t _size) -> void {

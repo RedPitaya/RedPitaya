@@ -19,6 +19,7 @@ add_subdirectory(config_net_lib)
 add_subdirectory(streaming_lib)
 add_subdirectory(dac_streaming_lib)
 add_subdirectory(gpio_streaming_lib)
+add_subdirectory(session_lib)
 add_subdirectory(converter_lib)
 
 add_custom_target( asio ALL)

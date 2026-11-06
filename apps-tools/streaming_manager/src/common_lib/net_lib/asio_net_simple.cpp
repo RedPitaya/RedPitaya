@@ -45,6 +45,11 @@ auto CAsioNetSimple::disconnect() -> void {
     m_IsRun = false;
 }
 
+auto CAsioNetSimple::closeConnection() -> void {
+    if (m_server)
+        m_server->closeConnection();
+}
+
 auto CAsioNetSimple::runningInIoThread() -> bool {
     return m_server && m_server->runningInIoThread();
 }

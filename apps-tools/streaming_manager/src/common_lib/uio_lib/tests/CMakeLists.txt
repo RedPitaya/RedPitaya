@@ -19,7 +19,7 @@ if(NOT TARGET GTest::gtest_main)
     FetchContent_MakeAvailable(googletest)
 endif()
 
-add_executable(uio_lib_tests test_hardware.cpp)
+add_executable(uio_lib_tests test_hardware.cpp test_memory_manager.cpp)
 
 target_include_directories(uio_lib_tests PRIVATE ${COMMON_LIB_DIR})
 
