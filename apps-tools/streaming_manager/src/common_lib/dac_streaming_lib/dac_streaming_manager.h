@@ -16,7 +16,7 @@ namespace dac_streaming_lib {
 
 class CDACStreamingManager {
    public:
-    enum NotifyResult { NR_ENDED, NR_BROKEN, NR_EMPTY, NR_MISSING_FILE, NR_STOP, NR_MEM_ERROR, NR_MEM_MODIFY, NR_SETTINGS_ERROR, NR_NO_ACTIVE_CNAHHELS };
+    enum NotifyResult { NR_ENDED, NR_BROKEN, NR_EMPTY, NR_MISSING_FILE, NR_STOP, NR_MEM_ERROR, NR_MEM_MODIFY, NR_SETTINGS_ERROR, NR_NO_ACTIVE_CNAHHELS, NR_DISCONNECTED };
 
     enum DACStream_FileType { TDMS_TYPE, WAV_TYPE };
 
@@ -59,6 +59,8 @@ class CDACStreamingManager {
     auto unlockBuffer() -> void;
     auto isEmptyBuffer() -> bool;
     auto isRunned() -> bool;
+    // the network client that sends the data has gone: what it sent is still played
+    auto isClientGone() -> bool;
 
 	auto getChannels(dac_channels_t &dac) -> bool;
     // of the file or memory to play; OR_OK in the network mode
@@ -89,6 +91,7 @@ class CDACStreamingManager {
     std::atomic_bool m_isRun;
     std::atomic_bool m_isThreadRun;
     std::atomic_bool m_stopReported;
+    std::atomic_bool m_clientGone{false};
     std::mutex m_mtx;
     bool m_verbose;
     uint32_t m_blockSize;

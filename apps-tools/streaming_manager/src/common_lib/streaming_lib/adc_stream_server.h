@@ -11,7 +11,8 @@ namespace streaming_lib {
 
 class ADCStreamServer;
 
-enum class ADCStopReason { NORMAL, SD_FULL, DONE, MEM_ERROR, MEM_MODIFY, NO_CHANNELS, CONFIG_ERROR };
+// DISCONNECTED: the network client of the data has gone
+enum class ADCStopReason { NORMAL, SD_FULL, DONE, MEM_ERROR, MEM_MODIFY, NO_CHANNELS, CONFIG_ERROR, DISCONNECTED };
 
 // Events of the server, called from its threads; the default does nothing
 class ADCServerCallback {

@@ -42,11 +42,13 @@ struct ADCStreamServer::Impl {
     // Every start() is a new session. A stop from a thread of its own belongs to the session it
     // was asked in; atomic: stopNonBlocking() is also called from start() under mtx.
     std::atomic<uint64_t> session{0};
+    std::atomic<bool> active{false};  // the session is not torn down yet
 
     auto teardown() -> void;
-    // of: the session the stop was asked in, none for a stop of whatever runs
-    auto stop(ADCStopReason reason, std::optional<uint64_t> of = std::nullopt) -> void;
-    auto stopNonBlocking(ADCStopReason reason) -> void;
+    // of: the session the stop was asked in, none for a stop of whatever runs; own: asked by
+    // the server's own threads (the end of a file, a client gone), void once the session ended
+    auto stop(ADCStopReason reason, std::optional<uint64_t> of = std::nullopt, bool own = false) -> void;
+    auto stopNonBlocking(ADCStopReason reason, bool own) -> void;
     auto notifyStopped(ADCStopReason reason) -> void;
     template <typename F>
     auto notify(F f) -> void {
@@ -62,6 +64,7 @@ struct ADCStreamServer::Impl {
 
 // The acquisition stops first, then what is queued for the SD card still goes into the file
 auto ADCStreamServer::Impl::teardown() -> void {
+    active = false;
     if (file)
         file->disableNotify();
     if (buffer)
@@ -83,11 +86,11 @@ auto ADCStreamServer::Impl::teardown() -> void {
 
 // A stop asked in an earlier session neither tears down nor reports: the session it was for is
 // gone with the start that followed, and its reason (a failed start) is not the new one's.
-auto ADCStreamServer::Impl::stop(ADCStopReason reason, std::optional<uint64_t> of) -> void {
+auto ADCStreamServer::Impl::stop(ADCStopReason reason, std::optional<uint64_t> of, bool own) -> void {
     try {
         {
             std::lock_guard lock(mtx);
-            if (of && session != *of) {
+            if ((of && session != *of) || (own && !active)) {
                 if (verbose)
                     aprintf(stdout, "[Streaming] A stop of an earlier session is ignored\n");
                 return;
@@ -106,13 +109,13 @@ auto ADCStreamServer::Impl::stop(ADCStopReason reason, std::optional<uint64_t> o
     }
 }
 
-auto ADCStreamServer::Impl::stopNonBlocking(ADCStopReason reason) -> void {
+auto ADCStreamServer::Impl::stopNonBlocking(ADCStopReason reason, bool own) -> void {
     // from the threads of the pipeline itself (the end of a file): it cannot join them
     try {
         auto impl = self.lock();
         uint64_t of = session;
         if (impl)
-            std::thread([impl, reason, of]() { impl->stop(reason, of); }).detach();
+            std::thread([impl, reason, of, own]() { impl->stop(reason, of, own); }).detach();
     } catch (std::exception& e) {
         ERROR_LOG("ADCStreamServer::stopNonBlocking() %s", e.what())
     }
@@ -136,6 +139,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         std::lock_guard lock(p.mtx);
         p.teardown();
         p.session++;
+        p.active = true;
         if (!p.hw)
             return false;
 
@@ -157,7 +161,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         memory->releaseMemory(uio_lib::MM_ADC_RESERVE_SKIP);
         if (memory->reserveMemory(uio_lib::MM_ADC_RESERVE_SKIP, 1, 1) != 1) {
             ERROR_LOG("Can't reserve memory via memory manager")
-            p.stopNonBlocking(ADCStopReason::MEM_ERROR);
+            p.stopNonBlocking(ADCStopReason::MEM_ERROR, true);
             return false;
         }
         p.hw->adcSetSkipBuffer(memory->getRegions(uio_lib::MM_ADC_RESERVE_SKIP)[0].start);
@@ -177,6 +181,12 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
                 if (obj)
                     obj->unlockBufferRead();
             };
+            // the client of the data is gone: nothing reads the stream any more
+            auto selfW = std::weak_ptr<Impl>(m_pimpl);
+            p.net->clientGone = [selfW]() {
+                if (auto impl = selfW.lock())
+                    impl->stopNonBlocking(ADCStopReason::DISCONNECTED, true);
+            };
         } else {
             auto path = options.filePath.empty() ? std::string(FILE_PATH) : options.filePath;
             p.file = CStreamingFile::create(
@@ -189,13 +199,13 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
                     return;
                 switch (r) {
                     case CStreamingFile::EStopReason::NORMAL:
-                        impl->stopNonBlocking(ADCStopReason::NORMAL);
+                        impl->stopNonBlocking(ADCStopReason::NORMAL, true);
                         break;
                     case CStreamingFile::EStopReason::OUT_SPACE:
-                        impl->stopNonBlocking(ADCStopReason::SD_FULL);
+                        impl->stopNonBlocking(ADCStopReason::SD_FULL, true);
                         break;
                     case CStreamingFile::EStopReason::REACH_LIMIT:
-                        impl->stopNonBlocking(ADCStopReason::DONE);
+                        impl->stopNonBlocking(ADCStopReason::DONE, true);
                         break;
                 }
             });
@@ -212,7 +222,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         }
         if (active == 0) {
             ERROR_LOG("No active channels")
-            p.stopNonBlocking(ADCStopReason::NO_CHANNELS);
+            p.stopNonBlocking(ADCStopReason::NO_CHANNELS, true);
             return false;
         }
 
@@ -221,7 +231,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         auto ramSize = memory->getReserverdMemory(uio_lib::MM_ADC);
         if (ramSize < memory->getMinRAMSize(uio_lib::MM_ADC)) {
             ERROR_LOG("Not enough memory for ADC mode")
-            p.stopNonBlocking(ADCStopReason::MEM_ERROR);
+            p.stopNonBlocking(ADCStopReason::MEM_ERROR, true);
             return false;
         }
         auto freeBlocks = ramSize / memory->getMemoryBlockSize();
@@ -230,7 +240,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         auto reserved = memory->reserveMemory(uio_lib::MM_ADC, freeBlocks, active);
         if (reserved == 0) {
             ERROR_LOG("Can't reserve memory via memory manager")
-            p.stopNonBlocking(ADCStopReason::MEM_ERROR);
+            p.stopNonBlocking(ADCStopReason::MEM_ERROR, true);
             return false;
         }
         if (p.verbose)
@@ -256,7 +266,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         }
         if (!p.hw->adcConfigure(adc)) {
             ERROR_LOG("Can't configure the ADC")
-            p.stopNonBlocking(ADCStopReason::CONFIG_ERROR);
+            p.stopNonBlocking(ADCStopReason::CONFIG_ERROR, true);
             return false;
         }
 
@@ -272,7 +282,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         trig.blocks = static_cast<uint16_t>(std::min<uint32_t>(blocks, UINT16_MAX));
         if (blocks > UINT16_MAX || !p.hw->adcSetTrigger(trig)) {
             ERROR_LOG("The ADC trigger settings are not taken (low %d, high %d, blocks %u)", trig.low, trig.high, blocks)
-            p.stopNonBlocking(ADCStopReason::CONFIG_ERROR);
+            p.stopNonBlocking(ADCStopReason::CONFIG_ERROR, true);
             return false;
         }
         if (p.hw->features().extTrigger) {
@@ -283,7 +293,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
             ext.dio0 = settings.getExtTrigDio0().value == CStreamSettings::State::ON;
             if (!p.hw->setExtTrigger(ext)) {
                 ERROR_LOG("The external trigger settings are not taken (debounce %u)", ext.debounceClocks)
-                p.stopNonBlocking(ADCStopReason::CONFIG_ERROR);
+                p.stopNonBlocking(ADCStopReason::CONFIG_ERROR, true);
                 return false;
             }
         }
@@ -355,7 +365,7 @@ auto ADCStreamServer::stop(ADCStopReason reason) -> void {
 }
 
 auto ADCStreamServer::stopNonBlocking(ADCStopReason reason) -> void {
-    m_pimpl->stopNonBlocking(reason);
+    m_pimpl->stopNonBlocking(reason, false);
 }
 
 auto ADCStreamServer::isRunning() -> bool {

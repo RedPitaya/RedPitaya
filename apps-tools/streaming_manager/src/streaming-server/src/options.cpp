@@ -23,11 +23,12 @@ static struct option long_options[] = {
     /* These options set a flag. */
     {"background", no_argument, 0, 'b'},
     {"file", required_argument, 0, 'f'},
+    {"listen", required_argument, 0, 'l'},
     {"verbose", no_argument, 0, 'v'},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}};
 
-static constexpr char optstring[] = "bf:hv";
+static constexpr char optstring[] = "bf:hl:v";
 
 std::vector<std::string> ClientOpt::split(const std::string& s, char seperator) {
     std::vector<std::string> output;
@@ -235,12 +236,15 @@ auto ClientOpt::usage(char const* progName) -> void {
         name = arr[arr.size() - 1];
     const char* format =
         "Usage: \n"
-        "\t%s [-b] [-f PATH] [-p PORT] [-s PORT] [-v]\n"
-        "\t%s [--background] [--file=PATH] [--port=PORT] [--search_port=PORT] [--verbose]\n"
+        "\t%s [-b] [-f PATH] [-l ADDRESS] [-v]\n"
+        "\t%s [--background] [--file=PATH] [--listen=ADDRESS] [--verbose]\n"
         "\n"
         "\t--background          -b        Run service in background.\n"
         "\t--file=PATH           -f FILE   Path to configuration file.\n"
         "\t                                By default uses the config file /root/.config/redpitaya/apps/streaming/streaming_config.json.\n"
+        "\t--listen=ADDRESS      -l ADDRESS The address of the board the config port listens on,\n"
+        "\t                                for example 127.0.0.1 for the clients of the board only.\n"
+        "\t                                By default every interface.\n"
         "\t--verbose             -v        Displays information.\n"
         "\n"
         "\t Example:\n"
@@ -283,6 +287,10 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
                 break;
             }
+
+            case 'l':
+                opt.listen = optarg;
+                break;
 
             default: {
                 printWithLog(LOG_ERR, stderr, "[ERROR] Unknown parameter\n");

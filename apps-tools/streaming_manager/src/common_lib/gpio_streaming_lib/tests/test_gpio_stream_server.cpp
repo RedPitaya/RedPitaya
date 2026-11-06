@@ -503,3 +503,66 @@ TEST_F(GPIOServer, ASharedSettingThatDiffersIsRefusedWhileTheOtherRuns) {
     EXPECT_TRUE(out->start(settings));
     EXPECT_TRUE(in->isRunning());
 }
+
+// --- the client of the data leaves
+
+TEST_F(GPIOServer, AnInputClientThatLeavesStopsTheInput) {
+    countingInput();
+    ASSERT_TRUE(in->start(settings));
+    {
+        InputClient client;
+        client.start();
+        ASSERT_TRUE(waitFor([&]() { return client.packs() > 2; }));
+        EXPECT_TRUE(recorder->stops().empty()) << "streaming while the client is there";
+    }
+    ASSERT_TRUE(recorder->waitStopped());
+    std::this_thread::sleep_for(300ms);
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::DISCONNECTED});
+    EXPECT_FALSE(uio_lib::dummy::gpioState().inRunning);
+}
+
+// The client sends what it has and leaves: the output plays all of it, then stops
+TEST_F(GPIOServer, WhatTheOutputClientSentBeforeItLeftIsPlayedOut) {
+    std::atomic<int> taken{0};
+    uio_lib::dummy::gpioState().outTaken = [&](uint8_t, uint32_t) { taken++; };
+    // the output waits once the last buffer is handed over and played: the counter runs then
+    std::atomic<uint64_t> waited{0};
+    uio_lib::dummy::gpioState().outWait = [&]() -> uint64_t { return taken >= 5 ? ++waited : 0; };
+    ASSERT_TRUE(out->start(settings));
+    {
+        OutputClient client;
+        ASSERT_TRUE(client.start());
+        for (uint32_t k = 0; k < 5; k++)
+            ASSERT_TRUE(client.send(outBuffer(k)));
+    }
+    ASSERT_TRUE(recorder->waitStopped());
+    std::this_thread::sleep_for(300ms);
+    EXPECT_EQ(taken.load(), 5) << "every buffer sent before the client left";
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::DISCONNECTED});
+    EXPECT_FALSE(uio_lib::dummy::gpioState().outRunning);
+}
+
+TEST_F(GPIOServer, AnOutputClientThatLeavesWithoutDataStopsTheOutput) {
+    ASSERT_TRUE(out->start(settings));
+    {
+        OutputClient client;
+        ASSERT_TRUE(client.start());
+    }
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::DISCONNECTED});
+}
+
+TEST_F(GPIOServer, AStopWithTheClientsConnectedIsReportedOncePerDirection) {
+    countingInput();
+    ASSERT_TRUE(in->start(settings));
+    ASSERT_TRUE(out->start(settings));
+    InputClient inClient;
+    inClient.start();
+    OutputClient outClient;
+    ASSERT_TRUE(outClient.start());
+    ASSERT_TRUE(waitFor([&]() { return inClient.packs() > 2; }));
+    in->stop(GPIOStopReason::NORMAL);
+    out->stop(GPIOStopReason::NORMAL);
+    std::this_thread::sleep_for(300ms);
+    EXPECT_EQ(recorder->stops(), (std::vector<GPIOStopReason>{GPIOStopReason::NORMAL, GPIOStopReason::NORMAL}));
+}

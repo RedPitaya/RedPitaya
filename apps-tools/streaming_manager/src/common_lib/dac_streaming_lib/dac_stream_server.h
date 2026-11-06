@@ -13,7 +13,8 @@ namespace dac_streaming_lib {
 class DACStreamServer;
 
 // DONE: the file has been played; EMPTY, BROKEN, MISSING_FILE: the file cannot be played
-enum class DACStopReason { NORMAL, DONE, EMPTY, BROKEN, MISSING_FILE, MEM_ERROR, MEM_MODIFY, NO_CHANNELS, CONFIG_ERROR };
+// DISCONNECTED: the network client that sends the data has gone
+enum class DACStopReason { NORMAL, DONE, EMPTY, BROKEN, MISSING_FILE, MEM_ERROR, MEM_MODIFY, NO_CHANNELS, CONFIG_ERROR, DISCONNECTED };
 
 // Events of the server, called from its threads; the default does nothing
 class DACServerCallback {

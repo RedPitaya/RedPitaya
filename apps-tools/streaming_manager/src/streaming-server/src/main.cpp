@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
 
         session_lib::SessionOptions options;
         options.configFile = opt.conf_file;
-        options.host = "127.0.0.1";
+        options.host = opt.listen;
         options.broadcastModel = ClientOpt::getBroadcastModel();
         options.broadcastMac = ClientOpt::getMACAddress();
         options.broadcastHost = ip_cur;

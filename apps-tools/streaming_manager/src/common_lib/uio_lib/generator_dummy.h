@@ -17,6 +17,10 @@ struct GenState {
     bool running = false;
     int starts = 0;
     int stops = 0;
+    bool triggerMode[2] = {false, false};
+    uint32_t triggerSources = 0;
+    uint32_t eventSource = 0;
+    int triggerSets = 0;  // setTriggerMode() calls
 };
 
 auto genState() -> GenState&;

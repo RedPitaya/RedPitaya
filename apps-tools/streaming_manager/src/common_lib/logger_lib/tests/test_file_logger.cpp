@@ -253,6 +253,43 @@ TEST_F(FileLoggerTest, AGpioOnlyReportHasNoAdcPart) {
     EXPECT_EQ(squash(lines(lostFile())[1]), "GPIO: Pos 0 Get: 1024 (0) Wait: 0 Words: 1024");
 }
 
+TEST_F(FileLoggerTest, TheReportHasAGpioOutputPart) {
+    {
+        CFileLogger logger(m_base, false);
+        logger.addGpioOutMetric(4096, 1024);
+        logger.addGpioOutMetric(2048, 512);
+        logger.setGpioOutWait(185000000);
+        logger.dumpToFile();
+    }
+    auto r = report();
+    EXPECT_EQ(r.find("ADC speed"), std::string::npos) << "a GPIO only report: " << r;
+    EXPECT_NE(r.find("GPIO output:\n\tBuffers:\t2\nThe total amount of data sent on: GPIO output\n\t-1536 Words\n\t-6144b"), std::string::npos) << r;
+    EXPECT_NE(r.find("\tThe output waited for the data:\t185000000 clocks\n"), std::string::npos) << r;
+    const std::regex regressPattern(R"(FPGA:\s*(\d+))");
+    EXPECT_EQ(std::distance(std::sregex_iterator(r.begin(), r.end(), regressPattern), std::sregex_iterator()), 0) << r;
+}
+
+TEST_F(FileLoggerTest, AnOutputWithoutTheStopReplyHasNoWait) {
+    {
+        CFileLogger logger(m_base, false);
+        logger.addGpioOutMetric(4096, 1024);
+        logger.dumpToFile();
+    }
+    auto r = report();
+    EXPECT_NE(r.find("\tThe output waited for the data:\tnot reported\n"), std::string::npos) << r;
+}
+
+TEST_F(FileLoggerTest, ResetClearsTheGpioOutput) {
+    {
+        CFileLogger logger(m_base, false);
+        logger.addGpioOutMetric(4096, 1024);
+        logger.setGpioOutWait(5);
+        logger.resetCounters();
+        logger.dumpToFile();
+    }
+    EXPECT_EQ(report().find("GPIO output"), std::string::npos);
+}
+
 TEST_F(FileLoggerTest, TheColumnsOfTheLostFileAreUnderEachOther) {
     {
         CFileLogger logger(m_base, false);

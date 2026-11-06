@@ -107,7 +107,8 @@ CFileLogger::CFileLogger(std::string _filePath, bool testMode)
       m_triggerCountLast(0),
       m_gpioProperties(),
       m_gpioPropertiesSet(false),
-      m_gpio() {
+      m_gpio(),
+      m_gpioOut() {
     resetCounters();
     m_file_open = true;
     if (!m_testMode) {
@@ -136,6 +137,7 @@ void CFileLogger::resetCounters() {
     m_gpioProperties = GpioProperties();
     m_gpioPropertiesSet = false;
     m_gpio = GpioStat();
+    m_gpioOut = GpioOutStat();
     for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
         DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
         m_current_sample[ch] = 0;
@@ -220,6 +222,19 @@ auto CFileLogger::setGpioProperties(const GpioProperties& properties) -> void {
     m_gpioPropertiesSet = true;
 }
 
+auto CFileLogger::addGpioOutMetric(uint64_t bytes, uint64_t words) -> void {
+    std::lock_guard lock(m_mtx);
+    m_gpioOut.buffers++;
+    m_gpioOut.bytes += bytes;
+    m_gpioOut.words += words;
+}
+
+auto CFileLogger::setGpioOutWait(uint64_t clocks) -> void {
+    std::lock_guard lock(m_mtx);
+    m_gpioOut.waitClocks = clocks;
+    m_gpioOut.waitSet = true;
+}
+
 auto CFileLogger::addGpioMetric(uint64_t bytes, uint64_t words, uint64_t samples, uint64_t lost, uint64_t wait, uint32_t triggerCount) -> void {
     const std::lock_guard<std::mutex> lock(m_mtx);
     if (m_gpio.buffers == 0) {
@@ -264,7 +279,7 @@ void CFileLogger::dumpToFile() {
         log << "====   Data transfer report  " << buff << " UTC =================\n";
         log << "======================================================================\n";
         log << "\n\n";
-        if (m_packs || !m_gpio.buffers) {  // a GPIO only recording has no ADC part
+        if (m_packs || (!m_gpio.buffers && !m_gpioOut.buffers)) {  // a GPIO only recording has no ADC part
             // The rate of the buffers is the sample rate after the decimation
             log << "Current ADC speed:\t" << m_oscRate << "\n";
             if (m_decimation) {
@@ -330,6 +345,22 @@ void CFileLogger::dumpToFile() {
             log << "\t- FPGA overflow:\t" << m_gpio.lost << " Samples\n";
             log << "\tWait for a trigger on: GPIO\n";
             log << "\t- " << m_gpio.wait << " Samples\n";
+            log << "\n";
+        }
+        if (m_gpioOut.buffers || m_gpioOut.waitSet) {
+            log << "GPIO output:\n";
+            log << "\tBuffers:\t" << m_gpioOut.buffers << "\n";
+            log << "The total amount of data sent on: GPIO output\n";
+            log << "\t-" << m_gpioOut.words << " Words\n";
+            log << "\t-" << m_gpioOut.bytes << "b \n";
+            log << "\t-" << m_gpioOut.bytes / 1024 << "kb \n";
+            log << "\t-" << m_gpioOut.bytes / (1024 * 1024) << "Mb \n";
+            // the lines keep the last word while the output waits for the data of the client
+            log << "\tThe output waited for the data:\t";
+            if (m_gpioOut.waitSet)
+                log << m_gpioOut.waitClocks << " clocks\n";
+            else
+                log << "not reported\n";
             log << "\n";
         }
 

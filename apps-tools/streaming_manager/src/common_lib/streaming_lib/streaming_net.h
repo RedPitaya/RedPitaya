@@ -31,6 +31,8 @@ class CStreamingNet {
 
     getBufferFunc getBuffer;
     unlockBufferFunc unlockBufferF;
+    // the client disconnected (from the asio thread)
+    std::function<void()> clientGone;
 
    private:
     CStreamingNet(const CStreamingNet&) = delete;

@@ -22,6 +22,12 @@
 #include "data_lib/network_header.h"
 #include "uio_lib/generator_dummy.h"
 #include "uio_lib/memory_manager.h"
+#include "uio_lib/trigger.h"
+
+#include "asio.hpp"
+#include "net_lib/asio_common.h"
+#include "net_lib/asio_net.h"
+#include "data_lib/buffers_cached.h"
 
 using namespace dac_streaming_lib;
 using namespace std::chrono_literals;
@@ -293,4 +299,168 @@ TEST_F(DACServer, AStopRightAfterTheStartOfTheApplicationEndsIt) {
         EXPECT_LT(std::chrono::steady_clock::now() - t0, 3s) << "run " << i;
     }
     memory->releaseMemory(uio_lib::MM_DAC);
+}
+
+TEST_F(DACServer, TheTriggerSettingsReachTheGenerator) {
+    writeRamp(dir / "ramp.wav", 7 * kBlockSamples);
+    CStreamSettings s;
+    fileSettings(s, "ramp.wav", CStreamSettings::DACRepeat::DAC_REP_INF);
+    ASSERT_TRUE(s.setDACTriggerMode(1, CStreamSettings::State::ON));
+    ASSERT_TRUE(s.setDACTriggerSources(uio_lib::TRIG_SRC_EXT | uio_lib::TRIG_SRC_ADC_CH2));
+    ASSERT_TRUE(server->start(s, dac_channels_t(), options));
+    auto& g = uio_lib::dummy::genState();
+    EXPECT_TRUE(g.triggerMode[0]);
+    EXPECT_FALSE(g.triggerMode[1]);
+    EXPECT_EQ(g.triggerSources, uio_lib::TRIG_SRC_EXT | uio_lib::TRIG_SRC_ADC_CH2);
+    server->stop(DACStopReason::NORMAL);
+}
+
+TEST_F(DACServer, WithoutTheTriggerModeTheBuffersSwapOnTheOwnChannel) {
+    writeRamp(dir / "ramp.wav", 7 * kBlockSamples);
+    CStreamSettings s;
+    fileSettings(s, "ramp.wav", CStreamSettings::DACRepeat::DAC_REP_INF);
+    ASSERT_TRUE(s.setDACTriggerSources(uio_lib::TRIG_SRC_EXT));  // kept, the mode off
+    ASSERT_TRUE(server->start(s, dac_channels_t(), options));
+    EXPECT_EQ(uio_lib::dummy::genState().triggerSources, uio_lib::TRIG_SRC_GEN_A);
+    EXPECT_GT(uio_lib::dummy::genState().triggerSets, 0);
+    server->stop(DACStopReason::NORMAL);
+}
+
+namespace {
+
+auto netSettings(CStreamSettings& s) -> CStreamSettings& {
+    s.setDACPassMode(CStreamSettings::DACPassMode::DAC_NET);
+    s.setMemoryBlockSize(kBlock);
+    return s;
+}
+
+auto connectTo(asio::io_context& io, uint16_t port) -> std::unique_ptr<asio::ip::tcp::socket> {
+    auto sock = std::make_unique<asio::ip::tcp::socket>(io);
+    for (int i = 0; i < 100; i++) {
+        asio::error_code ec;
+        sock->connect(asio::ip::tcp::endpoint(asio::ip::make_address("127.0.0.1"), port), ec);
+        if (!ec)
+            return sock;
+        sock->close(ec);
+        std::this_thread::sleep_for(20ms);
+    }
+    return nullptr;
+}
+
+}  // namespace
+
+TEST_F(DACServer, ANetworkClientThatLeavesStopsThePlayback) {
+    dac_channels_t ch;
+    ch.enable(DACChannels::DAC_CH1);
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(netSettings(s), ch, options));
+    asio::io_context io;
+    auto client = connectTo(io, NET_DAC_STREAMING_PORT);
+    ASSERT_TRUE(client);
+    std::this_thread::sleep_for(200ms);
+    EXPECT_TRUE(recorder->stops().empty()) << "playing while the client is there";
+    client->close();
+    ASSERT_TRUE(recorder->waitStopped());
+    std::this_thread::sleep_for(300ms);
+    EXPECT_EQ(recorder->stops(), std::vector<DACStopReason>{DACStopReason::DISCONNECTED});
+}
+
+TEST_F(DACServer, AStopWithTheClientConnectedIsReportedOnce) {
+    dac_channels_t ch;
+    ch.enable(DACChannels::DAC_CH1);
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(netSettings(s), ch, options));
+    asio::io_context io;
+    auto client = connectTo(io, NET_DAC_STREAMING_PORT);
+    ASSERT_TRUE(client);
+    std::this_thread::sleep_for(200ms);
+    server->stop(DACStopReason::NORMAL);
+    std::this_thread::sleep_for(300ms);
+    EXPECT_EQ(recorder->stops(), std::vector<DACStopReason>{DACStopReason::NORMAL}) << "the disconnect of our own stop is not a second stop";
+}
+
+namespace {
+
+// A network client of the DAC in its own memory: sends packs of one channel and leaves
+struct DACClient {
+    uio_lib::CMemoryManager memory;
+    DataLib::CBuffersCached::Ptr ring = DataLib::CBuffersCached::create();
+    net_lib::CAsioNet::Ptr net;
+    std::atomic<bool> connected{false};
+
+    auto start() -> bool {
+        memory.setMemoryBlockSize(kBlock);
+        memory.reallocateBlocks();
+        memory.reserveMemory(uio_lib::MM_DAC, 4, 1);
+        dac_channels_t ch;
+        ch.enable(DACChannels::DAC_CH1);
+        ring->generateBuffersEmptyDAC(ch, memory.getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
+        ring->initHeadersDAC(ch);
+        net = net_lib::CAsioNet::create(net_lib::M_CLIENT, "127.0.0.1", NET_DAC_STREAMING_PORT, nullptr);
+        net->clientConnectNotify.connect([this](std::string&) { connected = true; });
+        net->start();
+        for (int i = 0; i < 250 && !connected; i++)
+            std::this_thread::sleep_for(20ms);
+        return connected;
+    }
+
+    auto send(int packs, bool onePack = false, int64_t repeats = 0) -> bool {
+        auto pack = ring->writeBuffer(true);
+        auto buffer = pack->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
+        for (int i = 0; i < packs; i++) {
+            auto samples = reinterpret_cast<int16_t*>(buffer->getMappedDataMemory());
+            for (uint32_t k = 0; k < kBlockSamples; k++)
+                samples[k] = static_cast<int16_t>(i);
+            DataLib::setHeaderDAC(buffer, 1, kBlock, onePack, false, repeats, 16);
+            if (!net->sendSyncData(pack))
+                return false;
+        }
+        return true;
+    }
+
+    auto leave() -> void {
+        if (net)
+            net->stop();
+        net = nullptr;
+    }
+};
+
+}  // namespace
+
+// A client sends what it has and leaves: the board plays all of it, then stops
+TEST_F(DACServer, WhatTheClientSentBeforeItLeftIsPlayedOut) {
+    std::atomic<int> played{0};
+    uio_lib::dummy::genState().taken = [&](uint8_t, uint32_t, uint32_t, uint32_t) { played++; };
+    dac_channels_t ch;
+    ch.enable(DACChannels::DAC_CH1);
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(netSettings(s), ch, options));
+    DACClient client;
+    ASSERT_TRUE(client.start());
+    ASSERT_TRUE(client.send(8));
+    client.leave();
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(played.load(), 8) << "every pack sent before the client left";
+    EXPECT_EQ(recorder->stops(), std::vector<DACStopReason>{DACStopReason::DISCONNECTED});
+}
+
+// One pack the board repeats itself (adc_dac_example, the regress DAC loop): the client leaves
+// after sending it, the repeats go on to the end
+TEST_F(DACServer, TheRepeatsOfAPackGoOnAfterTheClientLeft) {
+    std::atomic<int> played{0};
+    uio_lib::dummy::genState().taken = [&](uint8_t, uint32_t, uint32_t, uint32_t) {
+        played++;
+        std::this_thread::sleep_for(2ms);
+    };
+    dac_channels_t ch;
+    ch.enable(DACChannels::DAC_CH1);
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(netSettings(s), ch, options));
+    DACClient client;
+    ASSERT_TRUE(client.start());
+    ASSERT_TRUE(client.send(1, true, 50));
+    client.leave();
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(played.load(), 50);
+    EXPECT_EQ(recorder->stops(), std::vector<DACStopReason>{DACStopReason::DONE});
 }

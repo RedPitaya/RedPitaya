@@ -62,6 +62,7 @@ void CDACStreamingApplication::genWorker() {
     DataLib::CDataBuffersPackDMA::Ptr buffer = nullptr;
     bool onePackMode = false;
     bool notRun = true;
+    bool clientGone = false;  // the end came from the network client that left
     // The FPGA holds two buffers, one playing and one queued: a pack goes back to the ring only
     // when its slot takes the next but one pack, the DMA has read it then
     int handedOver = 0;
@@ -77,6 +78,13 @@ void CDACStreamingApplication::genWorker() {
                 break;
             }
             buffer = (!onePackMode || buffer == nullptr) ? m_streamingManager->getBuffer() : buffer;
+            if (!buffer && !m_streamingManager->isLocalMode() && m_streamingManager->isClientGone() && m_streamingManager->isEmptyBuffer()) {
+                // the network client has gone and everything it sent went to the FPGA: let it play
+                if (!notRun)
+                    m_hw->dacWaitPlayed(1000);
+                clientGone = true;
+                break;
+            }
             if (buffer) {
                 auto ch1 = buffer->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
                 auto ch2 = buffer->getBuffer(DataLib::EDataBuffersPackChannel::CH2);
@@ -185,7 +193,9 @@ void CDACStreamingApplication::genWorker() {
     else
         for (; handedOver > 0; handedOver--)
             m_streamingManager->unlockBuffer();
-    if (!m_streamingManager->isRunned())  // Send notification that generation is complete at application level
+    if (clientGone)
+        m_streamingManager->reportStop(CDACStreamingManager::NR_DISCONNECTED);
+    else if (!m_streamingManager->isRunned())  // Send notification that generation is complete at application level
         m_streamingManager->reportStop(CDACStreamingManager::NR_ENDED);
     m_isRun = false;
 }

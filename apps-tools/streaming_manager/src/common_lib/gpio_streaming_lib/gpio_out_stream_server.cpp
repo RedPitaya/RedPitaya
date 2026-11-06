@@ -48,16 +48,19 @@ struct GPIOOutStreamServer::Impl {
     // the run
     std::atomic<bool> run{false};
     std::atomic<bool> playing{false};  // the output started
+    std::atomic<bool> clientGone{false};  // the client left: what it sent is played, then the stop
     CBuffersCached::Ptr ring;
     net_lib::CAsioNet::Ptr net;
     std::thread fpgaThread;  // the client's buffers to the FPGA
 
     auto teardown() -> uint64_t;
     // of: the session the stop was asked in, none for a stop of whatever runs
-    auto stop(GPIOStopReason reason, std::optional<uint64_t> of = std::nullopt) -> void;
-    auto stopNonBlocking(GPIOStopReason reason) -> void;
+    auto stop(GPIOStopReason reason, std::optional<uint64_t> of = std::nullopt, bool own = false) -> void;
+    // own: asked by the server's own threads (a client gone), void once the session ended
+    auto stopNonBlocking(GPIOStopReason reason, bool own) -> void;
     auto prefill() -> void;
     auto fpgaWork() -> void;
+    auto waitPlayedOut() -> void;
     template <typename F>
     auto notify(F f) -> void {
         std::shared_ptr<GPIOOutServerCallback> cb;
@@ -99,12 +102,12 @@ auto GPIOOutStreamServer::Impl::teardown() -> uint64_t {
 
 // A stop asked in an earlier session neither tears down nor reports: the session it was for is
 // gone with the start that followed, and its reason (a failed start) is not the new one's.
-auto GPIOOutStreamServer::Impl::stop(GPIOStopReason reason, std::optional<uint64_t> of) -> void {
+auto GPIOOutStreamServer::Impl::stop(GPIOStopReason reason, std::optional<uint64_t> of, bool own) -> void {
     try {
         uint64_t wait = 0;
         {
             std::lock_guard lock(mtx);
-            if (of && session != *of) {
+            if ((of && session != *of) || (own && !active)) {
                 if (verbose)
                     aprintf(stdout, "[Streaming] A stop of an earlier session is ignored\n");
                 return;
@@ -123,12 +126,12 @@ auto GPIOOutStreamServer::Impl::stop(GPIOStopReason reason, std::optional<uint64
     }
 }
 
-auto GPIOOutStreamServer::Impl::stopNonBlocking(GPIOStopReason reason) -> void {
+auto GPIOOutStreamServer::Impl::stopNonBlocking(GPIOStopReason reason, bool own) -> void {
     try {
         auto impl = self.lock();
         uint64_t of = session;
         if (impl)
-            std::thread([impl, reason, of]() { impl->stop(reason, of); }).detach();
+            std::thread([impl, reason, of, own]() { impl->stop(reason, of, own); }).detach();
     } catch (std::exception& e) {
         ERROR_LOG("GPIOOutStreamServer::stopNonBlocking() %s", e.what())
     }
@@ -148,7 +151,7 @@ auto GPIOOutStreamServer::Impl::prefill() -> void {
             seen = n;
             last = now;
         }
-        if (n >= full || (n > 0 && now - last >= kPrefillQuiet))
+        if (n >= full || (n > 0 && now - last >= kPrefillQuiet) || clientGone)
             return;
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
@@ -162,12 +165,18 @@ auto GPIOOutStreamServer::Impl::prefill() -> void {
 auto GPIOOutStreamServer::Impl::fpgaWork() -> void {
     uint8_t index = 0;
     int handedOver = 0;
+    bool drained = false;  // the client left and everything it sent went to the FPGA
     try {
         prefill();
         while (run) {
             auto pack = ring->readBuffer();
-            if (!pack)
+            if (!pack) {
+                if (clientGone && ring->filled() == 0) {
+                    drained = true;
+                    break;
+                }
                 continue;
+            }
             auto buffer = bufferOf(pack);
             DataLib::GPIOHeader header;
             size_t size = buffer->getDataLenght();
@@ -203,9 +212,33 @@ auto GPIOOutStreamServer::Impl::fpgaWork() -> void {
     } catch (std::exception& e) {
         ERROR_LOG("GPIOOutStreamServer output %s", e.what())
     }
+    if (drained) {
+        if (playing)
+            waitPlayedOut();
+        if (verbose)
+            aprintf(stdout, "[GPIO] The client has gone, its data is played\n");
+        stopNonBlocking(GPIOStopReason::DISCONNECTED, true);
+        // the stop tears down: the output stops, then the packs still held go back below
+    }
     // the output is stopped by now (teardown): the packs still held go back
     for (; handedOver > 0; handedOver--)
         ring->unlockBufferRead();
+}
+
+// The last buffer is played when the output starts to wait for the next one: its wait counter
+// runs then (without the counter a fixed time).
+auto GPIOOutStreamServer::Impl::waitPlayedOut() -> void {
+    if (!hw->features().gpioOutWait) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        return;
+    }
+    const auto w0 = hw->gpioStatus().outputWait;
+    const auto end = std::chrono::steady_clock::now() + std::chrono::seconds(5);
+    while (run && std::chrono::steady_clock::now() < end) {
+        if (hw->gpioStatus().outputWait > w0)
+            return;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 }
 
 GPIOOutStreamServer::GPIOOutStreamServer(uio_lib::CHardware::Ptr hw) : m_pimpl(std::make_shared<Impl>()) {
@@ -231,12 +264,12 @@ auto GPIOOutStreamServer::start(const CStreamSettings& settings, const GPIOStrea
             return false;
         if (!p.hw->features().gpio) {
             ERROR_LOG("There is no GPIO block in the FPGA")
-            p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR);
+            p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR, true);
             return false;
         }
         if (!p.hw->features().gpioOutRefill) {
             ERROR_LOG("The GPIO output of this FPGA plays two buffers only, it can't stream")
-            p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR);
+            p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR, true);
             return false;
         }
 
@@ -256,7 +289,7 @@ auto GPIOOutStreamServer::start(const CStreamSettings& settings, const GPIOStrea
         trig.patternNegEdge = settings.getGPIOPatternNegEdge();
         if (!p.hw->gpioConfigureOutput(cfg) || !p.hw->gpioSetOutputTrigger(trig)) {
             ERROR_LOG("The GPIO output settings are not taken (block %u bytes; the input may run with others)", cfg.bufferBytes)
-            p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR);
+            p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR, true);
             return false;
         }
 
@@ -265,13 +298,13 @@ auto GPIOOutStreamServer::start(const CStreamSettings& settings, const GPIOStrea
         auto ramSize = memory->getReserverdMemory(uio_lib::MM_GPIO_OUT);
         if (ramSize < memory->getMinRAMSize(uio_lib::MM_GPIO_OUT)) {
             ERROR_LOG("Not enough memory for the GPIO output")
-            p.stopNonBlocking(GPIOStopReason::MEM_ERROR);
+            p.stopNonBlocking(GPIOStopReason::MEM_ERROR, true);
             return false;
         }
         auto reserved = memory->reserveMemory(uio_lib::MM_GPIO_OUT, ramSize / memory->getMemoryBlockSize(), 1);
         if (reserved < 4) {  // two in the FPGA, one in the receiver, one to fill
             ERROR_LOG("Can't reserve memory via memory manager")
-            p.stopNonBlocking(GPIOStopReason::MEM_ERROR);
+            p.stopNonBlocking(GPIOStopReason::MEM_ERROR, true);
             return false;
         }
         if (p.verbose)
@@ -282,8 +315,15 @@ auto GPIOOutStreamServer::start(const CStreamSettings& settings, const GPIOStrea
         p.ring->generateBuffersEmptyADC(one, memory->getRegions(uio_lib::MM_GPIO_OUT), DataLib::sizeHeader());
 
         p.hw->gpioPrepareOutput();
+        p.clientGone = false;
         p.net = net_lib::CAsioNet::create(net_lib::M_SERVER, options.host, NET_GPIO_OUT_STREAMING_PORT, p.ring);
         p.net->setPackID(DataLib::ID_PACK_GPIO);
+        // the client is gone: the output plays what it sent, then stops
+        auto selfW = std::weak_ptr<Impl>(m_pimpl);
+        p.net->serverDisconnectNotify.connect([selfW](std::string&) {
+            if (auto impl = selfW.lock())
+                impl->clientGone = true;
+        });
         p.net->start();
         p.run = true;
         p.fpgaThread = std::thread(&Impl::fpgaWork, &p);
@@ -293,7 +333,7 @@ auto GPIOOutStreamServer::start(const CStreamSettings& settings, const GPIOStrea
         return true;
     } catch (std::exception& e) {
         ERROR_LOG("GPIOOutStreamServer::start() %s", e.what())
-        p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR);
+        p.stopNonBlocking(GPIOStopReason::CONFIG_ERROR, true);
     }
     return false;
 }
@@ -303,7 +343,7 @@ auto GPIOOutStreamServer::stop(GPIOStopReason reason) -> void {
 }
 
 auto GPIOOutStreamServer::stopNonBlocking(GPIOStopReason reason) -> void {
-    m_pimpl->stopNonBlocking(reason);
+    m_pimpl->stopNonBlocking(reason, false);
 }
 
 auto GPIOOutStreamServer::isRunning() -> bool {

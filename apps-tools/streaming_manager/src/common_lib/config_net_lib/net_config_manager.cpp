@@ -81,7 +81,8 @@ auto CNetConfigManager::startAsioNet(net_lib::EMode _mode, std::string _host, ui
     m_mode = _mode;
     m_host = _host;
     m_port = _port;
-    if (m_host == "" || m_port == 0)
+    // a server without a host listens on every interface
+    if ((m_mode != net_lib::EMode::M_SERVER && m_host == "") || m_port == 0)
         return false;
     return start();
 }
@@ -107,7 +108,8 @@ auto CNetConfigManager::stopAsioNet() -> bool {
 }
 
 bool CNetConfigManager::start() {
-    if (m_host == "" || m_port == 0)
+    // a server without a host listens on every interface
+    if ((m_mode != net_lib::EMode::M_SERVER && m_host == "") || m_port == 0)
         return false;
 
     stopAsioNet();

@@ -284,7 +284,8 @@ auto rp_app_init(void) -> int {
             TRACE("ss_ip_addr %s", ss_ip_addr.Value().c_str());
             session_lib::SessionOptions options;
             options.configFile = config_file;
-            options.host = ss_ip_addr.Value();
+            // the config port on every interface: the address of the page is 127.0.0.1 until the
+            // page sets it, and it is the announced one, not a filter of the clients
             options.adcHost = ss_ip_addr.Value();
             options.broadcastModel = getModel();
             options.broadcastMac = getMACAddress();
@@ -717,6 +718,7 @@ class WebCallback : public session_lib::SessionCallback {
         switch (reason) {
             case R::NORMAL:
             case R::CONFIG_ERROR:
+            case R::DISCONNECTED:
                 ss_status.SendValue(0);
                 break;
             case R::SD_FULL:
@@ -750,6 +752,7 @@ class WebCallback : public session_lib::SessionCallback {
         using R = dac_streaming_lib::DACStopReason;
         switch (reason) {
             case R::NORMAL:
+            case R::DISCONNECTED:
                 ss_dac_status.SendValue(0);
                 break;
             case R::DONE:
@@ -789,6 +792,7 @@ class WebCallback : public session_lib::SessionCallback {
         using R = gpio_streaming_lib::GPIOStopReason;
         switch (reason) {
             case R::NORMAL:
+            case R::DISCONNECTED:
                 ss_gpio_status.SendValue(0);
                 break;
             case R::MEM_ERROR:

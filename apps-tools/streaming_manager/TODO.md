@@ -9,16 +9,15 @@ Found in a review of the code at e26c75a5f. Paths are relative to `src/` unless 
   `os.execute("cp " .. body .. " " .. filename)`. A file name with `;` or `../` runs commands or
   writes outside `/home/redpitaya/streaming_files/dac`. All locations send
   `Access-Control-Allow-Origin: *`.
-- **The config port listens on every interface.** A malformed frame closes only its connection
-  now (`CNetConfigManager::rejectStream`), but any host on the network may connect and change the
-  settings.
+- **The config port listens on every interface by default.** streaming-server takes
+  `--listen ADDRESS` to limit it (the web application keeps every interface: the address of its
+  page is the announced one); the data ports always listen on every interface.
 
-## DAC
+## Broadcast
 
-- **The DAC trigger settings have no consumer.** `CStreamSettings` keeps the DAC trigger keys,
-  `CHardware::dacSetTrigger` exists, `DACStreamServer::start` does not pass them on.
-- **A network DAC client that disconnects is not reported.** The playback goes on with what the
-  ring holds and waits for data until a stop comes over the config port.
+- **`Broadcast.TheConfiguredHostCanChangeWhileAnnouncing` crashed once** (SEGFAULT) in the
+  board image build of 2026-11-06 under `make -j8`; 20 runs in a row afterwards passed. A race of
+  `setIPAddress` with the announcing thread is likely (`broadcast_lib/asio_broadcast_socket.cpp`).
 
 ## GPIO
 
@@ -29,6 +28,3 @@ Found in a review of the code at e26c75a5f. Paths are relative to `src/` unless 
 - **No GPIO file mode.** The settings have no pass mode, file name or format for the GPIO: the input
   goes to the network only, the output comes from the network only.
 - **No GPIO in rpsa_client.** Only the client API (`GPIOStreamClient`) streams GPIO.
-- **A GPIO client that disconnects is not reported**, as with the DAC: the output keeps the lines
-  of the last word (and counts the wait), the input drops its buffers until a stop comes over the
-  config port.

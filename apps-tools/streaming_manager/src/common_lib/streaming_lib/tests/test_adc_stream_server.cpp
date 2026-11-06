@@ -19,6 +19,9 @@
 #include "uio_lib/oscilloscope_dummy.h"
 #include "uio_lib/trigger.h"
 
+#include "asio.hpp"
+#include "net_lib/asio_common.h"
+
 using namespace streaming_lib;
 
 namespace {
@@ -232,4 +235,60 @@ TEST_F(ADCServer, AWrongTriggerLevelIsAConfigurationError) {
     EXPECT_FALSE(server->start(s, options));
     ASSERT_TRUE(recorder->waitStopped());
     EXPECT_EQ(recorder->reasons[0], ADCStopReason::CONFIG_ERROR);
+}
+
+namespace {
+
+auto connectTo(asio::io_context& io, uint16_t port) -> std::unique_ptr<asio::ip::tcp::socket> {
+    auto sock = std::make_unique<asio::ip::tcp::socket>(io);
+    for (int i = 0; i < 100; i++) {
+        asio::error_code ec;
+        sock->connect(asio::ip::tcp::endpoint(asio::ip::make_address("127.0.0.1"), port), ec);
+        if (!ec)
+            return sock;
+        sock->close(ec);
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    return nullptr;
+}
+
+auto netSettings(CStreamSettings& s) -> CStreamSettings& {
+    s.setADCPassMode(CStreamSettings::PassMode::NET);
+    s.setADCChannels(1, CStreamSettings::State::ON);
+    return s;
+}
+
+}  // namespace
+
+TEST_F(ADCServer, ANetworkClientThatLeavesStopsTheStreaming) {
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(netSettings(s)));
+    server->startADC();
+    asio::io_context io;
+    auto client = connectTo(io, NET_ADC_STREAMING_PORT);
+    ASSERT_TRUE(client);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    {
+        std::lock_guard lock(recorder->mtx);
+        EXPECT_TRUE(recorder->reasons.empty()) << "streaming while the client is there";
+    }
+    client->close();
+    ASSERT_TRUE(recorder->waitStopped());
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::lock_guard lock(recorder->mtx);
+    EXPECT_EQ(recorder->reasons, std::vector<ADCStopReason>{ADCStopReason::DISCONNECTED});
+}
+
+TEST_F(ADCServer, AStopWithTheClientConnectedIsReportedOnce) {
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(netSettings(s)));
+    server->startADC();
+    asio::io_context io;
+    auto client = connectTo(io, NET_ADC_STREAMING_PORT);
+    ASSERT_TRUE(client);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    server->stop(ADCStopReason::NORMAL);
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    std::lock_guard lock(recorder->mtx);
+    EXPECT_EQ(recorder->reasons, std::vector<ADCStopReason>{ADCStopReason::NORMAL}) << "the disconnect of our own stop is not a second stop";
 }

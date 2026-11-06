@@ -3,7 +3,8 @@
 
 namespace gpio_streaming_lib {
 
-enum class GPIOStopReason { NORMAL, MEM_ERROR, MEM_MODIFY, CONFIG_ERROR };
+// DISCONNECTED: the network client of the data has gone
+enum class GPIOStopReason { NORMAL, MEM_ERROR, MEM_MODIFY, CONFIG_ERROR, DISCONNECTED };
 
 }  // namespace gpio_streaming_lib
 

@@ -27,6 +27,7 @@ typedef enum { RP_125_14, RP_250_12, RP_125_14_4CH } models_t;
 struct Options {
     bool background;
     std::string conf_file;
+    std::string listen;  // the config port: empty - every interface
     bool verbose;
 
     Options() {

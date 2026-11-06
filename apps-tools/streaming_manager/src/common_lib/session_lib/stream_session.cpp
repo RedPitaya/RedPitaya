@@ -200,6 +200,7 @@ class ADCEvents : public streaming_lib::ADCServerCallback {
         auto& c = *s->config;
         switch (reason) {
             case ADCStopReason::NORMAL:
+            case ADCStopReason::DISCONNECTED:  // the client of the data is gone: an ordinary stop
                 c.sendServerStopped();
                 break;
             case ADCStopReason::SD_FULL:
@@ -256,6 +257,7 @@ class DACEvents : public dac_streaming_lib::DACServerCallback {
         auto& c = *s->config;
         switch (reason) {
             case DACStopReason::NORMAL:
+            case DACStopReason::DISCONNECTED:
                 c.sendDACServerStopped();
                 break;
             case DACStopReason::DONE:
@@ -309,6 +311,7 @@ class GPIOInEvents : public gpio_streaming_lib::GPIOInServerCallback {
         switch (reason) {
             case GPIOStopReason::NORMAL:
             case GPIOStopReason::MEM_MODIFY:  // the protocol has no reply of its own for it
+            case GPIOStopReason::DISCONNECTED:
                 c.sendGPIOInServerStopped();
                 break;
             case GPIOStopReason::MEM_ERROR:
@@ -346,6 +349,7 @@ class GPIOOutEvents : public gpio_streaming_lib::GPIOOutServerCallback {
         switch (reason) {
             case GPIOStopReason::NORMAL:
             case GPIOStopReason::MEM_MODIFY:
+            case GPIOStopReason::DISCONNECTED:
                 c.sendGPIOOutServerStopped(waitClocks);
                 break;
             case GPIOStopReason::MEM_ERROR:
@@ -441,7 +445,7 @@ auto StreamSession::create(uio_lib::CHardware::Ptr hw, const SessionOptions& opt
     connectTriggerCommands(p->config, hw);
 
     if (options.broadcast)
-        c.startBroadcast(options.broadcastModel, options.broadcastMac, options.broadcastHost.empty() ? options.host : options.broadcastHost, options.broadcastPort);
+        c.startBroadcast(options.broadcastModel, options.broadcastMac, !options.broadcastHost.empty() ? options.broadcastHost : !options.host.empty() ? options.host : std::string("127.0.0.1"), options.broadcastPort);
 
     return Ptr(new StreamSession(p));
 }

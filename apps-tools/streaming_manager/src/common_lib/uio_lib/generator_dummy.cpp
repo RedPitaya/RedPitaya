@@ -78,7 +78,10 @@ auto CGenerator::stop() -> void {
 
 auto CGenerator::printReg() -> void {}
 
-auto CGenerator::setTriggerMode(bool, bool) -> bool {
+auto CGenerator::setTriggerMode(bool ch1, bool ch2) -> bool {
+    dummy::genState().triggerMode[0] = ch1;
+    dummy::genState().triggerMode[1] = ch2;
+    dummy::genState().triggerSets++;
     return true;
 }
 
@@ -86,15 +89,17 @@ auto CGenerator::getArmed() -> uint8_t {
     return 0;
 }
 
-auto CGenerator::setTriggerSources(uint32_t) -> bool {
+auto CGenerator::setTriggerSources(uint32_t sources) -> bool {
+    dummy::genState().triggerSources = sources;
     return true;
 }
 
 auto CGenerator::getTriggerSources() -> uint32_t {
-    return 0;
+    return dummy::genState().triggerSources;
 }
 
-auto CGenerator::setEventSource(uint32_t) -> bool {
+auto CGenerator::setEventSource(uint32_t source) -> bool {
+    dummy::genState().eventSource = source;
     return true;
 }
 

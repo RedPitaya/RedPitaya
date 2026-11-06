@@ -435,3 +435,42 @@ TEST(Broadcast, AMessageIsFourFieldsWithAnOptionalTrailingNewline) {
         EXPECT_FALSE(ClientNetConfigManager::parseBroadcast(bad, c)) << bad;
     }
 }
+
+// ---- the address the server listens on ----
+
+namespace {
+
+auto CanConnect(const std::string& address, uint16_t port) -> bool {
+    asio::io_context io;
+    asio::ip::tcp::socket socket(io);
+    asio::error_code ec;
+    socket.connect(asio::ip::tcp::endpoint(asio::ip::make_address(address), port), ec);
+    return !ec;
+}
+
+}  // namespace
+
+TEST(NetConfigListen, WithoutAnAddressTheServerTakesEveryInterface) {
+    const uint16_t port = NextPort();
+    ServerNetConfigManager server(TempFile(port), broadcast_lib::AB_SERVER_MASTER, "", port, 2);
+    EXPECT_TRUE(WaitFor([&] { return CanConnect("127.0.0.1", port); }));
+    EXPECT_TRUE(CanConnect("127.0.0.2", port));
+    std::error_code ec;
+    std::filesystem::remove(TempFile(port), ec);
+}
+
+TEST(NetConfigListen, WithAnAddressTheServerTakesThatOneOnly) {
+    const uint16_t port = NextPort();
+    ServerNetConfigManager server(TempFile(port), broadcast_lib::AB_SERVER_MASTER, "127.0.0.2", port, 2);
+    EXPECT_TRUE(WaitFor([&] { return CanConnect("127.0.0.2", port); }));
+    EXPECT_FALSE(CanConnect("127.0.0.1", port));
+    std::error_code ec;
+    std::filesystem::remove(TempFile(port), ec);
+}
+
+TEST(NetConfigListen, AWrongAddressIsAnError) {
+    const uint16_t port = NextPort();
+    EXPECT_ANY_THROW(ServerNetConfigManager(TempFile(port), broadcast_lib::AB_SERVER_MASTER, "not-an-address", port, 2));
+    std::error_code ec;
+    std::filesystem::remove(TempFile(port), ec);
+}

@@ -38,6 +38,8 @@ auto toReason(CDACStreamingManager::NotifyResult r) -> DACStopReason {
             return DACStopReason::CONFIG_ERROR;
         case CDACStreamingManager::NR_NO_ACTIVE_CNAHHELS:
             return DACStopReason::NO_CHANNELS;
+        case CDACStreamingManager::NR_DISCONNECTED:
+            return DACStopReason::DISCONNECTED;
         default:
             return DACStopReason::NORMAL;
     }
@@ -163,6 +165,17 @@ auto DACStreamServer::start(const CStreamSettings& settings, dac_channels_t chan
             return false;
         }
 
+        // the trigger: a channel in the trigger mode plays on the trigger of the sources
+        uio_lib::DACTrigger trig;
+        trig.enable = {settings.getDACTriggerMode(1).value == CStreamSettings::State::ON, settings.getDACTriggerMode(2).value == CStreamSettings::State::ON};
+        trig.sources = settings.getDACTriggerSources();
+        trig.events = static_cast<uio_lib::EventSource>(static_cast<int>(settings.getDACEventSource().value));
+        if (!p.hw->dacSetTrigger(trig)) {
+            ERROR_LOG("The DAC trigger settings are not taken (sources 0x%X)", trig.sources)
+            p.stopNonBlocking(DACStopReason::CONFIG_ERROR, true);
+            return false;
+        }
+
         auto self = std::weak_ptr<Impl>(m_pimpl);
         bool file = settings.getDACPassMode().value == CStreamSettings::DACPassMode::DAC_FILE;
         if (file) {
@@ -205,6 +218,12 @@ auto DACStreamServer::start(const CStreamSettings& settings, dac_channels_t chan
                 p.stopNonBlocking(DACStopReason::NO_CHANNELS, true);
                 return false;
             }
+            // the client that sends the data disconnects
+            p.manager->notifyStop.connect([self](CDACStreamingManager::NotifyResult r) {
+                auto impl = self.lock();
+                if (impl)
+                    impl->stopNonBlocking(toReason(r), true);
+            });
         }
 
         // memory

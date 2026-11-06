@@ -142,15 +142,19 @@ CDACStreamingManager::~CDACStreamingManager() {
 
 auto CDACStreamingManager::startServer() -> void {
     m_asionet = nullptr;
+    m_clientGone = false;
     m_asionet = net_lib::CAsioNet::create(net_lib::M_SERVER, m_host, NET_DAC_STREAMING_PORT, m_buffer);
 
     m_asionet->serverConnectNotify.connect([=, this](std::string& host) {
         if (m_verbose)
             aprintf(stdout, "Client connected to DAC streaming server %s\n", host.c_str());
     });
+    // the client that sends the data is gone: the application plays what came and then stops
+    // (a client sends a file and leaves while the DMA repeats it)
     m_asionet->serverDisconnectNotify.connect([=, this](std::string& host) {
         if (m_verbose)
             aprintf(stdout, "Client disconnected from DAC streaming server %s\n", host.c_str());
+        m_clientGone = true;
     });
 
     m_asionet->start();
@@ -317,6 +321,10 @@ auto CDACStreamingManager::threadFunc() -> void {
 
 auto CDACStreamingManager::isRunned() -> bool {
     return m_isThreadRun;
+}
+
+auto CDACStreamingManager::isClientGone() -> bool {
+    return m_clientGone;
 }
 
 auto CDACStreamingManager::isLocalMode() -> bool {

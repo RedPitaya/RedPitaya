@@ -38,7 +38,11 @@ void CStreamingNet::startServer() {
     m_index_of_message = 0;
     m_asionet = new net_lib::CAsioNet(net_lib::EMode::M_SERVER, m_host, m_port, nullptr);
     m_asionet->serverConnectNotify.connect([](std::string host) { aprintf(stdout, "Connected %s\n", host.c_str()); });
-    m_asionet->serverDisconnectNotify.connect([](std::string host) { aprintf(stdout, "Disconnect %s\n", host.c_str()); });
+    m_asionet->serverDisconnectNotify.connect([this](std::string host) {
+        aprintf(stdout, "Disconnect %s\n", host.c_str());
+        if (clientGone)
+            clientGone();
+    });
     m_asionet->start();
 }
 
