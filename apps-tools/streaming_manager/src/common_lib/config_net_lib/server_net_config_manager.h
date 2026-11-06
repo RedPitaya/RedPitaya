@@ -71,6 +71,15 @@ class ServerNetConfigManager {
     auto sendGPIOOutServerStopped(uint64_t waitClocks) -> bool;
     auto sendGPIOOutServerMemoryErrorStopped() -> bool;
     auto sendGPIOOutServerConfigErrorStopped() -> bool;
+    auto sendGPIOInServerStartedSD() -> bool;
+    auto sendGPIOInServerStoppedSDFull() -> bool;
+    auto sendGPIOInServerStoppedSDDone() -> bool;
+    auto sendGPIOInServerStoppedSDBroken() -> bool;
+    auto sendGPIOOutServerStartedSD() -> bool;
+    auto sendGPIOOutServerStoppedSDDone(uint64_t waitClocks) -> bool;
+    auto sendGPIOOutServerStoppedSDEmpty() -> bool;
+    auto sendGPIOOutServerStoppedSDBroken() -> bool;
+    auto sendGPIOOutServerStoppedSDMissingFile() -> bool;
 
     auto sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool;
     auto sendSoftwareTriggerFail(CNetConfigManager::ETriggerTarget target) -> bool;

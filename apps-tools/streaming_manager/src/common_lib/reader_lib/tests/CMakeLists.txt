@@ -28,6 +28,7 @@ endif()
 add_executable(reader_lib_tests
     test_metadata_cursor.cpp
     test_sources.cpp
+    test_gpio_file_reader.cpp
 )
 
 target_include_directories(reader_lib_tests PRIVATE
@@ -48,6 +49,7 @@ target_link_directories(reader_lib_tests
 target_link_libraries(reader_lib_tests PRIVATE
     ${PROJECT_NAME}
     tdms_lib
+    bin_lib
     settings_lib
     data_lib
     logger_lib

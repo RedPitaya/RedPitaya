@@ -1,6 +1,7 @@
 #include "gpio_out_stream_server.h"
 
 #include <atomic>
+#include <filesystem>
 #include <chrono>
 #include <mutex>
 #include <optional>
@@ -15,6 +16,7 @@
 #include "logger_lib/file_logger.h"
 #include "net_lib/asio_net.h"
 #include "uio_lib/memory_manager.h"
+#include "reader_lib/gpio_file_reader.h"
 
 using namespace gpio_streaming_lib;
 using DataLib::CBuffersCached;
@@ -48,7 +50,10 @@ struct GPIOOutStreamServer::Impl {
     // the run
     std::atomic<bool> run{false};
     std::atomic<bool> playing{false};  // the output started
-    std::atomic<bool> clientGone{false};  // the client left: what it sent is played, then the stop
+    std::atomic<bool> clientGone{false};  // no more data (the client left, the file ended): what came plays, then the stop
+    GPIOStopReason endReason = GPIOStopReason::DISCONNECTED;  // the stop after it
+    std::unique_ptr<CGpioFileReader> reader;  // the file mode
+    std::thread fileThread;                    // the file into the ring
     CBuffersCached::Ptr ring;
     net_lib::CAsioNet::Ptr net;
     std::thread fpgaThread;  // the client's buffers to the FPGA
@@ -61,6 +66,7 @@ struct GPIOOutStreamServer::Impl {
     auto prefill() -> void;
     auto fpgaWork() -> void;
     auto waitPlayedOut() -> void;
+    auto fileWork() -> void;
     template <typename F>
     auto notify(F f) -> void {
         std::shared_ptr<GPIOOutServerCallback> cb;
@@ -94,6 +100,9 @@ auto GPIOOutStreamServer::Impl::teardown() -> uint64_t {
     }
     if (fpgaThread.joinable())
         fpgaThread.join();
+    if (fileThread.joinable())
+        fileThread.join();
+    reader.reset();
     net = nullptr;
     ring = nullptr;
     uio_lib::CMemoryManager::instance()->releaseMemory(uio_lib::MM_GPIO_OUT);
@@ -169,14 +178,14 @@ auto GPIOOutStreamServer::Impl::fpgaWork() -> void {
     try {
         prefill();
         while (run) {
-            auto pack = ring->readBuffer();
-            if (!pack) {
-                if (clientGone && ring->filled() == 0) {
-                    drained = true;
-                    break;
-                }
-                continue;
+            // no more data and nothing left: no wait for a buffer that does not come
+            if (clientGone && ring->filled() == 0) {
+                drained = true;
+                break;
             }
+            auto pack = ring->readBuffer();
+            if (!pack)
+                continue;
             auto buffer = bufferOf(pack);
             DataLib::GPIOHeader header;
             size_t size = buffer->getDataLenght();
@@ -216,8 +225,8 @@ auto GPIOOutStreamServer::Impl::fpgaWork() -> void {
         if (playing)
             waitPlayedOut();
         if (verbose)
-            aprintf(stdout, "[GPIO] The client has gone, its data is played\n");
-        stopNonBlocking(GPIOStopReason::DISCONNECTED, true);
+            aprintf(stdout, "[GPIO] No more data (%s), what came is played\n", endReason == GPIOStopReason::DONE ? "the end of the file" : "the client has gone");
+        stopNonBlocking(endReason, true);
         // the stop tears down: the output stops, then the packs still held go back below
     }
     // the output is stopped by now (teardown): the packs still held go back
@@ -238,6 +247,34 @@ auto GPIOOutStreamServer::Impl::waitPlayedOut() -> void {
         if (hw->gpioStatus().outputWait > w0)
             return;
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+}
+
+// The file mode: the words of the file into the ring, a pack at a time, the last one in part
+auto GPIOOutStreamServer::Impl::fileWork() -> void {
+    uint64_t id = 0;
+    try {
+        while (run) {
+            auto pack = ring->writeBuffer(true);
+            if (!pack || !run)
+                break;
+            auto buffer = bufferOf(pack);
+            size_t got = 0;
+            const auto result = reader->read(static_cast<uint32_t*>(buffer->getMappedDataMemory()), buffer->getDataLenght() / 4, got);
+            if (got) {
+                DataLib::GPIOHeader h;
+                h.dataSize = static_cast<uint32_t>(got * 4);
+                DataLib::setHeaderGPIO(buffer, id++, h);
+                ring->unlockBufferWrite();
+            }
+            if (result == CGpioFileReader::Result::ENDED) {
+                endReason = GPIOStopReason::DONE;
+                clientGone = true;
+                break;
+            }
+        }
+    } catch (std::exception& e) {
+        ERROR_LOG("GPIOOutStreamServer file %s", e.what())
     }
 }
 
@@ -293,6 +330,28 @@ auto GPIOOutStreamServer::start(const CStreamSettings& settings, const GPIOStrea
             return false;
         }
 
+        // the file mode: the file is there and holds words for the output
+        const bool fromFile = settings.getGPIOOutPassMode().value == CStreamSettings::PassMode::FILE;
+        if (fromFile) {
+            const auto dir = options.dirPath.empty() ? CStreamSettings::getGPIODirPath() : options.dirPath;
+            const auto name = settings.getGPIOOutFile();
+            const auto path = dir + "/" + name;
+            if (name.empty() || !std::filesystem::exists(path)) {
+                ERROR_LOG("The GPIO output file %s is missing", path.c_str())
+                p.stopNonBlocking(GPIOStopReason::MISSING_FILE, true);
+                return false;
+            }
+            p.reader = std::make_unique<CGpioFileReader>(path, settings.getGPIOOutRepeat(), settings.getGPIOOutRepeatCount(), cfg.rle,
+                                                         settings.getGPIOOutPlayGaps().value == CStreamSettings::State::ON);
+            const auto opened = p.reader->isOpen();
+            if (opened != CGpioFileReader::Open::OK) {
+                ERROR_LOG("The GPIO output can't play %s: %s", path.c_str(), p.reader->error().c_str())
+                p.reader.reset();
+                p.stopNonBlocking(opened == CGpioFileReader::Open::EMPTY ? GPIOStopReason::EMPTY : GPIOStopReason::BROKEN, true);
+                return false;
+            }
+        }
+
         auto memory = uio_lib::CMemoryManager::instance();
         memory->releaseMemory(uio_lib::MM_GPIO_OUT);
         auto ramSize = memory->getReserverdMemory(uio_lib::MM_GPIO_OUT);
@@ -316,18 +375,27 @@ auto GPIOOutStreamServer::start(const CStreamSettings& settings, const GPIOStrea
 
         p.hw->gpioPrepareOutput();
         p.clientGone = false;
-        p.net = net_lib::CAsioNet::create(net_lib::M_SERVER, options.host, NET_GPIO_OUT_STREAMING_PORT, p.ring);
-        p.net->setPackID(DataLib::ID_PACK_GPIO);
-        // the client is gone: the output plays what it sent, then stops
-        auto selfW = std::weak_ptr<Impl>(m_pimpl);
-        p.net->serverDisconnectNotify.connect([selfW](std::string&) {
-            if (auto impl = selfW.lock())
-                impl->clientGone = true;
-        });
-        p.net->start();
-        p.run = true;
+        p.endReason = GPIOStopReason::DISCONNECTED;
+        if (fromFile) {
+            p.run = true;
+            p.fileThread = std::thread(&Impl::fileWork, &p);
+        } else {
+            p.net = net_lib::CAsioNet::create(net_lib::M_SERVER, options.host, NET_GPIO_OUT_STREAMING_PORT, p.ring);
+            p.net->setPackID(DataLib::ID_PACK_GPIO);
+            // the client is gone: the output plays what it sent, then stops
+            auto selfW = std::weak_ptr<Impl>(m_pimpl);
+            p.net->serverDisconnectNotify.connect([selfW](std::string&) {
+                if (auto impl = selfW.lock())
+                    impl->clientGone = true;
+            });
+            p.net->start();
+            p.run = true;
+        }
         p.fpgaThread = std::thread(&Impl::fpgaWork, &p);
-        p.notify([&](GPIOOutServerCallback* cb) { cb->started(this); });
+        if (fromFile)
+            p.notify([&](GPIOOutServerCallback* cb) { cb->startedSD(this); });
+        else
+            p.notify([&](GPIOOutServerCallback* cb) { cb->started(this); });
         if (p.verbose)
             aprintf(stdout, "[Streaming] Start gpio output server\n");
         return true;

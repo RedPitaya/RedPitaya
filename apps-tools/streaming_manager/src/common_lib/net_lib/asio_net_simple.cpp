@@ -45,6 +45,10 @@ auto CAsioNetSimple::disconnect() -> void {
     m_IsRun = false;
 }
 
+auto CAsioNetSimple::waitSent(std::chrono::milliseconds timeout) -> bool {
+    return m_server && m_server->waitSent(timeout);
+}
+
 auto CAsioNetSimple::closeConnection() -> void {
     if (m_server)
         m_server->closeConnection();

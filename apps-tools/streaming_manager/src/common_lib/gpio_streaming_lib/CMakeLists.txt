@@ -48,7 +48,7 @@ list(APPEND src
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC data_lib net_lib uio_lib settings_lib logger_lib
+    PUBLIC data_lib net_lib uio_lib settings_lib logger_lib writer_lib reader_lib bin_lib
     PRIVATE pthread stdc++)
 
 

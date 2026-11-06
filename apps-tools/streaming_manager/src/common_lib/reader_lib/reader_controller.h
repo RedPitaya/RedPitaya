@@ -12,6 +12,9 @@
 namespace TDMS {
 class FileReader;
 }
+namespace bin_lib {
+class FileReader;
+}
 class CWaveReader;
 
 /**
@@ -26,6 +29,9 @@ class CWaveReader;
  * TDMS: the channels "ch1" and "ch2" of the group "Group", or of the first group that has them;
  * any other channel (the time column, the buffer rows of a recording) is ignored.
  * WAV: PCM, 8 or 16 bit, mono or stereo.
+ * BIN (bin_lib): the int8 or int16 channels 1 and 2 of a recording or of a signal made for the
+ * DAC. With gaps the samples lost and waited for a trigger in the recording are played as zeros,
+ * so that it plays in its own time; without them the samples follow each other.
  */
 class CReaderController {
    public:
@@ -57,11 +63,12 @@ class CReaderController {
     enum BufferResult { BR_OK = 0, BR_ENDED = 1, BR_BROKEN = 2, BR_EMPTY = 3 };
 
     using Ptr = std::shared_ptr<CReaderController>;
-    static Ptr Create(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
+    static Ptr Create(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize, bool gaps = false);
 
     static Ptr Create(DataIn* dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
 
-    CReaderController(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
+    // gaps: BIN only, the gaps of the recording are played
+    CReaderController(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize, bool gaps = false);
 
     // Takes over dataIn; its sample memory stays the caller's
     CReaderController(DataIn* dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize);
@@ -89,6 +96,7 @@ class CReaderController {
 
     auto openTDMS() -> OpenResult;
     auto openWav() -> OpenResult;
+    auto openBin() -> OpenResult;
     auto openMemory() -> OpenResult;
     auto openSink() -> OpenResult;
     // Up to n samples of every channel from m_position into dst + offset; how many
@@ -111,6 +119,9 @@ class CReaderController {
     std::unique_ptr<TDMS::FileReader> m_tdms;
     std::string m_tdmsGroup;
     std::unique_ptr<CWaveReader> m_wav;
+    std::unique_ptr<bin_lib::FileReader> m_bin;
+    uint8_t m_binChannel[MAX_DAC_CHANNELS] = {0, 0};  // the channels of the file for DAC 1 and 2
+    bool m_gaps = false;
     std::vector<uint8_t> m_frames;  // interleaved stereo frames on their way to the two blocks
     DataIn* m_genData;
     MemoryStreamSink* m_memSink;

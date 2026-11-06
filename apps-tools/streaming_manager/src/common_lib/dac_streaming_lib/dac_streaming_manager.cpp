@@ -8,12 +8,12 @@
 using namespace dac_streaming_lib;
 
 CDACStreamingManager::Ptr CDACStreamingManager::Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count,
-                                                       uint32_t blockSize, bool verbose) {
-    return std::make_shared<CDACStreamingManager>(_fileType, _filePath, _repeat, _rep_count, blockSize, verbose);
+                                                       uint32_t blockSize, bool verbose, bool gaps) {
+    return std::make_shared<CDACStreamingManager>(_fileType, _filePath, _repeat, _rep_count, blockSize, verbose, gaps);
 }
 
 CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize,
-                                           bool verbose)
+                                           bool verbose, bool gaps)
     : m_use_local_file(true),
       m_fileType(_fileType),
       m_host(""),
@@ -38,10 +38,13 @@ CDACStreamingManager::CDACStreamingManager(DACStream_FileType _fileType, std::st
         case DACStream_FileType::WAV_TYPE:
             type = CStreamSettings::DataFormat::WAV;
             break;
+        case DACStream_FileType::BIN_TYPE:
+            type = CStreamSettings::DataFormat::BIN;
+            break;
         default:
             FATAL("Error type of file")
     }
-    m_readerController = new CReaderController(type, m_filePath, m_repeat, m_rep_count, blockSize);
+    m_readerController = new CReaderController(type, m_filePath, m_repeat, m_rep_count, blockSize, gaps);
 }
 
 CDACStreamingManager::Ptr CDACStreamingManager::Create(std::string _host, bool verbose) {

@@ -1,6 +1,7 @@
 #ifndef CONFIG_NET_LIB_NCM_H
 #define CONFIG_NET_LIB_NCM_H
 
+#include <chrono>
 #include <mutex>
 #include "data_lib/signal.hpp"
 #include "net_lib/asio_common.h"
@@ -99,7 +100,19 @@ class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager>
         // tag: the clocks the output waited for a buffer of the client (decimal)
         CS_RESPONSE_GPIO_OUT_SERVER_STOPPED = 61,
         CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_MEM_ERROR = 62,
-        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR = 63
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR = 63,
+
+        // The GPIO file mode (gpio_in_pass_mode, gpio_out_pass_mode FILE)
+        CS_RESPONSE_GPIO_IN_SERVER_STARTED_SD = 64,
+        CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_FULL = 65,
+        CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_DONE = 66,    // the sample limit is written
+        CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_BROKEN = 67,  // the file cannot be written
+        CS_RESPONSE_GPIO_OUT_SERVER_STARTED_SD = 68,
+        // tag: the clocks the output waited for the data (decimal)
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_DONE = 69,  // the file is played to its end
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_EMPTY = 70,
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_BROKEN = 71,
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING = 72
     };
 
     // Block that a software trigger is sent to; wire values like ECommands.
@@ -115,6 +128,8 @@ class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager>
 
     auto startAsioNet(net_lib::EMode _mode, std::string _host, uint16_t _port) -> bool;
     auto stopAsioNet() -> bool;
+    // Waits up to timeout for the queued messages to be written
+    auto waitSent(std::chrono::milliseconds timeout) -> bool;
     auto isConnected() -> bool;
     auto getHost() -> std::string;
     auto getPort() -> uint16_t;
@@ -170,5 +185,6 @@ static_assert(CNetConfigManager::CS_REQUEST_DAC_SERVER_START == 31);
 static_assert(CNetConfigManager::CS_RESPONSE_SERVER_MODE_SD == 45);
 static_assert(CNetConfigManager::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_CONFIG_ERROR == 57);
 static_assert(CNetConfigManager::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR == 63);
+static_assert(CNetConfigManager::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING == 72);
 
 #endif

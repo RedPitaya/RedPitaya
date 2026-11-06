@@ -106,6 +106,8 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setGPIOOutFile("out.bin");
     s.setGPIOOutRepeat(CStreamSettings::GPIORepeat::GPIO_REP_INF);
     s.setGPIOOutRepeatCount(9);
+    s.setGPIOOutPlayGaps(State::ON);
+    s.setDACPlayGaps(State::ON);
 }
 
 auto SameSettings(const CStreamSettings& a, const CStreamSettings& b) -> ::testing::AssertionResult {
@@ -190,6 +192,8 @@ TEST(StreamSettings, TheDefaultsAreTheOnesDeclaredInTheHeader) {
     EXPECT_EQ(s.getGPIOOutFile(), "");
     EXPECT_EQ(s.getGPIOOutRepeat(), CStreamSettings::GPIORepeat::GPIO_REP_OFF);
     EXPECT_EQ(s.getGPIOOutRepeatCount(), 0u);
+    EXPECT_EQ(s.getGPIOOutPlayGaps(), State::OFF);
+    EXPECT_EQ(s.getDACPlayGaps(), State::OFF);
 }
 
 // The range of every checked setter, at both bounds; a rejected value is not stored.
@@ -332,19 +336,13 @@ TEST(StreamSettings, DecimationIsOneToSixtyFiveThousandFiveHundredThirtySix) {
     EXPECT_NE(CStreamSettings::getHelp().find("1-65536"), std::string::npos);
 }
 
-// BIN is a valid ADC recording format but not a valid DAC playback format, and
-// the setter enforces that by refusing the write. Callers that ignore the
-// return value silently keep the previous type - parseJson is one of them.
-TEST(StreamSettings, TheDacFileTypeRefusesBin) {
+// The BIN stream file plays on the DAC like WAV and TDMS
+TEST(StreamSettings, TheDacPlaysEveryFileFormat) {
     CStreamSettings s;
-    ASSERT_TRUE(s.setDACFileType(DataFormat::TDMS));
-    EXPECT_EQ(s.getDACFileType(), DataFormat::TDMS);
-
-    EXPECT_FALSE(s.setDACFileType(DataFormat::BIN));
-    EXPECT_EQ(s.getDACFileType(), DataFormat::TDMS) << "the rejected write must leave the old value";
-
-    EXPECT_TRUE(s.setDACFileType(DataFormat::WAV));
-    EXPECT_EQ(s.getDACFileType(), DataFormat::WAV);
+    for (auto f : {DataFormat::TDMS, DataFormat::BIN, DataFormat::WAV}) {
+        EXPECT_TRUE(s.setDACFileType(f));
+        EXPECT_EQ(s.getDACFileType(), f);
+    }
 }
 
 TEST(StreamSettings, ScalarSettersStoreExactlyWhatTheyAreGiven) {
@@ -476,7 +474,7 @@ TEST(StreamSettings, GetHelpNamesEveryKeyTheKeyValueInterfaceAccepts) {
                             "gpio_pattern_neg_edge", "gpio_trigger_sources", "gpio_event_source", "gpio_in_trigger_mode",
                             "gpio_out_trigger_mode", "gpio_trigger_blocks", "gpio_in_pass_mode", "gpio_in_format_sd",
                             "gpio_in_samples_limit_sd", "gpio_out_pass_mode", "gpio_out_file_sd", "gpio_out_repeat",
-                            "gpio_out_repeat_count"}) {
+                            "gpio_out_repeat_count", "gpio_out_play_gaps", "dac_play_gaps"}) {
         EXPECT_NE(help.find(key), std::string::npos) << "missing key " << key;
     }
     for (int i = 1; i <= 4; i++) {

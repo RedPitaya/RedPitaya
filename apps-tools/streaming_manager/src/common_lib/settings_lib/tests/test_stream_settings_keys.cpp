@@ -96,6 +96,8 @@ const std::vector<KeyValue> kAllKeys = {
     {"gpio_out_file_sd", "pattern.bin"},
     {"gpio_out_repeat", "GPIO_REP_ON"},
     {"gpio_out_repeat_count", "17"},
+    {"gpio_out_play_gaps", "ON"},
+    {"dac_play_gaps", "ON"},
 };
 
 }  // namespace
@@ -191,11 +193,10 @@ TEST(StreamSettingsKeys, ARangeCheckedValueIsReportedByItsSetter) {
     EXPECT_FALSE(s.setValue("adc_decimation", "65537"));
     EXPECT_EQ(s.getValue("adc_decimation"), "65536") << "the rejected value must not be stored";
 
-    // file_type_sd goes through setDACFileType, which refuses BIN, and setValue
-    // now passes that answer on instead of reporting success.
-    EXPECT_TRUE(s.setValue("file_type_sd", "TDMS"));
-    EXPECT_FALSE(s.setValue("file_type_sd", "BIN"));
-    EXPECT_EQ(s.getValue("file_type_sd"), "TDMS") << "and nothing was written";
+    // file_type_sd takes BIN too: the BIN stream file plays on the DAC
+    EXPECT_TRUE(s.setValue("file_type_sd", "BIN"));
+    EXPECT_EQ(s.getValue("file_type_sd"), "BIN");
+    EXPECT_FALSE(s.setValue("file_type_sd", "MP3"));
 }
 
 // to_uint/to_uint64 check for overflow instead of wrapping, so a value too wide

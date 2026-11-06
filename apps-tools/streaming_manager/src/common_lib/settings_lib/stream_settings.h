@@ -110,6 +110,9 @@ class CStreamSettings {
     auto getDACRepeat() const -> DACRepeat;
     auto setDACRepeatCount(uint32_t _value) -> void;
     auto getDACRepeatCount() const -> uint32_t;
+    // A BIN recording plays its lost and trigger wait samples (as 0): in its own time
+    auto setDACPlayGaps(State _value) -> void;
+    auto getDACPlayGaps() const -> State;
 
     // stream_app triggers of the ADC: trigger mode, block mode, level trigger in ADC codes
     auto setADCTriggerMode(State _value) -> void;
@@ -193,6 +196,9 @@ class CStreamSettings {
     auto getGPIOOutRepeat() const -> GPIORepeat;
     auto setGPIOOutRepeatCount(uint32_t _count) -> void;
     auto getGPIOOutRepeatCount() const -> uint32_t;
+    // A BIN recording of the input plays its lost and trigger wait samples (the lines hold)
+    auto setGPIOOutPlayGaps(State _value) -> void;
+    auto getGPIOOutPlayGaps() const -> State;
 
     // The data bytes of a memory block, a multiple of MEMORY_BLOCK_ALIGN (the DMA bursts) from
     // MEMORY_BLOCK_ALIGN to MEMORY_BLOCK_MAX; whether the board's RAM holds it is the memory
@@ -259,6 +265,7 @@ class CStreamSettings {
         DACRepeat m_repeat = DACRepeat::DAC_REP_OFF;
         uint64_t m_memoryUsage = 1024 * 1024;
         uint32_t m_repeatCount = 0;
+        State m_playGaps = State::OFF;
         uint32_t m_rate = 125000000;
         State m_trigMode[2] = {State::OFF, State::OFF};
         uint32_t m_trigSources = 0;
@@ -295,6 +302,7 @@ class CStreamSettings {
         std::string m_outFile;
         GPIORepeat m_outRepeat = GPIORepeat::GPIO_REP_OFF;
         uint32_t m_outRepeatCount = 0;
+        State m_outPlayGaps = State::OFF;
     };
 
     ADCSettings m_adcsettings;

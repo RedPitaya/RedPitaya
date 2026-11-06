@@ -317,8 +317,8 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\tThis mode allows you to generate output data using a signal from a file.\n"
         "\n"
         "\tOptions:\n"
-        "\t\t%s -o [-h IPs] -f tdms|wav -d FILE_NAME [-r inf|COUNT] [-v] [-b]\n"
-        "\t\t%s --out_streaming [--hosts=IPs] --format=tdms|wav --data=FILE_NAME [--repeat=inf|COUNT] [--verbose]\n"
+        "\t\t%s -o [-h IPs] -f tdms|wav|bin -d FILE_NAME [-r inf|COUNT] [-v] [-b]\n"
+        "\t\t%s --out_streaming [--hosts=IPs] --format=tdms|wav|bin --data=FILE_NAME [--repeat=inf|COUNT] [--verbose]\n"
         "\n"
         "\t\t--out_streaming        -o              Enable dac streaming mode.\n"
         "\t\t--hosts=IP,...         -h IP,...       You can specify one or more board IP addresses through a separator - ','\n"
@@ -329,6 +329,7 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\t\t--format=FORMAT        -f FORMAT       The format in which the data will be used.\n"
         "\t\t                                       Keys: tdsm = NI TDMS File Format.\n"
         "\t\t                                             wav = Waveform Audio File Format.\n"
+        "\t\t                                             bin = The BIN stream file (channels 1 and 2 of a recording).\n"
         "\t\t--data=FILE_NAME       -d FILE_NAME    Path to the file for streaming.\n"
         "\t\t                                       Important! Data must be a multiple of 128 bytes, otherwise there will be artifacts on the signal.\n"
         "\t\t--repeat=inf|COUNT     -r inf|COUNT    The number of times the file has been resent.\n"
@@ -729,6 +730,8 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                         opt.streamign_type = StreamingType::TDMS;
                     } else if (strcmp(optarg, "wav") == 0) {
                         opt.streamign_type = StreamingType::WAV;
+                    } else if (strcmp(optarg, "bin") == 0) {
+                        opt.streamign_type = StreamingType::BIN;
                     } else {
                         fprintf(stderr, "Error key --format: %s\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;

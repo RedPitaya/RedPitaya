@@ -61,7 +61,7 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/output/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib wav_lib writer_lib logger_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC converter_lib wav_lib writer_lib bin_lib logger_lib)
 
 if(NOT WIN32 )
     if (${CMAKE_BUILD_TYPE} STREQUAL "Release")

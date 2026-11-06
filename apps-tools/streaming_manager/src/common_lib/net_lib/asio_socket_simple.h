@@ -1,6 +1,7 @@
 #ifndef NET_LIB_ASIO_SOCKET_SIMPLE_H
 #define NET_LIB_ASIO_SOCKET_SIMPLE_H
 
+#include <chrono>
 #include <deque>
 #include <future>
 #include <mutex>
@@ -31,6 +32,9 @@ class CAsioSocketSimple {
     auto closeSocket() -> void;
     // Closes the current connection only: a server goes on accepting.
     auto closeConnection() -> void;
+    // Waits up to timeout for the queued buffers to be written (not on the asio thread); true when
+    // nothing is left to write
+    auto waitSent(std::chrono::milliseconds timeout) -> bool;
     // True only while a connection is established.
     auto isConnected() -> bool;
     auto runningInIoThread() -> bool;

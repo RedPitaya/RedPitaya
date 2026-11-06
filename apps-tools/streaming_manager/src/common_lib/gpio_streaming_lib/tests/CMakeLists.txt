@@ -25,6 +25,7 @@ target_include_directories(gpio_streaming_lib_tests PRIVATE ${COMMON_LIB_DIR})
 
 target_link_libraries(gpio_streaming_lib_tests PRIVATE
     ${PROJECT_NAME}
+    bin_lib
     board_lib
     uio_lib
     data_lib

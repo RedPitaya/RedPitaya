@@ -2,6 +2,7 @@
 #define NET_LIB_ASIO_NET_SIMPLE_H
 
 #include <atomic>
+#include <chrono>
 #include "data_lib/signal.hpp"
 #include "net_lib/asio_common.h"
 
@@ -22,6 +23,8 @@ class CAsioNetSimple {
     auto disconnect() -> void;
     // Closes the current connection; a server goes on accepting.
     auto closeConnection() -> void;
+    // Waits up to timeout for what is queued to be written
+    auto waitSent(std::chrono::milliseconds timeout) -> bool;
 
     sigslot::signal<std::string&> connectNotify;
     sigslot::signal<std::string&> disconnectNotify;

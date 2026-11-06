@@ -28,6 +28,7 @@
 #include "net_lib/asio_common.h"
 #include "net_lib/asio_net.h"
 #include "data_lib/buffers_cached.h"
+#include "bin_lib/bin_file.h"
 
 using namespace dac_streaming_lib;
 using namespace std::chrono_literals;
@@ -463,4 +464,57 @@ TEST_F(DACServer, TheRepeatsOfAPackGoOnAfterTheClientLeft) {
     ASSERT_TRUE(recorder->waitStopped());
     EXPECT_EQ(played.load(), 50);
     EXPECT_EQ(recorder->stops(), std::vector<DACStopReason>{DACStopReason::DONE});
+}
+
+namespace {
+
+// A recording of one int16 channel: buffer b of kBlockSamples holds b * kBlockSamples + k; buffer 1
+// comes after `gap` lost samples
+auto writeBinRamp(const std::filesystem::path& path, int buffers, uint64_t gap) -> void {
+    bin_lib::FileInfo info;
+    info.channels = {{1, bin_lib::SampleType::INT16, 0, 14}};
+    auto out = bin_lib::fileHeader(info);
+    bin_lib::Timeline line;
+    for (int b = 0; b < buffers; b++) {
+        std::vector<int16_t> s(kBlockSamples);
+        for (uint32_t k = 0; k < kBlockSamples; k++)
+            s[k] = static_cast<int16_t>(b * kBlockSamples + k);
+        bin_lib::BlockInfo block;
+        block.samples = kBlockSamples;
+        block.lost = b == 1 ? gap : 0;
+        block.position = line.next(0, block.lost, 0, kBlockSamples);
+        bin_lib::appendBlock(out, block, s.data(), kBlock);
+    }
+    std::ofstream f(path, std::ios::binary | std::ios::trunc);
+    f.write(reinterpret_cast<const char*>(out.data()), static_cast<std::streamsize>(out.size()));
+}
+
+}  // namespace
+
+// The BIN stream file plays on the DAC, with the gaps of the recording or without them
+TEST_F(DACServer, ABinRecordingPlaysWithOrWithoutItsGaps) {
+    writeBinRamp(dir / "rec.bin", 3, kBlockSamples);  // a whole buffer lost before buffer 1
+    for (bool gaps : {false, true}) {
+        std::mutex mtx;
+        std::vector<int16_t> firsts;
+        uio_lib::dummy::genState().taken = [&](uint8_t, uint32_t ch1, uint32_t, uint32_t) {
+            auto p = samplesAt(ch1);
+            std::lock_guard lock(mtx);
+            firsts.push_back(p ? p[0] : -1);
+        };
+        recorder = std::make_shared<Recorder>();
+        server->setCallback(recorder);
+        CStreamSettings s;
+        fileSettings(s, "rec.bin");
+        ASSERT_TRUE(s.setDACFileType(CStreamSettings::DataFormat::BIN));
+        s.setDACPlayGaps(gaps ? CStreamSettings::State::ON : CStreamSettings::State::OFF);
+        ASSERT_TRUE(server->start(s, dac_channels_t(), options));
+        ASSERT_TRUE(recorder->waitStopped());
+        EXPECT_EQ(recorder->stops(), std::vector<DACStopReason>{DACStopReason::DONE});
+        std::lock_guard lock(mtx);
+        if (gaps)
+            EXPECT_EQ(firsts, (std::vector<int16_t>{0, 0, static_cast<int16_t>(kBlockSamples), static_cast<int16_t>(2 * kBlockSamples)})) << "the lost buffer as zeros";
+        else
+            EXPECT_EQ(firsts, (std::vector<int16_t>{0, static_cast<int16_t>(kBlockSamples), static_cast<int16_t>(2 * kBlockSamples)}));
+    }
 }

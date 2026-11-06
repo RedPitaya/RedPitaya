@@ -1,8 +1,8 @@
 /**
  * The segments of the recording formats and CStreamingFile writing them.
  *
- * BIN keeps its bytes (convert_tool reads them): the chunk is compared with the former
- * stringstream builder, kept here as the reference. TDMS segments reference the converted buffers
+ * BIN is the stream file of bin_lib: the file header with the first chunk, a block per channel
+ * and pack, read back by bin_lib::FileReader. TDMS segments reference the converted buffers
  * and are read back by the new FileReader and by the former TDMS::File, which reader_lib still
  * uses for the DAC. WAV keeps its header and interleaving.
  */
@@ -23,6 +23,7 @@
 #include "tdms_lib/file.h"
 #include "tdms_lib/tdms.h"
 #include "wav_lib/wav_writer.h"
+#include "bin_lib/bin_file.h"
 #include "writer_lib/file_helper.h"
 
 using data_test::Arena;
@@ -68,35 +69,6 @@ auto MakePack(Arena& arena, int n, uint64_t lost = 0) -> DataLib::CDataBuffersPa
     return pack;
 }
 
-// The former buildBINStream, as the reference for the BIN bytes
-auto FormerBIN(DataLib::CDataBuffersPackDMA::Ptr pack, std::map<DataLib::EDataBuffersPackChannel, uint32_t> samples) -> std::string {
-    static constexpr uint8_t end[12] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    std::ostringstream memory(std::ios::binary);
-    CBinInfo::BinHeader header;
-    std::memset(static_cast<void*>(&header), 0, sizeof(header));  // the padding, as buildBINChunk writes it
-    DataLib::CDataBufferDMA::Ptr ch[4] = {pack->getBuffer(DataLib::CH1), pack->getBuffer(DataLib::CH2), pack->getBuffer(DataLib::CH3), pack->getBuffer(DataLib::CH4)};
-    uint32_t size[4] = {0, 0, 0, 0};
-    for (int i = 0; i < 4; i++) {
-        if (ch[i]) {
-            uint32_t s = std::min<uint32_t>(ch[i]->getSamplesCount(), samples[(DataLib::EDataBuffersPackChannel)i]);
-            size[i] = std::min<uint32_t>(s * (ch[i]->getBitBySample() / 8), ch[i]->getDataLenght());
-            header.dataFormatSize[i] = ch[i]->getBitBySample() / 8;
-            header.sizeCh[i] = size[i];
-            header.sampleCh[i] = s;
-            header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA);
-            header.oscRate[i] = ch[i]->getADCBaseRate();
-            header.timeCapture[i] = ch[i]->getTimeCapture();
-        }
-    }
-    header.sigmentLength = size[0] + size[1] + size[2] + size[3];
-    memory.write(reinterpret_cast<const char*>(&header), sizeof(header));
-    for (int i = 0; i < 4; i++)
-        if (ch[i] && size[i])
-            memory.write(static_cast<const char*>(ch[i]->getMappedDataMemory()), size[i]);
-    memory.write(reinterpret_cast<const char*>(end), 12);
-    return memory.str();
-}
-
 auto Pass(const std::vector<int16_t>& samples, int bits = 16) -> SBuffPass {
     SBuffPass p;
     p.buffer = net_lib::createBuffer(reinterpret_cast<const char*>(samples.data()), samples.size() * 2);
@@ -109,29 +81,62 @@ auto Pass(const std::vector<int16_t>& samples, int bits = 16) -> SBuffPass {
 
 }  // namespace
 
-TEST(BinChunk, KeepsTheBytesOfTheFormerBuilder) {
-    Arena arena(8, kBlock);
-    auto pack = MakePack(arena, 3, 7);
-    std::map<DataLib::EDataBuffersPackChannel, uint32_t> all{{DataLib::CH1, 32}, {DataLib::CH2, 32}};
-    EXPECT_EQ(Bytes(*buildBINChunk(pack, all)), FormerBIN(pack, all));
-    std::map<DataLib::EDataBuffersPackChannel, uint32_t> limited{{DataLib::CH1, 5}, {DataLib::CH2, 32}};
-    EXPECT_EQ(Bytes(*buildBINChunk(pack, limited)), FormerBIN(pack, limited)) << "a sample limit";
+namespace {
+
+auto WriteFile(const std::string& path, const std::string& bytes) -> void {
+    std::ofstream out(path, std::ios::binary | std::ios::trunc);
+    out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
 }
 
-TEST(BinChunk, ThePaddingOfTheHeaderIsZero) {
+}  // namespace
+
+TEST(BinChunk, TheFirstChunkCarriesTheFileHeaderAndTheBlocksTheirTimeline) {
     Arena arena(8, kBlock);
-    auto pack = MakePack(arena, 1, 3);
-    const std::string bytes = Bytes(*buildBINChunk(pack, {{DataLib::CH1, 32}, {DataLib::CH2, 32}}));
-    const auto padBeforeLost = offsetof(CBinInfo::BinHeader, lostCount) - (offsetof(CBinInfo::BinHeader, sampleCh) + sizeof(uint32_t) * 4);
-    const auto padAtEnd = sizeof(CBinInfo::BinHeader) - (offsetof(CBinInfo::BinHeader, sigmentLength) + sizeof(uint32_t));
-    EXPECT_EQ(bytes.substr(offsetof(CBinInfo::BinHeader, lostCount) - padBeforeLost, padBeforeLost), std::string(padBeforeLost, '\0'));
-    EXPECT_EQ(bytes.substr(sizeof(CBinInfo::BinHeader) - padAtEnd, padAtEnd), std::string(padAtEnd, '\0'));
+    BinFileState state;
+    std::map<DataLib::EDataBuffersPackChannel, uint32_t> all{{DataLib::CH1, 32}, {DataLib::CH2, 32}};
+    std::string bytes = Bytes(*buildBINChunk(MakePack(arena, 0), all, state));
+    ASSERT_GE(bytes.size(), sizeof(bin_lib::FileHeader));
+    EXPECT_EQ(bytes.substr(0, 8), "RPSTREAM");
+    const std::string second = Bytes(*buildBINChunk(MakePack(arena, 1, 7), all, state));
+    EXPECT_NE(second.substr(0, 8), "RPSTREAM") << "the header once";
+    bytes += second;
+    const std::string path = TempDir() + "/chunks.bin";
+    WriteFile(path, bytes);
+
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(path)) << r.error();
+    ASSERT_EQ(r.info().channels.size(), 2u);
+    EXPECT_EQ(r.info().source, bin_lib::Source::ADC);
+    EXPECT_EQ(r.info().channels[0].type, bin_lib::SampleType::INT16);
+    EXPECT_EQ(r.info().startTime, 1000000);
+    bin_lib::BlockInfo b;
+    std::vector<uint8_t> data;
+    std::vector<uint64_t> positions;
+    while (r.nextBlock(b, data))
+        if (b.channel == 0)
+            positions.push_back(b.position);
+    EXPECT_EQ(positions, (std::vector<uint64_t>{0, 39})) << "32 samples, then 7 lost";
+    std::vector<int16_t> ch2(64);
+    ASSERT_EQ(r.read(1, 0, 64, ch2.data(), false), 64u);
+    EXPECT_EQ(ch2[33], -101);
+}
+
+TEST(BinChunk, TheSampleLimitCutsTheBlock) {
+    Arena arena(8, kBlock);
+    BinFileState state;
+    const std::string path = TempDir() + "/limit.bin";
+    WriteFile(path, Bytes(*buildBINChunk(MakePack(arena, 3), {{DataLib::CH1, 5}, {DataLib::CH2, 0}}, state)));
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(path));
+    EXPECT_EQ(r.samples(0, false), 5u);
+    EXPECT_EQ(r.samples(1, false), 0u) << "a channel past its limit has no block";
 }
 
 TEST(BinChunk, IsOneBlockThatNoLongerNeedsTheDmaBuffer) {
     Arena arena(8, kBlock);
     auto pack = MakePack(arena, 0);
-    auto chunk = buildBINChunk(pack, {{DataLib::CH1, 32}, {DataLib::CH2, 32}});
+    BinFileState state;
+    auto chunk = buildBINChunk(pack, {{DataLib::CH1, 32}, {DataLib::CH2, 32}}, state);
     const std::string before = Bytes(*chunk);
     ASSERT_EQ(chunk->blocks().size(), 1u);
     std::memset(pack->getBuffer(DataLib::CH1)->getMappedDataMemory(), 0x55, kBlock);  // the ring reuses the buffer
@@ -252,11 +257,13 @@ TEST_P(StreamingFileTest, PacksEndUpInTheFile) {
             ch1.push_back(static_cast<int16_t>(n * 100 + i));
 
     if (format.value == CStreamSettings::DataFormat::BIN) {
-        std::fstream in(path, std::ios::in | std::ios::binary);
-        auto info = readBinInfo(&in);
-        EXPECT_EQ(info.segCount, 20u);
-        EXPECT_EQ(info.samples_ch[0], 640u);
-        EXPECT_EQ(info.samples_ch[1], 640u);
+        bin_lib::FileReader r;
+        ASSERT_TRUE(r.open(path)) << r.error();
+        EXPECT_EQ(r.samples(0, false), 640u);
+        EXPECT_EQ(r.samples(1, false), 640u);
+        std::vector<int16_t> got(640);
+        ASSERT_EQ(r.read(0, 0, 640, got.data(), false), 640u);
+        EXPECT_EQ(got, ch1);
     } else if (format.value == CStreamSettings::DataFormat::TDMS) {
         TDMS::FileReader f;
         ASSERT_TRUE(f.open(path)) << f.error();

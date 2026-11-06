@@ -25,6 +25,8 @@ ServerNetConfigManager::~ServerNetConfigManager() {
 }
 
 auto ServerNetConfigManager::stop() -> void {
+    // the replies queued last (the stops of the streams) still reach the client
+    m_pNetConfManager->waitSent(std::chrono::milliseconds(500));
     if (m_pBroadcast) {
         m_pBroadcast->errorNotify.disconnect_all();
         m_pBroadcast->closeSocket();
@@ -381,6 +383,42 @@ auto ServerNetConfigManager::sendGPIOOutServerMemoryErrorStopped() -> bool {
 
 auto ServerNetConfigManager::sendGPIOOutServerConfigErrorStopped() -> bool {
     return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR);
+}
+
+auto ServerNetConfigManager::sendGPIOInServerStartedSD() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STARTED_SD);
+}
+
+auto ServerNetConfigManager::sendGPIOInServerStoppedSDFull() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_FULL);
+}
+
+auto ServerNetConfigManager::sendGPIOInServerStoppedSDDone() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_DONE);
+}
+
+auto ServerNetConfigManager::sendGPIOInServerStoppedSDBroken() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_BROKEN);
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerStartedSD() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STARTED_SD);
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerStoppedSDDone(uint64_t waitClocks) -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_DONE, std::to_string(waitClocks));
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerStoppedSDEmpty() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_EMPTY);
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerStoppedSDBroken() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_BROKEN);
+}
+
+auto ServerNetConfigManager::sendGPIOOutServerStoppedSDMissingFile() -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING);
 }
 
 auto ServerNetConfigManager::sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool {

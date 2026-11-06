@@ -128,6 +128,7 @@ auto CStreamingFile::run(std::string _prefix, std::string _fileName) -> void {
     m_passSizeSamples[DataLib::CH4] = 0;
 
     m_tdmsStarted = false;
+    m_bin = BinFileState();
     m_file_out = _fileName == "" ? getNewFileName(m_fileType, m_filePath, _prefix) : _fileName;
     m_fileLogger = CFileLogger::create(m_file_out + ".log", m_testMode);
     aprintf(stdout, "Run write to: %s\n", m_file_out.c_str());
@@ -505,7 +506,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
         }
 
         if (m_file_manager->isWork()) {
-            if (!m_file_manager->addChunkToWrite(buildBINChunk(pack, map))) {
+            if (!m_file_manager->addChunkToWrite(buildBINChunk(pack, map, m_bin))) {
                 m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
             }
         }

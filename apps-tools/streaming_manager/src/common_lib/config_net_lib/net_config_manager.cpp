@@ -107,6 +107,11 @@ auto CNetConfigManager::stopAsioNet() -> bool {
     return true;
 }
 
+auto CNetConfigManager::waitSent(std::chrono::milliseconds timeout) -> bool {
+    auto asionet = net();
+    return asionet && asionet->waitSent(timeout);
+}
+
 bool CNetConfigManager::start() {
     // a server without a host listens on every interface
     if ((m_mode != net_lib::EMode::M_SERVER && m_host == "") || m_port == 0)

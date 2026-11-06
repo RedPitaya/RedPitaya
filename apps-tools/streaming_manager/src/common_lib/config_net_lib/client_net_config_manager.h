@@ -111,6 +111,16 @@ class ClientNetConfigManager : public CStreamSettings {
     sigslot::signal<std::string&, uint64_t> serverGpioOutStoppedNofiy;
     sigslot::signal<std::string&> serverGpioOutStoppedMemErrorNofiy;
     sigslot::signal<std::string&> serverGpioOutStoppedConfigErrorNofiy;
+    // the GPIO file mode
+    sigslot::signal<std::string&> serverGpioInStartedSDNofiy;
+    sigslot::signal<std::string&> serverGpioInStoppedSDFullNofiy;
+    sigslot::signal<std::string&> serverGpioInStoppedSDDoneNofiy;
+    sigslot::signal<std::string&> serverGpioInStoppedSDBrokenNofiy;
+    sigslot::signal<std::string&> serverGpioOutStartedSDNofiy;
+    sigslot::signal<std::string&, uint64_t> serverGpioOutStoppedSDDoneNofiy;  // the clocks the output waited
+    sigslot::signal<std::string&> serverGpioOutStoppedSDEmptyNofiy;
+    sigslot::signal<std::string&> serverGpioOutStoppedSDBrokenNofiy;
+    sigslot::signal<std::string&> serverGpioOutStoppedSDMissingNofiy;
 
     sigslot::signal<std::string&, CNetConfigManager::ETriggerTarget> softwareTriggerDoneNofiy;
     sigslot::signal<std::string&, CNetConfigManager::ETriggerTarget> softwareTriggerFailNofiy;

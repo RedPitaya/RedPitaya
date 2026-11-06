@@ -18,6 +18,8 @@ class GPIOOutServerCallback {
    public:
     virtual ~GPIOOutServerCallback() {}
     virtual void started(GPIOOutStreamServer*) {}
+    // the file mode: the output plays the file (instead of started)
+    virtual void startedSD(GPIOOutStreamServer*) {}
     // after every stop, also of a server that was not running (a client stops before it starts);
     // waitClocks: the clocks the output waited for a buffer of the client since it began to play
     // (the network was too slow), the time after the last buffer up to the stop included

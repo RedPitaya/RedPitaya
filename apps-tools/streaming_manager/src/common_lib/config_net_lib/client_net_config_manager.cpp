@@ -69,6 +69,15 @@ auto ClientNetConfigManager::removeHadlers() -> void {
     serverGpioOutStoppedNofiy.disconnect_all();
     serverGpioOutStoppedMemErrorNofiy.disconnect_all();
     serverGpioOutStoppedConfigErrorNofiy.disconnect_all();
+    serverGpioInStartedSDNofiy.disconnect_all();
+    serverGpioInStoppedSDFullNofiy.disconnect_all();
+    serverGpioInStoppedSDDoneNofiy.disconnect_all();
+    serverGpioInStoppedSDBrokenNofiy.disconnect_all();
+    serverGpioOutStartedSDNofiy.disconnect_all();
+    serverGpioOutStoppedSDDoneNofiy.disconnect_all();
+    serverGpioOutStoppedSDEmptyNofiy.disconnect_all();
+    serverGpioOutStoppedSDBrokenNofiy.disconnect_all();
+    serverGpioOutStoppedSDMissingNofiy.disconnect_all();
 
     softwareTriggerDoneNofiy.disconnect_all();
     softwareTriggerFailNofiy.disconnect_all();
@@ -330,6 +339,25 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR) {
         serverGpioOutStoppedConfigErrorNofiy(sender->m_manager->getHost());
     }
+
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STARTED_SD)
+        serverGpioInStartedSDNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_FULL)
+        serverGpioInStoppedSDFullNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_DONE)
+        serverGpioInStoppedSDDoneNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_BROKEN)
+        serverGpioInStoppedSDBrokenNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STARTED_SD)
+        serverGpioOutStartedSDNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_DONE)
+        serverGpioOutStoppedSDDoneNofiy(sender->m_manager->getHost(), strtoull(tag.c_str(), nullptr, 10));
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_EMPTY)
+        serverGpioOutStoppedSDEmptyNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_BROKEN)
+        serverGpioOutStoppedSDBrokenNofiy(sender->m_manager->getHost());
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING)
+        serverGpioOutStoppedSDMissingNofiy(sender->m_manager->getHost());
 
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_DONE || c == CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_FAIL) {
         CNetConfigManager::ETriggerTarget target;

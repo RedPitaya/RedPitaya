@@ -303,6 +303,14 @@ class GPIOInEvents : public gpio_streaming_lib::GPIOInServerCallback {
         }
     }
 
+    void startedSD(gpio_streaming_lib::GPIOInStreamServer*) override {
+        if (auto s = m_s.lock()) {
+            s->config->sendGPIOInServerStartedSD();
+            if (auto a = s->app())
+                a->gpioInStarted();
+        }
+    }
+
     void stopped(gpio_streaming_lib::GPIOInStreamServer*, GPIOStopReason reason) override {
         auto s = m_s.lock();
         if (!s)
@@ -318,7 +326,18 @@ class GPIOInEvents : public gpio_streaming_lib::GPIOInServerCallback {
                 c.sendGPIOInServerMemoryErrorStopped();
                 break;
             case GPIOStopReason::CONFIG_ERROR:
+            case GPIOStopReason::MISSING_FILE:  // the output's only
+            case GPIOStopReason::EMPTY:
                 c.sendGPIOInServerConfigErrorStopped();
+                break;
+            case GPIOStopReason::DONE:
+                c.sendGPIOInServerStoppedSDDone();
+                break;
+            case GPIOStopReason::SD_FULL:
+                c.sendGPIOInServerStoppedSDFull();
+                break;
+            case GPIOStopReason::BROKEN:
+                c.sendGPIOInServerStoppedSDBroken();
                 break;
         }
         if (auto a = s->app())
@@ -341,6 +360,14 @@ class GPIOOutEvents : public gpio_streaming_lib::GPIOOutServerCallback {
         }
     }
 
+    void startedSD(gpio_streaming_lib::GPIOOutStreamServer*) override {
+        if (auto s = m_s.lock()) {
+            s->config->sendGPIOOutServerStartedSD();
+            if (auto a = s->app())
+                a->gpioOutStarted();
+        }
+    }
+
     void stopped(gpio_streaming_lib::GPIOOutStreamServer*, GPIOStopReason reason, uint64_t waitClocks) override {
         auto s = m_s.lock();
         if (!s)
@@ -356,7 +383,20 @@ class GPIOOutEvents : public gpio_streaming_lib::GPIOOutServerCallback {
                 c.sendGPIOOutServerMemoryErrorStopped();
                 break;
             case GPIOStopReason::CONFIG_ERROR:
+            case GPIOStopReason::SD_FULL:  // the input's only
                 c.sendGPIOOutServerConfigErrorStopped();
+                break;
+            case GPIOStopReason::DONE:
+                c.sendGPIOOutServerStoppedSDDone(waitClocks);
+                break;
+            case GPIOStopReason::EMPTY:
+                c.sendGPIOOutServerStoppedSDEmpty();
+                break;
+            case GPIOStopReason::BROKEN:
+                c.sendGPIOOutServerStoppedSDBroken();
+                break;
+            case GPIOStopReason::MISSING_FILE:
+                c.sendGPIOOutServerStoppedSDMissingFile();
                 break;
         }
         if (auto a = s->app())

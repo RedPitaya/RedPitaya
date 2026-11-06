@@ -117,6 +117,8 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setGPIOOutFile("out.bin");
     s.setGPIOOutRepeat(CStreamSettings::GPIORepeat::GPIO_REP_INF);
     s.setGPIOOutRepeatCount(9);
+    s.setGPIOOutPlayGaps(State::ON);
+    s.setDACPlayGaps(State::ON);
 }
 
 // A directory removed on destruction, so a failing test cannot leave files
@@ -230,6 +232,8 @@ TEST(StreamSettingsJson, EveryFieldSurvivesToJsonThenParseJson) {
     EXPECT_EQ(target.getGPIOOutFile(), "out.bin");
     EXPECT_EQ(target.getGPIOOutRepeat(), CStreamSettings::GPIORepeat::GPIO_REP_INF);
     EXPECT_EQ(target.getGPIOOutRepeatCount(), 9u);
+    EXPECT_EQ(target.getGPIOOutPlayGaps(), State::ON);
+    EXPECT_EQ(target.getDACPlayGaps(), State::ON);
 }
 
 // Files written before ext_trigger and gpio_streaming existed have only the three
@@ -393,15 +397,11 @@ TEST(StreamSettingsJson, APerChannelKeyTouchesOnlyThatChannel) {
     EXPECT_EQ(s.getADCAttenuator(4), Attenuator::A_1_20);
 }
 
-// BIN reaches setDACFileType, which refuses it. parseJson deliberately keeps
-// ignoring that result: one unusable field should not invalidate a whole
-// settings file, so the document parses and the field keeps its previous value.
-// setValue("file_type_sd", "BIN") does report false - see the keys suite.
-TEST(StreamSettingsJson, ADacFileTypeOfBinIsAcceptedAndThenIgnored) {
+TEST(StreamSettingsJson, ADacFileTypeOfBinIsTaken) {
     CStreamSettings s;
     ASSERT_TRUE(s.setDACFileType(DataFormat::TDMS));
     EXPECT_TRUE(s.parseJson(R"({"adc_streaming":{},"dac_streaming":{"file_type_sd":"BIN"},"memory_manager":{}})"));
-    EXPECT_EQ(s.getDACFileType(), DataFormat::TDMS);
+    EXPECT_EQ(s.getDACFileType(), DataFormat::BIN);
 }
 
 TEST(StreamSettingsJson, WriteToFileAndReadFromFileRoundTrip) {

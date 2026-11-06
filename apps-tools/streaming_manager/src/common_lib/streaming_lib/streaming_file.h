@@ -76,6 +76,7 @@ class CStreamingFile {
     bool m_rp_mode;
     bool m_tdmsTimeColumn = false;
     bool m_tdmsStarted = false;  // the first segment, with the properties of the recording, is written
+    BinFileState m_bin;          // the BIN file: its header, the channels, the time line
 
     CStreamSettings::DataFormat m_fileType;
 

@@ -697,7 +697,8 @@ namespace {
 // SS_STATUS (ADC): 0 stopped, 1 running, 2 SD full, 3 done, 4 memory error, 5 memory changed,
 // 6 no channels. SS_DAC_STATUS: 0 stopped, 1 running, 2 done, 3 empty, 4 broken, 5 missing file,
 // 6 memory error, 7 memory changed, 8 no channels. SS_GPIO_STATUS (the input): 0 stopped,
-// 1 running, 6 memory error, 7 memory changed, 8 configuration error.
+// 1 running, 2 SD full, 3 the file has its samples, 4 the file cannot be written, 6 memory error,
+// 7 memory changed, 8 configuration error.
 class WebCallback : public session_lib::SessionCallback {
     void settingsChanged(const CStreamSettings&, const CStreamSettings&) override {
         if (!g_pageChanges)
@@ -802,7 +803,18 @@ class WebCallback : public session_lib::SessionCallback {
                 ss_gpio_status.SendValue(7);
                 break;
             case R::CONFIG_ERROR:
+            case R::MISSING_FILE:
+            case R::EMPTY:
                 ss_gpio_status.SendValue(8);
+                break;
+            case R::SD_FULL:
+                ss_gpio_status.SendValue(2);
+                break;
+            case R::DONE:
+                ss_gpio_status.SendValue(3);
+                break;
+            case R::BROKEN:
+                ss_gpio_status.SendValue(4);
                 break;
         }
         ss_gpio_data_pass.SendValue(0);

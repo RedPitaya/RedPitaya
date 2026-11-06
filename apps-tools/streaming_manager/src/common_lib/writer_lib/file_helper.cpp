@@ -5,6 +5,7 @@
 #include <windows.h>
 #endif
 
+#include <algorithm>
 #include <cstring>
 #include <filesystem>
 #include <limits>
@@ -14,9 +15,9 @@
 #include "logger_lib/file_logger.h"
 #include "data_lib/neon_asm.h"
 #include "tdms_lib/tdms.h"
-#include "w_binary.h"
+#include "bin_lib/bin_file.h"
+#include "data_lib/network_header.h"
 
-static constexpr uint8_t g_endOfSegment[12] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 auto getTotalSystemMemory() -> uint64_t {
 #ifndef _WIN32
@@ -101,319 +102,75 @@ auto buildTDMSChunk(std::map<DataLib::EDataBuffersPackChannel, SBuffPass> new_bu
     return buildTDMSChunk(segment);
 }
 
-auto buildBINChunk(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib::EDataBuffersPackChannel, uint32_t> _samples) -> FileChunk::Ptr {
-    CBinInfo::BinHeader header;
-    // The padding of the header goes into the file too; all fields start at 0
-    std::memset(static_cast<void*>(&header), 0, sizeof(header));
-    DataLib::CDataBufferDMA::Ptr ch[4] = {NULL, NULL, NULL, NULL};
-    ch[0] = buff_pack->getBuffer(DataLib::CH1);
-    ch[1] = buff_pack->getBuffer(DataLib::CH2);
-    ch[2] = buff_pack->getBuffer(DataLib::CH3);
-    ch[3] = buff_pack->getBuffer(DataLib::CH4);
-    uint32_t ch_samp[4] = {0, 0, 0, 0};
-    uint32_t ch_size[4] = {0, 0, 0, 0};
-    memset(header.dataFormatSize, 0, sizeof(uint8_t) * 4);
-    memset(header.sizeCh, 0, sizeof(uint32_t) * 4);
+// The channel of a buffer pack in the file: CH1..CH4 in their order, as the first pack has them
+namespace {
 
-    for (int i = 0; i < 4; i++) {
-        if (ch[i].get()) {
-            ch_samp[i] = ch[i]->getSamplesCount() < _samples[(DataLib::EDataBuffersPackChannel)i] ? ch[i]->getSamplesCount() : _samples[(DataLib::EDataBuffersPackChannel)i];
-            auto bytes = ch[i]->getBitBySample() / 8;
-            ch_size[i] = ch_samp[i] * bytes > ch[i]->getDataLenght() ? ch[i]->getDataLenght() : ch_samp[i] * bytes;
-            header.dataFormatSize[i] = ch[i]->getBitBySample() / 8;
-            header.sizeCh[i] = ch_size[i];
-            header.sampleCh[i] = ch_samp[i];
-            header.lostCount[i] = ch[i]->getLostSamples(DataLib::FPGA);
-            header.oscRate[i] = ch[i]->getADCBaseRate();
-            header.timeCapture[i] = ch[i]->getTimeCapture();
-        }
-    }
+auto sampleType(uint8_t bits) -> bin_lib::SampleType {
+    if (bits == 8)
+        return bin_lib::SampleType::INT8;
+    if (bits == 32)
+        return bin_lib::SampleType::FLOAT32;
+    return bin_lib::SampleType::INT16;
+}
 
-    header.sigmentLength = header.sizeCh[0] + header.sizeCh[1] + header.sizeCh[2] + header.sizeCh[3];
-    // One copy out of the DMA buffers, which go back to the ring right after, into a block of the final size
-    std::vector<uint8_t> segment(sizeof(header) + header.sigmentLength + sizeof(g_endOfSegment));
-    uint8_t* at = segment.data();
-    memcpy(at, &header, sizeof(header));
-    at += sizeof(header);
+auto adcFileInfo(DataLib::CDataBuffersPackDMA::Ptr pack, BinFileState& state) -> bin_lib::FileInfo {
+    bin_lib::FileInfo info;
+    info.source = bin_lib::Source::ADC;
+    state.index.fill(-1);
     for (int i = 0; i < 4; i++) {
-        if (ch[i].get() && ch_size[i]) {
-            memcpy_neon(at, ch[i]->getMappedDataMemory(), ch_size[i]);
-            at += ch_size[i];
+        auto ch = pack->getBuffer(static_cast<DataLib::EDataBuffersPackChannel>(i));
+        if (!ch)
+            continue;
+        if (info.channels.empty()) {
+            const uint32_t dec = ch->getDecimation();
+            info.decimation = dec ? dec : 1;
+            // the exact clock when the buffer has it, else the rate of the samples
+            info.clock = ch->getADCClock() ? ch->getADCClock() : (dec ? ch->getADCBaseRate() * dec : ch->getADCBaseRate());
+            info.startTime = ch->getTimeCapture();
+            if (ch->getADCFlags() & DataLib::ADC_FLAG_TRIGGER_MODE)
+                info.flags |= bin_lib::FILE_FLAG_TRIGGER_MODE;
+            if (ch->getADCFlags() & DataLib::ADC_FLAG_WAIT_COUNTER)
+                info.flags |= bin_lib::FILE_FLAG_WAIT_COUNTER;
         }
+        state.index[i] = static_cast<int>(info.channels.size());
+        bin_lib::ChannelInfo c;
+        c.id = static_cast<uint8_t>(i + 1);
+        c.type = sampleType(ch->getBitBySample());
+        c.adcBits = ch->getADCBaseBits();
+        info.channels.push_back(c);
     }
-    memcpy(at, g_endOfSegment, sizeof(g_endOfSegment));
+    return info;
+}
+
+}  // namespace
+
+auto buildBINChunk(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib::EDataBuffersPackChannel, uint32_t> _samples, BinFileState& state) -> FileChunk::Ptr {
+    std::vector<uint8_t> bytes;
+    if (!state.started) {
+        // the file header with the channels of the first pack
+        bytes = bin_lib::fileHeader(adcFileInfo(buff_pack, state));
+        state.line.reset();
+        state.started = true;
+    }
+    // One copy out of the DMA buffers, which go back to the ring right after
+    for (int i = 0; i < 4; i++) {
+        auto ch = buff_pack->getBuffer(static_cast<DataLib::EDataBuffersPackChannel>(i));
+        if (!ch || state.index[i] < 0 || _samples[static_cast<DataLib::EDataBuffersPackChannel>(i)] == 0)
+            continue;  // past the sample limit: nothing more of this channel
+        const uint32_t sampleBytes = ch->getBitBySample() / 8 ? ch->getBitBySample() / 8 : 1;
+        uint64_t samples = std::min<uint64_t>(ch->getSamplesCount(), _samples[static_cast<DataLib::EDataBuffersPackChannel>(i)]);
+        const uint32_t size = static_cast<uint32_t>(std::min<uint64_t>(samples * sampleBytes, ch->getDataLenght()));
+        samples = size / sampleBytes;
+        bin_lib::BlockInfo block;
+        block.channel = static_cast<uint8_t>(state.index[i]);
+        block.triggerCount = ch->getTriggerCount();
+        block.samples = samples;
+        block.lost = ch->getLostSamples(DataLib::FPGA);
+        block.wait = ch->getWaitSamples();
+        block.position = state.line.next(block.channel, block.lost, block.wait, samples);
+        bin_lib::appendBlock(bytes, block, ch->getMappedDataMemory(), size);
+    }
     auto chunk = std::make_unique<FileChunk>();
-    chunk->add(std::move(segment));
+    chunk->add(std::move(bytes));
     return chunk;
-}
-
-auto readCSV(std::iostream* buffer, int64_t* _position, int* _channels, uint64_t* samplePos, bool skipData, FH_CSVMode mode) -> std::iostream* {
-    uint32_t endSeg[] = {0, 0, 0};
-    std::stringstream* memory = nullptr;
-    buffer->seekg(*_position, std::ios::beg);
-    CBinInfo::BinHeader header;
-    int64_t timeCapture = 0;
-    buffer->read((char*)&header, sizeof(header));
-    buffer->seekg(*_position + sizeof(CBinInfo::BinHeader) + header.sigmentLength, std::ios::beg);
-    buffer->read((char*)endSeg, 12);
-    if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF) {
-        if (!skipData) {
-            auto size_ch1 = header.sizeCh[0];
-            auto size_ch2 = header.sizeCh[1];
-            auto size_ch3 = header.sizeCh[2];
-            auto size_ch4 = header.sizeCh[3];
-
-            auto sample_ch1 = header.sampleCh[0];
-            auto sample_ch2 = header.sampleCh[1];
-            auto sample_ch3 = header.sampleCh[2];
-            auto sample_ch4 = header.sampleCh[3];
-
-            auto lost_ch1 = header.lostCount[0];
-            auto lost_ch2 = header.lostCount[1];
-            auto lost_ch3 = header.lostCount[2];
-            auto lost_ch4 = header.lostCount[3];
-
-            if (*_channels == 0) {
-                *_channels = (size_ch1 > 0 ? 0x1 : 0) | (size_ch2 > 0 ? 0x2 : 0) | (size_ch3 > 0 ? 0x4 : 0) | (size_ch4 > 0 ? 0x8 : 0);
-            }
-            if (size_ch1 || size_ch2 || size_ch3 || size_ch4 || lost_ch1 || lost_ch2 || lost_ch3 || lost_ch4) {
-                memory = new std::stringstream(std::ios_base::in | std::ios_base::out);
-            }
-            auto resolutionCh1 = header.dataFormatSize[0] * 8;
-            auto resolutionCh2 = header.dataFormatSize[1] * 8;
-            auto resolutionCh3 = header.dataFormatSize[2] * 8;
-            auto resolutionCh4 = header.dataFormatSize[3] * 8;
-
-            char* buffer_ch1 = nullptr;
-            char* buffer_ch2 = nullptr;
-            char* buffer_ch3 = nullptr;
-            char* buffer_ch4 = nullptr;
-
-            buffer->seekg(*_position + sizeof(CBinInfo::BinHeader), std::ios::beg);
-            if (size_ch1 > 0) {
-                buffer_ch1 = new char[size_ch1];
-                buffer->read(buffer_ch1, size_ch1);
-            }
-
-            if (size_ch2 > 0) {
-                buffer_ch2 = new char[size_ch2];
-                buffer->read(buffer_ch2, size_ch2);
-            }
-
-            if (size_ch3 > 0) {
-                buffer_ch3 = new char[size_ch3];
-                buffer->read(buffer_ch3, size_ch3);
-            }
-
-            if (size_ch4 > 0) {
-                buffer_ch4 = new char[size_ch4];
-                buffer->read(buffer_ch4, size_ch4);
-            }
-
-            for (auto ch = 0u; ch < 4; ch++) {
-                if (header.timeCapture[ch] > 0) {
-                    timeCapture = header.timeCapture[ch];
-                }
-            }
-
-            auto max_size = sample_ch1 + lost_ch1;
-            max_size = max_size < (sample_ch2 + lost_ch2) ? sample_ch2 + lost_ch2 : max_size;
-            max_size = max_size < (sample_ch3 + lost_ch3) ? sample_ch3 + lost_ch3 : max_size;
-            max_size = max_size < (sample_ch4 + lost_ch4) ? sample_ch4 + lost_ch4 : max_size;
-
-            auto print = [&](char* b, size_t pos, uint8_t res) {
-                if (res == 8) {
-                    *memory << (int)((int8_t*)b)[pos];
-                }
-
-                if (res == 16) {
-                    *memory << ((int16_t*)b)[pos];
-                }
-
-                if (res == 32) {
-                    *memory << ((float*)b)[pos];
-                }
-            };
-
-            double frequency_hz = header.oscRate[0];
-            double period_ns = (frequency_hz > 0) ? (1.0 / frequency_hz) * 1e9 : 0;
-
-            for (auto i = 0u; i < max_size; i++) {
-                (*samplePos)++;
-                if (mode & FH_CSV_ADD_INDEX) {
-                    *memory << *samplePos << ",";
-                }
-
-                if (timeCapture != 0) {
-                    if ((mode & FH_CSV_ADD_TIME_COL) || (mode & FH_CSV_ADD_TIME_COL_NS) || ((mode & FH_CSV_ADD_TIME_COL_FOR_BLOCK) && i == 0)) {
-                        uint64_t time_sample_ns = timeCapture + (uint64_t)(period_ns * i);
-                        if (mode & FH_CSV_ADD_TIME_COL_NS) {
-                            *memory << time_sample_ns << ",";
-                        } else {
-                            auto ns = std::chrono::nanoseconds{time_sample_ns};
-                            std::chrono::system_clock::time_point tp{std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
-                            std::time_t time_t_value = std::chrono::system_clock::to_time_t(tp);
-                            char time_buf[100];
-                            std::tm* tm_info = std::gmtime(&time_t_value);
-                            std::strftime(time_buf, sizeof(time_buf), "%Y-%m-%d %H:%M:%S", tm_info);
-                            *memory << time_buf << "." << std::setfill('0') << std::setw(9) << (ns.count() % 1000000000LL) << ",";
-                        }
-                    } else if (mode & FH_CSV_ADD_TIME_COL_FOR_BLOCK) {
-                        *memory << ",";
-                    }
-                }
-
-                bool needPrintComma = false;
-                if (i < sample_ch1) {
-                    needPrintComma = true;
-                    print(buffer_ch1, i, resolutionCh1);
-                } else {
-                    if (sample_ch1 > 0 || lost_ch1 > 0) {
-                        needPrintComma = true;
-                        *memory << "-";
-                    }
-                }
-
-                if (i < sample_ch2) {
-                    if (needPrintComma)
-                        *memory << ",";
-                    needPrintComma = true;
-                    print(buffer_ch2, i, resolutionCh2);
-                } else {
-                    if (sample_ch2 > 0 || lost_ch2 > 0) {
-                        if (needPrintComma)
-                            *memory << ",";
-                        needPrintComma = true;
-                        *memory << "-";
-                    }
-                }
-
-                if (i < sample_ch3) {
-                    if (needPrintComma)
-                        *memory << ",";
-                    needPrintComma = true;
-                    print(buffer_ch3, i, resolutionCh3);
-                } else {
-                    if (sample_ch3 > 0 || lost_ch3 > 0) {
-                        if (needPrintComma)
-                            *memory << ",";
-                        needPrintComma = true;
-                        *memory << "-";
-                    }
-                }
-
-                if (i < sample_ch4) {
-                    if (needPrintComma)
-                        *memory << ",";
-                    print(buffer_ch4, i, resolutionCh4);
-                } else {
-                    if (sample_ch4 > 0 || lost_ch4 > 0) {
-                        if (needPrintComma)
-                            *memory << ",";
-                        *memory << "-";
-                    }
-                }
-                *memory << "\n";
-            }
-
-            delete[] buffer_ch1;
-            delete[] buffer_ch2;
-            delete[] buffer_ch3;
-            delete[] buffer_ch4;
-        }
-        buffer->seekg(0, std::ios::end);
-        auto Length = buffer->tellg();
-        *_position = *_position + sizeof(CBinInfo::BinHeader) + header.sigmentLength + 12;  // 12 - End segment len
-        if (*_position >= Length) {
-            *_position = -2;
-        }
-    } else {
-        *_position = -1;
-    }
-    return memory;
-}
-
-auto readBinData(std::iostream* buffer, int64_t* _position) -> SBinData* {
-    SBinData* data = nullptr;
-    uint32_t endSeg[] = {0, 0, 0};
-    buffer->seekg(*_position, std::ios::beg);
-    CBinInfo::BinHeader header;
-    buffer->read((char*)&header, sizeof(header));
-    buffer->seekg(*_position + sizeof(CBinInfo::BinHeader) + header.sigmentLength, std::ios::beg);
-    buffer->read((char*)endSeg, 12);
-    if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF) {
-        data = new SBinData();
-        buffer->seekg(*_position + sizeof(CBinInfo::BinHeader), std::ios::beg);
-        for (int i = 0; i < 4; i++) {
-            data->ch_size[i] = header.sizeCh[i];
-            data->ch_samples[i] = header.sampleCh[i];
-            data->ch_lost[i] = header.lostCount[i];
-            data->ch_bits[i] = header.dataFormatSize[i];
-            data->ch_timeCapture[i] = header.timeCapture[i];
-            data->adcRate = std::max(header.oscRate[i], data->adcRate);
-            if (data->ch_size[i] > 0) {
-                data->ch[i] = new uint8_t[data->ch_size[i]];
-                buffer->read(reinterpret_cast<char*>(data->ch[i]), data->ch_size[i]);
-            }
-        }
-        buffer->seekg(0, std::ios::end);
-        auto Length = buffer->tellg();
-        *_position = *_position + sizeof(CBinInfo::BinHeader) + header.sigmentLength + 12;  // 12 - End segment len
-        if (*_position >= Length) {
-            *_position = -2;
-        }
-    } else {
-        *_position = -1;
-    }
-    return data;
-}
-
-auto readBinInfo(std::iostream* buffer) -> CBinInfo {
-    int64_t position = 0;
-    buffer->seekg(0, std::ios::end);
-    auto Length = buffer->tellg();
-    CBinInfo bi;
-    while (position >= 0) {
-        uint32_t endSeg[] = {0, 0, 0};
-        buffer->seekg(position, std::ios::beg);
-        CBinInfo::BinHeader header;
-        buffer->read((char*)&header, sizeof(CBinInfo::BinHeader));
-        buffer->seekg(position + sizeof(CBinInfo::BinHeader) + header.sigmentLength, std::ios::beg);
-        buffer->read((char*)endSeg, 12);
-        bi.segments.push_back(header);
-        uint64_t samplesCount = 0u;
-        for (auto i = 0u; i < 4; i++) {
-            bi.dataFormatSize[i] = header.dataFormatSize[i];
-            bi.size_ch[i] += header.sizeCh[i];
-            if (header.dataFormatSize[i]) {
-                samplesCount += header.sizeCh[i] / header.dataFormatSize[i];
-                bi.samples_ch[i] += header.sizeCh[i] / header.dataFormatSize[i];
-            }
-            bi.lostCount[i] += header.lostCount[i];
-            if (bi.timeCapture[i] == 0 && header.timeCapture[i] != 0) {
-                bi.timeCapture[i] = header.timeCapture[i];
-            }
-            if (header.timeCapture[i] != 0) {
-                double frequency_hz = header.oscRate[i];
-                double period_ns = (1.0 / frequency_hz) * 1000000000.0;
-                // uint64_t period_ns = 1000000000 / frequency_hz;
-                bi.timeCaptureLast[i] = header.timeCapture[i] + period_ns * (header.sampleCh[i] + header.lostCount[i]);
-            }
-        }
-
-        if (bi.segSamplesCount == 0)
-            bi.segSamplesCount = samplesCount;
-        bi.segLastSamplesCount = samplesCount;
-        bi.segCount++;
-        if (endSeg[0] == 0xFFFFFFFF && endSeg[1] == 0xFFFFFFFF && endSeg[2] == 0xFFFFFFFF) {
-            position = position + sizeof(CBinInfo::BinHeader) + header.sigmentLength + 12;
-            if (position >= Length) {
-                position = -2;
-            }
-        } else {
-            position = -1;
-        }
-    }
-    bi.lastSegState = position == -2;
-    return bi;
 }

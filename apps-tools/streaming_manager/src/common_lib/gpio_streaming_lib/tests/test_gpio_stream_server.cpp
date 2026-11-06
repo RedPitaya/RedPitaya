@@ -9,6 +9,9 @@
 
 #include <gtest/gtest.h>
 
+#include <filesystem>
+#include <fstream>
+
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -23,6 +26,8 @@
 #include "gpio_streaming_lib/gpio_in_stream_server.h"
 #include "gpio_streaming_lib/gpio_out_stream_server.h"
 #include "net_lib/asio_net.h"
+#include "bin_lib/bin_file.h"
+#include "bin_lib/gpio_words.h"
 #include "uio_lib/gpio.h"
 #include "uio_lib/gpio_dummy.h"
 #include "uio_lib/memory_manager.h"
@@ -43,6 +48,8 @@ struct Recorder : public GPIOInServerCallback, public GPIOOutServerCallback {
     void started(GPIOInStreamServer*) override { add("in started"); }
     void stopped(GPIOInStreamServer*, GPIOStopReason r) override { stop("in stopped", r, 0); }
     void started(GPIOOutStreamServer*) override { add("out started"); }
+    void startedSD(GPIOInStreamServer*) override { add("in started sd"); }
+    void startedSD(GPIOOutStreamServer*) override { add("out started sd"); }
     void stopped(GPIOOutStreamServer*, GPIOStopReason r, uint64_t w) override { stop("out stopped", r, w); }
 
     auto waitStopped(int seconds = 10) -> bool {
@@ -565,4 +572,111 @@ TEST_F(GPIOServer, AStopWithTheClientsConnectedIsReportedOncePerDirection) {
     out->stop(GPIOStopReason::NORMAL);
     std::this_thread::sleep_for(300ms);
     EXPECT_EQ(recorder->stops(), (std::vector<GPIOStopReason>{GPIOStopReason::NORMAL, GPIOStopReason::NORMAL}));
+}
+
+// --- the file mode
+
+namespace {
+
+auto FileDir() -> std::string {
+    auto dir = std::filesystem::temp_directory_path() / ("gpio_files_" + std::to_string(::getpid()));
+    std::filesystem::create_directories(dir);
+    return dir.string();
+}
+
+}  // namespace
+
+TEST_F(GPIOServer, TheInputWritesABinFileUpToItsLimit) {
+    countingInput();
+    const auto dir = FileDir();
+    for (auto& e : std::filesystem::directory_iterator(dir))
+        std::filesystem::remove(e.path());
+    settings.setGPIOInPassMode(CStreamSettings::PassMode::FILE);
+    settings.setGPIOInFormat(CStreamSettings::GPIOFormat::BIN);
+    settings.setGPIOInSamples(3 * kWords);  // no RLE: a word is a sample
+    GPIOStreamOptions o;
+    o.dirPath = dir;
+    ASSERT_TRUE(in->start(settings, o));
+    EXPECT_EQ(in->filePath().rfind(dir + "/gpio_", 0), 0u) << in->filePath();
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::DONE});
+    EXPECT_EQ(recorder->events.front(), "in started sd");
+
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(in->filePath())) << r.error();
+    EXPECT_EQ(r.info().source, bin_lib::Source::GPIO_IN);
+    bin_lib::BlockInfo b;
+    std::vector<uint8_t> data;
+    uint32_t expect = 0;
+    int blocks = 0;
+    while (r.nextBlock(b, data)) {
+        const auto* w = reinterpret_cast<const uint32_t*>(data.data());
+        for (size_t i = 0; i < data.size() / 4; i++)
+            ASSERT_EQ(w[i], expect++) << "block " << blocks << " word " << i;
+        blocks++;
+    }
+    EXPECT_EQ(blocks, 3) << "the third buffer reaches the limit";
+}
+
+TEST_F(GPIOServer, TheOutputPlaysAFileToItsEnd) {
+    const auto dir = FileDir();
+    // 5 buffers of output words, no RLE: word i of buffer k is outBuffer(k)[i]
+    bin_lib::FileInfo info;
+    info.source = bin_lib::Source::GPIO_OUT;
+    info.channels = {{1, bin_lib::SampleType::GPIO_OUT_WORD, 0, 0}};
+    auto bytes = bin_lib::fileHeader(info);
+    bin_lib::Timeline line;
+    for (uint32_t k = 0; k < 5; k++) {
+        auto words = outBuffer(k);
+        bin_lib::BlockInfo b;
+        b.samples = words.size();
+        b.position = line.next(0, 0, 0, b.samples);
+        bin_lib::appendBlock(bytes, b, words.data(), static_cast<uint32_t>(words.size() * 4));
+    }
+    std::ofstream(dir + "/play.bin", std::ios::binary).write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+
+    std::mutex m;
+    std::vector<uint32_t> firsts;
+    uio_lib::dummy::gpioState().outTaken = [&](uint8_t, uint32_t address) {
+        auto w = wordsAt(address);
+        std::lock_guard lock(m);
+        firsts.push_back(w ? w[0] : 0);
+    };
+    std::atomic<uint64_t> waited{0};
+    uio_lib::dummy::gpioState().outWait = [&]() -> uint64_t {
+        std::lock_guard lock(m);
+        return firsts.size() >= 5 ? ++waited : 0;
+    };
+    settings.setGPIOOutPassMode(CStreamSettings::PassMode::FILE);
+    settings.setGPIOOutFile("play.bin");
+    GPIOStreamOptions o;
+    o.dirPath = dir;
+    ASSERT_TRUE(out->start(settings, o));
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::DONE});
+    EXPECT_EQ(recorder->events.front(), "out started sd");
+    std::lock_guard lock(m);
+    ASSERT_EQ(firsts.size(), 5u);
+    for (uint32_t k = 0; k < 5; k++)
+        EXPECT_EQ(firsts[k], outBuffer(k)[0]) << "buffer " << k;
+}
+
+TEST_F(GPIOServer, TheOutputRefusesAFileItCannotPlay) {
+    const auto dir = FileDir();
+    GPIOStreamOptions o;
+    o.dirPath = dir;
+    settings.setGPIOOutPassMode(CStreamSettings::PassMode::FILE);
+    settings.setGPIOOutFile("none.bin");
+    EXPECT_FALSE(out->start(settings, o));
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->stops().back(), GPIOStopReason::MISSING_FILE);
+
+    bin_lib::FileInfo info;
+    info.channels = {{1, bin_lib::SampleType::INT16, 0, 14}};
+    auto bytes = bin_lib::fileHeader(info);
+    std::ofstream(dir + "/adc.bin", std::ios::binary).write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    settings.setGPIOOutFile("adc.bin");
+    EXPECT_FALSE(out->start(settings, o));
+    ASSERT_TRUE(waitFor([&]() { return recorder->stops().size() == 2; }));
+    EXPECT_EQ(recorder->stops().back(), GPIOStopReason::BROKEN);
 }

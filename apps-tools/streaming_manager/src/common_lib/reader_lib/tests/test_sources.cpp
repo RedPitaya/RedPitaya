@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "support.h"
+#include "bin_lib/bin_file.h"
 #include "tdms_lib/tdms.h"
 
 using namespace reader_test;
@@ -356,4 +357,85 @@ TEST(Sources, TheBlockIsWrittenInPlaceAndNoFurther) {
             EXPECT_EQ(b[k], 0xEE) << "block " << i;
         }
     }
+}
+
+// ---- the BIN stream file (bin_lib)
+
+namespace {
+
+// A recording of two int16 channels in two buffers of 3 samples: channel c of buffer b holds
+// (c ? -1 : 1) * (b * 10 + k); the second buffer comes after `lost` lost and `wait` waited samples
+auto BinRecording(const std::string& path, uint64_t lost, uint64_t wait, bin_lib::SampleType type = bin_lib::SampleType::INT16) -> void {
+    bin_lib::FileInfo info;
+    info.channels = {{1, type, 0, 14}, {2, type, 0, 14}};
+    auto out = bin_lib::fileHeader(info);
+    bin_lib::Timeline line;
+    for (int b = 0; b < 2; b++) {
+        for (uint8_t c = 0; c < 2; c++) {
+            bin_lib::BlockInfo block;
+            block.channel = c;
+            block.samples = 3;
+            block.lost = b ? lost : 0;
+            block.wait = b ? wait : 0;
+            block.position = line.next(c, block.lost, block.wait, 3);
+            std::string s;
+            for (int k = 0; k < 3; k++) {
+                const int v = (c ? -1 : 1) * (b * 10 + k + 1);
+                s += type == bin_lib::SampleType::INT8 ? Le<int8_t>(static_cast<int8_t>(v)) : Le<int16_t>(static_cast<int16_t>(v));
+            }
+            bin_lib::appendBlock(out, block, s.data(), static_cast<uint32_t>(s.size()));
+        }
+    }
+    WriteBytes(path, std::string(out.begin(), out.end()));
+}
+
+auto Bin(const std::string& path, bool gaps, CStreamSettings::DACRepeat repeat = CStreamSettings::DACRepeat::DAC_REP_OFF, uint32_t count = 0) -> Reader::Ptr {
+    return Reader::Create(CStreamSettings::DataFormat::BIN, path, repeat, count, kBlock, gaps);
+}
+
+}  // namespace
+
+TEST(Sources, ABinRecordingPlaysItsSamplesOneAfterTheOther) {
+    TempFile file("rec.bin");
+    BinRecording(file.path(), 2, 1);
+    auto r = Bin(file.path(), false);
+    ASSERT_EQ(r->isOpen(), Reader::OR_OK);
+    dac_channels_t ch;
+    r->getChannels(ch);
+    EXPECT_TRUE(ch.isEnabled(DACChannels::DAC_CH1) && ch.isEnabled(DACChannels::DAC_CH2));
+    auto d = Drain(*r);
+    EXPECT_EQ(d.last, Reader::BR_ENDED);
+    EXPECT_EQ(d.bits[0], 16);
+    EXPECT_EQ(Values<int16_t>(d.ch[0]), (std::vector<int16_t>{1, 2, 3, 11, 12, 13}));
+    EXPECT_EQ(Values<int16_t>(d.ch[1]), (std::vector<int16_t>{-1, -2, -3, -11, -12, -13}));
+}
+
+TEST(Sources, ABinRecordingWithItsGapsPlaysInItsOwnTime) {
+    TempFile file("gaps.bin");
+    BinRecording(file.path(), 2, 1);
+    auto d = Drain(*Bin(file.path(), true));
+    EXPECT_EQ(Values<int16_t>(d.ch[0]), (std::vector<int16_t>{1, 2, 3, 0, 0, 0, 11, 12, 13})) << "2 lost and 1 waited as zeros";
+    EXPECT_EQ(Values<int16_t>(d.ch[1]), (std::vector<int16_t>{-1, -2, -3, 0, 0, 0, -11, -12, -13}));
+}
+
+TEST(Sources, ABinRecordingRepeats) {
+    TempFile file("repeat.bin");
+    BinRecording(file.path(), 0, 0, bin_lib::SampleType::INT8);
+    auto d = Drain(*Bin(file.path(), false, CStreamSettings::DACRepeat::DAC_REP_ON, 2));
+    EXPECT_EQ(d.bits[0], 8);
+    EXPECT_EQ(Values<int8_t>(d.ch[0]), (std::vector<int8_t>{1, 2, 3, 11, 12, 13, 1, 2, 3, 11, 12, 13}));
+}
+
+TEST(Sources, BinFilesTheDacCannotPlayAreRefused) {
+    TempFile gpio("gpio.bin");
+    bin_lib::FileInfo info;
+    info.source = bin_lib::Source::GPIO_IN;
+    info.channels = {{1, bin_lib::SampleType::GPIO_IN_WORD, bin_lib::CHANNEL_FLAG_RLE, 0}};
+    auto out = bin_lib::fileHeader(info);
+    WriteBytes(gpio.path(), std::string(out.begin(), out.end()));
+    EXPECT_EQ(Bin(gpio.path(), false)->isOpen(), Reader::OR_WRONG_DATA_TYPE);
+
+    TempFile old("old.bin");
+    WriteBytes(old.path(), std::string(200, '\x01'));
+    EXPECT_EQ(Bin(old.path(), false)->isOpen(), Reader::OR_CLOSE) << "the former BIN is not this format";
 }

@@ -33,7 +33,7 @@ target_include_directories(${PROJECT_NAME}
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/file_queue_manager.h
             ${PROJECT_SOURCE_DIR}/file_helper.h
-            ${PROJECT_SOURCE_DIR}/w_binary.h
+            ${PROJECT_SOURCE_DIR}/gpio_file_writer.h
             ${PROJECT_SOURCE_DIR}/w_queue.h
             ${PROJECT_SOURCE_DIR}/file_chunk.h
         )
@@ -41,7 +41,7 @@ list(APPEND headers
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/file_queue_manager.cpp
             ${PROJECT_SOURCE_DIR}/file_helper.cpp
-            ${PROJECT_SOURCE_DIR}/w_binary.cpp
+            ${PROJECT_SOURCE_DIR}/gpio_file_writer.cpp
             ${PROJECT_SOURCE_DIR}/w_queue.cpp
             ${PROJECT_SOURCE_DIR}/file_chunk.cpp
         )
@@ -49,7 +49,7 @@ list(APPEND src
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC settings_lib tdms_lib net_lib
+    PUBLIC settings_lib tdms_lib net_lib bin_lib
     PRIVATE pthread stdc++)
 
 

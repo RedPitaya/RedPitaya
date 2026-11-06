@@ -18,14 +18,17 @@ class CDACStreamingManager {
    public:
     enum NotifyResult { NR_ENDED, NR_BROKEN, NR_EMPTY, NR_MISSING_FILE, NR_STOP, NR_MEM_ERROR, NR_MEM_MODIFY, NR_SETTINGS_ERROR, NR_NO_ACTIVE_CNAHHELS, NR_DISCONNECTED };
 
-    enum DACStream_FileType { TDMS_TYPE, WAV_TYPE };
+    enum DACStream_FileType { TDMS_TYPE, WAV_TYPE, BIN_TYPE };
 
     enum DACStreamingChannels { DS_CH1 = 0x1, DS_CH2 = 0x2 };
 
     using Ptr = std::shared_ptr<CDACStreamingManager>;
 
-    static Ptr Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
-    CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose);
+    // gaps: a BIN recording plays its lost and trigger wait samples
+    static Ptr Create(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose,
+                      bool gaps = false);
+    CDACStreamingManager(DACStream_FileType _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, int32_t _rep_count, uint32_t blockSize, bool verbose,
+                         bool gaps = false);
 
     static Ptr Create(std::string _host, bool verbose);
     CDACStreamingManager(std::string _host, bool verbose);

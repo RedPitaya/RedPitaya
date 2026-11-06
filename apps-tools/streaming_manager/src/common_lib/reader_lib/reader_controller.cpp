@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 
+#include "bin_lib/bin_file.h"
 #include "logger_lib/file_logger.h"
 #include "tdms_lib/tdms.h"
 #include "wav_lib/wav_reader.h"
@@ -25,15 +26,16 @@ auto toSigned(uint8_t* data, uint64_t samples, uint8_t bits) -> void {
 }  // namespace
 
 CReaderController::Ptr CReaderController::Create(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count,
-                                                 uint32_t blockSize) {
-    return std::make_shared<CReaderController>(_fileType, _filePath, _repeat, _rep_count, blockSize);
+                                                 uint32_t blockSize, bool gaps) {
+    return std::make_shared<CReaderController>(_fileType, _filePath, _repeat, _rep_count, blockSize, gaps);
 }
 
 CReaderController::Ptr CReaderController::Create(DataIn* dataIn, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize) {
     return std::make_shared<CReaderController>(dataIn, _repeat, _rep_count, blockSize);
 }
 
-CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize)
+CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std::string _filePath, CStreamSettings::DACRepeat _repeat, uint32_t _rep_count, uint32_t blockSize,
+                                     bool gaps)
     : m_fileType(_fileType),
       m_filePath(_filePath),
       m_repeat(_repeat),
@@ -42,6 +44,7 @@ CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std:
       m_result(OR_CLOSE),
       m_genData(nullptr),
       m_memSink(nullptr) {
+    m_gaps = gaps;
     if (m_repeat.value == CStreamSettings::DACRepeat::DAC_REP_ON && m_rep_count == 0) {
         m_rep_count = 1;
     }
@@ -49,6 +52,8 @@ CReaderController::CReaderController(CStreamSettings::DataFormat _fileType, std:
         m_result = openWav();
     } else if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
         m_result = openTDMS();
+    } else if (m_fileType.value == CStreamSettings::DataFormat::BIN) {
+        m_result = openBin();
     }
 }
 
@@ -160,6 +165,45 @@ auto CReaderController::openWav() -> OpenResult {
     return OR_OK;
 }
 
+// The channels 1 and 2 of a BIN stream file, int8 or int16 both
+auto CReaderController::openBin() -> OpenResult {
+    m_bin = std::make_unique<bin_lib::FileReader>();
+    if (!m_bin->open(m_filePath)) {
+        ERROR_LOG("Cannot read the BIN file %s: %s", m_filePath.c_str(), m_bin->error().c_str());
+        m_bin.reset();
+        return OR_CLOSE;
+    }
+    const auto& info = m_bin->info();
+    bin_lib::SampleType type = bin_lib::SampleType::INT16;
+    bool any = false;
+    for (int ch = 0; ch < MAX_DAC_CHANNELS; ch++) {
+        for (size_t i = 0; i < info.channels.size(); i++) {
+            if (info.channels[i].id != ch + 1)
+                continue;
+            const auto t = info.channels[i].type;
+            if (t != bin_lib::SampleType::INT8 && t != bin_lib::SampleType::INT16)
+                return OR_WRONG_DATA_TYPE;
+            if (any && t != type)
+                return OR_WRONG_DATA_TYPE;  // both channels have one sample format
+            const uint64_t n = m_bin->samples(static_cast<uint8_t>(i), m_gaps);
+            if (n == 0)
+                continue;
+            if (any && n != m_samples)
+                return OR_DATA_NOT_EQUAL;
+            type = t;
+            any = true;
+            m_present[ch] = true;
+            m_binChannel[ch] = static_cast<uint8_t>(i);
+            m_samples = n;
+        }
+    }
+    if (!any)
+        return OR_MISSING_CHANNELS;
+    m_bits = type == bin_lib::SampleType::INT8 ? 8 : 16;
+    m_unsigned = false;
+    return OR_OK;
+}
+
 auto CReaderController::openMemory() -> OpenResult {
     m_bits = m_genData->bits;
     const unsigned bytes = m_bits / 8 ? m_bits / 8 : 1;
@@ -231,6 +275,10 @@ auto CReaderController::readSamples(std::array<uint8_t*, MAX_DAC_CHANNELS>& dst,
                     std::memcpy(out + i * bytes, m_frames.data() + (i * 2 + ch) * bytes, bytes);
             }
         }
+    } else if (m_bin) {
+        for (int ch = 0; ch < MAX_DAC_CHANNELS; ch++)
+            if (m_present[ch] && dst[ch])
+                got = std::min(got, m_bin->read(m_binChannel[ch], m_position, n, dst[ch] + offset * bytes, m_gaps));
     } else if (m_genData) {
         for (int ch = 0; ch < MAX_DAC_CHANNELS; ch++) {
             if (!m_present[ch] || !dst[ch])

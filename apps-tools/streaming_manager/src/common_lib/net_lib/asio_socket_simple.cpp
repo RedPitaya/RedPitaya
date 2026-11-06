@@ -1,4 +1,6 @@
 #include "asio_socket_simple.h"
+
+#include <thread>
 #include <functional>
 
 #define SOCKET_BUFFER_SIZE 4096
@@ -226,6 +228,22 @@ auto CAsioSocketSimple::closeSocket() -> void {
         closeOnIoThread(socket, acceptor);
     if (wasConnected)
         disconnectNotify(peer);
+}
+
+auto CAsioSocketSimple::waitSent(std::chrono::milliseconds timeout) -> bool {
+    if (runningInIoThread())
+        return false;
+    const auto end = std::chrono::steady_clock::now() + timeout;
+    for (;;) {
+        {
+            std::lock_guard lock(m_mtx);
+            if (!m_tcp_socket || !m_connected || (m_writeQueue.empty() && !m_writing))
+                return m_writeQueue.empty() && !m_writing;
+        }
+        if (std::chrono::steady_clock::now() >= end)
+            return false;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 }
 
 auto CAsioSocketSimple::closeConnection() -> void {

@@ -187,12 +187,15 @@ auto DACStreamServer::start(const CStreamSettings& settings, dac_channels_t chan
                 type = CDACStreamingManager::WAV_TYPE;
             } else if (format.value == CStreamSettings::DataFormat::TDMS) {
                 type = CDACStreamingManager::TDMS_TYPE;
+            } else if (format.value == CStreamSettings::DataFormat::BIN) {
+                type = CDACStreamingManager::BIN_TYPE;
             } else {
-                ERROR_LOG("The DAC plays WAV and TDMS files only")
+                ERROR_LOG("The DAC plays WAV, TDMS and BIN files only")
                 p.stopNonBlocking(DACStopReason::BROKEN, true);
                 return false;
             }
-            p.manager = CDACStreamingManager::Create(type, path, settings.getDACRepeat(), settings.getDACRepeatCount(), settings.getMemoryBlockSize(), p.verbose);
+            const bool gaps = settings.getDACPlayGaps().value == CStreamSettings::State::ON;
+            p.manager = CDACStreamingManager::Create(type, path, settings.getDACRepeat(), settings.getDACRepeatCount(), settings.getMemoryBlockSize(), p.verbose, gaps);
             if (p.manager->getOpenResult() != CReaderController::OR_OK) {
                 std::error_code ec;
                 bool missing = !std::filesystem::exists(path, ec);

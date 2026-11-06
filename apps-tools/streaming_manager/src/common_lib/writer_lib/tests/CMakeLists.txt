@@ -19,7 +19,7 @@ if(NOT TARGET GTest::gtest_main)
     FetchContent_MakeAvailable(googletest)
 endif()
 
-add_executable(writer_lib_tests test_file_queue.cpp test_formats.cpp)
+add_executable(writer_lib_tests test_file_queue.cpp test_formats.cpp test_gpio_file_writer.cpp)
 
 target_include_directories(writer_lib_tests PRIVATE ${COMMON_LIB_DIR})
 

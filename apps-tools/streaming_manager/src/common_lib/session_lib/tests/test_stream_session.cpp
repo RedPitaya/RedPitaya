@@ -21,6 +21,7 @@
 #include "data_lib/network_header.h"
 #include "session_lib/stream_session.h"
 #include "session_lib/trigger_commands.h"
+#include "uio_lib/gpio.h"
 #include "uio_lib/gpio_dummy.h"
 #include "uio_lib/memory_manager.h"
 #include "uio_lib/oscilloscope_dummy.h"
@@ -169,6 +170,7 @@ class Session : public ::testing::Test {
         uio_lib::dummy::resetOscState();
         uio_lib::dummy::resetGpioState();
         uio_lib::dummy::gpioState().present = true;
+        uio_lib::dummy::gpioState().features = uio_lib::GPIO_FEATURE_OUT_FREE | uio_lib::GPIO_FEATURE_OUT_WAIT;
         m_file = (std::filesystem::temp_directory_path() / ("stream_session_" + std::to_string(m_port) + ".json")).string();
         std::filesystem::remove(m_file);
         hw = uio_lib::CHardware::create(std::make_shared<board_lib::CDummyBoard>());
@@ -354,4 +356,33 @@ TEST_F(Session, TheTriggerStatusComesFromTheHardware) {
 TEST_F(Session, TheTriggerStatusIsAnswered) {
     peer.send(Command(Cmd::CS_REQUEST_TRIGGER_STATUS));
     EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_TRIGGER_STATUS));
+}
+
+// The GPIO file mode over the protocol: the input writes its file up to the sample limit
+TEST_F(Session, TheGpioInputWritesAFileAndSaysSo) {
+    const auto dir = std::filesystem::temp_directory_path() / ("session_gpio_" + std::to_string(m_port));
+    std::filesystem::create_directories(dir);
+    CStreamSettings::setGPIODirPath(dir.string());
+    uio_lib::dummy::gpioState().inFill = [](uint8_t, uint32_t) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        return true;
+    };
+    set("gpio_in_pass_mode", "FILE");
+    set("gpio_in_format_sd", "VCD");
+    set("gpio_in_samples_limit_sd", "1");
+    peer.send(Command(Cmd::CS_REQUEST_GPIO_IN_SERVER_START));
+    EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_GPIO_IN_SERVER_STARTED_SD));
+    EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_DONE));
+    bool vcd = false;
+    for (const auto& e : std::filesystem::directory_iterator(dir))
+        vcd |= e.path().extension() == ".vcd";
+    EXPECT_TRUE(vcd);
+    std::filesystem::remove_all(dir);
+}
+
+TEST_F(Session, TheGpioOutputWithoutItsFileSaysWhy) {
+    set("gpio_out_pass_mode", "FILE");
+    set("gpio_out_file_sd", "none.bin");
+    peer.send(Command(Cmd::CS_REQUEST_GPIO_OUT_SERVER_START));
+    EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING));
 }

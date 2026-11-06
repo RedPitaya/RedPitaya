@@ -43,16 +43,18 @@ target_include_directories(${PROJECT_NAME}
 
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/reader_controller.h
+            ${PROJECT_SOURCE_DIR}/gpio_file_reader.h
         )
 
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/reader_controller.cpp
+            ${PROJECT_SOURCE_DIR}/gpio_file_reader.cpp
         )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})
 
 target_link_libraries(${PROJECT_NAME}
-    PUBLIC wav_lib tdms_lib
+    PUBLIC wav_lib tdms_lib bin_lib
     PRIVATE pthread stdc++)
 
 if (NOT CMAKE_CROSSCOMPILING)

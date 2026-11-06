@@ -1,6 +1,8 @@
 #include "gpio_in_stream_server.h"
 
 #include <atomic>
+#include <chrono>
+#include <ctime>
 #include <mutex>
 #include <optional>
 #include <thread>
@@ -14,6 +16,7 @@
 #include "logger_lib/file_logger.h"
 #include "net_lib/asio_net.h"
 #include "uio_lib/memory_manager.h"
+#include "writer_lib/gpio_file_writer.h"
 
 using namespace gpio_streaming_lib;
 using DataLib::CBuffersCached;
@@ -59,7 +62,8 @@ struct GPIOInStreamServer::Impl {
     CBuffersCached::Ptr ring;
     net_lib::CAsioNet::Ptr net;
     std::thread fpgaThread;  // FPGA buffers to the ring
-    std::thread sendThread;  // the ring to the client
+    std::thread sendThread;  // the ring to the client, or to the file
+    CGpioFileWriter::Ptr file;  // the file mode
     CDataBuffersPackDMA::Ptr packs[2];
     DataLib::GPIOHeader header;  // what every buffer of the run carries
     bool rle = false;
@@ -71,6 +75,7 @@ struct GPIOInStreamServer::Impl {
     auto stopNonBlocking(GPIOStopReason reason, bool own) -> void;
     auto fpgaWork() -> void;
     auto sendWork() -> void;
+    auto fileWork() -> void;
     template <typename F>
     auto notify(F f) -> void {
         std::shared_ptr<GPIOInServerCallback> cb;
@@ -97,6 +102,8 @@ auto GPIOInStreamServer::Impl::teardown() -> void {
     for (auto t : {&fpgaThread, &sendThread})
         if (t->joinable())
             t->join();
+    if (file)
+        file->close();  // what is queued still goes into the file
     net = nullptr;
     packs[0] = packs[1] = nullptr;
     ring = nullptr;
@@ -200,6 +207,32 @@ auto GPIOInStreamServer::Impl::sendWork() -> void {
     }
 }
 
+// The file mode: the ring into the file. The sample limit, a full disk or an error end the run.
+auto GPIOInStreamServer::Impl::fileWork() -> void {
+    try {
+        while (run) {
+            auto pack = ring->readBuffer();
+            if (!pack)
+                continue;
+            auto buffer = bufferOf(pack);
+            DataLib::GPIOHeader h;
+            DataLib::getHeaderGPIO(buffer, h);
+            const auto* words = static_cast<const uint32_t*>(buffer->getMappedDataMemory());
+            const auto result = file->write(words, buffer->getDataLenght() / 4, h.lostFPGA, h.waitFPGA, h.triggerCount);
+            ring->unlockBufferRead();
+            if (result == CGpioFileWriter::Result::OK)
+                continue;
+            stopNonBlocking(result == CGpioFileWriter::Result::LIMIT  ? GPIOStopReason::DONE
+                            : result == CGpioFileWriter::Result::FULL ? GPIOStopReason::SD_FULL
+                                                                      : GPIOStopReason::BROKEN,
+                            true);
+            break;
+        }
+    } catch (std::exception& e) {
+        ERROR_LOG("GPIOInStreamServer file %s", e.what())
+    }
+}
+
 GPIOInStreamServer::GPIOInStreamServer(uio_lib::CHardware::Ptr hw) : m_pimpl(std::make_shared<Impl>()) {
     m_pimpl->owner = this;
     m_pimpl->self = m_pimpl;
@@ -217,6 +250,7 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
     try {
         std::lock_guard lock(p.mtx);
         p.teardown();
+        p.file = nullptr;
         p.session++;
         p.active = true;
         if (!p.hw)
@@ -283,19 +317,51 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
             p.packs[i] = p.ring->writeBuffer(true);
             p.hw->gpioSetInBuffer(i, bufferOf(p.packs[i])->getDataAddress());
         }
-        p.net = net_lib::CAsioNet::create(net_lib::M_SERVER, options.host, NET_GPIO_IN_STREAMING_PORT, nullptr);
-        // the client is gone: nothing reads the input, nothing feeds the output any more
         auto selfW = std::weak_ptr<Impl>(m_pimpl);
-        p.net->serverDisconnectNotify.connect([selfW](std::string&) {
-            if (auto impl = selfW.lock())
-                impl->stopNonBlocking(GPIOStopReason::DISCONNECTED, true);
-        });
-        p.net->start();
+        const bool toFile = settings.getGPIOInPassMode().value == CStreamSettings::PassMode::FILE;
+        if (toFile) {
+            GpioRecording rec;
+            rec.format = settings.getGPIOInFormat();
+            rec.rle = p.rle;
+            rec.clock = p.header.gpioClock;
+            rec.decimation = cfg.decimation;
+            rec.triggerMode = trig.input;
+            rec.waitCounter = p.hw->features().gpioWaitCounter;
+            rec.startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            rec.samplesLimit = settings.getGPIOInSamples();
+            char name[48];
+            const time_t now = time(nullptr);
+            strftime(name, sizeof(name), "gpio_%Y-%m-%d_%H-%M-%S.", gmtime(&now));
+            const std::string ext = rec.format.value == CStreamSettings::GPIOFormat::CSV ? "csv" : rec.format.value == CStreamSettings::GPIOFormat::VCD ? "vcd" : "bin";
+            const auto dir = options.dirPath.empty() ? CStreamSettings::getGPIODirPath() : options.dirPath;
+            p.file = std::make_shared<CGpioFileWriter>();
+            if (!p.file->open(dir + "/" + name + ext, rec)) {
+                ERROR_LOG("Can't make the GPIO file in %s", dir.c_str())
+                p.file = nullptr;
+                p.stopNonBlocking(GPIOStopReason::BROKEN, true);
+                return false;
+            }
+            p.file->outOfSpaceNotify.connect([selfW]() {
+                if (auto impl = selfW.lock())
+                    impl->stopNonBlocking(GPIOStopReason::SD_FULL, true);
+            });
+        } else {
+            p.net = net_lib::CAsioNet::create(net_lib::M_SERVER, options.host, NET_GPIO_IN_STREAMING_PORT, nullptr);
+            // the client is gone: nothing reads the input any more
+            p.net->serverDisconnectNotify.connect([selfW](std::string&) {
+                if (auto impl = selfW.lock())
+                    impl->stopNonBlocking(GPIOStopReason::DISCONNECTED, true);
+            });
+            p.net->start();
+        }
         p.run = true;
         p.fpgaThread = std::thread(&Impl::fpgaWork, &p);
-        p.sendThread = std::thread(&Impl::sendWork, &p);
+        p.sendThread = toFile ? std::thread(&Impl::fileWork, &p) : std::thread(&Impl::sendWork, &p);
         p.hw->gpioStartInput();
-        p.notify([&](GPIOInServerCallback* cb) { cb->started(this); });
+        if (toFile)
+            p.notify([&](GPIOInServerCallback* cb) { cb->startedSD(this); });
+        else
+            p.notify([&](GPIOInServerCallback* cb) { cb->started(this); });
         if (p.verbose)
             aprintf(stdout, "[Streaming] Start gpio input server\n");
         return true;
@@ -312,6 +378,11 @@ auto GPIOInStreamServer::stop(GPIOStopReason reason) -> void {
 
 auto GPIOInStreamServer::stopNonBlocking(GPIOStopReason reason) -> void {
     m_pimpl->stopNonBlocking(reason, false);
+}
+
+auto GPIOInStreamServer::filePath() -> std::string {
+    std::lock_guard lock(m_pimpl->mtx);
+    return m_pimpl->file ? m_pimpl->file->path() : std::string();
 }
 
 auto GPIOInStreamServer::isRunning() -> bool {

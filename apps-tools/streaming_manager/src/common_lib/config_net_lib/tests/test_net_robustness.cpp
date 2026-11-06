@@ -282,7 +282,7 @@ TEST(ApplyConfigJson, EveryGivenValueMustBeTaken) {
     const std::string before = s.toJson();
     EXPECT_FALSE(applyConfigJson(R"({"adc_streaming":{"adc_decimation":0},"dac_streaming":{},"memory_manager":{}})", s));
     EXPECT_FALSE(applyConfigJson(R"({"adc_streaming":{"adc_decimation":2.5},"dac_streaming":{},"memory_manager":{}})", s)) << "not 2";
-    EXPECT_FALSE(applyConfigJson(R"({"adc_streaming":{},"dac_streaming":{"file_type_sd":"BIN"},"memory_manager":{}})", s));
+    EXPECT_FALSE(applyConfigJson(R"({"adc_streaming":{},"dac_streaming":{"file_sd":"../x.wav"},"memory_manager":{}})", s)) << "a path";
     EXPECT_FALSE(applyConfigJson(R"({"adc_streaming":{"adc_trigger_level_high":40000},"dac_streaming":{},"memory_manager":{}})", s));
     EXPECT_FALSE(applyConfigJson(R"({"adc_streaming":{},"dac_streaming":{},"memory_manager":{},"ext_trigger":{"ext_trig_debounce":70000}})", s));
     EXPECT_EQ(s.toJson(), before);

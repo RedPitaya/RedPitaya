@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include "data_lib/network_header.h"
 #include "json/json.h"
+#include <mutex>
+
 #include "logger_lib/file_logger.h"
 
 #define FILE_PATH "/home/redpitaya/streaming_files/dac"
@@ -15,7 +17,9 @@
 namespace {
 
 thread_local std::string g_dirPath = FILE_PATH;
-thread_local std::string g_gpioDirPath = GPIO_FILE_PATH;
+// one for the process: the servers start their files on their own threads
+std::string g_gpioDirPath = GPIO_FILE_PATH;
+std::mutex g_gpioDirMtx;
 
 auto to_uint64(char const* s) -> uint64_t {
     if (s == NULL || *s == '\0')
@@ -145,6 +149,7 @@ auto CStreamSettings::toJson() const -> std::string {
 
     dac_config["repeat"] = getDACRepeat().name();
     dac_config["repeatCount"] = getDACRepeatCount();
+    dac_config["dac_play_gaps"] = getDACPlayGaps().name();
 
     for (auto i = 1u; i <= 2; i++) {
         dac_config["channel_gain_" + std::to_string(i)] = getDACGain(i).name();
@@ -186,6 +191,7 @@ auto CStreamSettings::toJson() const -> std::string {
     gpio_config["gpio_out_file_sd"] = getGPIOOutFile();
     gpio_config["gpio_out_repeat"] = getGPIOOutRepeat().name();
     gpio_config["gpio_out_repeat_count"] = getGPIOOutRepeatCount();
+    gpio_config["gpio_out_play_gaps"] = getGPIOOutPlayGaps().name();
 
     root["adc_streaming"] = adc_config;
     root["dac_streaming"] = dac_config;
@@ -301,6 +307,8 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setDACRepeat(DACRepeat::from_string(dac_config["repeat"].asString()));
         if (dac_config.isMember("repeatCount"))
             setDACRepeatCount(dac_config["repeatCount"].asUInt());
+        if (dac_config.isMember("dac_play_gaps"))
+            setDACPlayGaps(State::from_string(dac_config["dac_play_gaps"].asString()));
         for (auto i = 1u; i <= 2; i++) {
             if (dac_config.isMember("channel_gain_" + std::to_string(i)))
                 setDACGain(i, DACGain::from_string(dac_config["channel_gain_" + std::to_string(i)].asString()));
@@ -376,6 +384,8 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setGPIOOutRepeat(GPIORepeat::from_string(gpio_config["gpio_out_repeat"].asString()));
         if (gpio_config.isMember("gpio_out_repeat_count"))
             setGPIOOutRepeatCount(gpio_config["gpio_out_repeat_count"].asUInt());
+        if (gpio_config.isMember("gpio_out_play_gaps"))
+            setGPIOOutPlayGaps(State::from_string(gpio_config["gpio_out_play_gaps"].asString()));
         return true;
     } catch (...) {
         ERROR_LOG("Error parse json. Invalid file")
@@ -429,6 +439,7 @@ auto CStreamSettings::toString() const -> std::string {
     str += "Data format:\t\t" + std::string(getDACFileType().to_string()) + " (In file mode)\n";
     str += "Repeat:\t\t" + std::string(getDACRepeat().to_string()) + " (In file mode)\n";
     str += "Repeat count:\t" + std::to_string(getDACRepeatCount()) + " (In file mode)\n";
+    str += "Play the gaps of a BIN recording:\t" + std::string(getDACPlayGaps().to_string()) + "\n";
     str += "Trigger mode:\t\tCh 1: " + std::string(getDACTriggerMode(1).to_string()) + " Ch 2: " + getDACTriggerMode(2).to_string() + "\n";
     str += "Trigger sources:\t\t" + hex(getDACTriggerSources()) + "\n";
     str += "Event source:\t\t" + std::string(getDACEventSource().to_string()) + "\n";
@@ -465,6 +476,7 @@ auto CStreamSettings::toString() const -> std::string {
     str += "Output file on SD:\t\t" + getGPIOOutFile() + "\n";
     str += "Output repeat:\t\t" + std::string(getGPIOOutRepeat().to_string()) + " (In file mode)\n";
     str += "Output repeat count:\t" + std::to_string(getGPIOOutRepeatCount()) + " (In file mode)\n";
+    str += "Output plays the gaps of a recording:\t" + std::string(getGPIOOutPlayGaps().to_string()) + "\n";
 
     return str;
 }
@@ -627,11 +639,24 @@ auto CStreamSettings::getDACFile() const -> std::string {
 }
 
 auto CStreamSettings::setDACFileType(CStreamSettings::DataFormat _value) -> bool {
-    if (_value.value != DataFormat::BIN) {
-        m_dacsettings.m_file_type = _value;
-        return true;
-    }
-    return false;
+    m_dacsettings.m_file_type = _value;  // WAV, TDMS and the BIN stream file play
+    return true;
+}
+
+auto CStreamSettings::setDACPlayGaps(State _value) -> void {
+    m_dacsettings.m_playGaps = _value;
+}
+
+auto CStreamSettings::getDACPlayGaps() const -> State {
+    return m_dacsettings.m_playGaps;
+}
+
+auto CStreamSettings::setGPIOOutPlayGaps(State _value) -> void {
+    m_gpiosettings.m_outPlayGaps = _value;
+}
+
+auto CStreamSettings::getGPIOOutPlayGaps() const -> State {
+    return m_gpiosettings.m_outPlayGaps;
 }
 
 auto CStreamSettings::getDACFileType() const -> CStreamSettings::DataFormat {
@@ -1143,6 +1168,11 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return true;
         }
 
+        if (key == "dac_play_gaps") {
+            setDACPlayGaps(State::from_string(value));
+            return true;
+        }
+
         for (auto i = 1u; i <= 2; i++) {
             if (key == "channel_gain_" + std::to_string(i)) {
                 return setDACGain(i, DACGain::from_string(value));
@@ -1303,6 +1333,11 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return true;
         }
 
+        if (key == "gpio_out_play_gaps") {
+            setGPIOOutPlayGaps(State::from_string(value));
+            return true;
+        }
+
     } catch (...) {
         return false;
     }
@@ -1411,6 +1446,10 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
 
         if (key == "repeatCount") {
             return std::to_string(getDACRepeatCount());
+        }
+
+        if (key == "dac_play_gaps") {
+            return getDACPlayGaps().name();
         }
 
         for (auto i = 1u; i <= 2; i++) {
@@ -1557,6 +1596,10 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
             return std::to_string(getGPIOOutRepeatCount());
         }
 
+        if (key == "gpio_out_play_gaps") {
+            return getGPIOOutPlayGaps().name();
+        }
+
     } catch (...) {
         return "ERROR";
     }
@@ -1611,6 +1654,7 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "dac_pass_mode\t\t: " + concat(CStreamSettings::DACPassMode::names(), CStreamSettings::DACPassMode::count) + "\n";
     s += "repeat\t\t\t: " + concat(CStreamSettings::DACRepeat::names(), CStreamSettings::DACRepeat::count) + "\n";
     s += "repeatCount\t\t: An unsigned integer value.\n";
+    s += "dac_play_gaps\t\t: " + states + ". ON - a BIN recording plays the samples it lost and waited for a trigger, as 0: in its own time.\n";
     for (auto i = 1u; i <= 2; i++) {
         s += "channel_gain_" + std::to_string(i) + "\t\t: " + concat(CStreamSettings::DACGain::names(), CStreamSettings::DACGain::count) + "\n";
         s += "dac_trigger_mode_" + std::to_string(i) + "\t: " + states + ". ON - the channel waits for a trigger from dac_trigger_sources.\n";
@@ -1652,6 +1696,7 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "gpio_out_file_sd\t: The name of a file in " GPIO_FILE_PATH " to play on the output; a name only, without a directory.\n";
     s += "gpio_out_repeat\t\t: " + concat(CStreamSettings::GPIORepeat::names(), CStreamSettings::GPIORepeat::count) + "\n";
     s += "gpio_out_repeat_count\t: An unsigned integer value.\n";
+    s += "gpio_out_play_gaps\t: " + states + ". ON - a recording of the input plays the samples it lost and waited for a trigger: the lines hold.\n";
 
     return s;
 }
@@ -1716,11 +1761,13 @@ auto CStreamSettings::getGPIOOutRepeatCount() const -> uint32_t {
 }
 
 auto CStreamSettings::setGPIODirPath(const std::string& _path) -> void {
+    std::lock_guard lock(g_gpioDirMtx);
     g_gpioDirPath = _path;
 }
 
 // The directory of the GPIO files, made if missing (on the board; "." on a host)
 auto CStreamSettings::getGPIODirPath() -> std::string {
+    std::lock_guard lock(g_gpioDirMtx);
 #ifdef RP_PLATFORM
     if (g_gpioDirPath.empty())
         g_gpioDirPath = GPIO_FILE_PATH;

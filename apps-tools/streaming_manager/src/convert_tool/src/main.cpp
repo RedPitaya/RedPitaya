@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include "bin_lib/bin_file.h"
 #include "converter_lib/converter.h"
 #include "logger_lib/file_logger.h"
 #include "writer_lib/file_helper.h"
@@ -88,60 +89,59 @@ int main(int argc, char* argv[]) {
     }
 
     if (check_info || check_info_all) {
-        std::fstream fs;
-        fs.open(file_name, std::ios::binary | std::ofstream::in | std::ofstream::out);
-        if (fs.fail()) {
-            std::cout << " Error open file: " << file_name << "\n";
-        } else {
-            auto bi = readBinInfo(&fs);
-
-            aprintf(stdout, "Segments count: %llu\n", bi.segCount);
-            aprintf(stdout, "Samples per segment: %llu\n", bi.segSamplesCount);
-            aprintf(stdout, "Samples in last segment: %llu\n", bi.segLastSamplesCount);
-            aprintf(stdout, "Status of last segment: %s\n", bi.lastSegState ? "OK" : "BROKEN");
-
-            for (int i = 0; i < 4; i++) {
-                aprintf(stdout, "\nChannel %d:\n", i + 1);
-                std::string dft = "Unknown";
-                if (bi.dataFormatSize[i] == 1)
+        // The BIN stream file (bin_lib): the channels, their samples and losses, block by block with -ia
+        bin_lib::FileReader reader;
+        if (!reader.open(file_name)) {
+            std::cout << " Error open file: " << file_name << ": " << reader.error() << "\n";
+            return 0;
+        }
+        const auto& info = reader.info();
+        uint64_t samples[4] = {0, 0, 0, 0};
+        uint64_t lost[4] = {0, 0, 0, 0};
+        uint64_t wait[4] = {0, 0, 0, 0};
+        uint64_t blocks = 0;
+        bin_lib::BlockInfo block;
+        std::vector<uint8_t> data;
+        while (reader.nextBlock(block, data)) {
+            const auto& ch = info.channels[block.channel];
+            if (ch.id >= 1 && ch.id <= 4) {
+                samples[ch.id - 1] += block.samples;
+                lost[ch.id - 1] += block.lost;
+                wait[ch.id - 1] += block.wait;
+            }
+            if (check_info_all)
+                aprintf(stdout, "Block %llu. Channel %u, samples %llu, lost %llu, wait %llu, position %llu, bytes %u, trigger count %u\n", (unsigned long long)blocks + 1,
+                        ch.id, (unsigned long long)block.samples, (unsigned long long)block.lost, (unsigned long long)block.wait, (unsigned long long)block.position,
+                        block.dataSize, block.triggerCount);
+            blocks++;
+        }
+        aprintf(stdout, "Blocks count: %llu\n", (unsigned long long)blocks);
+        aprintf(stdout, "Clock: %llu Hz, decimation %u\n", (unsigned long long)info.clock, info.decimation);
+        for (int i = 0; i < 4; i++) {
+            aprintf(stdout, "\nChannel %d:\n", i + 1);
+            std::string dft = "Unknown";
+            for (const auto& ch : info.channels) {
+                if (ch.id != i + 1)
+                    continue;
+                if (ch.type == bin_lib::SampleType::INT8)
                     dft = "Int8";
-                if (bi.dataFormatSize[i] == 2)
+                if (ch.type == bin_lib::SampleType::INT16)
                     dft = "Int16";
-                if (bi.dataFormatSize[i] == 4)
+                if (ch.type == bin_lib::SampleType::FLOAT32)
                     dft = "Float";
-                aprintf(stdout, "\tData format type:\t%s\n", dft.c_str());
-                aprintf(stdout, "\tSamples count:\t%llu\n", bi.samples_ch[i]);
-                aprintf(stdout, "\tLost samples count: %llu\n", bi.lostCount[i]);
-                if (bi.timeCapture[i] != 0) {
-                    auto ns = std::chrono::nanoseconds{bi.timeCapture[i]};
-                    std::chrono::system_clock::time_point tp{std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
-                    std::time_t time_t_value = std::chrono::system_clock::to_time_t(tp);
-                    char buffer[100];
-                    std::tm* tm_info = std::gmtime(&time_t_value);
-                    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", tm_info);
-                    auto nsEnd = std::chrono::nanoseconds{bi.timeCaptureLast[i]};
-                    std::chrono::system_clock::time_point tpEnd{std::chrono::duration_cast<std::chrono::system_clock::duration>(nsEnd)};
-                    std::time_t time_t_valueEnd = std::chrono::system_clock::to_time_t(tpEnd);
-                    char bufferEnd[100];
-                    std::tm* tm_infoEnd = std::gmtime(&time_t_valueEnd);
-                    std::strftime(bufferEnd, sizeof(bufferEnd), "%Y-%m-%d %H:%M:%S", tm_infoEnd);
-                    aprintf(stdout, "\tCapture time: %s - %s\n", buffer, bufferEnd);
-                }
             }
-
-            if (check_info_all) {
-                size_t idx = 1;
-                for (auto& seg : bi.segments) {
-                    aprintf(stdout, "Segment - %zu. Length: %u\n", idx++, seg.sigmentLength);
-                    aprintf(stdout, "\tSamples: CH1 - %u; CH2 - %u; CH3 - %u; CH4 - %u\n", seg.sampleCh[0], seg.sampleCh[1], seg.sampleCh[2], seg.sampleCh[3]);
-                    aprintf(stdout, "\tSize: CH1 - %u; CH2 - %u; CH3 - %u; CH4 - %u\n", seg.sizeCh[0], seg.sizeCh[1], seg.sizeCh[2], seg.sizeCh[3]);
-                    aprintf(stdout, "\tLost: CH1 - %llu; CH2 - %llu; CH3 - %llu; CH4 - %llu\n", seg.lostCount[0], seg.lostCount[1], seg.lostCount[2], seg.lostCount[3]);
-                    aprintf(
-                        stdout, "\tFormat: CH1 - %u; CH2 - %u; CH3 - %u; CH4 - %u\n", seg.dataFormatSize[0], seg.dataFormatSize[1], seg.dataFormatSize[2], seg.dataFormatSize[3]);
-                    aprintf(stdout, "\tRate: CH1 - %llu; CH2 - %llu; CH3 - %llu; CH4 - %llu\n", seg.oscRate[0], seg.oscRate[1], seg.oscRate[2], seg.oscRate[3]);
-                    aprintf(stdout, "\tTime: CH1 - %lld; CH2 - %lld; CH3 - %lld; CH4 - %lld\n", seg.timeCapture[0], seg.timeCapture[1], seg.timeCapture[2], seg.timeCapture[3]);
-                }
-            }
+            aprintf(stdout, "\tData format type:\t%s\n", dft.c_str());
+            aprintf(stdout, "\tSamples count:\t%llu\n", (unsigned long long)samples[i]);
+            aprintf(stdout, "\tLost samples count: %llu\n", (unsigned long long)lost[i]);
+            aprintf(stdout, "\tTrigger wait samples count: %llu\n", (unsigned long long)wait[i]);
+        }
+        if (info.startTime != 0) {
+            auto ns = std::chrono::nanoseconds{info.startTime};
+            std::chrono::system_clock::time_point tp{std::chrono::duration_cast<std::chrono::system_clock::duration>(ns)};
+            std::time_t t = std::chrono::system_clock::to_time_t(tp);
+            char buffer[100];
+            std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::gmtime(&t));
+            aprintf(stdout, "\nCapture start: %s\n", buffer);
         }
         return 0;
     }

@@ -38,6 +38,9 @@ auto getActiveChannels(DACSettingsClient conf) -> dac_channels_t {
         case CStreamSettings::DataFormat::WAV:
             file_type = CDACStreamingManager::WAV_TYPE;
             break;
+        case CStreamSettings::DataFormat::BIN:
+            file_type = CDACStreamingManager::BIN_TYPE;
+            break;
         default:
             return {};
     }
@@ -70,6 +73,9 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
             break;
         case CStreamSettings::DataFormat::WAV:
             file_type = CDACStreamingManager::WAV_TYPE;
+            break;
+        case CStreamSettings::DataFormat::BIN:
+            file_type = CDACStreamingManager::BIN_TYPE;
             break;
         default:
             stopDACStreaming(conf.host);
