@@ -110,6 +110,13 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setGPIOInTriggerMode(State::ON);
     s.setGPIOOutTriggerMode(State::ON);
     s.setGPIOTriggerBlocks(7);
+    s.setGPIOInPassMode(PassMode::FILE);
+    s.setGPIOInFormat(CStreamSettings::GPIOFormat::CSV);
+    s.setGPIOInSamples(5000000000ull);
+    s.setGPIOOutPassMode(PassMode::FILE);
+    s.setGPIOOutFile("out.bin");
+    s.setGPIOOutRepeat(CStreamSettings::GPIORepeat::GPIO_REP_INF);
+    s.setGPIOOutRepeatCount(9);
 }
 
 // A directory removed on destruction, so a failing test cannot leave files
@@ -216,6 +223,13 @@ TEST(StreamSettingsJson, EveryFieldSurvivesToJsonThenParseJson) {
     EXPECT_EQ(target.getGPIOInTriggerMode(), State::ON);
     EXPECT_EQ(target.getGPIOOutTriggerMode(), State::ON);
     EXPECT_EQ(target.getGPIOTriggerBlocks(), 7u);
+    EXPECT_EQ(target.getGPIOInPassMode(), PassMode::FILE);
+    EXPECT_EQ(target.getGPIOInFormat(), CStreamSettings::GPIOFormat::CSV);
+    EXPECT_EQ(target.getGPIOInSamples(), 5000000000ull);
+    EXPECT_EQ(target.getGPIOOutPassMode(), PassMode::FILE);
+    EXPECT_EQ(target.getGPIOOutFile(), "out.bin");
+    EXPECT_EQ(target.getGPIOOutRepeat(), CStreamSettings::GPIORepeat::GPIO_REP_INF);
+    EXPECT_EQ(target.getGPIOOutRepeatCount(), 9u);
 }
 
 // Files written before ext_trigger and gpio_streaming existed have only the three

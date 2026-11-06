@@ -99,6 +99,13 @@ auto FillFullySetSettings(CStreamSettings& s) -> void {
     s.setGPIOInTriggerMode(State::ON);
     s.setGPIOOutTriggerMode(State::ON);
     s.setGPIOTriggerBlocks(7);
+    s.setGPIOInPassMode(PassMode::FILE);
+    s.setGPIOInFormat(CStreamSettings::GPIOFormat::CSV);
+    s.setGPIOInSamples(5000000000ull);
+    s.setGPIOOutPassMode(PassMode::FILE);
+    s.setGPIOOutFile("out.bin");
+    s.setGPIOOutRepeat(CStreamSettings::GPIORepeat::GPIO_REP_INF);
+    s.setGPIOOutRepeatCount(9);
 }
 
 auto SameSettings(const CStreamSettings& a, const CStreamSettings& b) -> ::testing::AssertionResult {
@@ -176,6 +183,13 @@ TEST(StreamSettings, TheDefaultsAreTheOnesDeclaredInTheHeader) {
     EXPECT_EQ(s.getGPIOInTriggerMode(), State::OFF);
     EXPECT_EQ(s.getGPIOOutTriggerMode(), State::OFF);
     EXPECT_EQ(s.getGPIOTriggerBlocks(), 0u);
+    EXPECT_EQ(s.getGPIOInPassMode(), PassMode::NET);
+    EXPECT_EQ(s.getGPIOInFormat(), CStreamSettings::GPIOFormat::BIN);
+    EXPECT_EQ(s.getGPIOInSamples(), 0u);
+    EXPECT_EQ(s.getGPIOOutPassMode(), PassMode::NET);
+    EXPECT_EQ(s.getGPIOOutFile(), "");
+    EXPECT_EQ(s.getGPIOOutRepeat(), CStreamSettings::GPIORepeat::GPIO_REP_OFF);
+    EXPECT_EQ(s.getGPIOOutRepeatCount(), 0u);
 }
 
 // The range of every checked setter, at both bounds; a rejected value is not stored.
@@ -460,7 +474,9 @@ TEST(StreamSettings, GetHelpNamesEveryKeyTheKeyValueInterfaceAccepts) {
                             "gpio_outputs_p", "gpio_outputs_n", "gpio_polarity", "gpio_decimation",
                             "gpio_rle", "gpio_out_step", "gpio_pattern_mask", "gpio_pattern_value", "gpio_pattern_pos_edge",
                             "gpio_pattern_neg_edge", "gpio_trigger_sources", "gpio_event_source", "gpio_in_trigger_mode",
-                            "gpio_out_trigger_mode", "gpio_trigger_blocks"}) {
+                            "gpio_out_trigger_mode", "gpio_trigger_blocks", "gpio_in_pass_mode", "gpio_in_format_sd",
+                            "gpio_in_samples_limit_sd", "gpio_out_pass_mode", "gpio_out_file_sd", "gpio_out_repeat",
+                            "gpio_out_repeat_count"}) {
         EXPECT_NE(help.find(key), std::string::npos) << "missing key " << key;
     }
     for (int i = 1; i <= 4; i++) {

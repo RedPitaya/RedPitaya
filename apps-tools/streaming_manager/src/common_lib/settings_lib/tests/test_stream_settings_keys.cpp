@@ -89,6 +89,13 @@ const std::vector<KeyValue> kAllKeys = {
     {"gpio_in_trigger_mode", "ON"},
     {"gpio_out_trigger_mode", "ON"},
     {"gpio_trigger_blocks", "65535"},
+    {"gpio_in_pass_mode", "FILE"},
+    {"gpio_in_format_sd", "VCD"},
+    {"gpio_in_samples_limit_sd", "123456789012"},
+    {"gpio_out_pass_mode", "FILE"},
+    {"gpio_out_file_sd", "pattern.bin"},
+    {"gpio_out_repeat", "GPIO_REP_ON"},
+    {"gpio_out_repeat_count", "17"},
 };
 
 }  // namespace
@@ -277,4 +284,15 @@ TEST(StreamSettingsKeys, EveryChannelKeyAddressesItsOwnChannel) {
     ASSERT_TRUE(s.setValue("channel_gain_2", "X5"));
     EXPECT_EQ(s.getValue("channel_gain_1"), "X1");
     EXPECT_EQ(s.getValue("channel_gain_2"), "X5");
+}
+
+TEST(StreamSettingsKeys, TheGpioOutputFileIsANameOnly) {
+    CStreamSettings s;
+    EXPECT_TRUE(s.setValue("gpio_out_file_sd", "lines.bin"));
+    for (const char* bad : {"../lines.bin", "/tmp/lines.bin", "dir/lines.bin", ".."}) {
+        EXPECT_FALSE(s.setValue("gpio_out_file_sd", bad)) << bad;
+        EXPECT_EQ(s.getValue("gpio_out_file_sd"), "lines.bin") << bad;
+    }
+    EXPECT_FALSE(s.setValue("gpio_in_format_sd", "WAV")) << "the GPIO input has its own formats";
+    EXPECT_FALSE(s.setValue("gpio_out_repeat", "DAC_REP_ON"));
 }

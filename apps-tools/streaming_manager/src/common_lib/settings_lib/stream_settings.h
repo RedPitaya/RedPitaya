@@ -28,6 +28,12 @@ class CStreamSettings {
 
     ENUM(DACRepeat, DAC_REP_OFF = -1, "Off", DAC_REP_INF = -2, "Infinity", DAC_REP_ON = 0, "On")
 
+    // The file of the GPIO input: BIN - the stream words as they come (an RLE word keeps its
+    // count), CSV and VCD - the levels of the lines with their sample times
+    ENUM(GPIOFormat, BIN = 0, "BIN", CSV = 1, "CSV", VCD = 2, "VCD")
+
+    ENUM(GPIORepeat, GPIO_REP_OFF = -1, "Off", GPIO_REP_INF = -2, "Infinity", GPIO_REP_ON = 0, "On")
+
     ENUM(DACGain, X1 = 0, "x1", X5 = 1, "x5")
 
     ENUM(TriggerEdge, RISING = 0, "Rising", FALLING = 1, "Falling")
@@ -91,6 +97,8 @@ class CStreamSettings {
     // A file name in the DAC directory (getDACDirPath): no directory part, "" - none
     auto setDACFile(std::string _value) -> bool;
     static auto isValidDACFileName(const std::string& _name) -> bool;
+    // a file name without a directory part (or ""): no '/', '\\', NUL, "." or ".."
+    static auto isValidFileName(const std::string& _name) -> bool;
     auto getDACFile() const -> std::string;
     auto setDACFileType(DataFormat _value) -> bool;
     auto getDACFileType() const -> DataFormat;
@@ -169,6 +177,23 @@ class CStreamSettings {
     auto setGPIOTriggerBlocks(uint32_t _blocks) -> bool;
     auto getGPIOTriggerBlocks() const -> uint32_t;
 
+    // GPIO files on the SD card (getGPIODirPath): the input written to a file, the output played
+    // from one
+    auto setGPIOInPassMode(PassMode _value) -> void;
+    auto getGPIOInPassMode() const -> PassMode;
+    auto setGPIOInFormat(GPIOFormat _value) -> void;
+    auto getGPIOInFormat() const -> GPIOFormat;
+    auto setGPIOInSamples(uint64_t _samples) -> void;  // GPIO clock samples, 0 - no limit
+    auto getGPIOInSamples() const -> uint64_t;
+    auto setGPIOOutPassMode(PassMode _value) -> void;
+    auto getGPIOOutPassMode() const -> PassMode;
+    auto setGPIOOutFile(std::string _name) -> bool;  // a name only, as file_sd
+    auto getGPIOOutFile() const -> std::string;
+    auto setGPIOOutRepeat(GPIORepeat _value) -> void;
+    auto getGPIOOutRepeat() const -> GPIORepeat;
+    auto setGPIOOutRepeatCount(uint32_t _count) -> void;
+    auto getGPIOOutRepeatCount() const -> uint32_t;
+
     // The data bytes of a memory block, a multiple of MEMORY_BLOCK_ALIGN (the DMA bursts) from
     // MEMORY_BLOCK_ALIGN to MEMORY_BLOCK_MAX; whether the board's RAM holds it is the memory
     // manager's check.
@@ -188,6 +213,9 @@ class CStreamSettings {
     static auto setDACDirPath(std::string& _path) -> void;
     static auto getDACDirPath() -> std::string;
     static auto getDACFiles() -> std::string;
+    static auto setGPIODirPath(const std::string& _path) -> void;
+    static auto getGPIODirPath() -> std::string;
+    static auto getGPIOFiles() -> std::string;
 
    private:
     CStreamSettings(CStreamSettings&&) = delete;
@@ -260,6 +288,13 @@ class CStreamSettings {
         State m_inTrigMode = State::OFF;
         State m_outTrigMode = State::OFF;
         uint32_t m_trigBlocks = 0;
+        PassMode m_inPassMode = PassMode::NET;
+        GPIOFormat m_inFormat = GPIOFormat::BIN;
+        uint64_t m_inSamples = 0;
+        PassMode m_outPassMode = PassMode::NET;
+        std::string m_outFile;
+        GPIORepeat m_outRepeat = GPIORepeat::GPIO_REP_OFF;
+        uint32_t m_outRepeatCount = 0;
     };
 
     ADCSettings m_adcsettings;

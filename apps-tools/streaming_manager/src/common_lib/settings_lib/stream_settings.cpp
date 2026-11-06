@@ -10,10 +10,12 @@
 #include "logger_lib/file_logger.h"
 
 #define FILE_PATH "/home/redpitaya/streaming_files/dac"
+#define GPIO_FILE_PATH "/home/redpitaya/streaming_files/gpio"
 
 namespace {
 
 thread_local std::string g_dirPath = FILE_PATH;
+thread_local std::string g_gpioDirPath = GPIO_FILE_PATH;
 
 auto to_uint64(char const* s) -> uint64_t {
     if (s == NULL || *s == '\0')
@@ -177,6 +179,13 @@ auto CStreamSettings::toJson() const -> std::string {
     gpio_config["gpio_in_trigger_mode"] = getGPIOInTriggerMode().name();
     gpio_config["gpio_out_trigger_mode"] = getGPIOOutTriggerMode().name();
     gpio_config["gpio_trigger_blocks"] = getGPIOTriggerBlocks();
+    gpio_config["gpio_in_pass_mode"] = getGPIOInPassMode().name();
+    gpio_config["gpio_in_format_sd"] = getGPIOInFormat().name();
+    gpio_config["gpio_in_samples_limit_sd"] = getGPIOInSamples();
+    gpio_config["gpio_out_pass_mode"] = getGPIOOutPassMode().name();
+    gpio_config["gpio_out_file_sd"] = getGPIOOutFile();
+    gpio_config["gpio_out_repeat"] = getGPIOOutRepeat().name();
+    gpio_config["gpio_out_repeat_count"] = getGPIOOutRepeatCount();
 
     root["adc_streaming"] = adc_config;
     root["dac_streaming"] = dac_config;
@@ -353,6 +362,20 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setGPIOOutTriggerMode(State::from_string(gpio_config["gpio_out_trigger_mode"].asString()));
         if (gpio_config.isMember("gpio_trigger_blocks"))
             setGPIOTriggerBlocks(gpio_config["gpio_trigger_blocks"].asUInt());
+        if (gpio_config.isMember("gpio_in_pass_mode"))
+            setGPIOInPassMode(PassMode::from_string(gpio_config["gpio_in_pass_mode"].asString()));
+        if (gpio_config.isMember("gpio_in_format_sd"))
+            setGPIOInFormat(GPIOFormat::from_string(gpio_config["gpio_in_format_sd"].asString()));
+        if (gpio_config.isMember("gpio_in_samples_limit_sd"))
+            setGPIOInSamples(gpio_config["gpio_in_samples_limit_sd"].asUInt64());
+        if (gpio_config.isMember("gpio_out_pass_mode"))
+            setGPIOOutPassMode(PassMode::from_string(gpio_config["gpio_out_pass_mode"].asString()));
+        if (gpio_config.isMember("gpio_out_file_sd"))
+            setGPIOOutFile(gpio_config["gpio_out_file_sd"].asString());
+        if (gpio_config.isMember("gpio_out_repeat"))
+            setGPIOOutRepeat(GPIORepeat::from_string(gpio_config["gpio_out_repeat"].asString()));
+        if (gpio_config.isMember("gpio_out_repeat_count"))
+            setGPIOOutRepeatCount(gpio_config["gpio_out_repeat_count"].asUInt());
         return true;
     } catch (...) {
         ERROR_LOG("Error parse json. Invalid file")
@@ -435,6 +458,13 @@ auto CStreamSettings::toString() const -> std::string {
     str += "Event source:\t\t" + std::string(getGPIOEventSource().to_string()) + "\n";
     str += "Trigger mode in/out:\t\t" + std::string(getGPIOInTriggerMode().to_string()) + " / " + getGPIOOutTriggerMode().to_string() + "\n";
     str += "Trigger blocks:\t\t" + blocks(getGPIOTriggerBlocks()) + "\n";
+    str += "Input pass mode:\t\t" + std::string(getGPIOInPassMode().to_string()) + "\n";
+    str += "Input file format:\t\t" + std::string(getGPIOInFormat().to_string()) + " (In file mode)\n";
+    str += "Input samples:\t\t" + std::to_string(getGPIOInSamples()) + " (In file mode)\n";
+    str += "Output pass mode:\t\t" + std::string(getGPIOOutPassMode().to_string()) + "\n";
+    str += "Output file on SD:\t\t" + getGPIOOutFile() + "\n";
+    str += "Output repeat:\t\t" + std::string(getGPIOOutRepeat().to_string()) + " (In file mode)\n";
+    str += "Output repeat count:\t" + std::to_string(getGPIOOutRepeatCount()) + " (In file mode)\n";
 
     return str;
 }
@@ -573,7 +603,7 @@ auto CStreamSettings::getADCCalibration() const -> State {
     return m_adcsettings.m_useCalib;
 }
 
-auto CStreamSettings::isValidDACFileName(const std::string& _name) -> bool {
+auto CStreamSettings::isValidFileName(const std::string& _name) -> bool {
     if (_name.empty())
         return true;
     if (_name.size() > 255 || _name == "." || _name == "..")
@@ -581,8 +611,12 @@ auto CStreamSettings::isValidDACFileName(const std::string& _name) -> bool {
     return _name.find_first_of(std::string("/\\\0", 3)) == std::string::npos;
 }
 
+auto CStreamSettings::isValidDACFileName(const std::string& _name) -> bool {
+    return isValidFileName(_name);
+}
+
 auto CStreamSettings::setDACFile(std::string _value) -> bool {
-    if (!isValidDACFileName(_value))
+    if (!isValidFileName(_value))
         return false;
     m_dacsettings.m_file = _value;
     return true;
@@ -1235,6 +1269,40 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return setGPIOTriggerBlocks(to_uint(value.c_str()));
         }
 
+        if (key == "gpio_in_pass_mode") {
+            setGPIOInPassMode(PassMode::from_string(value));
+            return true;
+        }
+
+        if (key == "gpio_in_format_sd") {
+            setGPIOInFormat(GPIOFormat::from_string(value));
+            return true;
+        }
+
+        if (key == "gpio_in_samples_limit_sd") {
+            setGPIOInSamples(to_uint64(value.c_str()));
+            return true;
+        }
+
+        if (key == "gpio_out_pass_mode") {
+            setGPIOOutPassMode(PassMode::from_string(value));
+            return true;
+        }
+
+        if (key == "gpio_out_file_sd") {
+            return setGPIOOutFile(value);
+        }
+
+        if (key == "gpio_out_repeat") {
+            setGPIOOutRepeat(GPIORepeat::from_string(value));
+            return true;
+        }
+
+        if (key == "gpio_out_repeat_count") {
+            setGPIOOutRepeatCount(to_uint(value.c_str()));
+            return true;
+        }
+
     } catch (...) {
         return false;
     }
@@ -1461,6 +1529,34 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
             return std::to_string(getGPIOTriggerBlocks());
         }
 
+        if (key == "gpio_in_pass_mode") {
+            return getGPIOInPassMode().name();
+        }
+
+        if (key == "gpio_in_format_sd") {
+            return getGPIOInFormat().name();
+        }
+
+        if (key == "gpio_in_samples_limit_sd") {
+            return std::to_string(getGPIOInSamples());
+        }
+
+        if (key == "gpio_out_pass_mode") {
+            return getGPIOOutPassMode().name();
+        }
+
+        if (key == "gpio_out_file_sd") {
+            return getGPIOOutFile();
+        }
+
+        if (key == "gpio_out_repeat") {
+            return getGPIOOutRepeat().name();
+        }
+
+        if (key == "gpio_out_repeat_count") {
+            return std::to_string(getGPIOOutRepeatCount());
+        }
+
     } catch (...) {
         return "ERROR";
     }
@@ -1549,7 +1645,100 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "gpio_in_trigger_mode\t: " + states + "\n";
     s += "gpio_out_trigger_mode\t: " + states + "\n";
     s += "gpio_trigger_blocks\t: An unsigned integer value: 0-65535. Blocks captured after a trigger, 0 - continuous.\n";
+    s += "gpio_in_pass_mode\t: " + concat(CStreamSettings::PassMode::names(), CStreamSettings::PassMode::count) + ". FILE - the input goes to a file in " GPIO_FILE_PATH ".\n";
+    s += "gpio_in_format_sd\t: " + concat(CStreamSettings::GPIOFormat::names(), CStreamSettings::GPIOFormat::count) + "\n";
+    s += "gpio_in_samples_limit_sd: An unsigned integer value. GPIO samples written to the file, 0 - until the stop.\n";
+    s += "gpio_out_pass_mode\t: " + concat(CStreamSettings::PassMode::names(), CStreamSettings::PassMode::count) + ". FILE - the output plays gpio_out_file_sd.\n";
+    s += "gpio_out_file_sd\t: The name of a file in " GPIO_FILE_PATH " to play on the output; a name only, without a directory.\n";
+    s += "gpio_out_repeat\t\t: " + concat(CStreamSettings::GPIORepeat::names(), CStreamSettings::GPIORepeat::count) + "\n";
+    s += "gpio_out_repeat_count\t: An unsigned integer value.\n";
 
+    return s;
+}
+
+auto CStreamSettings::setGPIOInPassMode(PassMode _value) -> void {
+    m_gpiosettings.m_inPassMode = _value;
+}
+
+auto CStreamSettings::getGPIOInPassMode() const -> PassMode {
+    return m_gpiosettings.m_inPassMode;
+}
+
+auto CStreamSettings::setGPIOInFormat(GPIOFormat _value) -> void {
+    m_gpiosettings.m_inFormat = _value;
+}
+
+auto CStreamSettings::getGPIOInFormat() const -> GPIOFormat {
+    return m_gpiosettings.m_inFormat;
+}
+
+auto CStreamSettings::setGPIOInSamples(uint64_t _samples) -> void {
+    m_gpiosettings.m_inSamples = _samples;
+}
+
+auto CStreamSettings::getGPIOInSamples() const -> uint64_t {
+    return m_gpiosettings.m_inSamples;
+}
+
+auto CStreamSettings::setGPIOOutPassMode(PassMode _value) -> void {
+    m_gpiosettings.m_outPassMode = _value;
+}
+
+auto CStreamSettings::getGPIOOutPassMode() const -> PassMode {
+    return m_gpiosettings.m_outPassMode;
+}
+
+auto CStreamSettings::setGPIOOutFile(std::string _name) -> bool {
+    if (!isValidFileName(_name))
+        return false;
+    m_gpiosettings.m_outFile = _name;
+    return true;
+}
+
+auto CStreamSettings::getGPIOOutFile() const -> std::string {
+    return m_gpiosettings.m_outFile;
+}
+
+auto CStreamSettings::setGPIOOutRepeat(GPIORepeat _value) -> void {
+    m_gpiosettings.m_outRepeat = _value;
+}
+
+auto CStreamSettings::getGPIOOutRepeat() const -> GPIORepeat {
+    return m_gpiosettings.m_outRepeat;
+}
+
+auto CStreamSettings::setGPIOOutRepeatCount(uint32_t _count) -> void {
+    m_gpiosettings.m_outRepeatCount = _count;
+}
+
+auto CStreamSettings::getGPIOOutRepeatCount() const -> uint32_t {
+    return m_gpiosettings.m_outRepeatCount;
+}
+
+auto CStreamSettings::setGPIODirPath(const std::string& _path) -> void {
+    g_gpioDirPath = _path;
+}
+
+// The directory of the GPIO files, made if missing (on the board; "." on a host)
+auto CStreamSettings::getGPIODirPath() -> std::string {
+#ifdef RP_PLATFORM
+    if (g_gpioDirPath.empty())
+        g_gpioDirPath = GPIO_FILE_PATH;
+    std::error_code ec;
+    std::filesystem::create_directories(g_gpioDirPath, ec);
+    if (ec)
+        return GPIO_FILE_PATH;
+    return g_gpioDirPath;
+#else
+    return g_gpioDirPath.empty() || g_gpioDirPath == GPIO_FILE_PATH ? "." : g_gpioDirPath;
+#endif
+}
+
+auto CStreamSettings::getGPIOFiles() -> std::string {
+    std::string s;
+    std::error_code ec;
+    for (const auto& entry : std::filesystem::directory_iterator(getGPIODirPath(), ec))
+        s += entry.path().filename().generic_string() + "\n";
     return s;
 }
 
