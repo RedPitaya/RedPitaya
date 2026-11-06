@@ -71,6 +71,8 @@ struct Listener {
         socket->errorNotify.connect([this](std::error_code) { errors++; });
         socket->initClient();
     }
+    // The socket goes first: its thread calls back into the members below until it is joined
+    ~Listener() { socket.reset(); }
     auto count() -> size_t {
         std::lock_guard lock(mutex);
         return messages.size();
@@ -114,6 +116,8 @@ struct Announcer {
             return targets;
         });
     }
+    // The socket goes first: its thread calls the provider (mutex, targets) until it is joined
+    ~Announcer() { socket.reset(); }
     auto setTargets(std::vector<BroadcastTarget> t) -> void {
         std::lock_guard lock(mutex);
         targets = std::move(t);

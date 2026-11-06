@@ -28,6 +28,8 @@ struct BroadcastTarget {
 //
 // Every socket operation runs on the object's asio thread; the public methods may be called
 // from any thread, and closeSocket() returns once nothing is sent or received any more.
+// The signals and the target provider are called on that thread until closeSocket() or the
+// destructor returned: what they use must outlive the socket (destroy the socket first).
 class CAsioBroadcastSocket {
    public:
     typedef uint8_t* ab_buffer;
