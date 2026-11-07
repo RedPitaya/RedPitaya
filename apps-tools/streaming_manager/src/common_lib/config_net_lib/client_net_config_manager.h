@@ -17,6 +17,7 @@ class ClientNetConfigManager : public CStreamSettings {
         std::string host;
         broadcast_lib::EMode mode;
         uint8_t model;
+        bool gpio = false;  // the board streams GPIO (its features)
         std::time_t ts;
     };
 

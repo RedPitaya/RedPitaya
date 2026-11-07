@@ -90,8 +90,7 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_ADC, s.getADCSize());
         streaming_lib::ADCStreamOptions o;
-        if (!options.adcHost.empty())
-            o.host = options.adcHost;
+        o.host = options.host;
         o.testMode = options.adcTestMode;
         adc->setVerbose(options.verbose);
         return adc->start(s, o);
@@ -119,7 +118,9 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_DAC, s.getDACSize());
         dac->setVerbose(options.verbose);
-        return dac->start(s, channels);
+        dac_streaming_lib::DACStreamOptions o;
+        o.host = options.host;
+        return dac->start(s, channels, o);
     }
 
     auto stopDAC(DACStopReason reason, bool wait) -> void {
@@ -137,7 +138,9 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_GPIO_IN, s.getGPIOInSize());
         gpioIn->setVerbose(options.verbose);
-        return gpioIn->start(s);
+        gpio_streaming_lib::GPIOStreamOptions o;
+        o.host = options.host;
+        return gpioIn->start(s, o);
     }
 
     auto stopGPIOIn(GPIOStopReason reason, bool wait) -> void {
@@ -155,7 +158,9 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_GPIO_OUT, s.getGPIOOutSize());
         gpioOut->setVerbose(options.verbose);
-        return gpioOut->start(s);
+        gpio_streaming_lib::GPIOStreamOptions o;
+        o.host = options.host;
+        return gpioOut->start(s, o);
     }
 
     auto stopGPIOOut(GPIOStopReason reason, bool wait) -> void {
@@ -485,7 +490,8 @@ auto StreamSession::create(uio_lib::CHardware::Ptr hw, const SessionOptions& opt
     connectTriggerCommands(p->config, hw);
 
     if (options.broadcast)
-        c.startBroadcast(options.broadcastModel, options.broadcastMac, !options.broadcastHost.empty() ? options.broadcastHost : !options.host.empty() ? options.host : std::string("127.0.0.1"), options.broadcastPort);
+        c.startBroadcast(options.broadcastModel, options.broadcastMac, !options.broadcastHost.empty() ? options.broadcastHost : !options.host.empty() ? options.host : std::string("127.0.0.1"),
+                         options.broadcastPort, hw->features().gpio ? "gpio" : "");
 
     return Ptr(new StreamSession(p));
 }

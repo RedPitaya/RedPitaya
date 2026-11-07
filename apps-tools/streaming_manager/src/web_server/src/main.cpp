@@ -284,9 +284,8 @@ auto rp_app_init(void) -> int {
             TRACE("ss_ip_addr %s", ss_ip_addr.Value().c_str());
             session_lib::SessionOptions options;
             options.configFile = config_file;
-            // the config port on every interface: the address of the page is 127.0.0.1 until the
-            // page sets it, and it is the announced one, not a filter of the clients
-            options.adcHost = ss_ip_addr.Value();
+            // the config and data ports on every interface: the address of the page is 127.0.0.1
+            // until the page sets it, and it is the announced one, not a filter of the clients
             options.broadcastModel = getModel();
             options.broadcastMac = getMACAddress();
             options.broadcastHost = ss_ip_addr.Value();

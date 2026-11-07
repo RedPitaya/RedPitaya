@@ -40,8 +40,9 @@ auto ServerNetConfigManager::startServer(std::string host, uint16_t port) -> voi
     m_pNetConfManager->startAsioNet(net_lib::M_SERVER, host, port);
 }
 
-auto ServerNetConfigManager::startBroadcast(uint8_t model, std::string mac, std::string host, uint16_t port) -> void {
+auto ServerNetConfigManager::startBroadcast(uint8_t model, std::string mac, std::string host, uint16_t port, std::string features) -> void {
     m_pBroadcast = broadcast_lib::CAsioBroadcastSocket::create(model, mac, host, port);
+    m_pBroadcast->setFeatures(features);
     m_pBroadcast->errorNotify.connect([=, this](std::error_code er) {
         ERROR_LOG("Broadcast server error: %s (%d)", er.message().c_str(), er.value());
         errorNofiy(Errors::BROADCAST_ERROR);

@@ -242,7 +242,7 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\t--background          -b        Run service in background.\n"
         "\t--file=PATH           -f FILE   Path to configuration file.\n"
         "\t                                By default uses the config file /root/.config/redpitaya/apps/streaming/streaming_config.json.\n"
-        "\t--listen=ADDRESS      -l ADDRESS The address of the board the config port listens on,\n"
+        "\t--listen=ADDRESS      -l ADDRESS The address of the board the config and data ports listen on,\n"
         "\t                                for example 127.0.0.1 for the clients of the board only.\n"
         "\t                                By default every interface.\n"
         "\t--verbose             -v        Displays information.\n"

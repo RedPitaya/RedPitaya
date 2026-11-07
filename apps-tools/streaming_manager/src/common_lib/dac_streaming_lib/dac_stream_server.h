@@ -27,7 +27,7 @@ class DACServerCallback {
 };
 
 struct DACStreamOptions {
-    std::string host = "127.0.0.1";  // the address the data server listens on
+    std::string host;  // the address the data server listens on; empty - every interface
     std::string dirPath;             // the directory of the files, CStreamSettings::getDACDirPath() when empty
 };
 

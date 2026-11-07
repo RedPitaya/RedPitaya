@@ -5,14 +5,18 @@
 
 #include <gtest/gtest.h>
 
+#include <cstring>
 #include <filesystem>
+#include <iterator>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
 
 #include "bin_lib/bin_file.h"
+#include "bin_lib/gpio_words.h"
 #include "converter_lib/converter.h"
+#include "tdms_lib/tdms.h"
 
 namespace {
 
@@ -85,4 +89,68 @@ TEST(ConvertToCSV, NotABinStreamFile) {
     std::ofstream(bin) << "old segments";
     converter_lib::CConverter c;
     EXPECT_FALSE(c.convertToCSV(bin, "", FH_CSV_ADD_INDEX));
+}
+
+TEST(ConvertToTDMS, TheSamplesAndTheRateOfTheRecording) {
+    const auto bin = Path("tdms.bin");
+    WriteRecording(bin, 1000000000);
+    converter_lib::CConverter c;
+    ASSERT_TRUE(c.convertToTDMS(bin, ""));
+    TDMS::FileReader f;
+    ASSERT_TRUE(f.open(Path("tdms.tdms"))) << f.error();
+    // as the board writes TDMS: the lost sample of a buffer is a 0 after its samples
+    EXPECT_EQ(f.readAll<int16_t>("Group", "ch1"), (std::vector<int16_t>{1, 2, 11, 12, 0}));
+    EXPECT_EQ(f.readAll<int16_t>("Group", "ch2"), (std::vector<int16_t>{-1, -2, -11, -12, 0}));
+    EXPECT_EQ(TDMS::getProperty<double>(f.groupProperties("Group"), "sample_rate"), 1e6);
+    EXPECT_EQ(f.readAll<uint64_t>("Buffers", "lost"), (std::vector<uint64_t>{0, 1}));
+}
+
+TEST(ConvertToWAV, TheSamplesInterleaved) {
+    const auto bin = Path("wav.bin");
+    WriteRecording(bin);
+    converter_lib::CConverter c;
+    ASSERT_TRUE(c.convertToWAV(bin, ""));
+    std::ifstream in(Path("wav.wav"), std::ios::binary);
+    std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    ASSERT_EQ(bytes.size(), 44u + 10u * 2u) << "as the board writes WAV: the lost sample is a 0 frame";
+    std::vector<int16_t> s(10);
+    std::memcpy(s.data(), bytes.data() + 44, 20);
+    EXPECT_EQ(s, (std::vector<int16_t>{1, -1, 2, -2, 11, -11, 12, -12, 0, 0}));
+}
+
+namespace {
+
+auto WriteGpio(const std::string& path) -> void {
+    bin_lib::FileInfo info;
+    info.source = bin_lib::Source::GPIO_IN;
+    info.clock = 125000000;
+    info.channels = {{1, bin_lib::SampleType::GPIO_IN_WORD, bin_lib::CHANNEL_FLAG_RLE, 0}};
+    auto out = bin_lib::fileHeader(info);
+    const uint32_t words[2] = {bin_lib::inWord(0x01, 2, 0x10, 2), bin_lib::inWord(0x02, 0, 0x20, 0)};
+    bin_lib::BlockInfo b;
+    b.samples = 4;
+    bin_lib::appendBlock(out, b, words, sizeof(words));
+    std::ofstream f(path, std::ios::binary | std::ios::trunc);
+    f.write(reinterpret_cast<const char*>(out.data()), static_cast<std::streamsize>(out.size()));
+}
+
+}  // namespace
+
+TEST(ConvertGpio, CsvAndVcdOfTheLines) {
+    const auto bin = Path("gpio.bin");
+    WriteGpio(bin);
+    converter_lib::CConverter c;
+    ASSERT_TRUE(c.convertToCSV(bin, "", FH_CSV_NONE));
+    EXPECT_EQ(ReadText(Path("gpio.csv")), "sample,p,n\n0,0x01,0x10\n3,0x02,0x20\n");
+    ASSERT_TRUE(c.convertToVCD(bin, ""));
+    const auto vcd = ReadText(Path("gpio.vcd"));
+    EXPECT_NE(vcd.find("#24000\nb00000010 p\nb00100000 n\n"), std::string::npos) << vcd;
+    EXPECT_FALSE(c.convertToTDMS(bin, "")) << "a GPIO recording is no TDMS";
+}
+
+TEST(ConvertGpio, VcdIsForGpioRecordings) {
+    const auto bin = Path("adc_vcd.bin");
+    WriteRecording(bin);
+    converter_lib::CConverter c;
+    EXPECT_FALSE(c.convertToVCD(bin, ""));
 }

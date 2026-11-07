@@ -60,7 +60,10 @@ CAsioSocketDMA::~CAsioSocketDMA() {
 auto CAsioSocketDMA::initServer() -> void {
     closeSocket();
     auto acceptor = std::make_shared<asio::ip::tcp::acceptor>(m_asio->getIO());
+    // the host given, every interface for none (or 0.0.0.0); a wrong address throws
     asio::ip::tcp::endpoint endpoint(asio::ip::tcp::v4(), m_port);
+    if (!m_host.empty() && m_host != "0.0.0.0")
+        endpoint = asio::ip::tcp::endpoint(asio::ip::make_address(m_host), m_port);
     acceptor->open(endpoint.protocol());
     acceptor->set_option(asio::ip::tcp::no_delay(true));
     acceptor->set_option(asio::ip::tcp::acceptor::reuse_address(true));

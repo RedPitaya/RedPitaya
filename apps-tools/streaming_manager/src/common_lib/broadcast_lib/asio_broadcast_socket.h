@@ -46,6 +46,9 @@ class CAsioBroadcastSocket {
     auto closeSocket() -> void;
     // The host announced when no interface is found.
     auto setIPAddress(std::string host) -> void;
+    // What the board has besides its model, words separated by spaces ("gpio"): announced after
+    // the model in its field, "7 gpio", which a client that reads the model with atoi() reads as 7
+    auto setFeatures(std::string features) -> void;
     // Replaces the interface list, for tests and setups that announce something else.
     auto setTargetProvider(TargetProvider provider) -> void;
 

@@ -17,9 +17,8 @@ namespace session_lib {
 
 struct SessionOptions {
     std::string configFile;           // the settings, read at the start; made with the defaults if missing
-    std::string host;                 // the config server listens on it; empty - every interface
+    std::string host;                 // the config and data servers listen on it; empty - every interface
     uint16_t configPort = NET_CONFIG_PORT;
-    std::string adcHost;              // the ADC data server listens on it; empty - its default
     bool broadcast = true;            // announce the board on the network
     uint8_t broadcastModel = 0;       // the board model the announcement carries
     std::string broadcastMac = "NONE";

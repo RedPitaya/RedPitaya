@@ -16,7 +16,9 @@
 
 namespace {
 
-thread_local std::string g_dirPath = FILE_PATH;
+// one for the process, as the GPIO one
+std::string g_dirPath = FILE_PATH;
+std::mutex g_dirMtx;
 // one for the process: the servers start their files on their own threads
 std::string g_gpioDirPath = GPIO_FILE_PATH;
 std::mutex g_gpioDirMtx;
@@ -1790,10 +1792,12 @@ auto CStreamSettings::getGPIOFiles() -> std::string {
 }
 
 auto CStreamSettings::setDACDirPath(std::string& _path) -> void {
+    std::lock_guard lock(g_dirMtx);
     g_dirPath = _path;
 }
 
 auto CStreamSettings::getDACDirPath() -> std::string {
+    std::lock_guard lock(g_dirMtx);
 #ifdef RP_PLATFORM
     if (g_dirPath.empty()) {
         g_dirPath = FILE_PATH;

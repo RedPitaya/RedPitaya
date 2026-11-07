@@ -44,7 +44,7 @@ void UsingArgs(char const* progName) {
     std::cout << "\t-ia get info about BIN file. Including information on all segments.\n";
     std::cout << "\t-s Segment from which the conversion starts\n";
     std::cout << "\t-e Segment where the conversion will end\n";
-    std::cout << "\t-f File format. [CSV|WAV|TDMS]. By default used CSV format\n";
+    std::cout << "\t-f File format. [CSV|WAV|TDMS|VCD]. By default used CSV format; a GPIO recording goes to CSV or VCD\n";
     std::cout << "\t-t Creates test data files for DAC streaming\n";
     std::cout << "\t-ci Adds an index column to the CSV file.\n";
     std::cout << "\t-cb Adds a block time column to the CSV file.\n";
@@ -208,6 +208,11 @@ int main(int argc, char* argv[]) {
     if (format == "TDMS") {
         g_converter = converter_lib::CConverter::create();
         g_converter->convertToTDMS(file_name, s, e, "");
+    }
+
+    if (format == "VCD") {
+        g_converter = converter_lib::CConverter::create();
+        g_converter->convertToVCD(file_name, "");
     }
     return 0;
 }

@@ -299,3 +299,15 @@ TEST(Broadcast, TheSystemTargetsAreBroadcastCapableInterfaces) {
         EXPECT_FALSE(ec) << t.destination;
     }
 }
+
+TEST(Broadcast, TheFeaturesFollowTheModelInItsField) {
+    const uint16_t port = NextPort();
+    Listener listener(port);
+    Announcer server(port, {{"10.0.0.33", kLoopbackBroadcast}});
+    server.socket->setFeatures("gpio");
+    server.socket->initServer(AB_SERVER_MASTER, 20);
+    ASSERT_TRUE(WaitFor([&] { return listener.count() > 0; }));
+    auto f = Split(listener.last());
+    ASSERT_EQ(f.size(), 4u) << "still four fields";
+    EXPECT_EQ(f[3], "7 gpio");
+}

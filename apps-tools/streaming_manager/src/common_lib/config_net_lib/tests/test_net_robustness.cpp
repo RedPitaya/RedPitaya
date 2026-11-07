@@ -430,6 +430,13 @@ TEST(Broadcast, AMessageIsFourFieldsWithAnOptionalTrailingNewline) {
 
     ASSERT_TRUE(ClientNetConfigManager::parseBroadcast("mac\nhost\nC\n1\n", c));
     EXPECT_EQ(c.mode, broadcast_lib::AB_NONE);
+    EXPECT_FALSE(c.gpio);
+
+    // the features after the model: an older client reads the model with atoi() all the same
+    ASSERT_TRUE(ClientNetConfigManager::parseBroadcast("mac\nhost\nM\n7 gpio\n", c));
+    EXPECT_EQ(c.model, 7);
+    EXPECT_TRUE(c.gpio);
+    EXPECT_EQ(atoi("7 gpio"), 7);
 
     for (const char* bad : {"", "\n", "mac\nhost\nM", "mac\nhost\nM\n7\nextra", "mac\nhost\nM\n7\n\n\n"}) {
         EXPECT_FALSE(ClientNetConfigManager::parseBroadcast(bad, c)) << bad;

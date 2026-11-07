@@ -25,7 +25,7 @@ class ADCServerCallback {
 };
 
 struct ADCStreamOptions {
-    std::string host = "127.0.0.1";  // the address the data server listens on
+    std::string host;  // the address the data server listens on; empty - every interface
     std::string filePath;            // the directory of the files, FILE_PATH when empty
     bool testMode = false;           // benchmark: no DMA addresses, at most 100 blocks
 };

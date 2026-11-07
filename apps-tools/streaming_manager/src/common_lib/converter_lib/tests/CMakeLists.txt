@@ -25,6 +25,7 @@ target_include_directories(converter_lib_tests PRIVATE ${COMMON_LIB_DIR})
 target_link_libraries(converter_lib_tests PRIVATE
     ${PROJECT_NAME}
     bin_lib
+    tdms_lib
     logger_lib
     GTest::gtest_main
     pthread)

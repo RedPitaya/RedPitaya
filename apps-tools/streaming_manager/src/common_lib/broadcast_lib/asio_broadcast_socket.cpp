@@ -31,6 +31,7 @@ class CAsioBroadcastSocket::Impl {
     broadcast_lib::EMode m_mode = EMode::AB_NONE;
     std::string m_mac = "";
     std::string m_host;
+    std::string m_features;
     uint16_t m_port = 0;
     bool m_stopped = true;
     TargetProvider m_provider;
@@ -58,7 +59,7 @@ class CAsioBroadcastSocket::Impl {
                 ret += "E\n";
                 break;
         }
-        ret += std::to_string(m_model) + "\n";
+        ret += std::to_string(m_model) + (m_features.empty() ? "" : " " + m_features) + "\n";
         return ret;
     };
 
@@ -254,6 +255,10 @@ auto CAsioBroadcastSocket::closeSocket() -> void {
 
 auto CAsioBroadcastSocket::setIPAddress(std::string host) -> void {
     m_pimpl->run([&]() { m_pimpl->m_host = host; });
+}
+
+auto CAsioBroadcastSocket::setFeatures(std::string features) -> void {
+    m_pimpl->run([&]() { m_pimpl->m_features = features; });
 }
 
 auto CAsioBroadcastSocket::setTargetProvider(TargetProvider provider) -> void {

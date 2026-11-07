@@ -162,7 +162,9 @@ auto ClientNetConfigManager::parseBroadcast(const std::string& message, BroadCas
     } else {
         client.mode = broadcast_lib::AB_NONE;
     }
+    // "7" or "7 gpio": the model, then the features of the board
     client.model = atoi(fields[3].c_str());
+    client.gpio = (" " + fields[3] + " ").find(" gpio ") != std::string::npos;
     client.ts = std::time(0);
     return true;
 }

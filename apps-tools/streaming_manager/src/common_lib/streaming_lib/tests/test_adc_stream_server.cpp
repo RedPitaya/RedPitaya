@@ -292,3 +292,19 @@ TEST_F(ADCServer, AStopWithTheClientConnectedIsReportedOnce) {
     std::lock_guard lock(recorder->mtx);
     EXPECT_EQ(recorder->reasons, std::vector<ADCStopReason>{ADCStopReason::NORMAL}) << "the disconnect of our own stop is not a second stop";
 }
+
+TEST_F(ADCServer, TheDataPortListensOnTheAddressGiven) {
+    CStreamSettings s;
+    ADCStreamOptions o;
+    o.host = "127.0.0.2";
+    ASSERT_TRUE(server->start(netSettings(s), o));
+    asio::io_context io;
+    asio::ip::tcp::socket a(io), b(io);
+    asio::error_code ec1, ec2;
+    a.connect(asio::ip::tcp::endpoint(asio::ip::make_address("127.0.0.2"), NET_ADC_STREAMING_PORT), ec1);
+    b.connect(asio::ip::tcp::endpoint(asio::ip::make_address("127.0.0.1"), NET_ADC_STREAMING_PORT), ec2);
+    EXPECT_FALSE(ec1) << ec1.message();
+    EXPECT_TRUE(ec2) << "not on another address";
+    a.close();
+    server->stop(ADCStopReason::NORMAL);
+}
