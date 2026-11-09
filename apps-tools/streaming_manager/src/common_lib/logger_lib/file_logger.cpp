@@ -1,3 +1,6 @@
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #include "file_logger.h"
 #include <cstdarg>
 #include "data_lib/network_header.h"
@@ -47,6 +50,8 @@ void acprintf(FILE* stream, __attribute__((unused)) PColor color, const char* fo
     va_start(args, format);
     std::string s = format;
 #ifndef _WIN32
+    if (!isatty(fileno(stream)))
+        color = WHITE;
     switch (color) {
         case WHITE:
             vfprintf(stream, format, args);

@@ -451,6 +451,14 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
     }
 }
 
+auto ClientNetConfigManager::isConnected(const std::string& host) -> bool {
+    for (auto& c : clientsCopy()) {
+        if (c->m_manager->getHost() == host)
+            return c->m_manager->isConnected();
+    }
+    return false;
+}
+
 auto ClientNetConfigManager::isServersConnected() -> bool {
     for (auto& c : clientsCopy()) {
         bool handshake = false;

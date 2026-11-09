@@ -59,9 +59,9 @@ auto FileQueueManager::openFile(std::string FileName, bool Append) -> void {
         m_freeSize = std::numeric_limits<unsigned long long>::max();
     }
     m_aviablePhyMemory = getTotalSystemMemory();
-    aprintf(stdout, "Available physical memory: %d Mb\n", m_aviablePhyMemory / (1024 * 1024));
+    TRACE_SHORT("Available physical memory: %d Mb", (int)(m_aviablePhyMemory / (1024 * 1024)))
     m_aviablePhyMemory /= 2;
-    aprintf(stdout, "Used physical memory: %d Mb\n", m_aviablePhyMemory / (1024 * 1024));
+    TRACE_SHORT("Used physical memory: %d Mb", (int)(m_aviablePhyMemory / (1024 * 1024)))
     m_hasWriteSize = 0;
 }
 

@@ -38,6 +38,8 @@ class ClientNetConfigManager : public CStreamSettings {
     auto startBroadcast(std::string host, uint16_t port) -> void;
     auto connectToServers(std::vector<std::string> _hosts, uint16_t port) -> void;
     auto isServersConnected() -> bool;
+    // the config connection to the board is open (a board takes one client: a newer one closes it)
+    auto isConnected(const std::string& host) -> bool;
     auto diconnectAll() -> void;
 
     // One broadcast message: "mac\nhost\nmode\nmodel" with an optional trailing newline.
