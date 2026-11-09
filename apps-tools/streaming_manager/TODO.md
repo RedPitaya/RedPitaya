@@ -15,13 +15,4 @@ Found in a review of the code at e26c75a5f. Paths are relative to `src/` unless 
   `SS_GPIO_STATUS`, which is not defined; the run/stop buttons send `SS_GPIO_START`, which starts
   the input only (the output plays what a network client sends), the page shows no status and has
   no GPIO settings. The memory sliders of the input and the output are there.
-- **The client API does not report the GPIO file mode.** The board writes the input to a file
-  (`gpio_in_pass_mode=FILE`, BIN/CSV/VCD in `/home/redpitaya/streaming_files/gpio`) and plays the
-  output from one (`gpio_out_pass_mode=FILE`); `ClientNetConfigManager` has the signals of its
-  replies (64..72), `streaming_api_lib` (ConfigCallback, GPIOStreamClient) does not pass them on.
 - **No GPIO in rpsa_client.** Only the client API (`GPIOStreamClient`) streams GPIO.
-
-## BIN stream file
-
-- **The client API plays WAV and TDMS only.** `DACStreamClient` has no BIN mode;
-  `rpsa_client -o -f bin` and the board (`file_type_sd=BIN`) play it.

@@ -241,6 +241,69 @@ ConfigStreamClient::ConfigStreamClient() {
             cl->gpioOutServerStoppedConfigError(this, host);
     });
 
+    m_pimpl->m_configClient->serverGpioInStartedSDNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO input started: %s writes a file [OK]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioInServerStartedSD(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioInStoppedSDFullNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO input stopped: %s SD card is full [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioInServerStoppedSDFull(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioInStoppedSDDoneNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO input stopped: %s the sample limit is written [OK]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioInServerStoppedSDDone(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioInStoppedSDBrokenNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO input stopped: %s the file can not be written [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioInServerStoppedSDBroken(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStartedSDNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output started: %s plays a file [OK]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStartedSD(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStoppedSDEmptyNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output stopped: %s the file is empty [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStoppedSDEmpty(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStoppedSDBrokenNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output stopped: %s the file is broken [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStoppedSDBroken(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStoppedSDMissingNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output stopped: %s missing file [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStoppedSDMissing(this, host);
+    });
+
+    m_pimpl->m_configClient->serverGpioOutStoppedSDDoneNofiy.connect([&](std::string host, uint64_t waitClocks) {
+        if (m_pimpl->m_verbose)
+            aprintf(stdout, "%s GPIO output stopped: %s the file is played, waited %llu clocks [OK]\n", getTS(": ").c_str(), host.c_str(), (unsigned long long)waitClocks);
+        for (auto cl : m_pimpl->m_callback)
+            cl->gpioOutServerStoppedSDDone(this, host, waitClocks);
+    });
+
     m_pimpl->m_configClient->successSendConfigNofiy.connect([&](std::string host) {
         if (m_pimpl->m_verbose) {
             aprintf(stdout, "%s SET: %s [OK]\n", getTS(": ").c_str(), host.c_str());

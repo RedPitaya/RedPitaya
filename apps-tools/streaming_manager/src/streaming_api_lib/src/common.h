@@ -26,6 +26,8 @@ auto requestStopStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::lis
 auto requestStartDACStreamingCommon(
 	std::shared_ptr<ConfigStreamClient> cl, std::string host, dac_channels_t ac, StateRunningHosts *runned_host, bool verbose) -> bool;
 // true when the server reports the GPIO input (or output) started within 5 s
-auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::string host, bool output, bool verbose) -> bool;
+// The start of the GPIO input or output; toFile: the board started its file mode (it writes or
+// plays a file of its own, no data connection), else the network mode
+auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::string host, bool output, bool verbose, bool* toFile = nullptr) -> bool;
 
 #endif

@@ -42,6 +42,15 @@ struct GPIOPack {
     std::vector<uint32_t> words;
 };
 
+// Why the board ended a GPIO file (the file mode: gpio_in_pass_mode / gpio_out_pass_mode = FILE)
+enum GPIOFileStop {
+    GPIO_FILE_DONE = 0,     // input: the sample limit is written; output: the file is played to its end
+    GPIO_FILE_SD_FULL = 1,  // input: no room left on the SD card
+    GPIO_FILE_BROKEN = 2,   // the file can not be written (input) or read (output)
+    GPIO_FILE_EMPTY = 3,    // output: the file holds no words
+    GPIO_FILE_MISSING = 4   // output: there is no such file (gpio_out_file_sd)
+};
+
 class ADCStreamClient;
 class DACStreamClient;
 class GPIOStreamClient;
@@ -97,6 +106,19 @@ class ConfigCallback {
     virtual void gpioOutServerStoppedMemError(ConfigStreamClient*, std::string) {}
     virtual void gpioOutServerStoppedConfigError(ConfigStreamClient*, std::string) {}
 
+    // The GPIO file mode: the input writes a file on the board, the output plays one from there
+    virtual void gpioInServerStartedSD(ConfigStreamClient*, std::string) {}
+    virtual void gpioInServerStoppedSDFull(ConfigStreamClient*, std::string) {}
+    // the sample limit is written (taken at a buffer: the file may run past it by up to a buffer)
+    virtual void gpioInServerStoppedSDDone(ConfigStreamClient*, std::string) {}
+    virtual void gpioInServerStoppedSDBroken(ConfigStreamClient*, std::string) {}
+    virtual void gpioOutServerStartedSD(ConfigStreamClient*, std::string) {}
+    // the file is played to its end; waitClocks as in gpioOutServerStopped
+    virtual void gpioOutServerStoppedSDDone(ConfigStreamClient*, std::string, [[maybe_unused]] uint64_t waitClocks) {}
+    virtual void gpioOutServerStoppedSDEmpty(ConfigStreamClient*, std::string) {}
+    virtual void gpioOutServerStoppedSDBroken(ConfigStreamClient*, std::string) {}
+    virtual void gpioOutServerStoppedSDMissing(ConfigStreamClient*, std::string) {}
+
     virtual void sigInt() {};
 };
 
@@ -137,6 +159,10 @@ class GPIOCallback {
     virtual void error(GPIOStreamClient*, std::string, int) {}
     // the board stopped the output: the clocks it waited for this client's data (see ConfigCallback)
     virtual void outputStopped(GPIOStreamClient*, std::string, [[maybe_unused]] uint64_t waitClocks) {}
+    // The file mode: the board ended its input file or the file its output played by itself
+    // (not on a stop of the client)
+    virtual void inputFileStopped(GPIOStreamClient*, std::string, [[maybe_unused]] GPIOFileStop reason) {}
+    virtual void outputFileStopped(GPIOStreamClient*, std::string, [[maybe_unused]] GPIOFileStop reason, [[maybe_unused]] uint64_t waitClocks) {}
     // The output words {P lines, N lines, 8 bit unused, RLE count} when the client streams them
     // itself (startStreaming without setOutputData): at most maxWords; none ends the output
     virtual std::vector<uint32_t> outputData(GPIOStreamClient*, [[maybe_unused]] size_t maxWords) { return {}; }

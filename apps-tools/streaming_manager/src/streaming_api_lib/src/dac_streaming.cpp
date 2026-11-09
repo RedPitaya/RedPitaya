@@ -18,7 +18,7 @@
 
 using namespace dac_streaming_lib;
 
-enum dataMode { WAV_MODE = 0, TDMS_MODE = 1, MEM_MODE = 2, MEM_STREAM_MODE = 3 };
+enum dataMode { WAV_MODE = 0, TDMS_MODE = 1, MEM_MODE = 2, MEM_STREAM_MODE = 3, BIN_MODE = 4 };
 
 class DACCb : public ConfigCallback {
 
@@ -66,6 +66,7 @@ struct DACStreamClient::Impl {
     bool m_repeatInf = false;
     dataMode m_dataMode;
     std::string m_fileName = "";
+    bool m_playGaps = false;  // BIN: the lost and trigger wait samples of the recording play as zeros
     uint8_t* m_memChannels[2] = {nullptr, nullptr};
     uint64_t m_memSize[2] = {0, 0};
     uint8_t m_memBytes[2] = {0, 0};
@@ -86,6 +87,9 @@ auto DACStreamClient::Impl::getActiveChannels() -> dac_channels_t {
         case dataMode::WAV_MODE:
             file_type = CDACStreamingManager::WAV_TYPE;
             break;
+        case dataMode::BIN_MODE:
+            file_type = CDACStreamingManager::BIN_TYPE;
+            break;
         case dataMode::MEM_MODE: {
             for (int i = 0; i < 2; i++) {
                 if (m_memChannels[i] != nullptr)
@@ -99,7 +103,7 @@ auto DACStreamClient::Impl::getActiveChannels() -> dac_channels_t {
         default:
             return channels;
     }
-    auto x = CDACStreamingManager::Create(file_type, m_fileName, CStreamSettings::DACRepeat::DAC_REP_OFF, 0, 0, false);
+    auto x = CDACStreamingManager::Create(file_type, m_fileName, CStreamSettings::DACRepeat::DAC_REP_OFF, 0, 0, false, m_playGaps);
     x->getChannels(channels);
     return channels;
 }
@@ -121,6 +125,10 @@ auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host,
 
     if (m_dataMode == TDMS_MODE) {
         file_type = CDACStreamingManager::TDMS_TYPE;
+    }
+
+    if (m_dataMode == BIN_MODE) {
+        file_type = CDACStreamingManager::BIN_TYPE;
     }
 
     m_repeatCount = m_repeatCount == 0 ? 1 : m_repeatCount;
@@ -151,7 +159,7 @@ auto DACStreamClient::Impl::runClient(DACStreamClient* client, std::string host,
             break;
         }
         default:
-            m_dac_manger = CDACStreamingManager::Create(file_type, m_fileName, rep_mode, m_repeatCount, size, m_verbose);
+            m_dac_manger = CDACStreamingManager::Create(file_type, m_fileName, rep_mode, m_repeatCount, size, m_verbose, m_playGaps);
     }
 
     auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_DAC, blocks, activeChannels.count());
@@ -307,6 +315,14 @@ auto DACStreamClient::removeCallback() -> void {
 auto DACStreamClient::startStreamingTDMS(std::string host, std::string fileName) -> bool {
     m_pimpl->m_dataMode = dataMode::TDMS_MODE;
     m_pimpl->m_fileName = fileName;
+    m_pimpl->m_host = host;
+    return startStreaming();
+}
+
+auto DACStreamClient::startStreamingBIN(std::string host, std::string fileName, bool playGaps) -> bool {
+    m_pimpl->m_dataMode = dataMode::BIN_MODE;
+    m_pimpl->m_fileName = fileName;
+    m_pimpl->m_playGaps = playGaps;
     m_pimpl->m_host = host;
     return startStreaming();
 }

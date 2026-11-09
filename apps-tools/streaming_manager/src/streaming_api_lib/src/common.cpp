@@ -496,9 +496,10 @@ auto requestStartDACStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std:
     return !timeout;
 }
 
-auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::string host, bool output, bool verbose) -> bool {
+auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::string host, bool output, bool verbose, bool* toFile) -> bool {
     std::atomic<int> answers{1};
     std::atomic<bool> started{false};
+    std::atomic<bool> file{false};
 
     class LocalCb : public ConfigCallback {
         void configError(ConfigStreamClient*, std::string, int) override { (*m_answers)--; }
@@ -510,23 +511,37 @@ auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std
         void gpioOutServerStopped(ConfigStreamClient*, std::string, uint64_t) override { answer(m_output, false); }
         void gpioOutServerStoppedMemError(ConfigStreamClient*, std::string) override { answer(m_output, false); }
         void gpioOutServerStoppedConfigError(ConfigStreamClient*, std::string) override { answer(m_output, false); }
+        // the file mode
+        void gpioInServerStartedSD(ConfigStreamClient*, std::string) override { answer(!m_output, true, true); }
+        void gpioInServerStoppedSDFull(ConfigStreamClient*, std::string) override { answer(!m_output, false); }
+        void gpioInServerStoppedSDDone(ConfigStreamClient*, std::string) override { answer(!m_output, false); }
+        void gpioInServerStoppedSDBroken(ConfigStreamClient*, std::string) override { answer(!m_output, false); }
+        void gpioOutServerStartedSD(ConfigStreamClient*, std::string) override { answer(m_output, true, true); }
+        void gpioOutServerStoppedSDDone(ConfigStreamClient*, std::string, uint64_t) override { answer(m_output, false); }
+        void gpioOutServerStoppedSDEmpty(ConfigStreamClient*, std::string) override { answer(m_output, false); }
+        void gpioOutServerStoppedSDBroken(ConfigStreamClient*, std::string) override { answer(m_output, false); }
+        void gpioOutServerStoppedSDMissing(ConfigStreamClient*, std::string) override { answer(m_output, false); }
 
-        auto answer(bool mine, bool start) -> void {
-            if (!mine)
+        auto answer(bool mine, bool start, bool file = false) -> void {
+            if (!mine || *m_answers <= 0)
                 return;
-            if (start)
+            if (start) {
                 *m_started = true;
+                *m_file = file;
+            }
             (*m_answers)--;
         }
 
         std::atomic<int>* m_answers;
         std::atomic<bool>* m_started;
+        std::atomic<bool>* m_file;
         bool m_output;
 
        public:
-        LocalCb(std::atomic<int>* answers, std::atomic<bool>* started, bool output) : m_answers(answers), m_started(started), m_output(output) {}
+        LocalCb(std::atomic<int>* answers, std::atomic<bool>* started, std::atomic<bool>* file, bool output)
+            : m_answers(answers), m_started(started), m_file(file), m_output(output) {}
     };
-    auto cb = std::make_shared<LocalCb>(&answers, &started, output);
+    auto cb = std::make_shared<LocalCb>(&answers, &started, &file, output);
     cl->addCallback(cb);
     if (verbose)
         aprintf(stdout, "%s Send GPIO %s start command to: %s\n", getTS(": ").c_str(), output ? "output" : "input", host.c_str());
@@ -536,5 +551,7 @@ auto requestStartGPIOStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std
     while (answers > 0 && std::chrono::steady_clock::now() - begin < std::chrono::seconds(5))
         sleepMs(10);
     cl->removeCallback(cb);
+    if (toFile)
+        *toFile = file;
     return started;
 }

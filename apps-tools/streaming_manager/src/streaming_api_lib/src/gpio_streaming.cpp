@@ -48,6 +48,9 @@ struct GPIOStreamClient::Impl {
     std::atomic<bool> m_outTerminate{true};
     std::atomic<bool> m_outStopped{false};  // the board answered the stop of the output
     std::atomic<uint64_t> m_outWait{0};
+    std::atomic<bool> m_inFile{false};   // the board writes the input to a file of its own
+    std::atomic<bool> m_outFile{false};  // the board plays a file of its own
+
     std::vector<uint32_t> m_words;
     uint64_t m_repeat = 1;
     bool m_memory = false;
@@ -56,6 +59,8 @@ struct GPIOStreamClient::Impl {
 
     auto runInput(uint32_t blockSize) -> void;
     auto runOutput(uint32_t blockSize) -> void;
+    // the file mode: no data connection, the direction lasts until the board ends it
+    auto runUntil(std::atomic<bool>& terminate) -> void;
     auto joinInput() -> void;
     auto joinOutput() -> void;
 
@@ -74,10 +79,37 @@ class GPIOStreamClient::Impl::ConfigCb : public ConfigCallback {
     void gpioOutServerStopped(ConfigStreamClient*, std::string host, uint64_t waitClocks) override { endOutput(host, waitClocks); }
     void gpioOutServerStoppedMemError(ConfigStreamClient*, std::string host) override { endOutput(host, 0); }
     void gpioOutServerStoppedConfigError(ConfigStreamClient*, std::string host) override { endOutput(host, 0); }
+    void gpioInServerStoppedSDFull(ConfigStreamClient*, std::string host) override { endInputFile(host, GPIO_FILE_SD_FULL); }
+    void gpioInServerStoppedSDDone(ConfigStreamClient*, std::string host) override { endInputFile(host, GPIO_FILE_DONE); }
+    void gpioInServerStoppedSDBroken(ConfigStreamClient*, std::string host) override { endInputFile(host, GPIO_FILE_BROKEN); }
+    void gpioOutServerStoppedSDDone(ConfigStreamClient*, std::string host, uint64_t waitClocks) override { endOutputFile(host, GPIO_FILE_DONE, waitClocks); }
+    void gpioOutServerStoppedSDEmpty(ConfigStreamClient*, std::string host) override { endOutputFile(host, GPIO_FILE_EMPTY, 0); }
+    void gpioOutServerStoppedSDBroken(ConfigStreamClient*, std::string host) override { endOutputFile(host, GPIO_FILE_BROKEN, 0); }
+    void gpioOutServerStoppedSDMissing(ConfigStreamClient*, std::string host) override { endOutputFile(host, GPIO_FILE_MISSING, 0); }
 
     auto endInput(const std::string& host) -> void {
         if (host == m_p->m_inHost)
             m_p->m_inTerminate = true;
+    }
+
+    auto endInputFile(const std::string& host, GPIOFileStop reason) -> void {
+        if (host != m_p->m_inHost)
+            return;
+        m_p->m_inTerminate = true;
+        const std::lock_guard lock(m_p->m_smutex);
+        if (m_p->m_callback)
+            m_p->m_callback->inputFileStopped(m_p->owner, host, reason);
+    }
+
+    auto endOutputFile(const std::string& host, GPIOFileStop reason, uint64_t waitClocks) -> void {
+        if (host != m_p->m_outHost)
+            return;
+        m_p->m_outWait = waitClocks;
+        m_p->m_outTerminate = true;
+        m_p->m_outStopped = true;
+        const std::lock_guard lock(m_p->m_smutex);
+        if (m_p->m_callback)
+            m_p->m_callback->outputFileStopped(m_p->owner, host, reason, waitClocks);
     }
 
     auto endOutput(const std::string& host, uint64_t waitClocks) -> void {
@@ -229,6 +261,11 @@ auto GPIOStreamClient::Impl::runOutput(uint32_t blockSize) -> void {
     net->stop();
 }
 
+auto GPIOStreamClient::Impl::runUntil(std::atomic<bool>& terminate) -> void {
+    while (!terminate)
+        sleepMs(100);
+}
+
 auto GPIOStreamClient::Impl::joinInput() -> void {
     if (m_input.joinable())
         m_input.join();
@@ -278,12 +315,17 @@ auto GPIOStreamClient::startInput(std::string host) -> bool {
         aprintf(stderr, "%s Can't get block sizes\n", getTS(": ").c_str());
         return false;
     }
-    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, false, p.m_verbose)) {
+    bool toFile = false;
+    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, false, p.m_verbose, &toFile)) {
         aprintf(stderr, "%s Can't start the GPIO input of %s\n", getTS(": ").c_str(), host.c_str());
         return false;
     }
+    p.m_inFile = toFile;
     p.m_inTerminate = false;  // a stop reply of an earlier session may have come with the start
-    p.m_input = std::thread(&Impl::runInput, m_pimpl, blockSizes[host]);
+    if (toFile)
+        p.m_input = std::thread(&Impl::runUntil, m_pimpl, std::ref(p.m_inTerminate));
+    else
+        p.m_input = std::thread(&Impl::runInput, m_pimpl, blockSizes[host]);
     return true;
 }
 
@@ -297,14 +339,19 @@ auto GPIOStreamClient::startOutput(std::string host) -> bool {
         aprintf(stderr, "%s Can't get block sizes\n", getTS(": ").c_str());
         return false;
     }
-    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, true, p.m_verbose)) {
+    bool toFile = false;
+    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, true, p.m_verbose, &toFile)) {
         aprintf(stderr, "%s Can't start the GPIO output of %s\n", getTS(": ").c_str(), host.c_str());
         return false;
     }
+    p.m_outFile = toFile;
     p.m_outTerminate = false;
     p.m_outStopped = false;
     p.m_outWait = 0;
-    p.m_output = std::thread(&Impl::runOutput, m_pimpl, blockSizes[host]);
+    if (toFile)
+        p.m_output = std::thread(&Impl::runUntil, m_pimpl, std::ref(p.m_outTerminate));
+    else
+        p.m_output = std::thread(&Impl::runOutput, m_pimpl, blockSizes[host]);
     return true;
 }
 
@@ -334,6 +381,14 @@ auto GPIOStreamClient::stopOutput() -> void {
 auto GPIOStreamClient::stopStreaming() -> void {
     stopOutput();
     stopInput();
+}
+
+auto GPIOStreamClient::inputToFile() -> bool {
+    return m_pimpl->m_inFile;
+}
+
+auto GPIOStreamClient::outputFromFile() -> bool {
+    return m_pimpl->m_outFile;
 }
 
 auto GPIOStreamClient::outputWaitClocks() -> uint64_t {

@@ -18,6 +18,12 @@ class ConfigStreamClient;
 // 125 MHz, far more than the network gives. When the data comes late the lines keep the last word
 // until it comes; the board counts these clocks and reports them with the stop
 // (GPIOCallback::outputStopped, outputWaitClocks()). The board fills its ring before it plays.
+//
+// The file mode (gpio_in_pass_mode / gpio_out_pass_mode = FILE, set with ConfigStreamClient): the
+// board writes the input to a file of its own (gpio_in_format_sd, gpio_in_samples_limit_sd) or
+// plays the output from one (gpio_out_file_sd); startInput()/startOutput() then open no data
+// connection, wait() lasts until the board ends the file or the stop, and the end comes with
+// GPIOCallback::inputFileStopped / outputFileStopped.
 class GPIOStreamClient {
    public:
     GPIOStreamClient(std::shared_ptr<ConfigStreamClient> configClient);
@@ -34,6 +40,10 @@ class GPIOStreamClient {
     auto stopInput() -> void;
     auto stopOutput() -> void;
     auto stopStreaming() -> void;  // both
+
+    // the board started its file mode at the last start
+    auto inputToFile() -> bool;
+    auto outputFromFile() -> bool;
 
     // the clocks the board's output waited for this client's data, from its last stop
     auto outputWaitClocks() -> uint64_t;

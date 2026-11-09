@@ -23,6 +23,10 @@ class DACStreamClient {
 
     auto startStreamingTDMS(std::string host, std::string fileName) -> bool;
     auto startStreamingWAV(std::string host, std::string fileName) -> bool;
+    // A BIN stream file (rpsa_client -f bin, the board with file_type_sd=BIN): its channels play as
+    // recorded. playGaps: the samples the recording lost or waited for a trigger play as zeros,
+    // so the time line is the recorded one; else the samples follow each other.
+    auto startStreamingBIN(std::string host, std::string fileName, bool playGaps = false) -> bool;
     auto startStreamingFromMemory(std::string host) -> bool;
     auto startStreamingFromMemorySink(std::string host, bool enableCh1, bool enableCh2, DACStreamBytes bytePerSample) -> bool;
     auto stopStreaming() -> void;

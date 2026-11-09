@@ -4,6 +4,7 @@
 #include <cinttypes>
 #include <chrono>
 #include <ctime>
+#include <filesystem>
 #include <mutex>
 #include <optional>
 #include <thread>
@@ -337,13 +338,22 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
             rec.waitCounter = p.hw->features().gpioWaitCounter;
             rec.startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             rec.samplesLimit = settings.getGPIOInSamples();
-            char name[48];
-            const time_t now = time(nullptr);
-            strftime(name, sizeof(name), "gpio_%Y-%m-%d_%H-%M-%S.", gmtime(&now));
             const std::string ext = rec.format.value == CStreamSettings::GPIOFormat::CSV ? "csv" : rec.format.value == CStreamSettings::GPIOFormat::VCD ? "vcd" : "bin";
             const auto dir = options.dirPath.empty() ? CStreamSettings::getGPIODirPath() : options.dirPath;
+            // gpio_<UTC date>_<time>_<ms>.<ext>; two recordings in one millisecond get _2, _3...:
+            // an existing file is never written over
+            const auto now = std::chrono::system_clock::now();
+            const time_t secs = std::chrono::system_clock::to_time_t(now);
+            const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count() % 1000;
+            char stamp[48];
+            strftime(stamp, sizeof(stamp), "%Y-%m-%d_%H-%M-%S", gmtime(&secs));
+            char base[64];
+            snprintf(base, sizeof(base), "gpio_%s_%03d", stamp, static_cast<int>(ms));
+            std::string path = dir + "/" + base + "." + ext;
+            for (int n = 2; std::filesystem::exists(path) && n < 1000; n++)
+                path = dir + "/" + base + "_" + std::to_string(n) + "." + ext;
             p.file = std::make_shared<CGpioFileWriter>();
-            if (!p.file->open(dir + "/" + name + ext, rec)) {
+            if (!p.file->open(path, rec)) {
                 ERROR_LOG("Can't make the GPIO file in %s", dir.c_str())
                 p.file = nullptr;
                 p.stopNonBlocking(GPIOStopReason::BROKEN, true);
