@@ -618,6 +618,32 @@ TEST_F(GPIOServer, TheInputWritesABinFileUpToItsLimit) {
     EXPECT_EQ(blocks, 3) << "the third buffer reaches the limit";
 }
 
+// A limit the first buffer reaches ends the run at once: started still goes out first (the
+// client takes a stop before the started as a failed start)
+TEST_F(GPIOServer, AFileThatEndsWithItsFirstBufferIsStartedFirst) {
+    countingInput();
+    const auto dir = FileDir();
+    settings.setGPIOInPassMode(CStreamSettings::PassMode::FILE);
+    settings.setGPIOInFormat(CStreamSettings::GPIOFormat::BIN);
+    settings.setGPIOInSamples(1);
+    GPIOStreamOptions o;
+    o.dirPath = dir;
+    for (int run = 0; run < 20; run++) {
+        {
+            std::lock_guard lock(recorder->mtx);
+            recorder->events.clear();
+            recorder->reasons.clear();
+        }
+        ASSERT_TRUE(in->start(settings, o)) << "run " << run;
+        ASSERT_TRUE(recorder->waitStopped()) << "run " << run;
+        std::lock_guard lock(recorder->mtx);
+        ASSERT_EQ(recorder->events, (std::vector<std::string>{"in started sd", "in stopped"})) << "run " << run;
+        EXPECT_EQ(recorder->reasons, std::vector<GPIOStopReason>{GPIOStopReason::DONE}) << "run " << run;
+    }
+    for (auto& e : std::filesystem::directory_iterator(dir))
+        std::filesystem::remove(e.path());
+}
+
 TEST_F(GPIOServer, TheOutputPlaysAFileToItsEnd) {
     const auto dir = FileDir();
     // 5 buffers of output words, no RLE: word i of buffer k is outBuffer(k)[i]

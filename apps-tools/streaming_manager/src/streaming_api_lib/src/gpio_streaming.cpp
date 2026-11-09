@@ -46,6 +46,7 @@ struct GPIOStreamClient::Impl {
     std::string m_outHost;
     std::atomic<bool> m_inTerminate{true};
     std::atomic<bool> m_outTerminate{true};
+    std::atomic<bool> m_inStopped{false};   // the board answered the stop of the input
     std::atomic<bool> m_outStopped{false};  // the board answered the stop of the output
     std::atomic<uint64_t> m_outWait{0};
     std::atomic<bool> m_inFile{false};   // the board writes the input to a file of its own
@@ -88,14 +89,17 @@ class GPIOStreamClient::Impl::ConfigCb : public ConfigCallback {
     void gpioOutServerStoppedSDMissing(ConfigStreamClient*, std::string host) override { endOutputFile(host, GPIO_FILE_MISSING, 0); }
 
     auto endInput(const std::string& host) -> void {
-        if (host == m_p->m_inHost)
-            m_p->m_inTerminate = true;
+        if (host != m_p->m_inHost)
+            return;
+        m_p->m_inTerminate = true;
+        m_p->m_inStopped = true;
     }
 
     auto endInputFile(const std::string& host, GPIOFileStop reason) -> void {
         if (host != m_p->m_inHost)
             return;
         m_p->m_inTerminate = true;
+        m_p->m_inStopped = true;
         const std::lock_guard lock(m_p->m_smutex);
         if (m_p->m_callback)
             m_p->m_callback->inputFileStopped(m_p->owner, host, reason);
@@ -321,6 +325,7 @@ auto GPIOStreamClient::startInput(std::string host) -> bool {
         return false;
     }
     p.m_inFile = toFile;
+    p.m_inStopped = false;
     p.m_inTerminate = false;  // a stop reply of an earlier session may have come with the start
     if (toFile)
         p.m_input = std::thread(&Impl::runUntil, m_pimpl, std::ref(p.m_inTerminate));
@@ -355,13 +360,20 @@ auto GPIOStreamClient::startOutput(std::string host) -> bool {
     return true;
 }
 
-// The client lets its connection go first: the board's stop closes it from its side
+// The client lets its connection go first: the board's stop closes it from its side. The board
+// stops the input in the background (a file is closed first) and answers then: waited for here up
+// to 3 s, so that a late answer is not taken for the answer to the next start.
 auto GPIOStreamClient::stopInput() -> void {
     auto& p = *m_pimpl;
     p.m_inTerminate = true;
     p.joinInput();
-    if (!p.m_inHost.empty())
-        p.m_configClient->requestGPIOInServerStop(p.m_inHost);
+    if (p.m_inHost.empty())
+        return;
+    p.m_inStopped = false;
+    if (p.m_configClient->requestGPIOInServerStop(p.m_inHost)) {
+        for (int i = 0; i < 300 && !p.m_inStopped; i++)
+            sleepMs(10);
+    }
 }
 
 // The board answers the stop with the clocks its output waited: waited for here up to 3 s

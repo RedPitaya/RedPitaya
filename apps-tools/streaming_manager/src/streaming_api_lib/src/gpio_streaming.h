@@ -36,7 +36,8 @@ class GPIOStreamClient {
 
     auto startInput(std::string host) -> bool;
     auto startOutput(std::string host) -> bool;
-    // stop the board's input or output and the client's side of it
+    // stop the board's input or output and the client's side of it; each waits up to 3 s for the
+    // board's answer
     auto stopInput() -> void;
     auto stopOutput() -> void;
     auto stopStreaming() -> void;  // both
