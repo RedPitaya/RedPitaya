@@ -4,11 +4,7 @@ Found in a review of the code at e26c75a5f. Paths are relative to `src/` unless 
 
 ## Security
 
-- **DAC file upload runs a shell command built from the request.** `nginx.conf`, location
-  `/upload_dac_file`: `args.file` goes unchecked into the path and into
-  `os.execute("cp " .. body .. " " .. filename)`. A file name with `;` or `../` runs commands or
-  writes outside `/home/redpitaya/streaming_files/dac`. All locations send
-  `Access-Control-Allow-Origin: *`.
+- **All locations of `nginx.conf` send `Access-Control-Allow-Origin: *`.**
 - **The ports listen on every interface by default.** streaming-server takes `--listen ADDRESS`
   for the config and the data ports; the web application keeps every interface (the address of
   its page is the announced one).

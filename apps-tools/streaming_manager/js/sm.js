@@ -999,7 +999,7 @@ $(function() {
                 fileReader.onload = (event) => {
                     console.log('Complete File read successfully!')
                     $.ajax({
-                        url: '/upload_dac_file' + '?file=' + file.name, //Server script to process data
+                        url: '/upload_dac_file' + '?file=' + encodeURIComponent(file.name), //Server script to process data
                         type: 'POST',
                         //Ajax events
                         //beforeSend: beforeSendHandler,
