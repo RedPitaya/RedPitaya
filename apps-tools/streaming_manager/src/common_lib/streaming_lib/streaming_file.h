@@ -45,6 +45,8 @@ class CStreamingFile {
 
     auto getPassSamples() -> uint64_t;
     auto getWritedSize() -> uint64_t;
+    // the file queue: what it holds of its memory, 0..1
+    auto getQueueFill() -> double;
 
     // TDMS: a column with the time of every sample (off by default; the time is always in the
     // wf_* properties of the channels and in the row of every buffer in the group "Buffers")

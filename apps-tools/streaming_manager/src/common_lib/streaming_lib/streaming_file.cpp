@@ -329,6 +329,11 @@ auto CStreamingFile::getFileLost() -> uint64_t {
     return 0;
 }
 
+auto CStreamingFile::getQueueFill() -> double {
+    std::lock_guard<std::mutex> lock(m_stopMtx);
+    return m_file_manager ? m_file_manager->queueFill() : 0;
+}
+
 auto CStreamingFile::getCSVFileName() -> std::string {
     return m_file_out;
 }

@@ -32,6 +32,8 @@ class FileQueueManager : public Queue {
     auto writeToFile(std::chrono::milliseconds wait = std::chrono::milliseconds(0)) -> int;
     auto deleteFile() -> void;
     auto getWritedSize() -> uint64_t;
+    // what the queue holds of the memory it may take, 0..1
+    auto queueFill() -> double;
 
     sigslot::signal<> outSpaceNotify;
     sigslot::signal<> stopNotify;

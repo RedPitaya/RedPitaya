@@ -4,12 +4,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <fstream>
+#include <functional>
 #include <mutex>
 #include "data_lib/buffers_pack.h"
 
 enum PColor { WHITE, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN };
 
 void aprintf(FILE* stream, const char* format, ...);
+
+// A program that redraws a block of lines in place (a status panel): aprintf and acprintf run
+// `before` (the block clears itself) and `after` under the lock of the output, so their text is
+// not drawn into the block. consoleLocked runs fn under that lock, without the hooks.
+void setConsoleHooks(std::function<void()> before, std::function<void()> after);
+void consoleLocked(const std::function<void()>& fn);
 
 void acprintf(FILE* stream, PColor color, const char* format, ...);
 

@@ -33,6 +33,10 @@ auto FileQueueManager::deleteFile() -> void {
     }
 }
 
+auto FileQueueManager::queueFill() -> double {
+    return m_aviablePhyMemory ? static_cast<double>(queueMemory()) / static_cast<double>(m_aviablePhyMemory) : 0;
+}
+
 auto FileQueueManager::addChunkToWrite(FileChunk::Ptr chunk) -> bool {
     if (!chunk || !m_threadWork)
         return false;

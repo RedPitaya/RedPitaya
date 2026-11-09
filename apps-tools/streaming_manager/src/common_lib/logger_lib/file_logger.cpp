@@ -36,12 +36,31 @@ static constexpr const char* kLostSeparator = "   ";
 #define ANSI_COLOR_CYAN "\033[1;97m"
 #define ANSI_COLOR_RESET "\x1b[0m"
 
+static std::function<void()> g_consoleBefore;
+static std::function<void()> g_consoleAfter;
+
+void setConsoleHooks(std::function<void()> before, std::function<void()> after) {
+    const std::lock_guard lock(g_mtx);
+    g_consoleBefore = std::move(before);
+    g_consoleAfter = std::move(after);
+}
+
+void consoleLocked(const std::function<void()>& fn) {
+    const std::lock_guard lock(g_mtx);
+    fn();
+}
+
 void aprintf(FILE* stream, const char* format, ...) {
     const std::lock_guard lock(g_mtx);
+    if (g_consoleBefore)
+        g_consoleBefore();
     va_list args;
     va_start(args, format);
     vfprintf(stream, format, args);
     va_end(args);
+    fflush(stream);
+    if (g_consoleAfter)
+        g_consoleAfter();
 }
 
 void acprintf(FILE* stream, __attribute__((unused)) PColor color, const char* format, ...) {
@@ -49,6 +68,8 @@ void acprintf(FILE* stream, __attribute__((unused)) PColor color, const char* fo
     va_list args;
     va_start(args, format);
     std::string s = format;
+    if (g_consoleBefore)
+        g_consoleBefore();
 #ifndef _WIN32
     if (!isatty(fileno(stream)))
         color = WHITE;
@@ -88,6 +109,9 @@ void acprintf(FILE* stream, __attribute__((unused)) PColor color, const char* fo
     vfprintf(stream, format, args);
 #endif
     va_end(args);
+    fflush(stream);
+    if (g_consoleAfter)
+        g_consoleAfter();
 }
 
 auto CFileLogger::create(std::string _filePath, bool testMode) -> CFileLogger::Ptr {
