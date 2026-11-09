@@ -175,12 +175,9 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
             rstart_counter--;
         }
     }
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the start of the streaming")) {
+        cl->removeHadlers();
+        return false;
     }
 
     rstart_counter = masterHosts.size();
@@ -192,12 +189,9 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
         }
     }
 
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the start of the streaming")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -231,12 +225,9 @@ auto requestMemoryBlockSize(std::shared_ptr<ClientNetConfigManager> cl, std::lis
             rstart_counter--;
         }
     }
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the request of the memory block size")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -270,12 +261,9 @@ auto requestActiveChannels(std::shared_ptr<ClientNetConfigManager> cl, std::list
             rstart_counter--;
         }
     }
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the request of the active channels")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -340,12 +328,9 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
             rstart_counter--;
         }
     }
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the start of the ADC")) {
+        cl->removeHadlers();
+        return false;
     }
 
     rstart_counter = masterHosts.size();
@@ -356,12 +341,9 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
             rstart_counter--;
         }
     }
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the start of the ADC")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -452,6 +434,25 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
             (*runned_hosts)[host] = StateRunnedHosts::LOCAL;
     });
 
+    // the board plays a file of its own SD card (dac_pass_mode=DAC_FILE) and cannot: the start
+    // ends at once
+    auto ownFile = [&](const std::string& host, const char* what) {
+        const std::lock_guard lock(g_rmutex);
+        aprintf(stderr,
+                "%s [ERROR] %s plays a file of its own SD card (dac_pass_mode=DAC_FILE), and %s.\n"
+                "        To play from here: rpsa_client -c -h %s -i dac_pass_mode=DAC_NET\n",
+                getTS(": ").c_str(),
+                host.c_str(),
+                what,
+                host.c_str());
+        rstart_counter--;
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+    };
+    cl->serverDacStoppedSDMissingNofiy.connect([&](std::string host) { ownFile(host, "that file (dac_file_sd) is missing"); });
+    cl->serverDacStoppedSDBrokenNofiy.connect([&](std::string host) { ownFile(host, "that file is broken"); });
+    cl->serverDacStoppedSDEmptyNofiy.connect([&](std::string host) { ownFile(host, "that file is empty"); });
+
     rstart_counter = slaveHosts.size();
 
     for (auto host : std::list<std::string>(slaveHosts)) {
@@ -467,12 +468,9 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
             rstart_counter--;
         }
     }
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the start of the DAC streaming")) {
+        cl->removeHadlers();
+        return false;
     }
 
     rstart_counter = masterHosts.size();
@@ -490,12 +488,9 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
             rstart_counter--;
         }
     }
-    while (rstart_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstart_counter, [] { return g_rexit_flag.load(); }, "the start of the DAC streaming")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -550,12 +545,9 @@ auto stopStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::st
             rstop_counter--;
         }
     }
-    while (rstop_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstop_counter, [] { return g_rexit_flag.load(); }, "the stop of the streaming")) {
+        cl->removeHadlers();
+        return false;
     }
 
     rstop_counter = slaveHosts.size();
@@ -566,12 +558,9 @@ auto stopStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::st
             rstop_counter--;
         }
     }
-    while (rstop_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstop_counter, [] { return g_rexit_flag.load(); }, "the stop of the streaming")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -644,12 +633,9 @@ auto stopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std:
             rstop_counter--;
         }
     }
-    while (rstop_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstop_counter, [] { return g_rexit_flag.load(); }, "the stop of the DAC streaming")) {
+        cl->removeHadlers();
+        return false;
     }
 
     rstop_counter = slaveHosts.size();
@@ -660,12 +646,9 @@ auto stopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std:
             rstop_counter--;
         }
     }
-    while (rstop_counter > 0) {
-        sleepMs(100);
-        if (g_rexit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(rstop_counter, [] { return g_rexit_flag.load(); }, "the stop of the DAC streaming")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;

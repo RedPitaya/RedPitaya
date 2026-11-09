@@ -1,4 +1,6 @@
 #include "config.h"
+#include <algorithm>
+#include <chrono>
 #include <mutex>
 #include "logger_lib/file_logger.h"
 
@@ -17,6 +19,30 @@ auto sleepMs(int ms) -> void {
 #else
     usleep(1000 * ms);
 #endif  // _WIN32
+}
+
+std::atomic<int> g_replyTimeoutMs(10000);
+
+auto setReplyTimeout(int ms) -> void {
+    g_replyTimeoutMs = ms;
+}
+
+auto replyTimeout() -> int {
+    return g_replyTimeoutMs;
+}
+
+auto waitAnswers(std::atomic<int>& counter, const std::function<bool()>& stopped, const char* what) -> bool {
+    const auto end = std::chrono::steady_clock::now() + std::chrono::milliseconds(g_replyTimeoutMs.load());
+    while (counter > 0) {
+        sleepMs(20);
+        if (stopped())
+            return false;
+        if (std::chrono::steady_clock::now() > end) {
+            aprintf(stderr, "%s [ERROR] No answer to %s within %.1f s (--reply-timeout)\n", getTS(": ").c_str(), what, g_replyTimeoutMs / 1000.0);
+            return false;
+        }
+    }
+    return true;
 }
 
 auto createDirConfig(const std::string dir) -> bool {
@@ -75,15 +101,16 @@ auto connectConfigServer(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::
 
     connect_counter = option.hosts.size();
     cl->connectToServers(option.hosts, NET_CONFIG_PORT);
-    while (connect_counter > 0) {
-        sleepMs(100);
-        if (g_exit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(connect_counter, [] { return g_exit_flag.load(); }, "the connection")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
-    return true;
+    for (auto& host : option.hosts) {
+        if (std::find(connected_hosts.begin(), connected_hosts.end(), host) == connected_hosts.end())
+            aprintf(stderr, "%s [ERROR] Can't connect to %s (is streaming running on the board?)\n", getTS(": ").c_str(), host.c_str());
+    }
+    return connected_hosts.size() == option.hosts.size();
 }
 
 auto getConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option) -> bool {
@@ -147,12 +174,9 @@ auto getConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
             get_counter--;
         }
     }
-    while (get_counter > 0) {
-        sleepMs(100);
-        if (g_exit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(get_counter, [] { return g_exit_flag.load(); }, "the request of the settings")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -210,12 +234,9 @@ auto getConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Option
             get_counter--;
         }
     }
-    while (get_counter > 0) {
-        sleepMs(100);
-        if (g_exit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(get_counter, [] { return g_exit_flag.load(); }, "the request of the setting")) {
+        cl->removeHadlers();
+        return false;
     }
     cl->removeHadlers();
     return true;
@@ -223,6 +244,7 @@ auto getConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Option
 
 auto setConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option) -> bool {
     std::atomic<int> set_counter;
+    std::atomic<bool> refused{false};  // a board refused or did not take it
     cl->successSendConfigNofiy.connect([&](std::string host) {
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (option.verbous)
@@ -240,6 +262,8 @@ auto setConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (option.verbous)
             aprintf(stdout, "%s SET: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s refused the settings of the file\n", getTS(": ").c_str(), host.c_str());
+        refused = true;
         set_counter--;
     });
 
@@ -254,6 +278,8 @@ auto setConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (option.verbous)
             aprintf(stdout, "%s SAVE TO FILE: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s could not save the settings in its config file\n", getTS(": ").c_str(), host.c_str());
+        refused = true;
         set_counter--;
     });
 
@@ -261,12 +287,14 @@ auto setConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
             aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+            refused = true;
             set_counter--;
         }
 
         if (errors == ClientNetConfigManager::Errors::ERROR_SEND_CONFIG) {
             if (option.verbous)
                 aprintf(stderr, "%s Error send configuration: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+            refused = true;
             set_counter--;
         }
     });
@@ -282,27 +310,23 @@ auto setConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
                 set_counter--;
             }
         }
-        while (set_counter > 0) {
-            sleepMs(100);
-            if (g_exit_flag) {
-                cl->removeHadlers();
-                return false;
-            }
-        }
-    } else {
-        if (option.verbous) {
-            aprintf(stderr, "%s Error read configuration file: %s\n", getTS(": ").c_str(), file.c_str());
+        if (!waitAnswers(set_counter, [] { return g_exit_flag.load(); }, "the settings sent")) {
             cl->removeHadlers();
             return false;
         }
+    } else {
+        aprintf(stderr, "%s [ERROR] Can't read the settings file %s\n", getTS(": ").c_str(), file.c_str());
+        cl->removeHadlers();
+        return false;
     }
 
     cl->removeHadlers();
-    return true;
+    return !refused;
 }
 
 auto setConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option) -> bool {
     std::atomic<int> set_counter;
+    std::atomic<bool> refused{false};  // a board refused or did not take it
     cl->successSendConfigNofiy.connect([&](std::string host) {
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (option.verbous)
@@ -320,6 +344,8 @@ auto setConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Option
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (option.verbous)
             aprintf(stdout, "%s SET: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s refused %s=%s (the values: rpsa_client --help keys %s)\n", getTS(": ").c_str(), host.c_str(), option.config_item_name.c_str(), option.config_item_value.c_str(), option.config_item_name.c_str());
+        refused = true;
         set_counter--;
     });
 
@@ -334,6 +360,8 @@ auto setConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Option
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (option.verbous)
             aprintf(stdout, "%s SAVE TO FILE: %s [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s could not save the settings in its config file\n", getTS(": ").c_str(), host.c_str());
+        refused = true;
         set_counter--;
     });
 
@@ -341,12 +369,14 @@ auto setConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Option
         const std::lock_guard<std::mutex> lock(g_mutex);
         if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
             aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+            refused = true;
             set_counter--;
         }
 
         if (errors == ClientNetConfigManager::Errors::ERROR_SEND_CONFIG) {
             if (option.verbous)
                 aprintf(stderr, "%s Error send configuration: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+            refused = true;
             set_counter--;
         }
     });
@@ -360,16 +390,13 @@ auto setConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Option
             set_counter--;
         }
     }
-    while (set_counter > 0) {
-        sleepMs(100);
-        if (g_exit_flag) {
-            cl->removeHadlers();
-            return false;
-        }
+    if (!waitAnswers(set_counter, [] { return g_exit_flag.load(); }, "the setting sent")) {
+        cl->removeHadlers();
+        return false;
     }
 
     cl->removeHadlers();
-    return true;
+    return !refused;
 }
 
 auto startConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option) -> bool {

@@ -9,7 +9,7 @@
 enum class StateRunnedHosts { NONE, TCP, LOCAL };
 
 namespace ClientOpt {
-enum class Mode { ERROR_MODE, ERROR_PARAM, SEARCH, CONFIG, REMOTE, STREAMING, STREAMING_DAC, CONFIG_ITEM };
+enum class Mode { ERROR_MODE, ERROR_PARAM, SEARCH, CONFIG, REMOTE, STREAMING, STREAMING_DAC, CONFIG_ITEM, SHOW_HELP, SHOW_VERSION };
 
 enum class ConfGet { NONE, VERBOUS_JSON, VERBOUS_JSON_DATA, VERBOUS, FILE };
 
@@ -31,7 +31,9 @@ enum class RepeatDAC { INF = -1 };
 struct Options {
     Mode mode{Mode::ERROR_MODE};
 
-    int timeout{5};
+    int timeout{5};             // detect, remote, streaming: milliseconds
+    int reply_timeout_ms{10000};  // how long an answer of a board is waited for
+    bool quiet{false};            // only the errors and the result
     std::vector<std::string> hosts{};
 
     ConfGet conf_get{ConfGet::NONE};
@@ -46,16 +48,19 @@ struct Options {
     std::string dac_file{""};  // For DAC streaming
     int64_t dac_repeat{1};     // For DAC streaming
 
-    StreamingType streamign_type;
+    StreamingType streamign_type{StreamingType::NONE};
     SaveType save_type{SaveType::NONE};
     int samples{0};
     bool tdms_time{false};  // a TDMS column with the time of every sample
     std::string config_item_name{""};
     std::string config_item_value{""};
     bool config_item_write{false};
+
+    // SHOW_HELP: the section and the filter of the keys; ERROR_PARAM: the section of the mode
+    std::string help_topic{""};
+    std::string help_filter{""};
 };
 
-auto usage(char const* progName) -> void;
 auto parse(int argc, char* argv[]) -> Options;
 }  // namespace ClientOpt
 

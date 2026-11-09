@@ -1,11 +1,14 @@
 #include <getopt.h>
 #include <algorithm>
 #include <chrono>
+#include <cerrno>
 #include <cstring>
+#include <strings.h>
 #include <ctime>
 #include <iostream>
 #include <vector>
 
+#include "help.h"
 #include "options.h"
 #include "settings_lib/stream_settings.h"
 
@@ -13,9 +16,11 @@ static struct option long_options_broadcast[] = {
     /* These options set a flag. */
     {"detect", no_argument, 0, 'd'},
     {"timeout", required_argument, 0, 't'},
+    {"quiet", no_argument, 0, 'q'},
+    {"reply-timeout", required_argument, 0, 'R'},  // long only
     {0, 0, 0, 0}};
 
-static constexpr char optstring_broadcast[] = "dt:";
+static constexpr char optstring_broadcast[] = ":dt:q";
 
 static struct option long_options_config[] = {
     /* These options set a flag. */
@@ -23,13 +28,15 @@ static struct option long_options_config[] = {
     {"hosts", required_argument, 0, 'h'},
     {"get", required_argument, 0, 'g'},
     {"set", required_argument, 0, 's'},
-    {0, required_argument, 0, 'i'},
     {"config_file", required_argument, 0, 'f'},
+    {"config-file", required_argument, 0, 'f'},
     {"verbose", no_argument, 0, 'v'},
-    {"write", required_argument, 0, 'w'},
+    {"write", no_argument, 0, 'w'},
+    {"quiet", no_argument, 0, 'q'},
+    {"reply-timeout", required_argument, 0, 'R'},  // long only
     {0, 0, 0, 0}};
 
-static constexpr char optstring_config[] = "ch:g:s:f:vwi:";
+static constexpr char optstring_config[] = ":ch:g:s:f:vwi:q";
 
 static struct option long_options_remote[] = {
     /* These options set a flag. */
@@ -38,9 +45,11 @@ static struct option long_options_remote[] = {
     {"mode", required_argument, 0, 'm'},
     {"timeout", required_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
+    {"quiet", no_argument, 0, 'q'},
+    {"reply-timeout", required_argument, 0, 'R'},  // long only
     {0, 0, 0, 0}};
 
-static constexpr char optstring_remote[] = "rh:m:t:v";
+static constexpr char optstring_remote[] = ":rh:m:t:vq";
 
 static struct option long_options_streaming[] = {
     /* These options set a flag. */
@@ -53,21 +62,27 @@ static struct option long_options_streaming[] = {
     {"timeout", required_argument, 0, 't'},
     {"verbose", no_argument, 0, 'v'},
     {"tdms_time", no_argument, 0, 'T'},  // long only
+    {"tdms-time", no_argument, 0, 'T'},
+    {"quiet", no_argument, 0, 'q'},
+    {"reply-timeout", required_argument, 0, 'R'},  // long only
     {0, 0, 0, 0}};
 
-static constexpr char optstring_streaming[] = "sh:c:f:d:l:m:t:v";
+static constexpr char optstring_streaming[] = ":sh:f:d:l:m:t:vq";
 
 static struct option long_options_dac_streaming[] = {
     /* These options set a flag. */
     {"out_streaming", no_argument, 0, 'o'},
+    {"out-streaming", no_argument, 0, 'o'},
     {"hosts", required_argument, 0, 'h'},
     {"format", required_argument, 0, 'f'},
     {"data", required_argument, 0, 'd'},
     {"repeat", required_argument, 0, 'r'},
     {"verbose", no_argument, 0, 'v'},
+    {"quiet", no_argument, 0, 'q'},
+    {"reply-timeout", required_argument, 0, 'R'},  // long only
     {0, 0, 0, 0}};
 
-static constexpr char optstring_dac_streaming[] = "oh:c:f:d:r:v";
+static constexpr char optstring_dac_streaming[] = ":oh:f:d:r:vq";
 
 auto getTS(std::string suffix) -> std::string {
     using namespace std;
@@ -164,6 +179,57 @@ int get_memory(int64_t* value, const char* str, const char* message) {
     return 0;
 }
 
+// "500ms", "5s", "2m" or a number in the unit of the option (unitMs: 1 for milliseconds, 1000 for
+// seconds); false: not a time or above maxMs
+static auto parseTime(const char* str, int64_t unitMs, int64_t maxMs, int64_t* ms) -> bool {
+    if (!str || !*str)
+        return false;
+    char* end = nullptr;
+    errno = 0;
+    const double value = strtod(str, &end);  // 1.5s too
+    if (end == str || value < 0 || errno || str[0] == '+' || str[0] == '-')
+        return false;
+    const std::string unit(end);
+    int64_t scale = unitMs;
+    if (unit == "ms")
+        scale = 1;
+    else if (unit == "s")
+        scale = 1000;
+    else if (unit == "m" || unit == "min")
+        scale = 60000;
+    else if (!unit.empty())
+        return false;
+    const double ms_ = value * scale;
+    if (ms_ > static_cast<double>(maxMs))
+        return false;
+    *ms = static_cast<int64_t>(ms_ + 0.5);
+    return true;
+}
+
+// the values of the options in any case: WAV and wav
+static auto same(const char* a, const char* b) -> bool {
+    return strcasecmp(a, b) == 0;
+}
+
+// the options every mode takes: --quiet, --reply-timeout
+static auto commonOption(ClientOpt::Options& opt, int ch) -> bool {
+    if (ch == 'q') {
+        opt.quiet = true;
+        return true;
+    }
+    if (ch == 'R') {
+        int64_t ms = 0;
+        if (!parseTime(optarg, 1000, 3600000, &ms) || ms == 0) {
+            fprintf(stderr, "[ERROR] Wrong value of --reply-timeout: %s (seconds, or 500ms, 5s, 1m)\n", optarg);
+            opt.mode = ClientOpt::Mode::ERROR_PARAM;
+        } else {
+            opt.reply_timeout_ms = static_cast<int>(ms);
+        }
+        return true;
+    }
+    return false;
+}
+
 auto check_ip(const std::string& value) -> bool {
     int octet[4], l;
     int r = sscanf(value.c_str(), "%d.%d.%d.%d%n", octet, octet + 1, octet + 2, octet + 3, &l);
@@ -183,164 +249,17 @@ void remove_duplicates(std::vector<std::string>& vec) {
     vec.erase(std::unique(vec.begin(), vec.end()), vec.end());
 }
 
-/** Print usage information */
-auto ClientOpt::usage(char const* progName) -> void {
-#ifdef _WIN32
-    auto arr = split(std::string(progName), '\\');
-#else
-    auto arr = split(std::string(progName), '/');
-#endif
-
-    std::string name = "";
-    if (arr.size() > 0)
-        name = arr[arr.size() - 1];
-    const char* format =
-        "\n"
-        "Usage: %s\n"
-        "\n"
-        "Detect Mode:\n"
-        "\tThis mode allows you to determine the IP addresses that are in the network in streaming mode. By default, the search takes 5 "
-        "seconds.\n"
-        "\n"
-        "\tOptions:\n"
-        "\t\t%s -d [-t SEC]\n"
-        "\t\t%s --detect [--timeout=SEC]\n"
-        "\n"
-        "\t\t--detect               -d              Enable broadcast search.\n"
-        "\t\t--timeout=SEC          -t SEC          Timeout(Default: 5 sec).\n"
-        "\n"
-        "Configuration Mode:\n"
-        "\tThis mode allows you to get or set the configuration on the boards.\n"
-        "\n"
-        "\tOptions:\n"
-        "\t\t%s -c [-h IPs] -g V|VV|F [-v]\n"
-        "\t\t%s -c [-h IPs] -s M|F [-f FILE] [-v]\n"
-        "\t\t%s --config [--hosts=IPs] --get=V|VV|F [--verbose]\n"
-        "\t\t%s --config [--hosts=IPs] --set=M|F [--config_file=FILE] [--verbose]\n"
-        "\n"
-        "\t\t--config               -c              Enable config mode.\n"
-        "\t\t--hosts=IP,...         -h IP,...       You can specify one or more board IP addresses through a separator - ','\n"
-        "\t\t                                       You can not specify the board address, then the client will take the first board found "
-        "via broadcast\n"
-        "\t\t                                       Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
-        "\t\t                                                 -h 127.0.0.1     or  -h 127.0.0.1,127.0.0.2,127.0.0.3\n"
-        "\t\t--get=V|V1|VV|F        -g V|V1|VV|F    Requests configurations from all boards.\n"
-        "\t\t                                       Keys: V  = Displays on the screen in json format.\n"
-        "\t\t                                             V1 = Displays on the screen in json format (only data).\n"
-        "\t\t                                             VV = Displays on the screen in a format with decoding values.\n"
-        "\t\t                                             F  = Saves to a config files.\n"
-        "\t\t--set=M|F              -s M|F          Sets configurations for all boards.\n"
-        "\t\t                                       Keys: M  = Sets values only to memory without saving to file.\n"
-        "\t\t                                             F  = Sets configuration and saves to file on remote boards.\n"
-        "\t\t--config_file=FILE     -f FILE         Configuration file for setting values on boards (Default: config.json).\n"
-        "\t\t--verbose              -v              Displays service information.\n"
-        "\n"
-        "\tSetting individual variables in the configuration file.\n"
-        "\n"
-        "\tOptions:\n"
-        "\t\t%s -c [-h IPs] -i NAME [-v]\n"
-        "\t\t%s -c [-h IPs] -i NAME=VALUE [-w] [-v]\n"
-        "\n"
-        "\t\t--config               -c              Enable config mode.\n"
-        "\t\t--hosts=IP,...         -h IP,...       You can specify one or more board IP addresses through a separator - ','\n"
-        "\t\t                                       You can not specify the board address, then the client will take the first board found "
-        "via broadcast\n"
-        "\t\t                                       Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
-        "\t\t                                              -h 127.0.0.1     or  -h 127.0.0.1,127.0.0.2,127.0.0.3\n"
-        "\t\t                       -i NAME         Returns the value of a variable from the server.\n"
-        "\t\t                                       Keys: NAME = The name of the variable that is specified in the Json configuration "
-        "file.\n"
-        "\t\t                       -i NAME VALUE   Sets a value to a variable on the server.\n"
-        "\t\t                                       Keys: NAME = The name of the variable that is specified in the Json configuration "
-        "file.\n"
-        "\t\t                                             VALUE = The value is valid for this variable.\n"
-        "\t\t--write                -w              Writes changes to the configuration file on the server.\n"
-        "\t\t--verbose              -v              Displays service information.\n"
-        "\n"
-        "Remote control Mode:\n"
-        "\tThis mode allows you to control streaming as a client.\n"
-        "\n"
-        "\tOptions:\n"
-        "\t\t%s -r [-h IPs] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac [-t MSEC] [-v]\n"
-        "\t\t%s --remote [--hosts=IPs] --mode=start|stop|start_stop|start_dac|stop_dac|start_stop_dac [--timeout=MSEC] [--verbose]\n"
-        "\n"
-        "\t\t--remote               -r              Enable remote control mode.\n"
-        "\t\t--hosts=IP,...         -h IP,...       You can specify one or more board IP addresses through a separator - ','\n"
-        "\t\t                                       You can not specify the board address, then the client will take the first board found "
-        "via broadcast\n"
-        "\t\t                                       Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
-        "\t\t                                                 -h 127.0.0.1     or  -h 127.0.0.1,127.0.0.2,127.0.0.3\n"
-        "\t\t--mode=MODE            -m MODE         Commands for managing servers.\n"
-        "\t\t                                       Keys: start = Starts the server.\n"
-        "\t\t                                              stop = Stop the server.\n"
-        "\t\t                                              start_stop = Sends a start command at the end of the timeout sends a stop "
-        "command.\n"
-        "\t\t                                              start_dac = Starts the DAC server.\n"
-        "\t\t                                              stop_dac = Stop the DAC server.\n"
-        "\t\t                                              start_stop_dac = Sends a start command at the end of the timeout sends a stop "
-        "command for DAC mode.\n"
-        "\t\t--timeout=MSEC         -t MSEC         Timeout (Default: 1000 ms). Used only in conjunction with the start_stop command.\n"
-        "\t\t--verbose              -v              Displays service information.\n"
-        "\n"
-        "Streaming Mode:\n"
-        "\tThis mode allows you to control streaming as a client, and also captures data in network streaming mode.\n"
-        "\n"
-        "\tOptions:\n"
-        "\t\t%s -s [-h IPs] -f tdms|wav|csv|bin [-d NAME] [-m raw|volt] [-l SAMPLES] [-t MSEC] [-v]\n"
-        "\t\t%s --streaming [--hosts=IPs] --format=tdms|wav|csv|bin [--dir=NAME] [--limit=SAMPLES] [--mode=raw|volt] [--timeout=MSEC] "
-        "[--tdms_time] [--verbose]\n"
-        "\n"
-        "\t\t--streaming            -s              Enable streaming mode.\n"
-        "\t\t--hosts=IP,...         -h IP,...       You can specify one or more board IP addresses through a separator - ','\n"
-        "\t\t                                       You can not specify the board address, then the client will take the first board found "
-        "via broadcast\n"
-        "\t\t                                       Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
-        "\t\t                                                 -h 127.0.0.1     or  -h 127.0.0.1,127.0.0.2,127.0.0.3\n"
-        "\t\t--format=FORMAT        -f FORMAT       The format in which the data will be saved.\n"
-        "\t\t                                       Keys: tdsm = NI TDMS File Format.\n"
-        "\t\t                                             wav = Waveform Audio File Format.\n"
-        "\t\t                                             csv = Text file that uses a comma to separate values.\n"
-        "\t\t                                             bin = Binary format.\n"
-        "\t\t--dir=NAME             -d NAME         Path to the directory where to save files.\n"
-        "\t\t--limit=SAMPLES        -l SAMPLES      Sample limit [1-%d] (no limit by default).\n"
-        "\t\t--mode=MODE            -m MODE         Convert values in volts (store as ADC raw data by default).\n"
-        "\t\t                                       Keys: raw = 8/16 Bit binary raw format.\n"
-        "\t\t                                              volt = Converts binary integer format to floating point format.\n"
-        "\t\t                                                    Measured in volts. In wav format, it is limited from -1 to 1.\n"
-        "\t\t--timeout=MSEC         -t MSEC         Stops recording after a specified amount of time.\n"
-        "\t\t--tdms_time                            TDMS: a column with the time of every sample (8 bytes each).\n"
-        "\t\t                                       Without it the time is in the channel properties (wf_start_time,\n"
-        "\t\t                                       wf_increment) and in the group Buffers, a row per buffer.\n"
-        "\t\t--verbose              -v              Displays service information.\n"
-        "\n"
-        "DAC streaming Mode:\n"
-        "\tThis mode allows you to generate output data using a signal from a file.\n"
-        "\n"
-        "\tOptions:\n"
-        "\t\t%s -o [-h IPs] -f tdms|wav|bin -d FILE_NAME [-r inf|COUNT] [-v] [-b]\n"
-        "\t\t%s --out_streaming [--hosts=IPs] --format=tdms|wav|bin --data=FILE_NAME [--repeat=inf|COUNT] [--verbose]\n"
-        "\n"
-        "\t\t--out_streaming        -o              Enable dac streaming mode.\n"
-        "\t\t--hosts=IP,...         -h IP,...       You can specify one or more board IP addresses through a separator - ','\n"
-        "\t\t                                       You can not specify the board address, then the client will take the first board found "
-        "via broadcast\n"
-        "\t\t                                       Example: --hosts=127.0.0.1 or --hosts=127.0.0.1,127.0.0.2\n"
-        "\t\t                                                 -h 127.0.0.1     or  -h 127.0.0.1,127.0.0.2,127.0.0.3\n"
-        "\t\t--format=FORMAT        -f FORMAT       The format in which the data will be used.\n"
-        "\t\t                                       Keys: tdsm = NI TDMS File Format.\n"
-        "\t\t                                             wav = Waveform Audio File Format.\n"
-        "\t\t                                             bin = The BIN stream file (channels 1 and 2 of a recording).\n"
-        "\t\t--data=FILE_NAME       -d FILE_NAME    Path to the file for streaming.\n"
-        "\t\t                                       Important! Data must be a multiple of 128 bytes, otherwise there will be artifacts on the signal.\n"
-        "\t\t--repeat=inf|COUNT     -r inf|COUNT    The number of times the file has been resent.\n"
-        "\t\t                                       Keys: inf is an infinite number of times.\n"
-        "\t\t                                          COUNT - value from [1 ... 1000000]\n"
-        "\t\t--verbose              -v              Displays service information.\n"
-        "\n";
-    auto n = name.c_str();
-    fprintf(stderr, format, n, n, n, n, n, n, n, n, n, n, n, n, n, 0x7FFFFFFF, n, n);
-
-    fprintf(stderr, "Configuration file variables and valid values:\nName\t\t\t  Parameters\n%s\n", CStreamSettings::getHelp().c_str());
+// An option getopt did not take: unknown, or without its value
+static auto badOption(ClientOpt::Options& opt, char* argv[], int ch) -> ClientOpt::Options {
+    const char* text = argv[optind - 1];
+    if (ch == ':')
+        fprintf(stderr, "[ERROR] Option %s needs a value\n", text);
+    else if (optopt && !(text && text[0] == '-' && text[1] == '-'))
+        fprintf(stderr, "[ERROR] Unknown option -%c\n", optopt);
+    else
+        fprintf(stderr, "[ERROR] Unknown option %s\n", text);
+    opt.mode = ClientOpt::Mode::ERROR_PARAM;
+    return opt;
 }
 
 auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
@@ -348,10 +267,52 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
     opt.mode = Mode::ERROR_MODE;
     if (argc < 2)
         return opt;
+    opterr = 0;  // the errors are told here, with the usage of the mode
+
+    // --help [SECTION [TEXT]], --help=SECTION, -?: anywhere; after a mode key its section
+    for (int i = 1; i < argc; i++) {
+        const std::string a = argv[i];
+        if (a == "--help" || a == "-?" || a.rfind("--help=", 0) == 0) {
+            opt.mode = Mode::SHOW_HELP;
+            if (a.rfind("--help=", 0) == 0) {
+                opt.help_topic = a.substr(7);
+            } else if (i + 1 < argc && argv[i + 1][0] != '-') {
+                opt.help_topic = argv[i + 1];
+                if (i + 2 < argc && argv[i + 2][0] != '-')
+                    opt.help_filter = argv[i + 2];
+            } else if (i > 1) {
+                opt.help_topic = ClientHelp::topicOfKey(argv[1]);
+            }
+            return opt;
+        }
+        if (a == "--version") {
+            opt.mode = Mode::SHOW_VERSION;
+            return opt;
+        }
+    }
+    // -q, -v, --reply-timeout may come before the mode: the first mode key goes to the front
+    if (ClientHelp::topicOfKey(argv[1]).empty()) {
+        for (int i = 2; i < argc; i++) {
+            if (!ClientHelp::topicOfKey(argv[i]).empty()) {
+                char* mode = argv[i];
+                for (int k = i; k > 1; k--)
+                    argv[k] = argv[k - 1];
+                argv[1] = mode;
+                break;
+            }
+        }
+    }
+    opt.help_topic = ClientHelp::topicOfKey(argv[1]);
+    if (opt.help_topic.empty()) {
+        fprintf(stderr, "[ERROR] Unknown mode %s: the first option is the mode (-d, -c, -r, -s or -o)\n", argv[1]);
+        opt.mode = Mode::ERROR_PARAM;
+        return opt;
+    }
     /* getopt_long stores the option index here. */
     int option_index = 0;
     int ch = -1;
     if ((strcmp(argv[1], "-d") == 0) || (strcmp(argv[1], "--detect") == 0)) {
+        opt.timeout = 5000;  // ms
         while ((ch = getopt_long(argc, argv, optstring_broadcast, long_options_broadcast, &option_index)) != -1) {
             switch (ch) {
                 case 'd':
@@ -359,20 +320,22 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     break;
 
                 case 't': {
-                    int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timout", 0, 100000) != 0) {
+                    int64_t ms = 0;
+                    if (!parseTime(optarg, 1000, 3600000, &ms)) {
+                        fprintf(stderr, "[ERROR] Wrong value of --timeout: %s (seconds, or 500ms, 5s, 1m)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.timeout = t_out;
+                    opt.timeout = static_cast<int>(ms);  // the detect mode keeps milliseconds
                     break;
                 }
-                default: {
-                    if (opt.mode == Mode::SEARCH) {
-                        fprintf(stderr, "[ERROR] Unknown parameter\n");
-                        exit(EXIT_FAILURE);
+                default:
+                    if (commonOption(opt, ch)) {
+                        if (opt.mode == Mode::ERROR_PARAM)
+                            return opt;
+                        break;
                     }
-                }
+                    return badOption(opt, argv, ch);
             }
         }
         if (opt.mode != Mode::ERROR_MODE) {
@@ -402,13 +365,13 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     if (opt.hosts.size() > 0) {
                         for (auto& s : opt.hosts) {
                             if (!check_ip(s)) {
-                                fprintf(stderr, "Error parse ip address: %s\n", s.c_str());
+                                fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", s.c_str());
                                 opt.mode = Mode::ERROR_PARAM;
                                 return opt;
                             }
                         }
                     } else {
-                        fprintf(stderr, "Error parse ip address: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -423,7 +386,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                             opt.config_item_value = vars[1];
                         }
                     } else {
-                        fprintf(stderr, "Error parse item name: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of -i: %s (NAME or NAME=VALUE)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -431,16 +394,16 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 'g': {
-                    if (strcmp(optarg, "V") == 0) {
+                    if (same(optarg, "V")) {
                         opt.conf_get = ConfGet::VERBOUS_JSON;
-                    } else if (strcmp(optarg, "V1") == 0) {
+                    } else if (same(optarg, "V1")) {
                         opt.conf_get = ConfGet::VERBOUS_JSON_DATA;
-                    } else if (strcmp(optarg, "VV") == 0) {
+                    } else if (same(optarg, "VV")) {
                         opt.conf_get = ConfGet::VERBOUS;
-                    } else if (strcmp(optarg, "F") == 0) {
+                    } else if (same(optarg, "F")) {
                         opt.conf_get = ConfGet::FILE;
                     } else {
-                        fprintf(stderr, "Error key --get: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --get: %s (V, V1, VV or F)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -448,52 +411,45 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 's': {
-                    if (strcmp(optarg, "M") == 0) {
+                    if (same(optarg, "M")) {
                         opt.conf_set = ConfSet::MEMORY;
-                    } else if (strcmp(optarg, "F") == 0) {
+                    } else if (same(optarg, "F")) {
                         opt.conf_set = ConfSet::FILE;
                     } else {
-                        fprintf(stderr, "Error key --set: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --set: %s (M or F)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
                     break;
                 }
 
-                case 't': {
-                    int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timeout", 0, 100000) != 0) {
-                        opt.mode = Mode::ERROR_PARAM;
-                        return opt;
-                    }
-                    opt.timeout = t_out;
-                    break;
-                }
+
 
                 case 'f': {
                     if (strcmp(optarg, "") != 0) {
                         opt.conf_file = optarg;
                     } else {
-                        fprintf(stderr, "Error key --file: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --config_file: '%s'\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
                     break;
                 }
 
-                default: {
-                    if (opt.mode == Mode::CONFIG) {
-                        fprintf(stderr, "[ERROR] Unknown parameter\n");
-                        exit(EXIT_FAILURE);
+                default:
+                    if (commonOption(opt, ch)) {
+                        if (opt.mode == Mode::ERROR_PARAM)
+                            return opt;
+                        break;
                     }
-                }
+                    return badOption(opt, argv, ch);
             }
         }
 
         if (opt.mode != Mode::ERROR_MODE) {
             if (opt.mode == Mode::CONFIG && ((opt.conf_get == ConfGet::NONE && opt.conf_set == ConfSet::NONE) && opt.config_item_name == "")) {
-                fprintf(stderr, "[ERROR] Missing required key in configuration mode\n");
-                exit(EXIT_FAILURE);
+                fprintf(stderr, "[ERROR] The config mode needs -g, -s or -i\n");
+                opt.mode = Mode::ERROR_PARAM;
             }
             return opt;
         }
@@ -501,6 +457,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
 
     option_index = 0;
     if ((strcmp(argv[1], "-r") == 0) || (strcmp(argv[1], "--remote") == 0)) {
+        opt.timeout = 1000;  // ms, for start_stop
         while ((ch = getopt_long(argc, argv, optstring_remote, long_options_remote, &option_index)) != -1) {
             switch (ch) {
                 case 'r':
@@ -517,13 +474,13 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     if (opt.hosts.size() > 0) {
                         for (auto& s : opt.hosts) {
                             if (!check_ip(s)) {
-                                fprintf(stderr, "Error parse ip address: %s\n", s.c_str());
+                                fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", s.c_str());
                                 opt.mode = Mode::ERROR_PARAM;
                                 return opt;
                             }
                         }
                     } else {
-                        fprintf(stderr, "Error parse ip address: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -531,20 +488,20 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 'm': {
-                    if (strcmp(optarg, "start") == 0) {
+                    if (same(optarg, "start")) {
                         opt.remote_mode = RemoteMode::START_WITH_ADC;
-                    } else if (strcmp(optarg, "stop") == 0) {
+                    } else if (same(optarg, "stop")) {
                         opt.remote_mode = RemoteMode::STOP;
-                    } else if (strcmp(optarg, "start_stop") == 0) {
+                    } else if (same(optarg, "start_stop")) {
                         opt.remote_mode = RemoteMode::START_STOP;
-                    } else if (strcmp(optarg, "start_dac") == 0) {
+                    } else if (same(optarg, "start_dac")) {
                         opt.remote_mode = RemoteMode::START_DAC;
-                    } else if (strcmp(optarg, "stop_dac") == 0) {
+                    } else if (same(optarg, "stop_dac")) {
                         opt.remote_mode = RemoteMode::STOP_DAC;
-                    } else if (strcmp(optarg, "start_stop_dac") == 0) {
+                    } else if (same(optarg, "start_stop_dac")) {
                         opt.remote_mode = RemoteMode::START_STOP_DAC;
                     } else {
-                        fprintf(stderr, "Error key --mode: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --mode: %s (start, stop, start_stop, start_dac, stop_dac or start_stop_dac)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -552,28 +509,30 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 't': {
-                    int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timeout", 0, 0xFFFFFFF) != 0) {
+                    int64_t ms = 0;
+                    if (!parseTime(optarg, 1, 0xFFFFFFF, &ms)) {
+                        fprintf(stderr, "[ERROR] Wrong value of --timeout: %s (milliseconds, or 500ms, 5s, 2m)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.timeout = t_out;
+                    opt.timeout = static_cast<int>(ms);
                     break;
                 }
 
-                default: {
-                    if (opt.mode == Mode::CONFIG) {
-                        fprintf(stderr, "[ERROR] Unknown parameter\n");
-                        exit(EXIT_FAILURE);
+                default:
+                    if (commonOption(opt, ch)) {
+                        if (opt.mode == Mode::ERROR_PARAM)
+                            return opt;
+                        break;
                     }
-                }
+                    return badOption(opt, argv, ch);
             }
         }
 
         if (opt.mode != Mode::ERROR_MODE) {
             if (opt.mode == Mode::REMOTE && (opt.remote_mode == RemoteMode::NONE)) {
-                fprintf(stderr, "[ERROR] Missing required key in remote mode\n");
-                exit(EXIT_FAILURE);
+                fprintf(stderr, "[ERROR] The remote mode needs -m COMMAND\n");
+                opt.mode = Mode::ERROR_PARAM;
             }
             return opt;
         }
@@ -602,13 +561,13 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     if (opt.hosts.size() > 0) {
                         for (auto& s : opt.hosts) {
                             if (!check_ip(s)) {
-                                fprintf(stderr, "Error parse ip address: %s\n", s.c_str());
+                                fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", s.c_str());
                                 opt.mode = Mode::ERROR_PARAM;
                                 return opt;
                             }
                         }
                     } else {
-                        fprintf(stderr, "Error parse ip address: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -616,16 +575,16 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 'f': {
-                    if (strcmp(optarg, "tdms") == 0) {
+                    if (same(optarg, "tdms")) {
                         opt.streamign_type = StreamingType::TDMS;
-                    } else if (strcmp(optarg, "wav") == 0) {
+                    } else if (same(optarg, "wav")) {
                         opt.streamign_type = StreamingType::WAV;
-                    } else if (strcmp(optarg, "csv") == 0) {
+                    } else if (same(optarg, "csv")) {
                         opt.streamign_type = StreamingType::CSV;
-                    } else if (strcmp(optarg, "bin") == 0) {
+                    } else if (same(optarg, "bin")) {
                         opt.streamign_type = StreamingType::BIN;
                     } else {
-                        fprintf(stderr, "Error key --format: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --format: %s (tdms, wav, csv or bin)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -633,12 +592,12 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 'm': {
-                    if (strcmp(optarg, "raw") == 0) {
+                    if (same(optarg, "raw")) {
                         opt.save_type = SaveType::RAW;
-                    } else if (strcmp(optarg, "volt") == 0) {
+                    } else if (same(optarg, "volt")) {
                         opt.save_type = SaveType::VOL;
                     } else {
-                        fprintf(stderr, "Error key --mode: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --mode: %s (raw or volt)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -646,7 +605,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
                 case 'l': {
                     int samp = 0;
-                    if (get_int(&samp, optarg, "Error get samples limit", 1, 0x7FFFFFFF) != 0) {
+                    if (get_int(&samp, optarg, "[ERROR] Wrong value of --limit (samples, 1-2147483647)", 1, 0x7FFFFFFF) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -655,12 +614,13 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 't': {
-                    int t_out = 0;
-                    if (get_int(&t_out, optarg, "Error get timeout", 0, 0xFFFFFFF) != 0) {
+                    int64_t ms = 0;
+                    if (!parseTime(optarg, 1, 0xFFFFFFF, &ms)) {
+                        fprintf(stderr, "[ERROR] Wrong value of --timeout: %s (milliseconds, or 500ms, 5s, 2m)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
-                    opt.timeout = t_out;
+                    opt.timeout = static_cast<int>(ms);
                     break;
                 }
 
@@ -668,33 +628,34 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     if (strcmp(optarg, "") != 0) {
                         opt.save_dir = optarg;
                     } else {
-                        fprintf(stderr, "Error key --dir: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --dir: '%s'\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
                     break;
                 }
 
-                default: {
-                    if (opt.mode == Mode::CONFIG) {
-                        fprintf(stderr, "[ERROR] Unknown parameter\n");
-                        exit(EXIT_FAILURE);
+                default:
+                    if (commonOption(opt, ch)) {
+                        if (opt.mode == Mode::ERROR_PARAM)
+                            return opt;
+                        break;
                     }
-                }
+                    return badOption(opt, argv, ch);
             }
         }
 
         if (opt.mode != Mode::ERROR_MODE) {
             if (opt.mode == Mode::STREAMING && (opt.streamign_type == StreamingType::NONE)) {
-                fprintf(stderr, "[ERROR] Missing required key in streaming mode\n");
-                exit(EXIT_FAILURE);
+                fprintf(stderr, "[ERROR] The streaming mode needs -f FORMAT\n");
+                opt.mode = Mode::ERROR_PARAM;
             }
             return opt;
         }
     }
 
     option_index = 0;
-    if ((strcmp(argv[1], "-o") == 0) || (strcmp(argv[1], "--out_streaming") == 0)) {
+    if ((strcmp(argv[1], "-o") == 0) || (strcmp(argv[1], "--out_streaming") == 0) || (strcmp(argv[1], "--out-streaming") == 0)) {
         opt.timeout = -1;
         while ((ch = getopt_long(argc, argv, optstring_dac_streaming, long_options_dac_streaming, &option_index)) != -1) {
             switch (ch) {
@@ -712,13 +673,13 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     if (opt.hosts.size() > 0) {
                         for (auto& s : opt.hosts) {
                             if (!check_ip(s)) {
-                                fprintf(stderr, "Error parse ip address: %s\n", s.c_str());
+                                fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", s.c_str());
                                 opt.mode = Mode::ERROR_PARAM;
                                 return opt;
                             }
                         }
                     } else {
-                        fprintf(stderr, "Error parse ip address: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -726,14 +687,14 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 'f': {
-                    if (strcmp(optarg, "tdms") == 0) {
+                    if (same(optarg, "tdms")) {
                         opt.streamign_type = StreamingType::TDMS;
-                    } else if (strcmp(optarg, "wav") == 0) {
+                    } else if (same(optarg, "wav")) {
                         opt.streamign_type = StreamingType::WAV;
-                    } else if (strcmp(optarg, "bin") == 0) {
+                    } else if (same(optarg, "bin")) {
                         opt.streamign_type = StreamingType::BIN;
                     } else {
-                        fprintf(stderr, "Error key --format: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --format: %s (tdms, wav or bin)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -742,9 +703,9 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
 
                 case 'r': {
                     int repeat = 0;
-                    if (strcmp(optarg, "inf") == 0) {
+                    if (same(optarg, "inf")) {
                         opt.dac_repeat = (int)RepeatDAC::INF;
-                    } else if (get_int(&repeat, optarg, "Error get repeat count", 1, 1000000) != 0) {
+                    } else if (get_int(&repeat, optarg, "[ERROR] Wrong value of --repeat (1-1000000 or inf)", 1, 1000000) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     } else {
@@ -758,26 +719,31 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     if (strcmp(optarg, "") != 0) {
                         opt.dac_file = optarg;
                     } else {
-                        fprintf(stderr, "Error key --data: %s\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --data: '%s'\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
                     break;
                 }
 
-                default: {
-                    if (opt.mode == Mode::CONFIG) {
-                        fprintf(stderr, "[ERROR] Unknown parameter\n");
-                        exit(EXIT_FAILURE);
+                default:
+                    if (commonOption(opt, ch)) {
+                        if (opt.mode == Mode::ERROR_PARAM)
+                            return opt;
+                        break;
                     }
-                }
+                    return badOption(opt, argv, ch);
             }
         }
 
         if (opt.mode != Mode::ERROR_MODE) {
             if (opt.mode == Mode::STREAMING_DAC && (opt.streamign_type == StreamingType::NONE)) {
-                fprintf(stderr, "[ERROR] Missing required key in dac streaming mode\n");
-                exit(EXIT_FAILURE);
+                fprintf(stderr, "[ERROR] The DAC mode needs -f FORMAT\n");
+                opt.mode = Mode::ERROR_PARAM;
+            }
+            if (opt.mode == Mode::STREAMING_DAC && opt.dac_file.empty()) {
+                fprintf(stderr, "[ERROR] The DAC mode needs -d FILE\n");
+                opt.mode = Mode::ERROR_PARAM;
             }
             return opt;
         }

@@ -49,6 +49,7 @@ target_include_directories(${PROJECT_NAME}
 list(APPEND headers
             ${PROJECT_SOURCE_DIR}/src/config.h
             ${PROJECT_SOURCE_DIR}/src/dac_streaming.h
+            ${PROJECT_SOURCE_DIR}/src/help.h
             ${PROJECT_SOURCE_DIR}/src/main.h
             ${PROJECT_SOURCE_DIR}/src/options.h
             ${PROJECT_SOURCE_DIR}/src/remote.h
@@ -60,6 +61,7 @@ list(APPEND headers
 list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/config.cpp
             ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
+            ${PROJECT_SOURCE_DIR}/src/help.cpp
             ${PROJECT_SOURCE_DIR}/src/main.cpp
             ${PROJECT_SOURCE_DIR}/src/options.cpp
             ${PROJECT_SOURCE_DIR}/src/remote.cpp

@@ -1,3 +1,4 @@
+#include "test_helper.h"
 #include "search.h"
 #include "config.h"
 
@@ -120,32 +121,35 @@ auto getModelName(uint8_t model) -> std::string {
     return "ERROR";
 }
 
-auto startSearch(ClientOpt::Options& option) -> void {
+auto startSearch(ClientOpt::Options& option) -> bool {
     ClientNetConfigManager client("", false);
     client.startBroadcast("127.0.0.1", NET_BROADCAST_PORT);
-    int timout = option.timeout;
+    const int timeoutMs = option.timeout;
 
     std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
     auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow);
     auto value = curTime.time_since_epoch();
     auto timeBegin = value.count();
     int point = 1;
-    while ((value.count() - timeBegin) < timout * 1000) {
-        std::cout << "\rSearch ";
-        for (int i = 0; i < 5; i++) {
-            if (i < point)
-                std::cout << ".";
-            else
-                std::cout << " ";
+    while ((value.count() - timeBegin) < timeoutMs) {
+        if (progressWanted(option)) {
+            std::cout << "\rSearch ";
+            for (int i = 0; i < 5; i++) {
+                if (i < point)
+                    std::cout << ".";
+                else
+                    std::cout << " ";
+            }
+            std::cout << std::flush;
         }
-        std::cout << std::flush;
         point++;
         if (point > 4)
             point = 0;
         sleepMs(100);
         value = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch();
     }
-    std::cout << "\rSearch: DONE";
+    if (progressWanted(option))
+        std::cout << "\rSearch: DONE";
     auto list = client.getBroadcastClients();
     std::cout << "\nFound boards:\n";
 
@@ -155,6 +159,9 @@ auto startSearch(ClientOpt::Options& option) -> void {
         std::cout << i++ << ")\t" << (item.mode == broadcast_lib::EMode::AB_SERVER_MASTER ? "MASTER" : "SLAVE") << "\t" << (item.host == "" ? "Unknown" : item.host) << "\t"
                   << model.c_str() << "\n";
     }
+    if (list.empty())
+        std::cout << "none\n";
+    return !list.empty();
 }
 
 auto startSearch() -> std::string {

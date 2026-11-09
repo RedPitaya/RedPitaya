@@ -1,3 +1,5 @@
+#include "test_helper.h"
+#include "config.h"
 #include <chrono>
 
 #include "dac_streaming.h"
@@ -14,6 +16,11 @@ std::map<std::string, net_lib::CAsioNet::Ptr> g_dac_asionet;
 std::mutex g_dac_smutex;
 ClientOpt::Options g_dac_soption;
 std::atomic<bool> dac_sig_exit_flag(false);
+std::atomic<bool> g_dacFailed(false);  // the file could not be played or sent
+std::atomic<int> g_dacRunning(0);
+std::map<std::string, uint64_t> g_dac_bytesTotal;  // sent per board
+std::map<std::string, bool> g_dac_lost;  // the data connection broke before the file was sent
+long long g_dac_start = 0;
 
 std::map<std::string, long long int> g_dac_timeBegin;
 std::map<std::string, bool> g_dac_terminate;
@@ -110,18 +117,18 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
         const std::lock_guard lock(g_dac_smutex);
         switch (res) {
             case CDACStreamingManager::NotifyResult::NR_BROKEN: {
-                if (conf.verbous)
-                    aprintf(stdout, "%s File %s is broken\n", getTS(": ").c_str(), conf.dac_file.c_str());
+                g_dacFailed = true;
+                aprintf(stderr, "%s [ERROR] File %s is broken\n", getTS(": ").c_str(), conf.dac_file.c_str());
                 break;
             }
             case CDACStreamingManager::NotifyResult::NR_EMPTY: {
-                if (conf.verbous)
-                    aprintf(stdout, "%s File %s is empty\n", getTS(": ").c_str(), conf.dac_file.c_str());
+                g_dacFailed = true;
+                aprintf(stderr, "%s [ERROR] File %s is empty\n", getTS(": ").c_str(), conf.dac_file.c_str());
                 break;
             }
             case CDACStreamingManager::NotifyResult::NR_MISSING_FILE: {
-                if (conf.verbous)
-                    aprintf(stdout, "%s File %s is missing\n", getTS(": ").c_str(), conf.dac_file.c_str());
+                g_dacFailed = true;
+                aprintf(stderr, "%s [ERROR] File %s is missing\n", getTS(": ").c_str(), conf.dac_file.c_str());
                 break;
             }
             case CDACStreamingManager::NotifyResult::NR_STOP: {
@@ -145,32 +152,36 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
     g_dac_asionet[conf.host] = net_lib::CAsioNet::create(net_lib::EMode::M_CLIENT, conf.host, NET_DAC_STREAMING_PORT, nullptr);
     g_dac_asionet[conf.host]->clientConnectNotify.connect([=](std::string host) {
         const std::lock_guard lock(g_dac_smutex);
-        aprintf(stdout, "%s CLIENT CONNECTED  %s\n", getTS(": ").c_str(), host.c_str());
+        if (conf.verbous)
+            aprintf(stdout, "%s CLIENT CONNECTED  %s\n", getTS(": ").c_str(), host.c_str());
         g_dac_connected[host] = true;
     });
 
     g_dac_asionet[conf.host]->clientDisconnectNotify.connect([=](std::string host) {
         const std::lock_guard lock(g_dac_smutex);
-        if (g_dac_connected[host])
+        if (g_dac_connected[host] && conf.verbous)
             aprintf(stdout, "%s CLIENT DISCONNECTED  %s\n", getTS(": ").c_str(), host.c_str());
         g_dac_connected[host] = false;
     });
 
     g_dac_asionet[conf.host]->sendNotify.connect([=](std::error_code err, size_t) {
         if (err.value() != 0 && g_dac_terminate[conf.host] == false) {
-            aprintf(stdout, "%s SEND ERROR  %s\n", getTS(": ").c_str(), conf.host.c_str());
+            if (conf.verbous)
+                aprintf(stdout, "%s SEND ERROR  %s\n", getTS(": ").c_str(), conf.host.c_str());
+            g_dacFailed = true;
+            g_dac_lost[conf.host] = true;
             g_dac_terminate[conf.host] = true;
         }
     });
 
     g_dac_asionet[conf.host]->start();
 
-    auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
-    auto curTime = beginTime;
-    while (!g_dac_connected[conf.host]) {
-        if (curTime - beginTime >= 5000)
-            break;
-        curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+    const auto connectEnd = std::chrono::steady_clock::now() + std::chrono::milliseconds(replyTimeout());
+    while (!g_dac_connected[conf.host] && !g_dac_terminate[conf.host] && std::chrono::steady_clock::now() < connectEnd)
+        sleepMs(10);
+    if (!g_dac_connected[conf.host]) {
+        aprintf(stderr, "%s [ERROR] %s: no data connection for the DAC within %.1f s\n", getTS(": ").c_str(), conf.host.c_str(), replyTimeout() / 1000.0);
+        g_dacFailed = true;
     }
 
     if (g_dac_connected[conf.host]) {
@@ -182,14 +193,17 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
                 auto ch1 = pack->getBuffer(DataLib::EDataBuffersPackChannel::CH1);
                 auto ch2 = pack->getBuffer(DataLib::EDataBuffersPackChannel::CH2);
 
+                const std::lock_guard lock(g_dac_smutex);
                 if (ch1) {
                     g_dac_packCounter_ch1[conf.host]++;
                     g_dac_BytesCount[conf.host] += ch1->getDataLenght();
+                    g_dac_bytesTotal[conf.host] += ch1->getDataLenght();
                 }
 
                 if (ch2) {
                     g_dac_packCounter_ch2[conf.host]++;
                     g_dac_BytesCount[conf.host] += ch2->getDataLenght();
+                    g_dac_bytesTotal[conf.host] += ch2->getDataLenght();
                 }
                 g_dac_manger[conf.host]->unlockBuffer();
             }
@@ -210,7 +224,7 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
             std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
             auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow);
             auto value = curTime.time_since_epoch();
-            if ((value.count() - g_dac_timeBegin[conf.host]) >= 5000) {
+            if (conf.verbous && (value.count() - g_dac_timeBegin[conf.host]) >= 5000) {
                 const std::lock_guard lock(g_dac_smutex);
                 uint64_t bw = g_dac_BytesCount[conf.host];
                 std::string pref = " ";
@@ -238,16 +252,20 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
     }
     stopDACStreaming(conf.host);
     delete memoryManager;
+    g_dacRunning--;
 }
 
-auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option) -> void {
+auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option) -> bool {
     g_dac_soption = option;
+    g_dacFailed = false;
+    g_dac_bytesTotal.clear();
+    g_dac_lost.clear();
 
     std::map<std::string, uint32_t> blockSizes;
     auto hosts = cl->getHosts();
     if (!requestMemoryBlockSize(cl, hosts, &blockSizes, option.verbous)) {
         aprintf(stdout, "%s Can't get block sizes\n", getTS(": ").c_str());
-        return;
+        return false;
     }
 
     std::map<std::string, dac_channels_t> acMap;
@@ -261,9 +279,11 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
             case ClientOpt::StreamingType::WAV:
                 conf.file_type = CStreamSettings::DataFormat::WAV;
                 break;
-            default:
+            case ClientOpt::StreamingType::BIN:
                 conf.file_type = CStreamSettings::DataFormat::BIN;
-                return;
+                break;
+            default:
+                return false;
         }
         conf.dac_file = g_dac_soption.dac_file;
         conf.dac_repeat = 0;
@@ -278,6 +298,28 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
     remote_opt.verbous = g_dac_soption.verbous;
     std::map<std::string, StateRunnedHosts> runned_hosts;
     if (startRemote(cl, remote_opt, &acMap, &runned_hosts)) {
+        // a board that plays its own file takes nothing from here
+        bool local = false;
+        for (auto& kv : runned_hosts) {
+            if (kv.second == StateRunnedHosts::LOCAL) {
+                aprintf(stderr,
+                        "%s [ERROR] %s plays a file of its own SD card (dac_pass_mode=DAC_FILE), not from this client.\n"
+                        "        To play from here: rpsa_client -c -h %s -i dac_pass_mode=DAC_NET\n",
+                        getTS(": ").c_str(),
+                        kv.first.c_str(),
+                        kv.first.c_str());
+                local = true;
+            }
+        }
+        if (local) {
+            remote_opt.remote_mode = ClientOpt::RemoteMode::STOP_DAC;
+            startRemote(cl, remote_opt, &acMap, &runned_hosts);
+            return false;
+        }
+        if (runned_hosts.empty()) {
+            aprintf(stderr, "%s [ERROR] No board started the DAC streaming\n", getTS(": ").c_str());
+            return false;
+        }
         for (auto& kv : runned_hosts) {
             if (kv.second == StateRunnedHosts::TCP) {
                 DACSettingsClient conf;
@@ -289,23 +331,66 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
                     case ClientOpt::StreamingType::WAV:
                         conf.file_type = CStreamSettings::DataFormat::WAV;
                         break;
-                    default:
+                    case ClientOpt::StreamingType::BIN:
                         conf.file_type = CStreamSettings::DataFormat::BIN;
-                        return;
+                        break;
+                    default:
+                        return false;
                 }
                 conf.dac_file = g_dac_soption.dac_file;
                 conf.dac_repeat = g_dac_soption.dac_repeat;
                 conf.verbous = g_dac_soption.verbous;
+                g_dacRunning++;
                 dac_clients.push_back(std::thread(dac_runClient, conf, blockSizes[kv.first]));
             }
         }
 
+        // the progress on a terminal while the file plays
+        auto nowMs = [] { return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch().count(); };
+        g_dac_start = nowMs();
+        auto line = [&] {
+            const std::lock_guard lock(g_dac_smutex);
+            const double secs = (nowMs() - g_dac_start) / 1000.0;
+            std::string l;
+            for (auto& [host, bytes] : g_dac_bytesTotal) {
+                l += (l.empty() ? "" : "  ") + host + ": sent " + sizeText(bytes) + ", " + sizeText(secs > 0 ? (uint64_t)(bytes / secs) : 0) + "/s";
+            }
+            char t[32];
+            snprintf(t, sizeof(t), "  [%.1f s]", secs);
+            return (l.empty() ? std::string("connecting...") : l) + t;
+        };
+        if (progressWanted(g_dac_soption)) {
+            while (g_dacRunning > 0) {
+                showProgress(line());
+                for (int i = 0; i < 5 && g_dacRunning > 0; i++)
+                    sleepMs(100);
+            }
+            showProgress("", true);
+        }
         for (std::thread& t : dac_clients) {
             if (t.joinable()) {
                 t.join();
             }
         }
+        dac_clients.clear();
+        if (!g_dac_lost.empty())
+            sleepMs(300);  // the closed config connection is seen
+        for (auto& [host, lost] : g_dac_lost) {
+            if (lost)
+                aprintf(stderr, "%s [ERROR] %s ended the DAC streaming early: %s\n", getTS(": ").c_str(), host.c_str(), endedText(cl->isConnected(host)));
+        }
+        const double secs = (nowMs() - g_dac_start) / 1000.0;
+        const bool repeats = g_dac_soption.dac_repeat == (int)ClientOpt::RepeatDAC::INF;
+        for (auto& [host, bytes] : g_dac_bytesTotal) {
+            const std::string hint = repeats && !g_dac_lost[host] ? "; the board repeats it until: rpsa_client -r -h " + host + " -m stop_dac" : "";
+            aprintf(stdout, "%s %s: sent %s of %s in %.1f s%s\n", g_dac_lost[host] ? "Stopped:" : "Done:", host.c_str(), sizeText(bytes).c_str(),
+                    g_dac_soption.dac_file.c_str(), secs, hint.c_str());
+        }
+    } else {
+        aprintf(stderr, "%s [ERROR] Can't start the DAC streaming on the boards\n", getTS(": ").c_str());
+        g_dacFailed = true;
     }
+    return !g_dacFailed;
 }
 
 auto dac_streamingSIGHandler() -> void {

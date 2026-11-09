@@ -3,7 +3,7 @@
 
 #include "options.h"
 
-auto startSearch(ClientOpt::Options& option) -> void;
+auto startSearch(ClientOpt::Options& option) -> bool;  // false: no board answered
 auto startSearch() -> std::string;
 
 #endif
