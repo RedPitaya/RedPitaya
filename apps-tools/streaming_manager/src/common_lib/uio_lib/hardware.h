@@ -20,6 +20,8 @@ struct BoardInfo {
     uint32_t dacRate = 125000000;  // Hz
     uint8_t adcBits = 14;          // of the ADC itself; the stream carries 16 or 8 bit
     bool adcFilter = false;        // the equalization filter is built into the FPGA
+    bool adcRanges = false;        // the inputs have two ranges, 1:1 and 1:20 (LV/HV)
+    bool adcACDC = false;          // the inputs switch between AC and DC coupling
     bool dacGain = false;          // the DAC has a x1/x5 gain switch (250-12)
     bool daisyChain = false;       // the board can be a daisy chain (x-streaming) slave
     uint8_t model = 0;             // the profile's model (rp_HPeModels_t), as the broadcast carries it

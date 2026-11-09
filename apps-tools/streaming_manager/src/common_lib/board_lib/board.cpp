@@ -65,8 +65,9 @@ class CRPBoard : public IBoard {
         m_info.dacGain = rp_HPGetIsGainDACx5OrDefault();
         if (rp_HPGetIsXStreamingAvailable(&m_info.daisyChain) != RP_HP_OK)
             ERROR_LOG("Can't get the x-streaming mode")
+        m_info.adcRanges = rp_HPGetFastADCIsLV_HVOrDefault();
+        m_info.adcACDC = rp_HPGetFastADCIsAC_DCOrDefault();
         m_attenuator = rp_HPGetIsAttenuatorControllerPresentOrDefault();
-        m_acdc = rp_HPGetFastADCIsAC_DCOrDefault();
         rp_HPeModels_t model = STEM_125_14_v1_0;
         if (rp_HPGetModel(&model) == RP_HP_OK)
             m_info.model = static_cast<uint8_t>(model);
@@ -78,7 +79,7 @@ class CRPBoard : public IBoard {
         else
             ERROR_LOG("Can't get the MAC address")
         // the relay controller of the 250-12 (attenuators, AC/DC, DAC gain) to its defaults
-        if (m_attenuator && m_acdc && m_info.dacGain)
+        if (m_attenuator && m_info.adcACDC && m_info.dacGain)
             rp_max7311::rp_initController();
     }
 
@@ -137,7 +138,7 @@ class CRPBoard : public IBoard {
         auto in = ch == 0 ? RP_MAX7311_IN1 : RP_MAX7311_IN2;
         if (m_attenuator)
             rp_max7311::rp_setAttenuator(in, att1_20 ? RP_ATTENUATOR_1_20 : RP_ATTENUATOR_1_1);
-        if (m_acdc)
+        if (m_info.adcACDC)
             rp_max7311::rp_setAC_DC(in, dc ? RP_DC_MODE : RP_AC_MODE);
     }
 
@@ -149,8 +150,7 @@ class CRPBoard : public IBoard {
 
    private:
     BoardInfo m_info;
-    bool m_attenuator = false;
-    bool m_acdc = false;
+    bool m_attenuator = false;  // the relay controller of the 250-12
     ADCCalibrationPlace m_place = ADCCalibrationPlace::AFTER_FILTER;
 };
 

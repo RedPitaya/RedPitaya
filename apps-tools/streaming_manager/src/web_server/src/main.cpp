@@ -2,10 +2,6 @@
 #include <type_traits>
 
 // Platform/Hardware includes
-#include "api250-12/rp-gpio-power.h"
-#include "api250-12/rp-spi.h"
-#include "rp_hw-profiles.h"
-#include "rp_hw_calib.h"
 
 // Common includes
 #include "common/version.h"
@@ -25,12 +21,6 @@
 // Forward declarations
 // ============================================================================
 
-auto getADCChannels() -> uint8_t;
-auto getDACChannels() -> uint8_t;
-auto getDACRate() -> uint32_t;
-auto getADCRate() -> uint32_t;
-auto getAC_DC() -> bool;
-auto getIsDACGain() -> bool;
 
 void setConfig(bool _force);
 void updateUI();
@@ -42,6 +32,11 @@ void updateUI();
 static constexpr char config_file[] = "/root/.config/redpitaya/apps/streaming/streaming_config.json";
 
 auto memmanager = uio_lib::CMemoryManager::instance();
+// The board (profile, calibration, relays) before the parameters of the page, which take its data;
+// the module stays loaded, the board is made once
+const std::shared_ptr<uio_lib::IBoard> g_board = board_lib::createBoard();
+const uio_lib::BoardInfo g_info = g_board->info();
+const uint32_t g_dacRate = g_info.dacRate ? g_info.dacRate : 1;
 
 // ============================================================================
 // ADC Parameters
@@ -61,7 +56,7 @@ CIntParameter ss_rate("SS_RATE", CBaseParameter::RW, 4, 0, 1, 65536);
 CIntParameter ss_format("SS_FORMAT", CBaseParameter::RW, 0, 0, 0, 2);
 CIntParameter ss_status("SS_STATUS", CBaseParameter::RW, 1, 0, 0, 100);
 CBooleanParameter ss_adc_data_pass("SS_ADC_DATA_PASS", CBaseParameter::RW, false, 0);
-CIntParameter ss_acd_max("SS_ACD_MAX", CBaseParameter::RO, getADCRate(), 0, getADCRate(), getADCRate());
+CIntParameter ss_acd_max("SS_ACD_MAX", CBaseParameter::RO, g_info.adcRate, 0, g_info.adcRate, g_info.adcRate);
 CIntParameter ss_attenuator("SS_ATTENUATOR", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_ac_dc("SS_AC_DC", CBaseParameter::RW, 0, 0, 0, 256);
 
@@ -78,7 +73,7 @@ CBooleanParameter ss_dac_data_pass("SS_DAC_DATA_PASS", CBaseParameter::RW, false
 CIntParameter ss_dac_file_type("SS_DAC_FILE_TYPE", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter ss_dac_gain("SS_DAC_GAIN", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_dac_mode("SS_DAC_MODE", CBaseParameter::RW, 0, 0, 0, 1);
-CIntParameter ss_dac_speed("SS_DAC_HZ", CBaseParameter::RW, getDACRate(), 0, 1.0 / (65536.0 / getDACRate()) + 1.0, getDACRate());
+CIntParameter ss_dac_speed("SS_DAC_HZ", CBaseParameter::RW, g_dacRate, 0, 1.0 / (65536.0 / g_dacRate) + 1.0, g_dacRate);
 CIntParameter ss_dac_repeat("SS_DAC_REPEAT", CBaseParameter::RW, -1, 0, -2, 0);
 CIntParameter ss_dac_rep_count("SS_DAC_REPEAT_COUNT", CBaseParameter::RW, 1, 0, 1, 2000000000);
 
@@ -86,10 +81,10 @@ CIntParameter ss_dac_rep_count("SS_DAC_REPEAT_COUNT", CBaseParameter::RW, 1, 0, 
 // Read-only capability parameters
 // ============================================================================
 
-CIntParameter ss_adc_channels("SS_ADC_CHANNELS", CBaseParameter::RO, getADCChannels(), 0, 0, 10);
-CIntParameter ss_dac_channels("SS_DAC_CHANNELS", CBaseParameter::RO, getDACChannels(), 0, 0, 10);
-CBooleanParameter ss_ac_dc_enable("SS_IS_AC_DC", CBaseParameter::RO, getAC_DC(), 0);
-CBooleanParameter ss_dac_gain_enable("SS_IS_DAC_GAIN", CBaseParameter::RO, getIsDACGain(), 0);
+CIntParameter ss_adc_channels("SS_ADC_CHANNELS", CBaseParameter::RO, g_info.adcChannels, 0, 0, 10);
+CIntParameter ss_dac_channels("SS_DAC_CHANNELS", CBaseParameter::RO, g_info.dacChannels, 0, 0, 10);
+CBooleanParameter ss_ac_dc_enable("SS_IS_AC_DC", CBaseParameter::RO, g_info.adcACDC, 0);
+CBooleanParameter ss_dac_gain_enable("SS_IS_DAC_GAIN", CBaseParameter::RO, g_info.dacGain, 0);
 
 // ============================================================================
 // Statistics parameters
@@ -136,7 +131,6 @@ auto makeWebCallback() -> std::shared_ptr<session_lib::SessionCallback>;
 
 uio_lib::BoardMode g_isMaster = uio_lib::BoardMode::UNKNOWN;
 
-std::atomic_bool g_serverRun(false);
 
 // ============================================================================
 // Hardware detection functions
@@ -152,55 +146,6 @@ auto isDACAviable() -> bool {
     return false;
 }
 
-auto getADCChannels() -> uint8_t {
-    uint8_t c = 0;
-    if (rp_HPGetFastADCChannelsCount(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast ADC channels count");
-    }
-    return c;
-}
-
-auto getDACChannels() -> uint8_t {
-    uint8_t c = 0;
-    if (rp_HPGetFastDACChannelsCount(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast DAC channels count");
-    }
-    return c;
-}
-
-auto getAC_DC() -> bool {
-    bool c = false;
-    if (rp_HPGetFastADCIsAC_DC(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast AC/DC mode");
-    }
-    return c;
-}
-
-auto getIsDACGain() -> bool {
-    bool c = false;
-    if (rp_HPGetIsGainDACx5(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast DAC gain mode");
-    }
-    return c;
-}
-
-auto getDACRate() -> uint32_t {
-    uint32_t c = 0;
-    if (rp_HPGetBaseFastDACSpeedHz(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast DAC speed");
-        return 1;
-    }
-    return c;
-}
-
-auto getADCRate() -> uint32_t {
-    uint32_t c = 0;
-    if (rp_HPGetBaseFastADCSpeedHz(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast ADC speed");
-    }
-    return c;
-}
-
 // ============================================================================
 // Application description & signal handling
 // ============================================================================
@@ -209,22 +154,12 @@ const char* rp_app_desc(void) {
     return (const char*)"Red Pitaya Stream server application.\n";
 }
 
-auto termSignalHandler(int) -> void {}
-
-auto installTermSignalHandler() -> void {
-    struct sigaction action;
-    memset(&action, 0, sizeof(struct sigaction));
-    action.sa_handler = termSignalHandler;
-    sigaction(SIGINT, &action, NULL);
-}
-
 // ============================================================================
 // Application initialization
 // ============================================================================
 
 auto rp_app_init(void) -> int {
     fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
-    installTermSignalHandler();
 
 #ifdef ZIP_DISABLED
     CDataManager::GetInstance()->SetEnableParamsGZip(false);
@@ -233,16 +168,14 @@ auto rp_app_init(void) -> int {
 #endif
 
     CDataManager::GetInstance()->SetParamInterval(100);
-    g_serverRun = false;
 
     try {
         // Detect master/slave mode
         try {
             // The FPGA blocks while the application runs; the daisy chain role is read from the scope
-            g_hw = uio_lib::CHardware::create(board_lib::createBoard());
-            if (!g_hw) {
-                FATAL("Can't open the FPGA blocks")
-            }
+            g_hw = uio_lib::CHardware::create(g_board);
+            if (!g_hw)
+                throw std::runtime_error("can't open the FPGA blocks");
             g_isMaster = g_hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
             WARNING("Detected %s mode", g_isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
 
@@ -483,7 +416,7 @@ void setConfig(bool _force) {
     }
 
     // Hardware-specific ADC settings
-    if (rp_HPGetFastADCIsLV_HVOrDefault()) {
+    if (g_info.adcRanges) {
         if (ss_attenuator.IsNewValue() || _force) {
             ss_attenuator.Update();
             int value = ss_attenuator.Value();
@@ -494,7 +427,7 @@ void setConfig(bool _force) {
         }
     }
 
-    if (rp_HPGetFastADCIsAC_DCOrDefault()) {
+    if (g_info.adcACDC) {
         if (ss_ac_dc.IsNewValue() || _force) {
             ss_ac_dc.Update();
             int value = ss_ac_dc.Value();
@@ -512,7 +445,7 @@ void setConfig(bool _force) {
         needUpdate = true;
     }
 
-    if (rp_HPGetIsGainDACx5OrDefault()) {
+    if (g_info.dacGain) {
         if (ss_dac_gain.IsNewValue() || _force) {
             ss_dac_gain.Update();
             int value = ss_dac_gain.Value();
@@ -637,7 +570,8 @@ void UpdateParamsFromWeb(void) {
             ss_writed_size.SendValue(g_session->adcWrittenSize());
         }
     } catch (std::exception& e) {
-        FATAL("%s", e.what());
+        // an error of one request, not a reason to end the nginx worker
+        ERROR_LOG("%s", e.what());
     }
 }
 
