@@ -321,7 +321,7 @@
             li.addEventListener('click', function() {
                 var addr = '/delete_arb_file';
                 $.ajax({
-                    url: addr + '?file=' + $(this).attr('fileName'),
+                    url: addr + '?file=' + encodeURIComponent($(this).attr('fileName')),
                     type: 'GET'
                 }).done(function(msg) {
                     console.log("File removed ",msg)
