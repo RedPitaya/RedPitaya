@@ -9,13 +9,14 @@
 enum class StateRunnedHosts { NONE, TCP, LOCAL };
 
 namespace ClientOpt {
-enum class Mode { ERROR_MODE, ERROR_PARAM, SEARCH, CONFIG, REMOTE, STREAMING, STREAMING_DAC, CONFIG_ITEM, SHOW_HELP, SHOW_VERSION };
+enum class Mode { ERROR_MODE, ERROR_PARAM, SEARCH, CONFIG, REMOTE, STREAMING, STREAMING_DAC, CONFIG_ITEM, SHOW_HELP, SHOW_VERSION, GPIO };
 
 enum class ConfGet { NONE, VERBOUS_JSON, VERBOUS_JSON_DATA, VERBOUS, FILE };
 
 enum class ConfSet { NONE, MEMORY, FILE };
 
-enum class RemoteMode { NONE, START, START_WITH_ADC, STOP, START_STOP, START_DAC, STOP_DAC, START_STOP_DAC, START_FPGA_ADC, START_FPGA_DAC };
+enum class RemoteMode { NONE, START, START_WITH_ADC, STOP, START_STOP, START_DAC, STOP_DAC, START_STOP_DAC, START_FPGA_ADC, START_FPGA_DAC,
+                        START_GPIO_IN, STOP_GPIO_IN, START_GPIO_OUT, STOP_GPIO_OUT };
 
 enum class StreamingType { NONE, TDMS, WAV, CSV, BIN };
 
@@ -55,6 +56,12 @@ struct Options {
     std::string config_item_name{""};
     std::string config_item_value{""};
     bool config_item_write{false};
+
+    // GPIO: the input into this file, this file on the output
+    std::string gpio_in_file{""};
+    std::string gpio_out_file{""};
+    std::string gpio_format{""};  // of the input file: bin, csv, vcd; "" - its extension
+    bool gpio_gaps{false};         // the output plays the gaps of a recording
 
     // SHOW_HELP: the section and the filter of the keys; ERROR_PARAM: the section of the mode
     std::string help_topic{""};

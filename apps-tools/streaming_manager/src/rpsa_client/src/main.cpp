@@ -5,6 +5,7 @@
 #include "config.h"
 #include "config_net_lib/client_net_config_manager.h"
 #include "dac_streaming.h"
+#include "gpio_client.h"
 #include "help.h"
 #include "logger_lib/file_logger.h"
 #include "options.h"
@@ -22,6 +23,7 @@ void sigHandler(int) {
     configSIGHandler();
     streamingSIGHandler();
     dac_streamingSIGHandler();
+    gpioSIGHandler();
 }
 
 void installTermSignalHandler() {
@@ -90,6 +92,8 @@ int main(int argc, char* argv[]) {
         ok = startStreaming(g_cl, opt);
     if (opt.mode == ClientOpt::Mode::STREAMING_DAC)
         ok = startDACStreaming(g_cl, opt);
+    if (opt.mode == ClientOpt::Mode::GPIO)
+        ok = startGPIO(g_cl, opt);
 
     g_cl = nullptr;
     return ok ? EXIT_OK : EXIT_FAILED;

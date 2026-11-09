@@ -8,6 +8,10 @@
 #include "settings_lib/stream_settings.h"
 #include "streaming_lib/streaming_file.h"
 #include "test_helper.h"
+#include "panel.h"
+
+#include <array>
+#include <cmath>
 #include "writer_lib/file_helper.h"
 
 std::map<std::string, converter_lib::CConverter::Ptr> g_converter;
@@ -22,6 +26,41 @@ std::atomic<int> g_runClientCounter;
 std::atomic<int> g_clientsRunning(0);
 std::map<std::string, std::string> g_files;  // the file of each board
 std::map<std::string, bool> g_endedByBoard;  // the board or the connection ended it, not this client
+// the levels of the channels since the panel took them: min and max in % of the full scale
+struct Levels {
+    std::array<int, 4> min{{101, 101, 101, 101}};
+    std::array<int, 4> max{{-101, -101, -101, -101}};
+    std::array<bool, 4> seen{};
+};
+std::map<std::string, Levels> g_levels;
+std::map<std::string, double> g_queue;  // the fill of the file queue of each board
+std::mutex g_levelsMutex;
+
+// min and max of a buffer of raw ADC codes, in % of the full scale
+static auto levelOf(DataLib::CDataBufferDMA::Ptr b, int& lo, int& hi) -> bool {
+    if (!b || b->getSamplesCount() == 0)
+        return false;
+    const size_t n = b->getSamplesCount();
+    int mn = INT32_MAX, mx = INT32_MIN;
+    if (b->getBitBySample() == 8) {
+        auto d = static_cast<const int8_t*>(b->getMappedDataMemory());
+        for (size_t i = 0; i < n; i++) {
+            mn = std::min<int>(mn, d[i]);
+            mx = std::max<int>(mx, d[i]);
+        }
+        lo = mn * 100 / 128;
+        hi = mx * 100 / 127;
+    } else {
+        auto d = static_cast<const int16_t*>(b->getMappedDataMemory());
+        for (size_t i = 0; i < n; i++) {
+            mn = std::min<int>(mn, d[i]);
+            mx = std::max<int>(mx, d[i]);
+        }
+        lo = mn * 100 / 32768;
+        hi = mx * 100 / 32767;
+    }
+    return true;
+}
 
 std::map<std::string, bool> g_terminate;
 
@@ -153,6 +192,20 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
                         lostRate += ch4->getLostSamplesAll();
                     }
 
+                    {
+                        const std::lock_guard lock(g_levelsMutex);
+                        auto& lv = g_levels[host];
+                        DataLib::CDataBufferDMA::Ptr chs[4] = {ch1, ch2, ch3, ch4};
+                        for (int k = 0; k < 4; k++) {
+                            int lo = 0, hi = 0;
+                            if (levelOf(chs[k], lo, hi)) {
+                                lv.min[k] = std::min(lv.min[k], lo);
+                                lv.max[k] = std::max(lv.max[k], hi);
+                                lv.seen[k] = true;
+                            }
+                        }
+                        g_queue[host] = obj->getQueueFill();
+                    }
                     auto flost = obj->getFileLost();
                     auto h = host;
                     addStatisticStreaming(h, sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4, sempCh1, sempCh2, sempCh3, sempCh4, lostRate, flost, -1);
@@ -195,8 +248,95 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
     g_clientsRunning--;
 }
 
+// The lines of the streaming panel
+static auto streamingPanel(const std::map<std::string, Levels>& levels, bool keys) -> std::vector<std::string> {
+    static const char* formats[] = {"", "TDMS", "WAV", "CSV", "BIN"};
+    const auto stats = statSnapshot();
+    const double secs = statSeconds();
+    std::map<std::string, std::string> files;
+    {
+        const std::lock_guard lock(g_smutex);
+        files = g_files;
+    }
+    char buf[256];
+    std::vector<std::string> lines;
+
+    // the head: what, where, how far
+    std::string head = Panel::bold("rpsa_client -s") + "  " + std::to_string(files.size()) + (files.size() == 1 ? " board  " : " boards  ") +
+                       formats[(int)g_soption.streamign_type] + " -> " + g_soption.save_dir;
+    double fraction = -1;
+    if (g_soption.timeout > 0) {
+        fraction = secs * 1000.0 / g_soption.timeout;
+        snprintf(buf, sizeof(buf), "   %.1f s of %.1f s ", secs, g_soption.timeout / 1000.0);
+    } else if (g_soption.samples > 0) {
+        uint64_t least = UINT64_MAX;
+        for (auto& [h, st] : stats)
+            least = std::min(least, st.samples);
+        fraction = stats.empty() ? 0 : (double)least / g_soption.samples;
+        snprintf(buf, sizeof(buf), "   %.1f s ", secs);  // the limit in samples: the bar
+    } else {
+        snprintf(buf, sizeof(buf), "   %.1f s ", secs);
+    }
+    head += buf;
+    if (fraction >= 0) {
+        snprintf(buf, sizeof(buf), " %3.0f%%", std::min(fraction, 1.0) * 100);
+        head += Panel::bar(fraction, 16) + buf;
+    }
+    lines.push_back(head);
+    lines.push_back("");
+    lines.push_back(Panel::dim(Panel::left("  board", 16) + Panel::left("state", 11) + Panel::right("samples/ch", 12) + Panel::right("kS/s", 9) +
+                               Panel::right("data", 10) + Panel::right("lost b/f", 10) + Panel::right("queue", 7)));
+    for (auto& [host, file] : files) {
+        HostStat st;
+        auto it = stats.find(host);
+        if (it != stats.end())
+            st = it->second;
+        std::string state = g_endedByBoard.count(host) && g_endedByBoard.at(host) ? Panel::red("stopped")
+                            : g_terminate.count(host) && g_terminate[host]          ? "done"
+                            : st.bytes == 0                                         ? "connecting"
+                                                                                    : Panel::green("streaming");
+        const double rate = secs > 0 ? st.samples / secs : 0;
+        snprintf(buf, sizeof(buf), "%.1f", rate / 1000.0);
+        std::string rateText = buf;
+        std::string lost = std::to_string(st.lost) + "/" + std::to_string(st.fileLost);
+        if (st.lost || st.fileLost)
+            lost = Panel::red(lost);
+        double q = 0;
+        {
+            const std::lock_guard lock(g_levelsMutex);
+            if (g_queue.count(host))
+                q = g_queue[host];
+        }
+        snprintf(buf, sizeof(buf), "%.0f %%", q * 100);
+        std::string queue = q > 0.5 ? Panel::red(buf) : std::string(buf);
+        lines.push_back(Panel::left("  " + host, 16) + Panel::left(state, 11) + Panel::right(std::to_string(st.samples), 12) + Panel::right(rateText, 9) +
+                        Panel::right(sizeText(st.bytes), 10) + Panel::right(lost, 10) + Panel::right(queue, 7));
+        // the levels: min..max of the last second per channel, % of the full scale
+        auto lv = levels.find(host);
+        std::string l = Panel::left("", 16) + Panel::dim("levels  ");
+        bool any = false;
+        if (lv != levels.end()) {
+            for (int k = 0; k < 4; k++) {
+                if (!lv->second.seen[k])
+                    continue;
+                const bool clip = lv->second.min[k] <= -99 || lv->second.max[k] >= 99;
+                snprintf(buf, sizeof(buf), "IN%d %+d..%+d %%  ", k + 1, lv->second.min[k], lv->second.max[k]);
+                l += clip ? Panel::red(buf) : std::string(buf);
+                any = true;
+            }
+        }
+        lines.push_back(any ? l : Panel::left("", 16) + Panel::dim("levels  -"));
+    }
+    lines.push_back("");
+    const auto free = getFreeSpaceDisk(g_soption.save_dir);
+    lines.push_back(Panel::dim("  disk free " + sizeText(free) + "    " + (keys ? "[q] stop   " : "") + "[Ctrl+C] stop"));
+    return lines;
+}
+
 auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option) -> bool {
     g_soption = option;
+    if (g_soption.save_dir.empty())
+        g_soption.save_dir = ".";
     g_streamFailed = false;
 
     char time_str[40];
@@ -344,14 +484,25 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
             stopStreaming(host);
         });
 
-        // the progress on a terminal while the boards stream
-        if (progressWanted(g_soption)) {
-            while (g_clientsRunning > 0) {
-                showProgress(progressLine());
-                for (int i = 0; i < 5 && g_clientsRunning > 0; i++)
-                    sleepMs(100);
+        // the panel on a terminal while the boards stream
+        {
+            Panel panel(g_soption);
+            std::map<std::string, Levels> last;
+            int tick = 0;
+            while (panel.enabled() && g_clientsRunning > 0) {
+                if (tick++ % 4 == 0) {  // the levels of the last second
+                    const std::lock_guard lock(g_levelsMutex);
+                    last = g_levels;
+                    g_levels.clear();
+                }
+                panel.draw(streamingPanel(last, panel.keys()));
+                const int k = panel.key();
+                if (k == 'q' || k == 'Q') {
+                    sig_exit_flag = true;
+                    stopStreaming();
+                }
+                sleepMs(250);
             }
-            showProgress("", true);
         }
         for (std::thread& t : clients) {
             if (t.joinable()) {

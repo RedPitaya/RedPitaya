@@ -15,4 +15,3 @@ Found in a review of the code at e26c75a5f. Paths are relative to `src/` unless 
   `SS_GPIO_STATUS`, which is not defined; the run/stop buttons send `SS_GPIO_START`, which starts
   the input only (the output plays what a network client sends), the page shows no status and has
   no GPIO settings. The memory sliders of the input and the output are there.
-- **No GPIO in rpsa_client.** Only the client API (`GPIOStreamClient`) streams GPIO.

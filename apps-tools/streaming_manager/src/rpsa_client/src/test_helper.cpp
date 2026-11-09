@@ -300,6 +300,19 @@ auto samplesOf(const std::string& host) -> uint64_t {
 }
 }  // namespace
 
+auto statSnapshot() -> std::map<std::string, HostStat> {
+    const std::lock_guard lock(g_statMutex);
+    std::map<std::string, HostStat> m;
+    for (auto& [host, bytes] : g_BytesCountTotal)
+        m[host] = HostStat{bytes, samplesOf(host), g_lostRateTotal[host], g_lostFileRateTotal[host]};
+    return m;
+}
+
+auto statSeconds() -> double {
+    const std::lock_guard lock(g_statMutex);
+    return g_timeBeginTotal ? (nowMs() - g_timeBeginTotal) / 1000.0 : 0;
+}
+
 auto progressLine() -> std::string {
     const std::lock_guard lock(g_statMutex);
     if (g_BytesCountTotal.empty())

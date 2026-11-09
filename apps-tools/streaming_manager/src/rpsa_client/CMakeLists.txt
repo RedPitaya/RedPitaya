@@ -50,6 +50,8 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/src/config.h
             ${PROJECT_SOURCE_DIR}/src/dac_streaming.h
             ${PROJECT_SOURCE_DIR}/src/help.h
+            ${PROJECT_SOURCE_DIR}/src/gpio_client.h
+            ${PROJECT_SOURCE_DIR}/src/panel.h
             ${PROJECT_SOURCE_DIR}/src/main.h
             ${PROJECT_SOURCE_DIR}/src/options.h
             ${PROJECT_SOURCE_DIR}/src/remote.h
@@ -62,6 +64,8 @@ list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/config.cpp
             ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
             ${PROJECT_SOURCE_DIR}/src/help.cpp
+            ${PROJECT_SOURCE_DIR}/src/gpio_client.cpp
+            ${PROJECT_SOURCE_DIR}/src/panel.cpp
             ${PROJECT_SOURCE_DIR}/src/main.cpp
             ${PROJECT_SOURCE_DIR}/src/options.cpp
             ${PROJECT_SOURCE_DIR}/src/remote.cpp
@@ -78,7 +82,7 @@ target_link_directories(${PROJECT_NAME}
     ${CMAKE_BINARY_DIR}/lib/
     )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib converter_lib streaming_lib settings_lib data_lib logger_lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC config_net_lib dac_streaming_lib converter_lib streaming_lib reader_lib writer_lib bin_lib settings_lib data_lib logger_lib)
 
 if(NOT WIN32)
     if (${CMAKE_BUILD_TYPE} STREQUAL "Release")

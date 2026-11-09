@@ -1,3 +1,5 @@
+#include <filesystem>
+#include "panel.h"
 #include "test_helper.h"
 #include "config.h"
 #include <chrono>
@@ -345,27 +347,51 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
             }
         }
 
-        // the progress on a terminal while the file plays
+        // the panel on a terminal while the file plays
         auto nowMs = [] { return std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()).time_since_epoch().count(); };
         g_dac_start = nowMs();
-        auto line = [&] {
-            const std::lock_guard lock(g_dac_smutex);
-            const double secs = (nowMs() - g_dac_start) / 1000.0;
-            std::string l;
-            for (auto& [host, bytes] : g_dac_bytesTotal) {
-                l += (l.empty() ? "" : "  ") + host + ": sent " + sizeText(bytes) + ", " + sizeText(secs > 0 ? (uint64_t)(bytes / secs) : 0) + "/s";
+        {
+            static const char* formats[] = {"", "TDMS", "WAV", "CSV", "BIN"};
+            std::error_code ec;
+            const uint64_t fileBytes = std::filesystem::file_size(g_dac_soption.dac_file, ec);
+            const bool inf = g_dac_soption.dac_repeat == (int)ClientOpt::RepeatDAC::INF;
+            const std::string repeats = inf ? "inf" : std::to_string(g_dac_soption.dac_repeat);
+            Panel panel(g_dac_soption);
+            while (panel.enabled() && g_dacRunning > 0) {
+                const double secs = (nowMs() - g_dac_start) / 1000.0;
+                char buf[256];
+                std::vector<std::string> lines;
+                snprintf(buf, sizeof(buf), "  %s (%s, %s)   repeat %s   %.1f s", g_dac_soption.dac_file.c_str(), formats[(int)g_dac_soption.streamign_type],
+                         sizeText(fileBytes).c_str(), repeats.c_str(), secs);
+                lines.push_back(Panel::bold("rpsa_client -o") + buf);
+                lines.push_back("");
+                lines.push_back(Panel::dim(Panel::left("  board", 16) + Panel::left("state", 11) + Panel::right("pass", 7) + "  " +
+                                           Panel::left("in the file", 19) + Panel::right("sent", 10) + Panel::right("rate", 11)));
+                {
+                    const std::lock_guard lock(g_dac_smutex);
+                    for (auto& [host, bytes] : g_dac_bytesTotal) {
+                        // the file is the data plus its header: the pass and the position are close, not exact
+                        const uint64_t pass = fileBytes ? bytes / fileBytes : 0;
+                        const double pos = fileBytes ? (double)(bytes % fileBytes) / fileBytes : 0;
+                        const std::string state = g_dac_lost[host] ? Panel::red("stopped") : g_dac_connected[host] ? Panel::green("playing") : std::string("connecting");
+                        snprintf(buf, sizeof(buf), "%3.0f %%", pos * 100);
+                        lines.push_back(Panel::left("  " + host, 16) + Panel::left(state, 11) +
+                                        Panel::right(std::to_string(pass + 1) + "/" + repeats, 7) + "  " + Panel::left(Panel::bar(pos, 10) + " " + buf, 19) +
+                                        Panel::right(sizeText(bytes), 10) + Panel::right(sizeText(secs > 0 ? (uint64_t)(bytes / secs) : 0) + "/s", 11));
+                    }
+                    if (g_dac_bytesTotal.empty())
+                        lines.push_back("  connecting...");
+                }
+                lines.push_back("");
+                lines.push_back(Panel::dim(std::string("  ") + (panel.keys() ? "[q] stop   " : "") + "[Ctrl+C] stop"));
+                panel.draw(lines);
+                const int k = panel.key();
+                if (k == 'q' || k == 'Q') {
+                    dac_sig_exit_flag = true;
+                    stopDACStreaming();
+                }
+                sleepMs(250);
             }
-            char t[32];
-            snprintf(t, sizeof(t), "  [%.1f s]", secs);
-            return (l.empty() ? std::string("connecting...") : l) + t;
-        };
-        if (progressWanted(g_dac_soption)) {
-            while (g_dacRunning > 0) {
-                showProgress(line());
-                for (int i = 0; i < 5 && g_dacRunning > 0; i++)
-                    sleepMs(100);
-            }
-            showProgress("", true);
         }
         for (std::thread& t : dac_clients) {
             if (t.joinable()) {

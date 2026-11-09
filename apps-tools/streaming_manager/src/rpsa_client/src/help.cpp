@@ -32,6 +32,7 @@ const char* kOverview =
     "  -r, --remote          start and stop the streams of the boards          (--help remote)\n"
     "  -s, --streaming       stream the ADC of the boards into files here      (--help stream)\n"
     "  -o, --out_streaming   play a file here on the DAC of the boards         (--help dac)\n"
+    "  -G, --gpio            record the GPIO input here, play a file on the GPIO output (--help gpio)\n"
     "\n"
     "Common options:\n"
     "  -h, --hosts=IP[,IP]   the boards; without it the first board that answers the broadcast\n"
@@ -43,7 +44,7 @@ const char* kOverview =
     "Long options take - or _: --out-streaming, --tdms-time, --config-file. Values take any case.\n"
     "\n"
     "More help:\n"
-    "  %P --help MODE        a mode: detect, config, remote, stream, dac\n"
+    "  %P --help MODE        a mode: detect, config, remote, stream, dac, gpio\n"
     "  %P --help keys [TEXT] the settings of the boards (-c -i NAME=VALUE), those with TEXT only\n"
     "  %P --help formats     the file formats\n"
     "  %P --help examples    typical commands\n"
@@ -103,6 +104,10 @@ const char* kRemote =
     "                        start_dac        start the DAC stream\n"
     "                        stop_dac         stop the DAC stream\n"
     "                        start_stop_dac   start the DAC stream, stop it after --timeout\n"
+    "                        start_gpio_in    start the GPIO input  (stop_gpio_in to stop it)\n"
+    "                        start_gpio_out   start the GPIO output (stop_gpio_out to stop it)\n"
+    "                          with gpio_in_pass_mode / gpio_out_pass_mode=FILE the board writes\n"
+    "                          or plays a file of its own (%P --help gpio)\n"
     "  -t, --timeout=MSEC    for start_stop and start_stop_dac, milliseconds or 5s, 2m (default 1000)\n"
     "  -v, --verbose         report every step\n";
 
@@ -150,6 +155,35 @@ const char* kDac =
     "file (DAC_FILE) is stopped again and reported.\n"
     "The data of a channel should be a multiple of 128 bytes, else the end of the file clicks.\n";
 
+const char* kGpio =
+    "GPIO: the DIO0..7_P and DIO0..7_N lines of one board. The input goes into a file here, a file\n"
+    "here goes to the output, or both at once (one connection: the board serves one client).\n"
+    "\n"
+    "Usage: %P -G [-h IP] --in FILE [-f bin|csv|vcd] [-l SAMPLES] [-t MSEC] [-v]\n"
+    "       %P -G [-h IP] --out FILE.bin [-r inf|COUNT] [--gaps] [-v]\n"
+    "       %P -G [-h IP] --in FILE --out FILE.bin ...\n"
+    "\n"
+    "  -G, --gpio            the mode\n"
+    "  -h, --hosts=IP        the board (default: the first board found)\n"
+    "      --in=FILE         record the input: bin (the BIN stream file), csv (a row where the lines\n"
+    "                        change) or vcd (a value change dump for a waveform viewer)\n"
+    "  -f, --format=FORMAT   the format of --in, else its extension\n"
+    "  -l, --limit=SAMPLES   stop the input after this many samples (taken at a buffer)\n"
+    "  -t, --timeout=MSEC    stop after this time, milliseconds or 10s, 2m (default: until Ctrl+C)\n"
+    "      --out=FILE        play a BIN stream file: a GPIO recording or GPIO output words\n"
+    "  -r, --repeat=N        how many times: 1-1000000 or inf (default 1)\n"
+    "      --gaps            play the samples a recording lost or waited for a trigger (the lines\n"
+    "                        hold their level), so that it plays in its own time\n"
+    "  -v, --verbose         report every step\n"
+    "\n"
+    "The lines, the decimation, RLE and the triggers are the board's settings (%P --help keys gpio):\n"
+    "gpio_outputs_p / gpio_outputs_n choose the lines the output drives, gpio_rle packs runs of a\n"
+    "level into one word. The board must stream to the network (gpio_in_pass_mode and\n"
+    "gpio_out_pass_mode = NET); with FILE it writes or plays files in streaming_files/gpio itself,\n"
+    "started with %P -r -m start_gpio_in / start_gpio_out.\n"
+    "After the last word of --out the board plays what it got and stops; the end line tells the\n"
+    "clocks the output waited for data (the network was too slow).\n";
+
 const char* kFormats =
     "File formats\n"
     "\n"
@@ -161,6 +195,8 @@ const char* kFormats =
     "  bin     yes        yes        the Red Pitaya stream file: blocks as the board sent them, with\n"
     "                                the samples lost and waited for a trigger before each block;\n"
     "                                the DAC plays channels 1 and 2 of it\n"
+    "\n"
+    "  GPIO: --in writes bin, csv or vcd; --out plays bin (a recording of the input or output words).\n"
     "\n"
     "convert_tool turns a bin file into tdms, wav or csv (and a GPIO recording into csv or vcd).\n"
     "The board itself writes the same formats with adc_pass_mode=FILE (format_sd).\n";
@@ -185,6 +221,11 @@ const char* kExamples =
     "  Let the board write the ADC to its own SD card for 5 s:\n"
     "    %P -c -h 192.168.1.10 -i adc_pass_mode=FILE\n"
     "    %P -r -h 192.168.1.10 -m start_stop -t 5s\n"
+    "  Record 10 s of the GPIO input as a VCD for a waveform viewer:\n"
+    "    %P -G -h 192.168.1.10 --in lines.vcd -t 10s\n"
+    "  Play a pattern on the GPIO output and record the pads at once:\n"
+    "    %P -c -h 192.168.1.10 -i gpio_outputs_p=255\n"
+    "    %P -G -h 192.168.1.10 --out pattern.bin --in pads.bin\n"
     "  In a script: stop on the first error\n"
     "    %P -q -s -h 192.168.1.10 -f bin -l 1000000 || echo \"failed with $?\"\n";
 
@@ -200,6 +241,7 @@ const std::map<std::string, Section>& sections() {
         {"remote", {kRemote, "Usage: %P -r [-h IPs] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac [-t MSEC] [-v]\n"}},
         {"stream", {kStream, "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC] [--tdms_time] [-v]\n"}},
         {"dac", {kDac, "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [-v]\n"}},
+        {"gpio", {kGpio, "Usage: %P -G [-h IP] [--in FILE [-f bin|csv|vcd] [-l SAMPLES]] [--out FILE.bin [-r inf|COUNT] [--gaps]] [-t MSEC] [-v]\n"}},
         {"formats", {kFormats, ""}},
         {"examples", {kExamples, ""}},
     };
@@ -213,7 +255,7 @@ auto canonical(const std::string& topic) -> std::string {
         {"c", "config"},        {"-c", "config"},           {"--config", "config"},     {"r", "remote"},
         {"-r", "remote"},       {"--remote", "remote"},     {"s", "stream"},            {"-s", "stream"},
         {"--streaming", "stream"}, {"streaming", "stream"}, {"adc", "stream"},          {"o", "dac"},
-        {"-o", "dac"},          {"--out_streaming", "dac"}, {"out_streaming", "dac"}, {"--out-streaming", "dac"}, {"out-streaming", "dac"},   {"key", "keys"},
+        {"-o", "dac"},          {"--out_streaming", "dac"}, {"-G", "gpio"}, {"--gpio", "gpio"}, {"out_streaming", "dac"}, {"--out-streaming", "dac"}, {"out-streaming", "dac"},   {"key", "keys"},
         {"settings", "keys"},   {"format", "formats"},      {"example", "examples"},
     };
     auto a = alias.find(topic);
@@ -223,6 +265,8 @@ auto canonical(const std::string& topic) -> std::string {
 }  // namespace
 
 auto ClientHelp::topicOfKey(const std::string& key) -> std::string {
+    if (key.empty() || key[0] != '-')
+        return "";  // a mode is a key (-s, --streaming), never a value
     auto t = canonical(key);
     return sections().count(t) && t != "formats" && t != "examples" ? t : "";
 }
@@ -251,7 +295,7 @@ auto ClientHelp::print(FILE* out, const std::string& prog, const std::string& to
     }
     auto s = sections().find(t);
     if (s == sections().end()) {
-        fprintf(stderr, "[ERROR] No help on \"%s\". Sections: detect, config, remote, stream, dac, keys, formats, examples\n", topic.c_str());
+        fprintf(stderr, "[ERROR] No help on \"%s\". Sections: detect, config, remote, stream, dac, gpio, keys, formats, examples\n", topic.c_str());
         return false;
     }
     put(out, prog, s->second.text);

@@ -1,3 +1,4 @@
+#include "panel.h"
 #include "test_helper.h"
 #include "search.h"
 #include "config.h"
@@ -126,32 +127,34 @@ auto startSearch(ClientOpt::Options& option) -> bool {
     client.startBroadcast("127.0.0.1", NET_BROADCAST_PORT);
     const int timeoutMs = option.timeout;
 
-    std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
-    auto curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(timeNow);
-    auto value = curTime.time_since_epoch();
-    auto timeBegin = value.count();
-    int point = 1;
-    while ((value.count() - timeBegin) < timeoutMs) {
-        if (progressWanted(option)) {
-            std::cout << "\rSearch ";
-            for (int i = 0; i < 5; i++) {
-                if (i < point)
-                    std::cout << ".";
-                else
-                    std::cout << " ";
+    // the boards as they answer, in a panel on a terminal
+    const auto begin = std::chrono::steady_clock::now();
+    auto elapsedMs = [&] { return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - begin).count(); };
+    {
+        Panel panel(option);
+        while (elapsedMs() < timeoutMs) {
+            if (panel.enabled()) {
+                char buf[128];
+                snprintf(buf, sizeof(buf), "   listening %.1f s of %.1f s ", elapsedMs() / 1000.0, timeoutMs / 1000.0);
+                std::vector<std::string> lines = {Panel::bold("rpsa_client -d") + buf + Panel::bar((double)elapsedMs() / timeoutMs, 20), ""};
+                lines.push_back(Panel::dim(Panel::left("  board", 18) + Panel::left("mode", 8) + Panel::left("features", 10) + "model"));
+                auto found = client.getBroadcastClients();
+                for (auto& item : found) {
+                    lines.push_back(Panel::left("  " + (item.host.empty() ? std::string("unknown") : item.host), 18) +
+                                    Panel::left(item.mode == broadcast_lib::EMode::AB_SERVER_MASTER ? "master" : "slave", 8) +
+                                    Panel::left(item.gpio ? "gpio" : "-", 10) + getModelName(item.model));
+                }
+                if (found.empty())
+                    lines.push_back(Panel::dim("  no board yet"));
+                panel.draw(lines);
+                if (panel.key() == 'q')
+                    break;
             }
-            std::cout << std::flush;
+            sleepMs(100);
         }
-        point++;
-        if (point > 4)
-            point = 0;
-        sleepMs(100);
-        value = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch();
     }
-    if (progressWanted(option))
-        std::cout << "\rSearch: DONE";
     auto list = client.getBroadcastClients();
-    std::cout << "\nFound boards:\n";
+    std::cout << "Found boards:\n";
 
     int i = 1;
     for (auto& item : list) {

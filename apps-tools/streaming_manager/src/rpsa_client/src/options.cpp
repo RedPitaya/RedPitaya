@@ -84,6 +84,23 @@ static struct option long_options_dac_streaming[] = {
 
 static constexpr char optstring_dac_streaming[] = ":oh:f:d:r:vq";
 
+static struct option long_options_gpio[] = {
+    {"gpio", no_argument, 0, 'G'},
+    {"hosts", required_argument, 0, 'h'},
+    {"in", required_argument, 0, 'I'},
+    {"out", required_argument, 0, 'O'},
+    {"format", required_argument, 0, 'f'},
+    {"repeat", required_argument, 0, 'r'},
+    {"gaps", no_argument, 0, 'P'},
+    {"limit", required_argument, 0, 'l'},
+    {"timeout", required_argument, 0, 't'},
+    {"verbose", no_argument, 0, 'v'},
+    {"quiet", no_argument, 0, 'q'},
+    {"reply-timeout", required_argument, 0, 'R'},
+    {0, 0, 0, 0}};
+
+static constexpr char optstring_gpio[] = ":Gh:f:r:l:t:vq";
+
 auto getTS(std::string suffix) -> std::string {
     using namespace std;
     using namespace std::chrono;
@@ -500,8 +517,16 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                         opt.remote_mode = RemoteMode::STOP_DAC;
                     } else if (same(optarg, "start_stop_dac")) {
                         opt.remote_mode = RemoteMode::START_STOP_DAC;
+                    } else if (same(optarg, "start_gpio_in")) {
+                        opt.remote_mode = RemoteMode::START_GPIO_IN;
+                    } else if (same(optarg, "stop_gpio_in")) {
+                        opt.remote_mode = RemoteMode::STOP_GPIO_IN;
+                    } else if (same(optarg, "start_gpio_out")) {
+                        opt.remote_mode = RemoteMode::START_GPIO_OUT;
+                    } else if (same(optarg, "stop_gpio_out")) {
+                        opt.remote_mode = RemoteMode::STOP_GPIO_OUT;
                     } else {
-                        fprintf(stderr, "[ERROR] Wrong value of --mode: %s (start, stop, start_stop, start_dac, stop_dac or start_stop_dac)\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --mode: %s (start, stop, start_stop, start_dac, stop_dac, start_stop_dac,\n        start_gpio_in, stop_gpio_in, start_gpio_out or stop_gpio_out)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -747,6 +772,105 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
             }
             return opt;
         }
+    }
+
+    option_index = 0;
+    if ((strcmp(argv[1], "-G") == 0) || (strcmp(argv[1], "--gpio") == 0)) {
+        opt.timeout = -1;
+        while ((ch = getopt_long(argc, argv, optstring_gpio, long_options_gpio, &option_index)) != -1) {
+            switch (ch) {
+                case 'G':
+                    opt.mode = Mode::GPIO;
+                    break;
+                case 'v':
+                    opt.verbous = true;
+                    break;
+                case 'P':
+                    opt.gpio_gaps = true;
+                    break;
+                case 'h': {
+                    opt.hosts = split(optarg, ',');
+                    remove_duplicates(opt.hosts);
+                    for (auto& h : opt.hosts) {
+                        if (!check_ip(h)) {
+                            fprintf(stderr, "[ERROR] Wrong value of --hosts, not an IPv4 address: %s\n", h.c_str());
+                            opt.mode = Mode::ERROR_PARAM;
+                            return opt;
+                        }
+                    }
+                    break;
+                }
+                case 'I':
+                    opt.gpio_in_file = optarg;
+                    break;
+                case 'O':
+                    opt.gpio_out_file = optarg;
+                    break;
+                case 'f':
+                    if (!same(optarg, "bin") && !same(optarg, "csv") && !same(optarg, "vcd")) {
+                        fprintf(stderr, "[ERROR] Wrong value of --format: %s (bin, csv or vcd)\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.gpio_format = optarg;
+                    break;
+                case 'r': {
+                    int repeat = 0;
+                    if (same(optarg, "inf")) {
+                        opt.dac_repeat = (int)RepeatDAC::INF;
+                    } else if (get_int(&repeat, optarg, "[ERROR] Wrong value of --repeat (1-1000000 or inf)", 1, 1000000) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    } else {
+                        opt.dac_repeat = repeat;
+                    }
+                    break;
+                }
+                case 'l': {
+                    int samp = 0;
+                    if (get_int(&samp, optarg, "[ERROR] Wrong value of --limit (samples, 1-2147483647)", 1, 0x7FFFFFFF) != 0) {
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.samples = samp;
+                    break;
+                }
+                case 't': {
+                    int64_t ms = 0;
+                    if (!parseTime(optarg, 1, 0xFFFFFFF, &ms)) {
+                        fprintf(stderr, "[ERROR] Wrong value of --timeout: %s (milliseconds, or 500ms, 5s, 2m)\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.timeout = static_cast<int>(ms);
+                    break;
+                }
+                default:
+                    if (commonOption(opt, ch)) {
+                        if (opt.mode == Mode::ERROR_PARAM)
+                            return opt;
+                        break;
+                    }
+                    return badOption(opt, argv, ch);
+            }
+        }
+        if (opt.mode == Mode::GPIO) {
+            if (opt.gpio_in_file.empty() && opt.gpio_out_file.empty()) {
+                fprintf(stderr, "[ERROR] The GPIO mode needs --in FILE, --out FILE or both\n");
+                opt.mode = Mode::ERROR_PARAM;
+            } else if (opt.hosts.size() > 1) {
+                fprintf(stderr, "[ERROR] The GPIO mode takes one board\n");
+                opt.mode = Mode::ERROR_PARAM;
+            } else if (!opt.gpio_in_file.empty() && opt.gpio_format.empty()) {
+                const auto dot = opt.gpio_in_file.find_last_of('.');
+                const std::string ext = dot == std::string::npos ? "" : opt.gpio_in_file.substr(dot + 1);
+                if (!same(ext.c_str(), "bin") && !same(ext.c_str(), "csv") && !same(ext.c_str(), "vcd")) {
+                    fprintf(stderr, "[ERROR] The format of %s: give it with -f bin|csv|vcd or as the extension\n", opt.gpio_in_file.c_str());
+                    opt.mode = Mode::ERROR_PARAM;
+                }
+            }
+        }
+        return opt;
     }
 
     return opt;

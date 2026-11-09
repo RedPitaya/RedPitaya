@@ -1,6 +1,7 @@
 #ifndef TEST_HELPER_H
 #define TEST_HELPER_H
 
+#include <map>
 #include <sstream>
 #include "options.h"
 
@@ -13,6 +14,14 @@ auto printStatisitc(bool force) -> void;
 auto printFinalStatisitc() -> void;
 // One line of all the boards: samples per channel, data, rate, losses (the totals so far)
 auto progressLine() -> std::string;
+struct HostStat {
+    uint64_t bytes = 0;
+    uint64_t samples = 0;  // per channel
+    uint64_t lost = 0;      // by the board
+    uint64_t fileLost = 0;  // by the file
+};
+auto statSnapshot() -> std::map<std::string, HostStat>;
+auto statSeconds() -> double;  // since the first data
 // The result of a board, one line starting with "Done:" ("Stopped:" when it ended too early)
 auto resultLine(const std::string& host, const std::string& file, bool ok = true) -> std::string;
 // Why a board ended a stream this client did not stop: taken over by another client or stopped

@@ -30,6 +30,56 @@ auto startStopDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list
 auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>& masterHosts, std::list<std::string>& slaveHosts,
               std::map<std::string, StateRunnedHosts>* runned_hosts) -> bool;
 
+// The GPIO input or output of the boards started or stopped (for the file mode of the board or
+// another client); every board's answer is told
+static auto remoteGpio(std::shared_ptr<ClientNetConfigManager> cl, const std::list<std::string>& hosts, bool start, bool output) -> bool {
+    std::atomic<int> count{0};
+    std::atomic<bool> failed{false};
+    std::mutex m;
+    const char* dir = output ? "output" : "input";
+    auto answer = [&](const std::string& host, const std::string& text, bool ok) {
+        const std::lock_guard lock(m);
+        aprintf(ok ? stdout : stderr, "%s %s%s: GPIO %s %s\n", getTS(": ").c_str(), ok ? "" : "[ERROR] ", host.c_str(), dir, text.c_str());
+        if (!ok)
+            failed = true;
+        count--;
+    };
+    if (output) {
+        cl->serverGpioOutStartedNofiy.connect([&](std::string h) { answer(h, "started, it waits for a client's data", start); });
+        cl->serverGpioOutStartedSDNofiy.connect([&](std::string h) { answer(h, "started, it plays its file (gpio_out_file_sd)", start); });
+        cl->serverGpioOutStoppedNofiy.connect([&](std::string h, uint64_t w) { answer(h, "stopped, it waited " + std::to_string(w) + " clocks for data", !start); });
+        cl->serverGpioOutStoppedSDDoneNofiy.connect([&](std::string h, uint64_t) { answer(h, "played its file to the end", true); });
+        cl->serverGpioOutStoppedSDMissingNofiy.connect([&](std::string h) { answer(h, "stopped: its file (gpio_out_file_sd) is missing", false); });
+        cl->serverGpioOutStoppedSDBrokenNofiy.connect([&](std::string h) { answer(h, "stopped: its file is broken", false); });
+        cl->serverGpioOutStoppedSDEmptyNofiy.connect([&](std::string h) { answer(h, "stopped: its file is empty", false); });
+        cl->serverGpioOutStoppedMemErrorNofiy.connect([&](std::string h) { answer(h, "stopped: not enough memory (gpio_out_size)", false); });
+        cl->serverGpioOutStoppedConfigErrorNofiy.connect([&](std::string h) { answer(h, "stopped: the settings are not taken (no GPIO block?)", false); });
+    } else {
+        cl->serverGpioInStartedNofiy.connect([&](std::string h) { answer(h, "started, it waits for a client to take the data", start); });
+        cl->serverGpioInStartedSDNofiy.connect([&](std::string h) { answer(h, "started, it writes a file in streaming_files/gpio", start); });
+        cl->serverGpioInStoppedNofiy.connect([&](std::string h) { answer(h, "stopped", !start); });
+        cl->serverGpioInStoppedSDDoneNofiy.connect([&](std::string h) { answer(h, "stopped: its file has the samples of gpio_in_samples_limit_sd", true); });
+        cl->serverGpioInStoppedSDFullNofiy.connect([&](std::string h) { answer(h, "stopped: the SD card is full", false); });
+        cl->serverGpioInStoppedSDBrokenNofiy.connect([&](std::string h) { answer(h, "stopped: the file cannot be written", false); });
+        cl->serverGpioInStoppedMemErrorNofiy.connect([&](std::string h) { answer(h, "stopped: not enough memory (gpio_in_size)", false); });
+        cl->serverGpioInStoppedConfigErrorNofiy.connect([&](std::string h) { answer(h, "stopped: the settings are not taken (no GPIO block?)", false); });
+    }
+    count = static_cast<int>(hosts.size());
+    for (auto& host : hosts) {
+        bool sent = start ? (output ? cl->sendGPIOOutServerStart(host) : cl->sendGPIOInServerStart(host))
+                          : (output ? cl->sendGPIOOutServerStop(host) : cl->sendGPIOInServerStop(host));
+        if (!sent) {
+            aprintf(stderr, "%s [ERROR] %s: the command could not be sent\n", getTS(": ").c_str(), host.c_str());
+            failed = true;
+            count--;
+        }
+    }
+    const std::string what = std::string(start ? "the start" : "the stop") + " of the GPIO " + dir;
+    const bool ok = waitAnswers(count, [] { return g_rexit_flag.load(); }, what.c_str());
+    cl->removeHadlers();
+    return ok && !failed;
+}
+
 auto startRemote(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& option, std::map<std::string, dac_channels_t>* activeChannels,
                  std::map<std::string, StateRunnedHosts>* runned_hosts) -> bool {
     std::list<std::string> connected_hosts;
@@ -85,6 +135,15 @@ auto startRemote(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options&
 
         case ClientOpt::RemoteMode::START_STOP_DAC: {
             return startStopDACStreaming(cl, masterHosts, slaveHosts, activeChannels, runned_hosts);
+        }
+
+        case ClientOpt::RemoteMode::START_GPIO_IN:
+        case ClientOpt::RemoteMode::STOP_GPIO_IN:
+        case ClientOpt::RemoteMode::START_GPIO_OUT:
+        case ClientOpt::RemoteMode::STOP_GPIO_OUT: {
+            const auto mode = g_roption.remote_mode;
+            return remoteGpio(cl, connected_hosts, mode == ClientOpt::RemoteMode::START_GPIO_IN || mode == ClientOpt::RemoteMode::START_GPIO_OUT,
+                              mode == ClientOpt::RemoteMode::START_GPIO_OUT || mode == ClientOpt::RemoteMode::STOP_GPIO_OUT);
         }
 
         default: {
