@@ -177,6 +177,7 @@ class Session : public ::testing::Test {
         SessionOptions o;
         o.configFile = m_file;
         o.configPort = m_port;
+        o.adcDir = (std::filesystem::temp_directory_path() / ("stream_session_adc_" + std::to_string(m_port))).string();
         o.broadcast = false;
         session = StreamSession::create(hw, o);
         events = std::make_shared<Events>();

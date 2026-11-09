@@ -13,16 +13,11 @@
 #define SYS(X, ...)
 #endif
 
-#define MAX_ADC_CHANNELS 4
-#define MAX_DAC_CHANNELS 2
-
 #define printWithLog(X, Y, ...) \
     aprintf(Y, __VA_ARGS__);    \
     SYS(X, __VA_ARGS__);
 
 namespace ClientOpt {
-
-typedef enum { RP_125_14, RP_250_12, RP_125_14_4CH } models_t;
 
 struct Options {
     bool background;
@@ -43,16 +38,6 @@ struct Options {
 auto split(const std::string& s, char seperator) -> std::vector<std::string>;
 auto usage(char const* progName) -> void;
 auto parse(int argc, char* argv[]) -> Options;
-
-auto getADCChannels() -> uint8_t;
-auto getADCBits() -> uint8_t;
-auto getDACChannels() -> uint8_t;
-auto getDACRate() -> uint32_t;
-auto getADCRate() -> uint32_t;
-auto getModel() -> models_t;
-auto getBroadcastModel() -> uint8_t;
-auto getMACAddress() -> std::string;
-auto getIsXStreaming() -> bool;
 
 }  // namespace ClientOpt
 

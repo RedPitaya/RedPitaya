@@ -17,12 +17,14 @@ namespace session_lib {
 
 struct SessionOptions {
     std::string configFile;           // the settings, read at the start; made with the defaults if missing
-    std::string host;                 // the config and data servers listen on it; empty - every interface
+    std::string host;                 // the config and data servers listen on it; empty - every interface.
+                                      // One address is the only one announced, on its interface; a
+                                      // loopback address is not announced
+    std::string adcDir;               // the ADC files; empty - FILE_PATH. Made by the session
     uint16_t configPort = NET_CONFIG_PORT;
-    bool broadcast = true;            // announce the board on the network
-    uint8_t broadcastModel = 0;       // the board model the announcement carries
-    std::string broadcastMac = "NONE";
-    std::string broadcastHost;        // the address announced; empty - host, or 127.0.0.1
+    bool broadcast = true;            // announce the board on the network (model and MAC of the board)
+    std::string broadcastHost;        // listening on every interface: the address announced where an
+                                      // interface gives none; empty - 127.0.0.1
     uint16_t broadcastPort = NET_BROADCAST_PORT;
     bool verbose = false;
     bool adcTestMode = false;         // the ADC benchmark: no DMA addresses

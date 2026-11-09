@@ -12,39 +12,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unordered_set>
 
 #include <sys/stat.h>
 #ifndef _WIN32
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <netinet/in.h>
 #include <sys/resource.h>
-#include <sys/time.h>
 #include <syslog.h>
 #endif
 
 #include <signal.h>
 #include <unistd.h>
-#include <mutex>
-#include <regex>
-
-//#ifndef __APPLE__
-//#include <sys/prctl.h>
-//#endif
+#include <atomic>
 
 #include "board_lib/board.h"
 #include "options.h"
 #include "session_lib/stream_session.h"
-#include "streaming_lib/streaming_file.h"
 #include "uio_lib/hardware.h"
-#include "uio_lib/oscilloscope.h"
 
-std::mutex g_print_mtx;
 session_lib::StreamSession::Ptr g_session = nullptr;
 std::atomic_bool g_run(true);
-
-const char* g_argv0 = nullptr;
 
 static void termSignalHandler(int) {
     printWithLog(LOG_INFO, stdout, "\nReceived terminate signal. Exiting...\n");
@@ -75,31 +60,12 @@ static void installTermSignalHandler() {
 #endif
 }
 
-std::string exec(const char* cmd) {
-    char buffer[128];
-    std::string result = "";
-    FILE* pipe = popen(cmd, "r");
-    if (!pipe)
-        throw std::runtime_error("popen() failed!");
-    try {
-        while (fgets(buffer, sizeof buffer, pipe) != NULL) {
-            result += buffer;
-        }
-    } catch (...) {
-        pclose(pipe);
-        throw;
-    }
-    pclose(pipe);
-    return result;
-}
-
 int main(int argc, char* argv[]) {
 #ifndef _WIN32
     setpriority(PRIO_PROCESS, 0, -20);
 #endif
-    uio_lib::BoardMode isMaster = uio_lib::BoardMode::UNKNOWN;
+    bool slave = false;  // a daisy chain slave, from the FPGA
 
-    g_argv0 = argv[0];
     auto opt = ClientOpt::parse(argc, argv);
     bool verbMode = opt.verbose;
 
@@ -144,62 +110,17 @@ int main(int argc, char* argv[]) {
 #endif
 
     try {
-
-        std::string ip_cur = "127.0.0.1";
-#ifdef RP_PLATFORM
-
-        auto get_ipv4_addresses_filtered = [](const std::unordered_set<std::string>& target_interfaces) -> std::vector<std::pair<std::string, std::string>> {
-            std::vector<std::pair<std::string, std::string>> result;
-            struct ifaddrs *ifaddr, *ifa;
-
-            if (getifaddrs(&ifaddr) == -1) {
-                perror("getifaddrs");
-                return result;
-            }
-
-            for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-                if (ifa->ifa_addr == NULL)
-                    continue;
-
-                std::string interface_name(ifa->ifa_name);
-
-                if (target_interfaces.find(interface_name) == target_interfaces.end()) {
-                    continue;
-                }
-
-                if (ifa->ifa_addr->sa_family == AF_INET) {
-                    struct sockaddr_in* addr = (struct sockaddr_in*)ifa->ifa_addr;
-                    char ip[INET_ADDRSTRLEN];
-                    inet_ntop(AF_INET, &addr->sin_addr, ip, sizeof(ip));
-
-                    result.emplace_back(interface_name, std::string(ip));
-                }
-            }
-
-            freeifaddrs(ifaddr);
-            return result;
-        };
-
-        auto result = get_ipv4_addresses_filtered({"eth0", "wlan0"});
-        if (result.size() > 0) {
-            ip_cur = result[0].second;
-        }
-
-#endif
         // The FPGA blocks for the whole process; the daisy chain role is read from the scope
         auto hw = uio_lib::CHardware::create(board_lib::createBoard());
         if (!hw) {
             FATAL("Can't open the FPGA blocks")
         }
-        isMaster = hw->features().slave ? uio_lib::BoardMode::SLAVE : uio_lib::BoardMode::MASTER;
-        printWithLog(LOG_INFO, stdout, "Detected %s mode\n", isMaster == uio_lib::BoardMode::MASTER ? "Master" : "Slave");
+        slave = hw->features().slave;
+        printWithLog(LOG_INFO, stdout, "Detected %s mode\n", slave ? "Slave" : "Master");
 
         session_lib::SessionOptions options;
         options.configFile = opt.conf_file;
         options.host = opt.listen;
-        options.broadcastModel = ClientOpt::getBroadcastModel();
-        options.broadcastMac = ClientOpt::getMACAddress();
-        options.broadcastHost = ip_cur;
         options.verbose = verbMode;
         g_session = session_lib::StreamSession::create(hw, options);
     } catch (std::exception& e) {
@@ -207,19 +128,12 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
     if (verbMode) {
-        printWithLog(LOG_NOTICE, stdout, "streaming-server started %s\n", isMaster != uio_lib::BoardMode::SLAVE ? "[Master]" : "[Slave]");
+        printWithLog(LOG_NOTICE, stdout, "streaming-server started %s\n", slave ? "[Slave]" : "[Master]");
     }
 
     installTermSignalHandler();
     // Handle close child events
     handleCloseChildEvents();
-    try {
-        streaming_lib::CStreamingFile::makeEmptyDir(FILE_PATH);
-    } catch (std::exception& e) {
-        printWithLog(LOG_ERR, stderr, "Error: Can't create %s dir %s", FILE_PATH, e.what());
-        exit(EXIT_FAILURE);
-    }
-
     while (g_run) {
         sleep(1);
     }

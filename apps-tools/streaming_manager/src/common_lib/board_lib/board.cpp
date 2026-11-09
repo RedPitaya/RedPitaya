@@ -67,6 +67,19 @@ class CRPBoard : public IBoard {
             ERROR_LOG("Can't get the x-streaming mode")
         m_attenuator = rp_HPGetIsAttenuatorControllerPresentOrDefault();
         m_acdc = rp_HPGetFastADCIsAC_DCOrDefault();
+        rp_HPeModels_t model = STEM_125_14_v1_0;
+        if (rp_HPGetModel(&model) == RP_HP_OK)
+            m_info.model = static_cast<uint8_t>(model);
+        else
+            ERROR_LOG("Can't get the board model")
+        char* mac = nullptr;
+        if (rp_HPGetModelETH_MAC_Address(&mac) == RP_HP_OK && mac)
+            m_info.mac = mac;
+        else
+            ERROR_LOG("Can't get the MAC address")
+        // the relay controller of the 250-12 (attenuators, AC/DC, DAC gain) to its defaults
+        if (m_attenuator && m_acdc && m_info.dacGain)
+            rp_max7311::rp_initController();
     }
 
     auto info() const -> BoardInfo override { return m_info; }

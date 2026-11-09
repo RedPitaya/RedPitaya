@@ -22,6 +22,8 @@ struct BoardInfo {
     bool adcFilter = false;        // the equalization filter is built into the FPGA
     bool dacGain = false;          // the DAC has a x1/x5 gain switch (250-12)
     bool daisyChain = false;       // the board can be a daisy chain (x-streaming) slave
+    uint8_t model = 0;             // the profile's model (rp_HPeModels_t), as the broadcast carries it
+    std::string mac = "NONE";      // of the Ethernet port, for the broadcast
 };
 
 struct ADCCalibration {

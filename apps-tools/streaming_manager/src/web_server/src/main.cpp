@@ -3,7 +3,6 @@
 
 // Platform/Hardware includes
 #include "api250-12/rp-gpio-power.h"
-#include "api250-12/rp-i2c-max7311.h"
 #include "api250-12/rp-spi.h"
 #include "rp_hw-profiles.h"
 #include "rp_hw_calib.h"
@@ -30,8 +29,6 @@ auto getADCChannels() -> uint8_t;
 auto getDACChannels() -> uint8_t;
 auto getDACRate() -> uint32_t;
 auto getADCRate() -> uint32_t;
-auto getModel() -> uint8_t;
-auto getModelS() -> std::string;
 auto getAC_DC() -> bool;
 auto getIsDACGain() -> bool;
 
@@ -204,38 +201,6 @@ auto getADCRate() -> uint32_t {
     return c;
 }
 
-auto getADCBits() -> uint8_t {
-    uint8_t c = 0;
-    if (rp_HPGetFastADCBits(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get fast ADC bits");
-    }
-    return c;
-}
-
-auto getIsXStreaming() -> bool {
-    bool c = false;
-    if (rp_HPGetIsXStreamingAvailable(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get xstreaming mode");
-    }
-    return c;
-}
-
-auto getModel() -> uint8_t {
-    rp_HPeModels_t c = STEM_125_14_v1_0;
-    if (rp_HPGetModel(&c) != RP_HP_OK) {
-        ERROR_LOG("Can't get board model");
-    }
-    return (uint8_t)c;
-}
-
-auto getMACAddress() -> std::string {
-    char* address = nullptr;
-    if (rp_HPGetModelETH_MAC_Address(&address) != RP_HP_OK) {
-        FATAL("Can't get MAC address")
-    }
-    return std::string(address);
-}
-
 // ============================================================================
 // Application description & signal handling
 // ============================================================================
@@ -286,8 +251,6 @@ auto rp_app_init(void) -> int {
             options.configFile = config_file;
             // the config and data ports on every interface: the address of the page is 127.0.0.1
             // until the page sets it, and it is the announced one, not a filter of the clients
-            options.broadcastModel = getModel();
-            options.broadcastMac = getMACAddress();
             options.broadcastHost = ss_ip_addr.Value();
             g_session = session_lib::StreamSession::create(g_hw, options);
             g_session->setCallback(makeWebCallback());
@@ -305,11 +268,6 @@ auto rp_app_init(void) -> int {
         ss_gpio_data_pass.SendValue(0);
         updateUI();
 
-        // Initialize file directory and hardware
-        streaming_lib::CStreamingFile::makeEmptyDir(FILE_PATH);
-        if (rp_HPGetIsAttenuatorControllerPresentOrDefault() && rp_HPGetFastADCIsAC_DCOrDefault() && rp_HPGetIsGainDACx5OrDefault()) {
-            rp_max7311::rp_initController();
-        }
 
         rp_WC_Init();
     } catch (std::exception& e) {

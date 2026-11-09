@@ -1,4 +1,7 @@
 #include "stream_session.h"
+#include "streaming_lib/streaming_file.h"
+
+#include <filesystem>
 
 #include <atomic>
 #include <mutex>
@@ -91,6 +94,7 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_ADC, s.getADCSize());
         streaming_lib::ADCStreamOptions o;
         o.host = options.host;
+        o.filePath = options.adcDir;
         o.testMode = options.adcTestMode;
         adc->setVerbose(options.verbose);
         return adc->start(s, o);
@@ -423,6 +427,12 @@ auto StreamSession::create(uio_lib::CHardware::Ptr hw, const SessionOptions& opt
     const auto mode = hw->features().slave ? broadcast_lib::EMode::AB_SERVER_SLAVE : broadcast_lib::EMode::AB_SERVER_MASTER;
     p->config = std::make_shared<ServerNetConfigManager>(options.configFile, mode, options.host, options.configPort, hw->info().adcChannels);
 
+    // the directory of the ADC files (those of the DAC and the GPIO are made by settings_lib)
+    const std::string adcDir = options.adcDir.empty() ? std::string(FILE_PATH) : options.adcDir;
+    streaming_lib::CStreamingFile::makeEmptyDir(adcDir);
+    if (!std::filesystem::is_directory(adcDir))
+        ERROR_LOG("Can't make the directory of the ADC files %s", adcDir.c_str())
+
     p->config->setSettingsValidator(&Impl::memoryTakes);
     const auto initial = p->config->getSettings();
     if (!Impl::memoryTakes(initial))
@@ -489,9 +499,30 @@ auto StreamSession::create(uio_lib::CHardware::Ptr hw, const SessionOptions& opt
     });
     connectTriggerCommands(p->config, hw);
 
-    if (options.broadcast)
-        c.startBroadcast(options.broadcastModel, options.broadcastMac, !options.broadcastHost.empty() ? options.broadcastHost : !options.host.empty() ? options.host : std::string("127.0.0.1"),
-                         options.broadcastPort, hw->features().gpio ? "gpio" : "");
+    // The announcement: on every interface with its own address; listening on one address, that one
+    // only, on its interface (or as a broadcast to all when no interface has it); a loopback
+    // address is not announced, nobody else can connect to it
+    const bool everyInterface = options.host.empty() || options.host == "0.0.0.0";
+    const bool loopback = !everyInterface && options.host.rfind("127.", 0) == 0;
+    if (options.broadcast && !loopback) {
+        broadcast_lib::CAsioBroadcastSocket::TargetProvider targets = nullptr;
+        if (!everyInterface) {
+            const std::string host = options.host;
+            targets = [host]() {
+                std::vector<broadcast_lib::BroadcastTarget> list;
+                for (const auto& t : broadcast_lib::CAsioBroadcastSocket::systemTargets())
+                    if (t.address == host)
+                        list.push_back(t);
+                if (list.empty())
+                    list.push_back({host, "255.255.255.255"});
+                return list;
+            };
+        }
+        const std::string announced = !everyInterface ? options.host : !options.broadcastHost.empty() ? options.broadcastHost : std::string("127.0.0.1");
+        c.startBroadcast(hw->info().model, hw->info().mac, announced, options.broadcastPort, hw->features().gpio ? "gpio" : "", targets);
+    } else if (options.broadcast && options.verbose) {
+        aprintf(stdout, "[Streaming] Listening on %s only: the board is not announced\n", options.host.c_str());
+    }
 
     return Ptr(new StreamSession(p));
 }
