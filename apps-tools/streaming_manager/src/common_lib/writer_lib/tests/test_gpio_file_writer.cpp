@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -130,6 +131,27 @@ TEST(GpioFileWriter, TheLimitEndsTheFileAtTheBufferThatReachesIt) {
     while (r.nextBlock(b, data))
         blocks++;
     EXPECT_EQ(blocks, 2);
+    // the report tells the limit and how far past it the last buffer went
+    const auto report = ReadText(path + ".log.txt");
+    EXPECT_NE(report.find("Samples limit:\t4\n"), std::string::npos) << report;
+    EXPECT_NE(report.find("Time line recorded:\t5 Samples\n"), std::string::npos) << report;
+    EXPECT_NE(report.find("the last buffer ends 1 Samples after it"), std::string::npos) << report;
+    const auto lines = ReadText(path + ".log.lost.txt");
+    EXPECT_EQ(std::count(lines.begin(), lines.end(), '\n'), 3) << "the legend and a line per buffer";
+}
+
+TEST(GpioFileWriter, TheReportSaysWhenTheLimitIsNotReached) {
+    const auto path = Path("short.csv");
+    auto rec = Recording(CStreamSettings::GPIOFormat::CSV);
+    rec.samplesLimit = 100;
+    {
+        CGpioFileWriter w;
+        ASSERT_TRUE(w.open(path, rec));
+        EXPECT_EQ(w.write(kFirst.data(), kFirst.size(), 0, 0, 0), CGpioFileWriter::Result::OK);
+    }
+    const auto report = ReadText(path + ".log.txt");
+    EXPECT_NE(report.find("Samples limit:\t100\n"), std::string::npos) << report;
+    EXPECT_NE(report.find("The limit is not reached"), std::string::npos) << report;
 }
 
 TEST(GpioFileWriter, AFileThatCannotBeMadeIsAnError) {

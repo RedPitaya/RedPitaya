@@ -222,6 +222,11 @@ auto CFileLogger::setGpioProperties(const GpioProperties& properties) -> void {
     m_gpioPropertiesSet = true;
 }
 
+auto CFileLogger::setGpioSamplesLimit(uint64_t limit) -> void {
+    std::lock_guard lock(m_mtx);
+    m_gpio.limit = limit;
+}
+
 auto CFileLogger::addGpioOutMetric(uint64_t bytes, uint64_t words) -> void {
     std::lock_guard lock(m_mtx);
     m_gpioOut.buffers++;
@@ -345,6 +350,15 @@ void CFileLogger::dumpToFile() {
             log << "\t- FPGA overflow:\t" << m_gpio.lost << " Samples\n";
             log << "\tWait for a trigger on: GPIO\n";
             log << "\t- " << m_gpio.wait << " Samples\n";
+            // the limit counts the time line (samples, lost and wait) and is taken at a buffer
+            if (m_gpio.limit) {
+                log << "\tSamples limit:\t" << m_gpio.limit << "\n";
+                log << "\tTime line recorded:\t" << m_gpio.pos << " Samples\n";
+                if (m_gpio.pos >= m_gpio.limit)
+                    log << "\tThe limit is taken at a buffer: the last buffer ends " << m_gpio.pos - m_gpio.limit << " Samples after it\n";
+                else
+                    log << "\tThe limit is not reached\n";
+            }
             log << "\n";
         }
         if (m_gpioOut.buffers || m_gpioOut.waitSet) {

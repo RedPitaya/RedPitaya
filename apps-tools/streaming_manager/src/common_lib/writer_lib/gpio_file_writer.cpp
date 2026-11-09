@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "file_queue_manager.h"
+#include "logger_lib/file_logger.h"
 
 namespace {
 
@@ -45,6 +46,16 @@ auto CGpioFileWriter::open(const std::string& path, const GpioRecording& recordi
     }
     m_file->startWrite(CStreamSettings::DataFormat::BIN);
     m_open = true;
+
+    m_logger = CFileLogger::create(path + ".log", m_testMode);
+    CFileLogger::GpioProperties properties;
+    properties.baseRate = m_rec.clock;
+    properties.decimation = m_rec.decimation;
+    properties.rle = m_rec.rle;
+    properties.triggerMode = m_rec.triggerMode;
+    properties.waitCounter = m_rec.waitCounter;
+    m_logger->setGpioProperties(properties);
+    m_logger->setGpioSamplesLimit(m_rec.samplesLimit);
 
     std::vector<uint8_t> head;
     switch (m_rec.format.value) {
@@ -87,8 +98,8 @@ auto CGpioFileWriter::write(const uint32_t* words, size_t count, uint64_t lost, 
     if (m_file->isOutOfSpace())
         return Result::FULL;
     std::vector<uint8_t> out;
+    const uint64_t samples = bin_lib::gpioInSamples(words, count, m_rec.rle);
     if (m_rec.format.value == CStreamSettings::GPIOFormat::BIN) {
-        const uint64_t samples = bin_lib::gpioInSamples(words, count, m_rec.rle);
         bin_lib::BlockInfo block;
         block.triggerCount = triggerCount;
         block.samples = samples;
@@ -104,6 +115,8 @@ auto CGpioFileWriter::write(const uint32_t* words, size_t count, uint64_t lost, 
     }
     if (!queue(std::move(out)))
         return m_file->isOutOfSpace() ? Result::FULL : Result::ERROR;
+    m_logger->addMetric(CFileLogger::EMetric::RECIVE_DATE, count * 4);
+    m_logger->addGpioMetric(count * 4, count, samples, lost, wait, triggerCount);
     if (m_rec.samplesLimit && m_position >= m_rec.samplesLimit) {
         m_limited = true;
         return Result::LIMIT;
@@ -118,6 +131,9 @@ auto CGpioFileWriter::close() -> void {
     m_file->stopWrite(true);
     m_file->closeFile();
     m_file.reset();
+    if (m_logger && !m_testMode)
+        m_logger->dumpToFile();
+    m_logger.reset();
 }
 
 auto CGpioFileWriter::queue(std::vector<uint8_t>&& bytes) -> bool {

@@ -113,6 +113,9 @@ class CFileLogger {
     // One GPIO input buffer: samples are the GPIO clock samples its words stand for,
     // lost the overflow and wait the trigger wait right before it, both in samples
     auto addGpioMetric(uint64_t bytes, uint64_t words, uint64_t samples, uint64_t lost, uint64_t wait, uint32_t triggerCount) -> void;
+    // The sample limit of a GPIO input recording (0 - none). It is taken at a buffer: the buffer
+    // that reaches it is the last one, so the recording may hold more samples than the limit.
+    auto setGpioSamplesLimit(uint64_t limit) -> void;
     // One GPIO output buffer sent to the board
     auto addGpioOutMetric(uint64_t bytes, uint64_t words) -> void;
     // The clocks the board's output waited for the data, from its stop
@@ -164,6 +167,7 @@ class CFileLogger {
         uint64_t lost = 0;
         uint64_t wait = 0;
         uint64_t pos = 0;
+        uint64_t limit = 0;
         uint32_t triggerCountFirst = 0;
         uint32_t triggerCountLast = 0;
     };

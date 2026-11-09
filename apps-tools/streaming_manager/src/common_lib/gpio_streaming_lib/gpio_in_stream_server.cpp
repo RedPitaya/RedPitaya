@@ -1,6 +1,7 @@
 #include "gpio_in_stream_server.h"
 
 #include <atomic>
+#include <cinttypes>
 #include <chrono>
 #include <ctime>
 #include <mutex>
@@ -222,6 +223,13 @@ auto GPIOInStreamServer::Impl::fileWork() -> void {
             ring->unlockBufferRead();
             if (result == CGpioFileWriter::Result::OK)
                 continue;
+            if (result == CGpioFileWriter::Result::LIMIT) {
+                // the limit is taken at a buffer: the file may run past it by up to a buffer
+                aprintf(stdout, "[Streaming] GPIO input: the sample limit %" PRIu64 " reached at a buffer, %" PRIu64 " samples in %s\n",
+                        file->samplesLimit(), file->samples(), file->path().c_str());
+                syslog(LOG_NOTICE, "[Streaming] GPIO input: the sample limit %" PRIu64 " reached at a buffer, %" PRIu64 " samples in %s\n",
+                       file->samplesLimit(), file->samples(), file->path().c_str());
+            }
             stopNonBlocking(result == CGpioFileWriter::Result::LIMIT  ? GPIOStopReason::DONE
                             : result == CGpioFileWriter::Result::FULL ? GPIOStopReason::SD_FULL
                                                                       : GPIOStopReason::BROKEN,

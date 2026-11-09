@@ -12,6 +12,7 @@
 #include "settings_lib/stream_settings.h"
 
 class FileQueueManager;
+class CFileLogger;
 
 // What the GPIO input records
 struct GpioRecording {
@@ -30,7 +31,10 @@ struct GpioRecording {
 //   CSV - "sample,p,n": a row where the lines change, the levels in hex; "-" where samples were
 //         lost or waited for a trigger;
 //   VCD - the value change dump of p[7:0] and n[7:0], in ps; x where samples are missing.
-// The sample limit is taken at a buffer: the buffer that reaches it is the last one in the file.
+// The sample limit is taken at a buffer: the buffer that reaches it is the last one in the file,
+// so the file may run past the limit by up to a buffer. The report next to the file
+// (<file>.log.txt, a line per buffer in <file>.log.lost.txt) gives the limit and the time line
+// recorded.
 class CGpioFileWriter {
    public:
     using Ptr = std::shared_ptr<CGpioFileWriter>;
@@ -47,7 +51,9 @@ class CGpioFileWriter {
     // The rest goes to the file, then it closes
     auto close() -> void;
 
+    // the time line written so far (samples, lost and wait)
     auto samples() const -> uint64_t { return m_position; }
+    auto samplesLimit() const -> uint64_t { return m_rec.samplesLimit; }
     auto path() const -> const std::string& { return m_path; }
 
     // the disk filled up while writing
@@ -61,6 +67,7 @@ class CGpioFileWriter {
 
     bool m_testMode;
     std::unique_ptr<FileQueueManager> m_file;
+    std::shared_ptr<CFileLogger> m_logger;
     std::string m_path;
     GpioRecording m_rec;
     bool m_open = false;
