@@ -157,6 +157,9 @@ if(IS_INSTALL)
 		      examples/dac_example_6_8bit_pulse.py
                       examples/adc_dac_example_1.py
                       examples/config_example_1.py
+                      examples/gpio_example_1.py
+                      examples/gpio_example_2.py
+                      examples/gpio_example_3.py
             DESTINATION ${INSTALL_DIR}/streaming/${PY_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 
@@ -218,6 +221,9 @@ if(IS_INSTALL)
                   examples/dac_example_5.cpp
                   examples/adc_dac_example_1.cpp
                   examples/config_example_1.cpp
+                  examples/gpio_example_1.cpp
+                  examples/gpio_example_2.cpp
+                  examples/gpio_example_3.cpp
             DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ} PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
             GROUP_EXECUTE GROUP_READ WORLD_READ WORLD_WRITE WORLD_EXECUTE)
 

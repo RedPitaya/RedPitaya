@@ -11,7 +11,10 @@ PRGS =  adc_example_1 \
 		dac_example_4 \
 		dac_example_5 \
 		config_example_1 \
-		adc_dac_example_1
+		adc_dac_example_1 \
+		gpio_example_1 \
+		gpio_example_2 \
+		gpio_example_3
 
 OBJS := $(patsubst %,%.o,$(PRGS))
 SRC := $(patsubst %,%.cpp,$(PRGS))
