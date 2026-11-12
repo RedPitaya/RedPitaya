@@ -21,6 +21,15 @@ typedef std::list<std::pair<net_buffer, size_t>> net_list;
 
 auto createBuffer(const char* buffer, size_t size) -> net_buffer;
 auto createBuffer(uint64_t size) -> net_buffer;
+
+// The CPU for a thread that sends a stream: the one that takes the fewest interrupts of the
+// network interfaces. TCP without segmentation offload costs a core per 1 Gb/s, and a sender on
+// the core of the network interrupt shares it with them: about 90 MB/s instead of the line rate
+// on a two core Zynq. -1: no choice (one CPU, no network interrupt found, not Linux).
+// RP_STREAMING_SENDER_CPU sets the CPU, -1 there leaves the sender to the scheduler.
+auto senderCpu() -> int;
+// Pins the calling thread to senderCpu(); returns the CPU, or -1 when the thread stays unpinned.
+auto pinSenderThread() -> int;
 }  // namespace net_lib
 
 #endif

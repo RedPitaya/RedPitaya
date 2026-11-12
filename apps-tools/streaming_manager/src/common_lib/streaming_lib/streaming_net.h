@@ -28,6 +28,10 @@ class CStreamingNet {
     auto runNonThread() -> void;
     auto stop() -> void;
     auto sendBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> void;
+    // Zero copy send (the ring in /dev/rp_resmem memory): a pack goes back through unlockBufferF
+    // once the kernel is done with it; at most maxPending packs in flight, below the ring size.
+    // Before run().
+    auto setZeroCopy(bool enable, size_t maxPending) -> void;
 
     getBufferFunc getBuffer;
     unlockBufferFunc unlockBufferF;
@@ -46,6 +50,8 @@ class CStreamingNet {
     net_lib::CAsioNet* m_asionet;
 
     uint64_t m_index_of_message;
+    bool m_zeroCopy = false;
+    size_t m_zeroCopyPending = 1;
     std::thread m_thread;
     std::atomic_bool m_threadRun;
     std::mutex m_mtx;

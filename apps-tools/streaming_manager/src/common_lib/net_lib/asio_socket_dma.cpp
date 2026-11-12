@@ -2,6 +2,26 @@
 #include <functional>
 #include <thread>
 
+#ifdef __linux__
+#include <errno.h>
+#include <linux/errqueue.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <sys/socket.h>
+#ifndef SO_ZEROCOPY
+#define SO_ZEROCOPY 60
+#endif
+#ifndef MSG_ZEROCOPY
+#define MSG_ZEROCOPY 0x4000000
+#endif
+#ifndef SO_EE_ORIGIN_ZEROCOPY
+#define SO_EE_ORIGIN_ZEROCOPY 5
+#endif
+#ifndef SO_EE_CODE_ZEROCOPY_COPIED
+#define SO_EE_CODE_ZEROCOPY_COPIED 1
+#endif
+#endif
+
 #include "asio_socket_dma.h"
 #include "data_lib/network_header.h"
 #include "logger_lib/file_logger.h"
@@ -51,6 +71,12 @@ CAsioSocketDMA::CAsioSocketDMA(std::string host, uint16_t port, CBuffersCached::
 CAsioSocketDMA::~CAsioSocketDMA() {
     stopReceive();
     closeSocket();
+    {
+        // the socket kept for the completions goes before its io_context
+        std::lock_guard send(m_sendMtx);
+        zcReleaseAll();
+        m_zcSocket = nullptr;
+    }
     // No handler runs after this; the sockets held by queued handlers go with the io_context.
     m_asio->stop();
     delete m_asio;
@@ -413,19 +439,31 @@ auto CAsioSocketDMA::startWatch(socket_ptr socket) -> void {
 }
 
 auto CAsioSocketDMA::sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool {
+    return sendSyncBuffer(_buffer, nullptr);
+}
+
+auto CAsioSocketDMA::sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer, Release release) -> bool {
     socket_ptr socket;
     {
         std::lock_guard lock(m_mtx);
         if (m_connected)
             socket = m_tcp_socket;
     }
+    std::lock_guard send(m_sendMtx);
     if (!socket) {
+        zcReleaseAll();
+        if (release)
+            release();
         handlerSend(asio::error::not_connected, 0);
         return false;
     }
-    std::lock_guard send(m_sendMtx);
+    // zero copy only where somebody takes the pack back later
+    const bool zc = release && m_zcEnabled;
+    if (zc)
+        zcBind(socket);
     asio::error_code error;
     size_t sent = 0;
+    const uint32_t firstId = m_zcNext;
     for (auto i = (int)DataLib::EDataBuffersPackChannel::CH1; i <= (int)DataLib::EDataBuffersPackChannel::CH4 && !error; i++) {
         auto buff = _buffer->getBuffer((DataLib::EDataBuffersPackChannel)i);
         if (buff == NULL)
@@ -434,18 +472,204 @@ auto CAsioSocketDMA::sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer) -
         size_t offset = 0;
         // Blocks while the peer does not read: that is the flow control of the stream.
         while (needSendSize && !error) {
-            size_t sendedSize = socket->send(asio::buffer((char*)buff->getMappedMemory() + offset, needSendSize), 0, error);
+            size_t sendedSize = 0;
+            if (zc && m_zcOn)
+                sendedSize = zcSend(socket, (char*)buff->getMappedMemory() + offset, needSendSize, error);
+            else
+                sendedSize = socket->send(asio::buffer((char*)buff->getMappedMemory() + offset, needSendSize), 0, error);
             offset += sendedSize;
             needSendSize -= sendedSize;
             sent += sendedSize;
         }
     }
+    if (!error && zc && m_zcNext != firstId) {
+        // the kernel still reads the pack: it goes back when its sends are complete
+        m_zcPending.push_back({m_zcNext, std::move(release)});
+        release = nullptr;
+        zcReap();
+        while (m_zcPending.size() > m_zcMaxPending) {
+            {
+                std::lock_guard lock(m_mtx);
+                if (socket != m_tcp_socket)
+                    break;  // dropped: released below
+            }
+            zcWait(100);
+        }
+    }
+    if (release)
+        release();
+    bool alive;
+    {
+        std::lock_guard lock(m_mtx);
+        alive = socket == m_tcp_socket;
+    }
+    if (!alive || error)
+        zcReleaseAll();  // nobody reads these packs any more
     handlerSend(error, error ? sent : _buffer->getLenghtBuffers());
     if (error) {
         dropConnection(socket);
         return false;
     }
     return true;
+}
+
+auto CAsioSocketDMA::setZeroCopy(bool enable, size_t maxPending) -> void {
+    std::lock_guard send(m_sendMtx);
+#ifdef __linux__
+    m_zcEnabled = enable;
+#else
+    (void)enable;
+    m_zcEnabled = false;
+#endif
+    m_zcMaxPending = maxPending ? maxPending : 1;
+}
+
+auto CAsioSocketDMA::zeroCopyStats() -> ZeroCopyStats {
+    std::lock_guard send(m_sendMtx);
+    return m_zcStats;
+}
+
+// A new connection starts its ids from zero; the packs of the old one are not read any more.
+auto CAsioSocketDMA::zcBind(const socket_ptr& socket) -> void {
+    if (socket == m_zcSocket)
+        return;
+    zcReleaseAll();
+    m_zcSocket = socket;
+    m_zcNext = m_zcDone = 0;
+    m_zcRanges.clear();
+    m_zcOn = false;
+    m_zcStats = ZeroCopyStats();
+#ifdef __linux__
+    int one = 1;
+    m_zcOn = setsockopt(socket->native_handle(), SOL_SOCKET, SO_ZEROCOPY, &one, sizeof(one)) == 0;
+    if (!m_zcOn)
+        WARNING("SO_ZEROCOPY refused (errno %d): the stream is sent with copying", errno)
+#endif
+    m_zcStats.used = m_zcOn;
+}
+
+// One send with MSG_ZEROCOPY on the native socket (asio keeps it non-blocking): waits for room
+// like a blocking send, and for completions when the kernel has no room for more notifications.
+auto CAsioSocketDMA::zcSend(const socket_ptr& socket, const char* data, size_t size, asio::error_code& error) -> size_t {
+#ifdef __linux__
+    const int fd = socket->native_handle();
+    while (true) {
+        ssize_t n = ::send(fd, data, size, MSG_ZEROCOPY | MSG_NOSIGNAL);
+        if (n > 0) {
+            m_zcNext++;
+            m_zcStats.sends++;
+            return static_cast<size_t>(n);
+        }
+        const int e = n < 0 ? errno : EPIPE;
+        if (e == EINTR)
+            continue;
+        if (e == EAGAIN || e == EWOULDBLOCK || e == ENOBUFS) {
+            {
+                std::lock_guard lock(m_mtx);
+                if (socket != m_tcp_socket) {
+                    error = asio::error::connection_aborted;
+                    return 0;
+                }
+            }
+            zcReap();
+            pollfd p = {fd, static_cast<short>(e == ENOBUFS ? 0 : POLLOUT), 0};
+            ::poll(&p, 1, 100);
+            continue;
+        }
+        if (m_zcNext == 0 && (e == EFAULT || e == EINVAL || e == EOPNOTSUPP)) {
+            // memory the kernel cannot pin: copy for this connection
+            WARNING("MSG_ZEROCOPY refused (errno %d): the stream is sent with copying", e)
+            m_zcOn = false;
+            m_zcStats.used = false;
+            return socket->send(asio::buffer(data, size), 0, error);
+        }
+        error = asio::error_code(e, asio::error::get_system_category());
+        return 0;
+    }
+#else
+    return socket->send(asio::buffer(data, size), 0, error);
+#endif
+}
+
+// Takes the completion notifications from the error queue of the socket and releases the packs
+// whose sends are all complete.
+auto CAsioSocketDMA::zcReap() -> void {
+#ifdef __linux__
+    if (!m_zcSocket)
+        return;
+    const int fd = m_zcSocket->native_handle();
+    while (true) {
+        char control[128];
+        msghdr msg = {};
+        msg.msg_control = control;
+        msg.msg_controllen = sizeof(control);
+        if (::recvmsg(fd, &msg, MSG_ERRQUEUE | MSG_DONTWAIT) < 0)
+            break;
+        for (cmsghdr* c = CMSG_FIRSTHDR(&msg); c; c = CMSG_NXTHDR(&msg, c)) {
+            if (!((c->cmsg_level == SOL_IP && c->cmsg_type == IP_RECVERR) || (c->cmsg_level == SOL_IPV6 && c->cmsg_type == IPV6_RECVERR)))
+                continue;
+            auto* ee = reinterpret_cast<sock_extended_err*>(CMSG_DATA(c));
+            if (ee->ee_origin != SO_EE_ORIGIN_ZEROCOPY)
+                continue;
+            if (ee->ee_code & SO_EE_CODE_ZEROCOPY_COPIED)
+                m_zcStats.copied += ee->ee_data - ee->ee_info + 1;
+            m_zcRanges.push_back({ee->ee_info, ee->ee_data});
+        }
+    }
+    // the ranges come in order for TCP; merged here all the same
+    for (bool moved = true; moved;) {
+        moved = false;
+        for (auto it = m_zcRanges.begin(); it != m_zcRanges.end(); ++it) {
+            if (static_cast<int32_t>(it->first - m_zcDone) <= 0) {
+                if (static_cast<int32_t>(it->second + 1 - m_zcDone) > 0)
+                    m_zcDone = it->second + 1;
+                m_zcRanges.erase(it);
+                moved = true;
+                break;
+            }
+        }
+    }
+#endif
+    zcReleaseDone();
+}
+
+auto CAsioSocketDMA::zcWait(int ms) -> void {
+#ifdef __linux__
+    if (m_zcSocket) {
+        pollfd p = {m_zcSocket->native_handle(), 0, 0};  // POLLERR: the error queue has data
+        ::poll(&p, 1, ms);
+    }
+#else
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+#endif
+    zcReap();
+}
+
+auto CAsioSocketDMA::zcReleaseDone() -> void {
+    while (!m_zcPending.empty() && static_cast<int32_t>(m_zcDone - m_zcPending.front().end) >= 0) {
+        auto release = std::move(m_zcPending.front().release);
+        m_zcPending.pop_front();
+        if (release)
+            release();
+    }
+}
+
+auto CAsioSocketDMA::zcReleaseAll() -> void {
+    while (!m_zcPending.empty()) {
+        auto release = std::move(m_zcPending.front().release);
+        m_zcPending.pop_front();
+        if (release)
+            release();
+    }
+}
+
+auto CAsioSocketDMA::flushZeroCopy(std::chrono::milliseconds timeout) -> void {
+    std::lock_guard send(m_sendMtx);
+    const auto end = std::chrono::steady_clock::now() + timeout;
+    while (!m_zcPending.empty() && std::chrono::steady_clock::now() < end)
+        zcWait(20);
+    zcReleaseAll();
+    m_zcSocket = nullptr;
 }
 
 void CAsioSocketDMA::handlerSend(const asio::error_code& _error, size_t _bytesTransferred) {

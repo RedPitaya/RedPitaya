@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -43,6 +44,27 @@ int getReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     return 0;
 }
 
+// The rp_resmem driver (linux drivers/redpitaya/rp_resmem.c) maps the same region without
+// /dev/mem, page by page, so the network can send it without copying. Its sysfs holds the region.
+#define RESMEM_DEVICE "/dev/rp_resmem"
+#define RESMEM_SYSFS "/sys/class/misc/rp_resmem/"
+
+static bool readSysfsValue(const char* name, unsigned long long* value) {
+    std::string path = std::string(RESMEM_SYSFS) + name;
+    FILE* f = fopen(path.c_str(), "r");
+    if (!f)
+        return false;
+    bool ok = fscanf(f, "%llx", value) == 1;
+    fclose(f);
+    return ok;
+}
+
+// RP_STREAMING_RESMEM=0 keeps /dev/mem, RP_STREAMING_ZEROCOPY=0 the copying send (comparisons).
+static bool envOff(const char* name) {
+    const char* v = getenv(name);
+    return v && strcmp(v, "0") == 0;
+}
+
 auto CMemoryManager::instance() -> Ptr {
     static auto s = std::make_shared<CMemoryManager>();
     return s;
@@ -55,19 +77,44 @@ CMemoryManager::CMemoryManager()
     }
     m_lowReservedAddress = m_startRAMAddress;
     m_highReservedAddress = m_startRAMAddress + m_ramSize;
-    TRACE_SHORT("Reserved memory 0x%X - 0x%X", m_lowReservedAddress, m_highReservedAddress)
 
-    m_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if (m_mem_fd < 0) {
-        FATAL("Error opening device: /dev/mem")
+    unsigned long long base = 0, size = 0, zeroCopy = 0;
+    if (!envOff("RP_STREAMING_RESMEM") && readSysfsValue("base", &base) && readSysfsValue("size", &size) && readSysfsValue("zerocopy", &zeroCopy)) {
+        m_mem_fd = open(RESMEM_DEVICE, O_RDWR);
+        if (m_mem_fd >= 0) {
+            if (base != m_startRAMAddress || size != m_ramSize)
+                WARNING("%s holds 0x%llX size 0x%llX, the device tree region is 0x%X size 0x%X: the driver's is used", RESMEM_DEVICE, base,
+                        size, m_startRAMAddress, m_ramSize)
+            m_startRAMAddress = static_cast<uint32_t>(base);
+            m_ramSize = static_cast<uint32_t>(size);
+            m_lowReservedAddress = m_startRAMAddress;
+            m_highReservedAddress = m_startRAMAddress + m_ramSize;
+            m_memory = mmap(NULL, m_ramSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_mem_fd, 0);
+            if (m_memory == MAP_FAILED) {
+                WARNING("Error mmap %s, /dev/mem is used", RESMEM_DEVICE)
+                close(m_mem_fd);
+                m_mem_fd = -1;
+            } else {
+                m_zeroCopy = zeroCopy == 1 && !envOff("RP_STREAMING_ZEROCOPY");
+            }
+        }
     }
+    TRACE_SHORT("Reserved memory 0x%X - 0x%X through %s%s", m_lowReservedAddress, m_highReservedAddress, m_memory != MAP_FAILED ? RESMEM_DEVICE : "/dev/mem",
+                m_zeroCopy ? ", zero copy send" : "")
 
-    if (m_lowReservedAddress % sysconf(_SC_PAGESIZE) != 0) {
-        FATAL(
-            "Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\n", (m_lowReservedAddress % sysconf(_SC_PAGESIZE)), sysconf(_SC_PAGESIZE))
+    if (m_memory == MAP_FAILED) {
+        m_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+        if (m_mem_fd < 0) {
+            FATAL("Error opening device: /dev/mem")
+        }
+
+        if (m_lowReservedAddress % sysconf(_SC_PAGESIZE) != 0) {
+            FATAL(
+                "Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\n", (m_lowReservedAddress % sysconf(_SC_PAGESIZE)), sysconf(_SC_PAGESIZE))
+        }
+
+        m_memory = mmap(NULL, m_ramSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_mem_fd, m_lowReservedAddress);
     }
-
-    m_memory = mmap(NULL, m_ramSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_mem_fd, m_lowReservedAddress);
 
     if (m_memory == MAP_FAILED) {
         FATAL("Error mmap memory")
@@ -94,9 +141,9 @@ CMemoryManager::~CMemoryManager() {
         m_memory = MAP_FAILED;
     }
 
-    if (m_mem_fd) {
+    if (m_mem_fd > 0) {
         if (close(m_mem_fd) < 0) {
-            ERROR_LOG("Error close device: /dev/mem")
+            ERROR_LOG("Error close the memory device")
         }
         m_mem_fd = 0;
     }

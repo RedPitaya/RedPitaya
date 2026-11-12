@@ -2,6 +2,8 @@
 #define NET_LIB_ASIO_NET_H
 
 #include <atomic>
+#include <chrono>
+#include <functional>
 #include <string>
 
 #include "asio_common.h"
@@ -27,6 +29,15 @@ class CAsioNet {
     auto disconnect() -> void;
 
     auto sendSyncData(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool;
+    // The pack goes back through release, at once or, with zero copy, once the kernel is done
+    // with its memory (see CAsioSocketDMA::sendSyncBuffer).
+    auto sendSyncData(DataLib::CDataBuffersPackDMA::Ptr _buffer, std::function<void()> release) -> bool;
+    // Zero copy for sendSyncData with a release; maxPending below the ring size. Before start().
+    auto setZeroCopy(bool enable, size_t maxPending) -> void;
+    // From the sender thread when it ends: waits for the packs in flight, releases the rest.
+    auto flushZeroCopy(std::chrono::milliseconds timeout) -> void;
+    // sends with MSG_ZEROCOPY on the last connection and how many of them the kernel copied
+    auto zeroCopyStats(uint64_t& sends, uint64_t& copied) -> bool;
     // the kind of the packs received, DataLib::ID_PACK_*; by default a client takes ADC packs and
     // a server DAC packs. Before start().
     auto setPackID(const uint8_t* id) -> void;

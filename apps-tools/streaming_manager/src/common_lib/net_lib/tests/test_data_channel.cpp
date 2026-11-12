@@ -22,6 +22,9 @@
 #include <thread>
 #include <vector>
 
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include "asio.hpp"
 #include "data_lib/buffers_cached.h"
 #include "data_lib/network_header.h"
@@ -357,6 +360,144 @@ TEST(DataChannel, ARefusedOrUnresolvableServerIsAnErrorNotAnException) {
     }
 }
 
+// ---- zero copy: the pack goes back once the kernel is done with its memory ----
+
+// Without zero copy the release comes before the send returns, as the old unlock after it did.
+TEST(DataChannel, WithoutZeroCopyAPackIsReleasedBeforeTheSendReturns) {
+    const uint16_t port = NextPort();
+    AdcServer server(port);
+    AdcClient client(port);
+    client.net->start();
+    ASSERT_TRUE(WaitFor([&] { return server.connects == 1 && client.connects == 1; }));
+    for (uint64_t id = 0; id < 10; id++) {
+        bool released = false;
+        ASSERT_TRUE(server.net->sendSyncData(server.tx.prepare(id), [&] { released = true; }));
+        EXPECT_TRUE(released);
+    }
+    ASSERT_TRUE(WaitFor([&] { return client.packs == 10; }));
+    uint64_t sends = 0, copied = 0;
+    EXPECT_FALSE(server.net->zeroCopyStats(sends, copied));
+}
+
+#ifdef __linux__
+// SO_ZEROCOPY is there (not under qemu user emulation, the docker build of the board)
+static bool ZeroCopySupported() {
+    const int fd = ::socket(AF_INET, SOCK_STREAM, 0);
+    if (fd < 0)
+        return false;
+    int one = 1;
+    const bool ok = ::setsockopt(fd, SOL_SOCKET, 60 /* SO_ZEROCOPY */, &one, sizeof(one)) == 0;
+    ::close(fd);
+    return ok;
+}
+
+// A slot of the sender is written again only after its pack came back, and the packs come back
+// in order. On loopback the kernel copies the data when it delivers it, so a slow client keeps
+// the packs in the send queue: a pack released too early would arrive overwritten.
+TEST(DataChannel, ZeroCopyReleasesAPackOnlyAfterTheKernelIsDoneWithIt) {
+    if (!ZeroCopySupported())
+        GTEST_SKIP() << "no SO_ZEROCOPY here";
+    const uint16_t port = NextPort();
+    AdcServer server(port);  // 4 slots
+    server.net->setZeroCopy(true, 2);
+    AdcClient client(port);
+    client.delayMs = 3;
+    client.net->start();
+    ASSERT_TRUE(WaitFor([&] { return server.connects == 1 && client.connects == 1; }));
+    constexpr uint64_t kPacks = 200;
+    std::mutex m;
+    std::vector<bool> busy(server.tx.packs.size(), false);
+    uint64_t nextRelease = 0;
+    int outOfOrder = 0, reused = 0;
+    std::atomic<uint64_t> released{0};
+    for (uint64_t id = 0; id < kPacks; id++) {
+        const size_t slot = id % busy.size();
+        {
+            std::lock_guard lock(m);
+            if (busy[slot])
+                reused++;  // at most 2 in flight of 4 slots: the old pack must be back
+            busy[slot] = true;
+        }
+        ASSERT_TRUE(server.net->sendSyncData(server.tx.prepare(id), [&, id, slot] {
+            std::lock_guard lock(m);
+            if (id != nextRelease)
+                outOfOrder++;
+            nextRelease = id + 1;
+            busy[slot] = false;
+            released++;
+        }));
+    }
+    server.net->flushZeroCopy(2000ms);
+    EXPECT_EQ(released, kPacks);
+    EXPECT_EQ(outOfOrder, 0);
+    EXPECT_EQ(reused, 0);
+    ASSERT_TRUE(WaitFor([&] { return client.packs == static_cast<int>(kPacks); }));
+    EXPECT_EQ(client.broken, 0);
+    uint64_t sends = 0, copied = 0;
+    EXPECT_TRUE(server.net->zeroCopyStats(sends, copied));
+    EXPECT_GE(sends, kPacks * 2) << "two channel buffers a pack";
+}
+
+// A client that leaves takes no more data: every pack still in flight comes back, each once.
+TEST(DataChannel, ZeroCopyReleasesEveryPackWhenTheConnectionGoes) {
+    const uint16_t port = NextPort();
+    AdcServer server(port);
+    server.net->setZeroCopy(true, 2);
+    RawPeer peer;  // never reads
+    ASSERT_TRUE(peer.connect(port));
+    ASSERT_TRUE(WaitFor([&] { return server.net->isConnected(); }));
+    std::atomic<int> calls{0}, released{0};
+    auto sender = std::async(std::launch::async, [&] {
+        for (uint64_t id = 0;; id++) {
+            calls++;
+            if (!server.net->sendSyncData(server.tx.prepare(id), [&] { released++; }))
+                return;
+        }
+    });
+    ASSERT_EQ(sender.wait_for(500ms), std::future_status::timeout) << "the sender is blocked";
+    server.net->disconnect();
+    ASSERT_EQ(sender.wait_for(2s), std::future_status::ready);
+    server.net->flushZeroCopy(500ms);
+    EXPECT_EQ(released, calls);
+}
+
+// CStreamingNet hands every pack back through unlockBufferF, the last ones when it stops.
+TEST(DataChannel, StreamingNetWithZeroCopyUnlocksEveryPack) {
+    const uint16_t port = NextPort();
+    std::string host = "127.0.0.1";
+    auto net = streaming_lib::CStreamingNet::create(host, port);
+    net->setZeroCopy(true, 2);
+    SenderPacks tx(4, true);
+    std::atomic<uint64_t> taken{0}, unlocked{0};
+    AdcClient client(port);
+    bool settled = false;
+    net->getBuffer = [&]() -> CDataBuffersPackDMA::Ptr {
+        // data only for the client: a pack without one is dropped and the ids would not match
+        if (client.connects == 0) {
+            std::this_thread::sleep_for(1ms);
+            return nullptr;
+        }
+        if (!settled) {
+            std::this_thread::sleep_for(100ms);  // the server side has taken the connection
+            settled = true;
+        }
+        // a ring of 4: a slot is taken again only after its pack came back
+        if (taken - unlocked >= tx.packs.size()) {
+            std::this_thread::sleep_for(1ms);
+            return nullptr;
+        }
+        return tx.prepare(taken++);
+    };
+    net->unlockBufferF = [&]() { unlocked++; };
+    net->run();
+    client.net->start();
+    ASSERT_TRUE(WaitFor([&] { return client.packs >= 100; }));
+    net->stop();
+    EXPECT_EQ(unlocked, taken);
+    EXPECT_EQ(client.broken, 0);
+}
+#endif
+
 // ---- stopping with a client that does not read ----
 
 TEST(DataChannel, DisconnectReleasesASenderBlockedOnAClientThatDoesNotRead) {
@@ -506,3 +647,34 @@ TEST(DataChannelDeathTest, APackOfAnotherKindEndsTheReceiver) {
         },
         "ID_PACK");
 }
+
+#ifdef __linux__
+#include <sched.h>
+#include <cstdlib>
+
+// The sender CPU: the variable decides when it is set, -1 leaves the thread unpinned; otherwise
+// a CPU of the machine (or none). A pinned thread runs on that CPU only.
+TEST(SenderCpu, TheVariableSetsTheCpuAndMinusOneLeavesTheThreadUnpinned) {
+    const char* old = std::getenv("RP_STREAMING_SENDER_CPU");
+    const std::string saved = old ? old : "";
+    setenv("RP_STREAMING_SENDER_CPU", "-1", 1);
+    EXPECT_EQ(net_lib::senderCpu(), -1);
+    std::thread([] { EXPECT_EQ(net_lib::pinSenderThread(), -1); }).join();
+    setenv("RP_STREAMING_SENDER_CPU", "0", 1);
+    EXPECT_EQ(net_lib::senderCpu(), 0);
+    std::thread([] {
+        ASSERT_EQ(net_lib::pinSenderThread(), 0);
+        cpu_set_t set;
+        CPU_ZERO(&set);
+        ASSERT_EQ(sched_getaffinity(0, sizeof(set), &set), 0);
+        EXPECT_EQ(CPU_COUNT(&set), 1);
+        EXPECT_TRUE(CPU_ISSET(0, &set));
+    }).join();
+    unsetenv("RP_STREAMING_SENDER_CPU");
+    const int cpu = net_lib::senderCpu();
+    EXPECT_GE(cpu, -1);
+    EXPECT_LT(cpu, CPU_SETSIZE);
+    if (old)
+        setenv("RP_STREAMING_SENDER_CPU", saved.c_str(), 1);
+}
+#endif

@@ -2,7 +2,12 @@
 #define NET_LIB_ASIO_SOCKET_DMA_H
 
 #include <atomic>
+#include <chrono>
+#include <deque>
+#include <functional>
 #include <mutex>
+#include <utility>
+#include <vector>
 #include "asio.hpp"
 #include "asio_common.h"
 #include "asio_service.h"
@@ -40,6 +45,28 @@ class CAsioSocketDMA {
     auto isConnected() -> bool;
     // Sends every channel buffer of the pack; false if the connection broke (it is then closed).
     auto sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool;
+
+    // Called once the memory of a pack may be written again.
+    using Release = std::function<void()>;
+    // As above, the pack handed back through release. Without zero copy release is called before
+    // the return. With zero copy (MSG_ZEROCOPY) the network controller reads the pack straight from
+    // its memory after the return: release is called once the kernel reports the send complete,
+    // from a later send or flushZeroCopy(). A broken connection releases every pack at once.
+    auto sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer, Release release) -> bool;
+    // Zero copy for the sends with a release; the pack memory must be pinnable (the rp_resmem
+    // driver mapping, not /dev/mem: the kernel refuses that one and the send copies). At most
+    // maxPending packs wait for their completion, a send waits beyond that: a ring of N packs
+    // needs maxPending < N, or its writer and its reader can wait for each other. Before start.
+    auto setZeroCopy(bool enable, size_t maxPending) -> void;
+    // Waits up to timeout for the packs in flight, then releases those left. From the sender
+    // thread, before the memory of the packs goes.
+    auto flushZeroCopy(std::chrono::milliseconds timeout) -> void;
+    struct ZeroCopyStats {
+        bool used = false;     // zero copy was on for the last connection
+        uint64_t sends = 0;    // sends with MSG_ZEROCOPY
+        uint64_t copied = 0;   // of them, copied by the kernel all the same
+    };
+    auto zeroCopyStats() -> ZeroCopyStats;
     // The kind of the packs received (ID_PACK_*, 16 bytes, static); by default a client takes
     // ADC packs and a server DAC packs. Set before start.
     auto setPackID(const uint8_t* id) -> void;
@@ -77,6 +104,18 @@ class CAsioSocketDMA {
     auto emitError(const asio::error_code& _error) -> void;
     auto emitDisconnect(std::string peer) -> void;
 
+    // Zero copy, under m_sendMtx.
+    struct Pending {
+        uint32_t end;  // the pack is done when every send id below end is
+        Release release;
+    };
+    auto zcBind(const socket_ptr& socket) -> void;
+    auto zcSend(const socket_ptr& socket, const char* data, size_t size, asio::error_code& error) -> size_t;
+    auto zcReap() -> void;
+    auto zcWait(int ms) -> void;
+    auto zcReleaseDone() -> void;
+    auto zcReleaseAll() -> void;
+
     // Network thread only.
     auto getBuffer() -> void;
     auto unlockBuffer() -> void;
@@ -101,6 +140,16 @@ class CAsioSocketDMA {
     CDataBuffersPackDMA::Ptr m_currentBuffer;
     std::atomic<bool> m_isStopReceive;
     const uint8_t* m_packId = nullptr;
+
+    bool m_zcEnabled = false;
+    size_t m_zcMaxPending = 1;
+    socket_ptr m_zcSocket;      // the connection the ids below belong to
+    bool m_zcOn = false;        // MSG_ZEROCOPY works on m_zcSocket
+    uint32_t m_zcNext = 0;      // the id of the next send
+    uint32_t m_zcDone = 0;      // every id below is complete
+    std::vector<std::pair<uint32_t, uint32_t>> m_zcRanges;  // completed ranges above m_zcDone
+    std::deque<Pending> m_zcPending;
+    ZeroCopyStats m_zcStats;
     uint8_t m_watchBuffer[256];
 };
 

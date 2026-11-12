@@ -65,3 +65,27 @@ auto CAsioNet::sendSyncData(DataLib::CDataBuffersPackDMA::Ptr _buffer) -> bool {
     }
     return false;
 }
+
+auto CAsioNet::sendSyncData(DataLib::CDataBuffersPackDMA::Ptr _buffer, std::function<void()> release) -> bool {
+    if (m_server) {
+        return m_server->sendSyncBuffer(_buffer, std::move(release));
+    }
+    if (release)
+        release();
+    return false;
+}
+
+auto CAsioNet::setZeroCopy(bool enable, size_t maxPending) -> void {
+    m_server->setZeroCopy(enable, maxPending);
+}
+
+auto CAsioNet::flushZeroCopy(std::chrono::milliseconds timeout) -> void {
+    m_server->flushZeroCopy(timeout);
+}
+
+auto CAsioNet::zeroCopyStats(uint64_t& sends, uint64_t& copied) -> bool {
+    auto s = m_server->zeroCopyStats();
+    sends = s.sends;
+    copied = s.copied;
+    return s.used;
+}

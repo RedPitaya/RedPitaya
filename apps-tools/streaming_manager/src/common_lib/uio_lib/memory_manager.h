@@ -53,6 +53,10 @@ class CMemoryManager {
 
     auto setDACMemoryStreamMode(bool enable) -> void;
 
+    // The memory comes from the rp_resmem driver as pages the kernel can pin: the network can
+    // send it with MSG_ZEROCOPY. False with /dev/mem (and for the heap of the host build).
+    auto isZeroCopy() const -> bool { return m_zeroCopy; }
+
    private:
     CMemoryManager(const CMemoryManager&) = delete;
     CMemoryManager(CMemoryManager&&) = delete;
@@ -72,6 +76,7 @@ class CMemoryManager {
     uint32_t m_ramSize;
     std::map<MemoryTAG, uint32_t> m_reservedMemory;
     bool m_dacStreamMode;
+    bool m_zeroCopy = false;
 };
 
 }  // namespace uio_lib

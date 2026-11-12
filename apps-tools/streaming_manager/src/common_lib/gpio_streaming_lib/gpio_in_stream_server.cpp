@@ -1,8 +1,9 @@
 #include "gpio_in_stream_server.h"
 
+#include <algorithm>
 #include <atomic>
-#include <cinttypes>
 #include <chrono>
+#include <cinttypes>
 #include <ctime>
 #include <filesystem>
 #include <mutex>
@@ -189,6 +190,9 @@ auto GPIOInStreamServer::Impl::fpgaWork() -> void {
 // Without a client the buffers are dropped here, as the ADC does
 auto GPIOInStreamServer::Impl::sendWork() -> void {
     uint64_t id = 0;
+    const int cpu = net_lib::pinSenderThread();
+    if (verbose && cpu >= 0)
+        aprintf(stdout, "[GPIO] Sender thread on CPU %d\n", cpu);
     try {
         while (run) {
             auto pack = ring->readBuffer();
@@ -199,14 +203,19 @@ auto GPIOInStreamServer::Impl::sendWork() -> void {
                 DataLib::GPIOHeader h;
                 if (DataLib::getHeaderGPIO(buffer, h))
                     DataLib::setHeaderGPIO(buffer, id, h);
-                net->sendSyncData(pack);
+                // back to the ring at once, or with zero copy once the kernel is done with it
+                auto r = ring;
+                net->sendSyncData(pack, [r]() { r->unlockBufferRead(); });
                 id++;
+            } else {
+                ring->unlockBufferRead();
             }
-            ring->unlockBufferRead();
         }
     } catch (std::exception& e) {
         ERROR_LOG("GPIOInStreamServer sender %s", e.what())
     }
+    if (net)
+        net->flushZeroCopy(std::chrono::milliseconds(500));
 }
 
 // The file mode: the ring into the file. The sample limit, a full disk or an error end the run.
@@ -365,6 +374,8 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
             });
         } else {
             p.net = net_lib::CAsioNet::create(net_lib::M_SERVER, options.host, NET_GPIO_IN_STREAMING_PORT, nullptr);
+            // the FPGA holds two packs, half the ring in flight at most leaves the rest free
+            p.net->setZeroCopy(memory->isZeroCopy(), std::max<size_t>(1, p.ring->ringSize() / 2));
             // the client is gone: nothing reads the input any more
             p.net->serverDisconnectNotify.connect([selfW](std::string&) {
                 if (auto impl = selfW.lock())
