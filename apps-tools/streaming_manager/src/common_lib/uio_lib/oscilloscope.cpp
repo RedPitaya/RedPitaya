@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <string>
+#include <thread>
 #include "logger_lib/file_logger.h"
 
 using namespace uio_lib;
@@ -272,13 +273,18 @@ auto COscilloscope::prepare() -> void {
     g_time = nanos;
 
     setRegister(m_OscMap, &(m_OscMap->dma_ctrl), UINT32_C(0x0000021E));
-    setRegister(m_OscMap, &(m_OscMap->event_sts), UINT32_C(0x00000002));
 
     // A slave in mode 0 starts its DMA on the daisy chain trigger. In the trigger mode the
     // trigger only starts the writing, so every board starts the DMA itself.
+    // The DMA first: its start resets the data FIFO for 32 clocks and the words that come in
+    // meanwhile are lost (112 samples at decimation 2 in 8 bit when the acquisition ran first).
+    // The read back makes sure the write arrived; the reset is over well within the wait.
     if (m_isMaster || m_trigMode) {
         setRegister(m_OscMap, &(m_OscMap->dma_ctrl), UINT32_C(0x00000001));
+        (void)*(volatile uint32_t*)&m_OscMap->dma_ctrl;
+        std::this_thread::sleep_for(std::chrono::microseconds(10));
     }
+    setRegister(m_OscMap, &(m_OscMap->event_sts), UINT32_C(0x00000002));
     m_running = true;
 }
 
