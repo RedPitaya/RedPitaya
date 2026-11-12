@@ -38,6 +38,10 @@ class CStreamSettings {
 
     ENUM(TriggerEdge, RISING = 0, "Rising", FALLING = 1, "Falling")
 
+    // How the ADC level window was given: CODE - adc_trigger_level_low/high as ADC codes,
+    // VOLT - a level and a hysteresis in volts, the codes follow the edge and the range
+    ENUM(LevelUnit, CODE = 0, "Code", VOLT = 1, "Volt")
+
     // The block whose start/stop/reset/trigger events a block follows (uio_lib EVENT_SRC_*);
     // OWN - its own events, the uio_lib default.
     ENUM(EventSource, OWN = -1, "Own", GEN_A = 0, "DAC A", GEN_B = 1, "DAC B", OSC1 = 2, "ADC 1", OSC2 = 3, "ADC 2", LA = 4, "GPIO")
@@ -123,6 +127,20 @@ class CStreamSettings {
     auto getADCTriggerLevelLow() const -> int32_t;
     auto setADCTriggerLevelHigh(int32_t _value) -> bool;
     auto getADCTriggerLevelHigh() const -> int32_t;
+    // The level window in volts: rising - armed below level - hysteresis, fires at the level;
+    // falling - armed above level + hysteresis, fires at the level. With the unit VOLT the codes
+    // (the getters above) follow from the volts and the full scale of the first input among the
+    // sources: 1 V at 1:1, 20 V at 1:20, the volts of the files; the FPGA compares the calibrated
+    // samples. With CODE the codes are the ones set. Every key keeps its own value: the order of
+    // the keys does not matter.
+    auto setADCTriggerLevelVolt(double _volts) -> bool;
+    auto getADCTriggerLevelVolt() const -> double;
+    auto setADCTriggerHysteresisVolt(double _volts) -> bool;
+    auto getADCTriggerHysteresisVolt() const -> double;
+    auto setADCTriggerLevelUnit(LevelUnit _unit) -> void;
+    auto getADCTriggerLevelUnit() const -> LevelUnit;
+    // The full scale in volts of the input that sets the codes
+    auto getADCTriggerFullScale() const -> double;
     auto setADCTriggerEdge(TriggerEdge _value) -> void;
     auto getADCTriggerEdge() const -> TriggerEdge;
     auto setADCEventSource(EventSource _value) -> void;
@@ -244,6 +262,9 @@ class CStreamSettings {
         uint32_t m_trigSources = 0;
         int32_t m_trigLevelLow = -4;  // the uio_lib defaults
         int32_t m_trigLevelHigh = 4;
+        LevelUnit m_trigUnit = LevelUnit::CODE;
+        double m_trigLevelV = 0;
+        double m_trigHystV = 0;
         TriggerEdge m_trigEdge = TriggerEdge::RISING;
         EventSource m_eventSource = EventSource::OWN;
         uint32_t m_trigBlocks = 0;  // 0 - continuous after the trigger

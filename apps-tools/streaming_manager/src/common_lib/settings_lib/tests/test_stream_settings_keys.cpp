@@ -297,3 +297,75 @@ TEST(StreamSettingsKeys, TheGpioOutputFileIsANameOnly) {
     EXPECT_FALSE(s.setValue("gpio_in_format_sd", "WAV")) << "the GPIO input has its own formats";
     EXPECT_FALSE(s.setValue("gpio_out_repeat", "DAC_REP_ON"));
 }
+
+// The level window in volts: with the unit VOLT the codes follow the volts, the edge and the
+// range of the first input among the sources (1 V at 1:1, 20 V at 1:20), as the volts of the files.
+TEST(StreamSettingsKeys, TheVoltsOfTheTriggerSetItsCodes) {
+    CStreamSettings s;
+    EXPECT_EQ(s.getValue("adc_trigger_level_unit"), "CODE");
+    ASSERT_TRUE(s.setValue("adc_trigger_sources", "4"));  // CH1
+    ASSERT_TRUE(s.setValue("adc_trigger_level_v", "0.25"));
+    ASSERT_TRUE(s.setValue("adc_trigger_hysteresis_v", "0.05"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_low"), "-4") << "the codes as set while the unit is CODE";
+    ASSERT_TRUE(s.setValue("adc_trigger_level_unit", "VOLT"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_low"), "6554");  // 0.20 V
+    EXPECT_EQ(s.getValue("adc_trigger_level_high"), "8192");  // 0.25 V
+
+    ASSERT_TRUE(s.setValue("adc_trigger_edge", "FALLING"));  // fires at the level coming down
+    EXPECT_EQ(s.getValue("adc_trigger_level_low"), "8192");
+    EXPECT_EQ(s.getValue("adc_trigger_level_high"), "9830");  // 0.30 V
+
+    ASSERT_TRUE(s.setValue("adc_trigger_edge", "RISING"));
+    ASSERT_TRUE(s.setValue("channel_attenuator_1", "A_1_20"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_low"), "328");
+    EXPECT_EQ(s.getValue("adc_trigger_level_high"), "410");
+    EXPECT_EQ(s.getValue("adc_trigger_level_v"), "0.25") << "the volts stay, the codes follow the range";
+
+    ASSERT_TRUE(s.setValue("adc_trigger_sources", "8"));  // CH2 first when CH1 is not a source
+    EXPECT_EQ(s.getValue("adc_trigger_level_high"), "8192");
+
+    // back to the codes: the ones set
+    ASSERT_TRUE(s.setValue("adc_trigger_level_unit", "CODE"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_low"), "-4");
+    EXPECT_EQ(s.getValue("adc_trigger_level_high"), "4");
+}
+
+TEST(StreamSettingsKeys, TheVoltsOfTheTriggerAreChecked) {
+    CStreamSettings s;
+    for (const char* bad : {"21", "-20.5", "abc", "", "1e400", "nan", "0.1x"})
+        EXPECT_FALSE(s.setValue("adc_trigger_level_v", bad)) << bad;
+    for (const char* bad : {"-0.01", "41", "inf"})
+        EXPECT_FALSE(s.setValue("adc_trigger_hysteresis_v", bad)) << bad;
+    EXPECT_FALSE(s.setValue("adc_trigger_level_unit", "MV"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_unit"), "CODE") << "a refused value changes nothing";
+    // codes beyond the range saturate
+    ASSERT_TRUE(s.setValue("adc_trigger_sources", "4"));
+    ASSERT_TRUE(s.setValue("adc_trigger_level_unit", "VOLT"));
+    ASSERT_TRUE(s.setValue("adc_trigger_level_v", "5"));
+    EXPECT_EQ(s.getValue("adc_trigger_level_high"), "32767");
+}
+
+// every key keeps its own value: any order of the keys gives the same settings
+TEST(StreamSettingsKeys, TheVoltsOfTheTriggerSurviveTheJsonAndAnyKeyOrder) {
+    CStreamSettings s;
+    ASSERT_TRUE(s.setValue("adc_trigger_sources", "4"));
+    ASSERT_TRUE(s.setValue("adc_trigger_level_unit", "VOLT"));
+    ASSERT_TRUE(s.setValue("adc_trigger_level_v", "-0.125"));
+    ASSERT_TRUE(s.setValue("adc_trigger_hysteresis_v", "0.0625"));
+    CStreamSettings t;
+    ASSERT_TRUE(t.parseJson(s.toJson()));
+    EXPECT_EQ(t.getValue("adc_trigger_level_unit"), "VOLT");
+    EXPECT_EQ(t.getValue("adc_trigger_level_v"), "-0.125");
+    EXPECT_EQ(t.getValue("adc_trigger_hysteresis_v"), "0.0625");
+    EXPECT_EQ(t.getValue("adc_trigger_level_low"), s.getValue("adc_trigger_level_low"));
+    EXPECT_EQ(t.toJson(), s.toJson());
+    const char* keys[] = {"adc_trigger_sources", "adc_trigger_level_low", "adc_trigger_level_high", "adc_trigger_level_unit", "adc_trigger_level_v",
+                          "adc_trigger_hysteresis_v"};
+    CStreamSettings forward, backward;
+    for (auto* k : keys)
+        ASSERT_TRUE(forward.setValue(k, s.getValue(k))) << k;
+    for (int i = 5; i >= 0; i--)
+        ASSERT_TRUE(backward.setValue(keys[i], s.getValue(keys[i]))) << keys[i];
+    EXPECT_EQ(forward.toJson(), s.toJson());
+    EXPECT_EQ(backward.toJson(), s.toJson());
+}

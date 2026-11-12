@@ -1,4 +1,7 @@
 #include "stream_settings.h"
+#include <cmath>
+#include <algorithm>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -54,6 +57,29 @@ auto to_int(char const* s) -> int32_t {
     if (negative ? magnitude > uint64_t{1} << 31 : magnitude > std::numeric_limits<int32_t>::max())
         throw std::out_of_range("value does not fit in 32 bits");
     return negative ? static_cast<int32_t>(-static_cast<int64_t>(magnitude)) : static_cast<int32_t>(magnitude);
+}
+
+// Decimal floating point, the whole string; no inf/nan.
+auto to_double(char const* s) -> double {
+    if (s == NULL || *s == 0)
+        throw std::invalid_argument("empty value");
+    char* end = nullptr;
+    const double v = std::strtod(s, &end);
+    if (end == s || *end != 0 || !std::isfinite(v))
+        throw std::invalid_argument("not a number");
+    return v;
+}
+
+auto to_string_v(double v) -> std::string {
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%.6g", v);
+    return buf;
+}
+
+// volts of an input of full scale fs to a 16 bit code, saturated
+auto voltsToCode(double volts, double fs) -> int32_t {
+    const double c = std::round(volts / fs * 32768.0);
+    return static_cast<int32_t>(std::clamp(c, -32768.0, 32767.0));
 }
 
 }  // namespace
@@ -139,7 +165,10 @@ auto CStreamSettings::toJson() const -> std::string {
     adc_config["adc_trigger_mode"] = getADCTriggerMode().name();
     adc_config["adc_trigger_sources"] = getADCTriggerSources();
     adc_config["adc_trigger_level_low"] = getADCTriggerLevelLow();
-    adc_config["adc_trigger_level_high"] = getADCTriggerLevelHigh();
+    adc_config["adc_trigger_level_high"] = getADCTriggerLevelHigh();  // with VOLT the ones the volts make
+    adc_config["adc_trigger_level_unit"] = getADCTriggerLevelUnit().name();
+    adc_config["adc_trigger_level_v"] = getADCTriggerLevelVolt();
+    adc_config["adc_trigger_hysteresis_v"] = getADCTriggerHysteresisVolt();
     adc_config["adc_trigger_edge"] = getADCTriggerEdge().name();
     adc_config["adc_event_source"] = getADCEventSource().name();
     adc_config["adc_trigger_blocks"] = getADCTriggerBlocks();
@@ -292,6 +321,12 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setADCTriggerLevelHigh(adc_config["adc_trigger_level_high"].asInt());
         if (adc_config.isMember("adc_trigger_edge"))
             setADCTriggerEdge(TriggerEdge::from_string(adc_config["adc_trigger_edge"].asString()));
+        if (adc_config.isMember("adc_trigger_level_unit"))
+            setADCTriggerLevelUnit(LevelUnit::from_string(adc_config["adc_trigger_level_unit"].asString()));
+        if (adc_config.isMember("adc_trigger_level_v"))
+            setADCTriggerLevelVolt(adc_config["adc_trigger_level_v"].asDouble());
+        if (adc_config.isMember("adc_trigger_hysteresis_v"))
+            setADCTriggerHysteresisVolt(adc_config["adc_trigger_hysteresis_v"].asDouble());
         if (adc_config.isMember("adc_event_source"))
             setADCEventSource(EventSource::from_string(adc_config["adc_event_source"].asString()));
         if (adc_config.isMember("adc_trigger_blocks"))
@@ -741,7 +776,21 @@ auto CStreamSettings::setADCTriggerLevelLow(int32_t _value) -> bool {
     return true;
 }
 
+auto CStreamSettings::getADCTriggerFullScale() const -> double {
+    // the inputs among the sources: CH1 (bit 2), CH2 (bit 3); on the 4-input board CH3, CH4 take bits 0, 1
+    const uint32_t s = m_adcsettings.m_trigSources;
+    const int order[4][2] = {{4, 1}, {8, 2}, {1, 3}, {2, 4}};
+    for (auto& o : order)
+        if (s & o[0])
+            return getADCAttenuator(o[1]) == Attenuator::A_1_20 ? 20.0 : 1.0;
+    return getADCAttenuator(1) == Attenuator::A_1_20 ? 20.0 : 1.0;
+}
+
 auto CStreamSettings::getADCTriggerLevelLow() const -> int32_t {
+    if (m_adcsettings.m_trigUnit == LevelUnit::VOLT) {
+        const double l = m_adcsettings.m_trigLevelV, h = m_adcsettings.m_trigHystV;
+        return voltsToCode(m_adcsettings.m_trigEdge == TriggerEdge::RISING ? l - h : l, getADCTriggerFullScale());
+    }
     return m_adcsettings.m_trigLevelLow;
 }
 
@@ -753,7 +802,42 @@ auto CStreamSettings::setADCTriggerLevelHigh(int32_t _value) -> bool {
 }
 
 auto CStreamSettings::getADCTriggerLevelHigh() const -> int32_t {
+    if (m_adcsettings.m_trigUnit == LevelUnit::VOLT) {
+        const double l = m_adcsettings.m_trigLevelV, h = m_adcsettings.m_trigHystV;
+        return voltsToCode(m_adcsettings.m_trigEdge == TriggerEdge::RISING ? l : l + h, getADCTriggerFullScale());
+    }
     return m_adcsettings.m_trigLevelHigh;
+}
+
+// 20 V is the widest range; a window beyond the range of the chosen input saturates its codes
+auto CStreamSettings::setADCTriggerLevelVolt(double _volts) -> bool {
+    if (!std::isfinite(_volts) || std::fabs(_volts) > 20.0)
+        return false;
+    m_adcsettings.m_trigLevelV = _volts;
+    return true;
+}
+
+auto CStreamSettings::getADCTriggerLevelVolt() const -> double {
+    return m_adcsettings.m_trigLevelV;
+}
+
+auto CStreamSettings::setADCTriggerHysteresisVolt(double _volts) -> bool {
+    if (!std::isfinite(_volts) || _volts < 0 || _volts > 40.0)
+        return false;
+    m_adcsettings.m_trigHystV = _volts;
+    return true;
+}
+
+auto CStreamSettings::getADCTriggerHysteresisVolt() const -> double {
+    return m_adcsettings.m_trigHystV;
+}
+
+auto CStreamSettings::setADCTriggerLevelUnit(LevelUnit _unit) -> void {
+    m_adcsettings.m_trigUnit = _unit;
+}
+
+auto CStreamSettings::getADCTriggerLevelUnit() const -> LevelUnit {
+    return m_adcsettings.m_trigUnit;
 }
 
 auto CStreamSettings::setADCTriggerEdge(TriggerEdge _value) -> void {
@@ -1126,6 +1210,19 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return setADCTriggerLevelHigh(to_int(value.c_str()));
         }
 
+        if (key == "adc_trigger_level_v") {
+            return setADCTriggerLevelVolt(to_double(value.c_str()));
+        }
+
+        if (key == "adc_trigger_hysteresis_v") {
+            return setADCTriggerHysteresisVolt(to_double(value.c_str()));
+        }
+
+        if (key == "adc_trigger_level_unit") {
+            setADCTriggerLevelUnit(LevelUnit::from_string(value));
+            return true;
+        }
+
         if (key == "adc_trigger_edge") {
             setADCTriggerEdge(TriggerEdge::from_string(value));
             return true;
@@ -1414,6 +1511,18 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
             return std::to_string(getADCTriggerLevelHigh());
         }
 
+        if (key == "adc_trigger_level_v") {
+            return to_string_v(getADCTriggerLevelVolt());
+        }
+
+        if (key == "adc_trigger_hysteresis_v") {
+            return to_string_v(getADCTriggerHysteresisVolt());
+        }
+
+        if (key == "adc_trigger_level_unit") {
+            return getADCTriggerLevelUnit().name();
+        }
+
         if (key == "adc_trigger_edge") {
             return getADCTriggerEdge().name();
         }
@@ -1645,6 +1754,12 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "adc_trigger_sources\t: " + sources;
     s += "adc_trigger_level_low\t: A signed integer value: -32768-32767, ADC codes. Must not be greater than adc_trigger_level_high.\n";
     s += "adc_trigger_level_high\t: A signed integer value: -32768-32767, ADC codes.\n";
+    s += "adc_trigger_level_unit\t: CODE or VOLT. CODE - the window is adc_trigger_level_low/high; VOLT - adc_trigger_level_v\n"
+         "\t\t\t  and adc_trigger_hysteresis_v: rising - armed below level - hysteresis, fires at the level; falling - armed\n"
+         "\t\t\t  above level + hysteresis. The codes follow the edge and the range (1 V at 1:1, 20 V at 1:20) of the first\n"
+         "\t\t\t  input among the sources; adc_trigger_level_low/high read them back.\n";
+    s += "adc_trigger_level_v\t: The level in volts, -20..20 (with the unit VOLT).\n";
+    s += "adc_trigger_hysteresis_v: The hysteresis in volts, 0..40 (with the unit VOLT).\n";
     s += "adc_trigger_edge\t: " + concat(CStreamSettings::TriggerEdge::names(), CStreamSettings::TriggerEdge::count) + "\n";
     s += "adc_event_source\t: " + events;
     s += "adc_trigger_blocks\t: An unsigned integer value: 0-65535. Blocks captured after a trigger, 0 - continuous.\n";

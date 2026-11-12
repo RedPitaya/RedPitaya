@@ -474,7 +474,8 @@ TEST(StreamSettings, GetHelpNamesEveryKeyTheKeyValueInterfaceAccepts) {
                             "gpio_pattern_neg_edge", "gpio_trigger_sources", "gpio_event_source", "gpio_in_trigger_mode",
                             "gpio_out_trigger_mode", "gpio_trigger_blocks", "gpio_in_pass_mode", "gpio_in_format_sd",
                             "gpio_in_samples_limit_sd", "gpio_out_pass_mode", "gpio_out_file_sd", "gpio_out_repeat",
-                            "gpio_out_repeat_count", "gpio_out_play_gaps", "dac_play_gaps"}) {
+                            "gpio_out_repeat_count", "gpio_out_play_gaps", "dac_play_gaps", "adc_trigger_level_v",
+                            "adc_trigger_hysteresis_v", "adc_trigger_level_unit"}) {
         EXPECT_NE(help.find(key), std::string::npos) << "missing key " << key;
     }
     for (int i = 1; i <= 4; i++) {
