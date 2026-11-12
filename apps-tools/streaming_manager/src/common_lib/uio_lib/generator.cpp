@@ -321,6 +321,10 @@ auto CGenerator::hasLoopMode() -> bool {
     return m_Map != nullptr && (m_Map->features & 0x1);
 }
 
+auto CGenerator::hasTriggerOutputs() -> bool {
+    return m_Map != nullptr && (m_Map->features & 0x2);
+}
+
 auto CGenerator::startLoop(uint32_t ch1, uint32_t ch2, uint32_t size, uint32_t count) -> void {
     const std::lock_guard lock(m_waitLock);
     // Normal mode with a reset, then buffer 1 and the repeats

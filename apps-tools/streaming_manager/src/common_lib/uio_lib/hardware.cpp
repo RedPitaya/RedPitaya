@@ -113,6 +113,7 @@ CHardware::CHardware(std::shared_ptr<IBoard> board) : m_pimpl(new Impl()) {
     if (p.gen) {
         p.features.dac = true;
         p.features.dacLoop = p.gen->hasLoopMode();
+        p.features.dacTriggerOutputs = p.gen->hasTriggerOutputs();
     }
     if (p.gpio) {
         p.features.gpio = true;

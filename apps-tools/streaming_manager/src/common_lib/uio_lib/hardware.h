@@ -142,6 +142,7 @@ struct HardwareFeatures {
     bool adcWaitCounter = false;
     bool dac = false;
     bool dacLoop = false;  // the DMA repeats a buffer itself
+    bool dacTriggerOutputs = false;  // a DAC channel starting fires TRIG_SRC_GEN_A/B
     bool gpio = false;
     bool gpioTriggerMode = false;  // output trigger mode
     bool gpioBlockMode = false;    // input trigger and block mode

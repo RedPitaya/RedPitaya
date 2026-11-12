@@ -113,6 +113,10 @@ auto CGenerator::hasLoopMode() -> bool {
     return false;
 }
 
+auto CGenerator::hasTriggerOutputs() -> bool {
+    return false;
+}
+
 auto CGenerator::startLoop(uint32_t, uint32_t, uint32_t, uint32_t) -> void {}
 
 auto CGenerator::isLoopDone() -> bool {

@@ -91,7 +91,8 @@ struct GeneratorMapT {
     uint32_t diag_reg3;  // 118  - offset 0x78
     uint32_t diag_reg4;  // 122  - offset 0x7C
     uint32_t reserv2[4];        // 128  - offset 0x80
-    uint32_t features;          // 144  - offset 0x90: bit 0 normal mode (buffer 1 repeated by the DMA)
+    uint32_t features;          // 144  - offset 0x90: bit 0 normal mode (buffer 1 repeated by the DMA),
+                                //        bit 1 trigger outputs (TRIG_SRC_GEN_A/B pulse when a channel starts)
     uint32_t loop_count;        // 148  - offset 0x94: repeats in the normal mode, 0 - until reset
     uint32_t loop_played_chA;   // 152  - offset 0x98: repeats read since the start
     uint32_t loop_played_chB;   // 156  - offset 0x9C
@@ -124,6 +125,9 @@ class CGenerator {
     // Normal mode: the DMA repeats buffer 1 itself, count times or (0) until stop(); start()
     // follows. Only when hasLoopMode(), an older FPGA has no such mode.
     auto hasLoopMode() -> bool;
+    // A channel that starts to play pulses its trigger on the bus (TRIG_SRC_GEN_A/B): the ADC,
+    // the GPIO and the other channel can start on it. Older FPGAs never fire these bits.
+    auto hasTriggerOutputs() -> bool;
     auto startLoop(uint32_t ch1, uint32_t ch2, uint32_t size, uint32_t count) -> void;
     // The last of the count repeats has been put out
     auto isLoopDone() -> bool;

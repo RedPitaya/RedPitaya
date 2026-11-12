@@ -1,4 +1,8 @@
+#include <cmath>
 #include <filesystem>
+#include <functional>
+#include <memory>
+#include <vector>
 #include <type_traits>
 
 // Platform/Hardware includes
@@ -10,8 +14,10 @@
 
 // Streaming/Config includes
 #include "session_lib/stream_session.h"
+#include "session_lib/trigger_commands.h"
 #include "streaming_lib/streaming_file.h"
 #include "board_lib/board.h"
+#include "rp_hw-profiles.h"
 #include "uio_lib/hardware.h"
 #include "uio_lib/oscilloscope.h"
 #include "uio_lib/uio_parser.h"
@@ -24,6 +30,8 @@
 
 void setConfig(bool _force);
 void updateUI();
+auto sendTriggerWindow() -> void;
+auto gpioFileList() -> std::string;
 
 // ============================================================================
 // Global variables
@@ -46,7 +54,9 @@ CBooleanParameter ss_start("SS_START", CBaseParameter::RW, false, 0);
 CBooleanParameter ss_use_localfile("SS_USE_FILE", CBaseParameter::RW, false, 0);
 CIntParameter ss_is_master("SS_IS_MASTER", CBaseParameter::RO, 0, 0, 0, 2);
 CStringParameter ss_ip_addr("SS_IP_ADDR", CBaseParameter::RW, "127.0.0.1", 0);
-CIntParameter ss_samples("SS_SAMPLES", CBaseParameter::RW, 20000000, 0, 0, 2000000000);
+// sample limits are 64 bit in the settings: a double holds every integer up to 2^53 exactly
+constexpr double kMaxSamples = 9007199254740992.0;
+CDoubleParameter ss_samples("SS_SAMPLES", CBaseParameter::RW, 20000000, 0, 0, kMaxSamples);
 CIntParameter ss_channels("SS_CHANNEL", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_resolution("SS_RESOLUTION", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_calib("SS_USE_CALIB", CBaseParameter::RW, 1, 0, 0, 1);
@@ -70,7 +80,7 @@ CStringParameter ss_dac_file("SS_DAC_FILE", CBaseParameter::RW, "", 0);
 CIntParameter ss_dac_file_ctr("SS_DAC_FILE_CTR", CBaseParameter::RW, 0, 0, 0, 100);
 CIntParameter ss_dac_status("SS_DAC_STATUS", CBaseParameter::RW, 1, 0, 0, 100);
 CBooleanParameter ss_dac_data_pass("SS_DAC_DATA_PASS", CBaseParameter::RW, false, 0);
-CIntParameter ss_dac_file_type("SS_DAC_FILE_TYPE", CBaseParameter::RW, 0, 0, 0, 1);
+CIntParameter ss_dac_file_type("SS_DAC_FILE_TYPE", CBaseParameter::RW, 0, 0, 0, 2);
 CIntParameter ss_dac_gain("SS_DAC_GAIN", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_dac_mode("SS_DAC_MODE", CBaseParameter::RW, 0, 0, 0, 1);
 CIntParameter ss_dac_speed("SS_DAC_HZ", CBaseParameter::RW, g_dacRate, 0, 1.0 / (65536.0 / g_dacRate) + 1.0, g_dacRate);
@@ -85,6 +95,8 @@ CIntParameter ss_adc_channels("SS_ADC_CHANNELS", CBaseParameter::RO, g_info.adcC
 CIntParameter ss_dac_channels("SS_DAC_CHANNELS", CBaseParameter::RO, g_info.dacChannels, 0, 0, 10);
 CBooleanParameter ss_ac_dc_enable("SS_IS_AC_DC", CBaseParameter::RO, g_info.adcACDC, 0);
 CBooleanParameter ss_dac_gain_enable("SS_IS_DAC_GAIN", CBaseParameter::RO, g_info.dacGain, 0);
+// the inputs have two ranges (1:1 and 1:20): the page shows the range switch only then
+CBooleanParameter ss_attenuator_enable("SS_IS_ATTENUATOR", CBaseParameter::RO, g_info.adcRanges, 0);
 
 // ============================================================================
 // Statistics parameters
@@ -115,6 +127,114 @@ CBooleanParameter mem_gpio_out_size_valid("MM_GPIO_OUT_VALID", CBaseParameter::R
 CBooleanParameter ss_gpio_start("SS_GPIO_START", CBaseParameter::RW, false, 0);
 CIntParameter ss_gpio_status("SS_GPIO_STATUS", CBaseParameter::RW, 1, 0, 0, 100);
 CBooleanParameter ss_gpio_data_pass("SS_GPIO_DATA_PASS", CBaseParameter::RW, false, 0);
+// the output: start/stop and the state (codes as SS_GPIO_STATUS)
+CBooleanParameter ss_gpio_out_start("SS_GPIO_OUT_START", CBaseParameter::RW, false, 0);
+CIntParameter ss_gpio_out_status("SS_GPIO_OUT_STATUS", CBaseParameter::RW, 0, 0, 0, 100);
+// "<current file>*<file 1>\n<file 2>..." of the GPIO directory, like SS_DAC_FILE
+CStringParameter ss_gpio_out_file("SS_GPIO_OUT_FILE", CBaseParameter::RW, "", 0);
+
+// ============================================================================
+// Triggers: the settings of the ADC, DAC and GPIO triggers and of the external input. Every
+// one is a plain integer of the settings (enums as their values); a refused value is answered
+// with the one the settings keep.
+// ============================================================================
+
+// command: 1 software trigger of the ADC, 2 of the DAC, 3 of the GPIO
+CIntParameter ss_soft_trigger("SS_SOFT_TRIGGER", CBaseParameter::RW, 0, 0, 0, 3);
+// the trigger status of the FPGA blocks as JSON (TriggerStatus::toJson), sent when it changes
+CStringParameter ss_trigger_status("SS_TRIGGER_STATUS", CBaseParameter::RO, "", 0);
+// the ADC level window in volts (settings adc_trigger_level_v / adc_trigger_hysteresis_v): the
+// codes SS_TRIG_LEVEL_LOW/HIGH follow from them, the edge and the range of the first chosen input
+CDoubleParameter ss_trig_level_v("SS_TRIG_LEVEL_V", CBaseParameter::RW, 0, 0, -20, 20);
+CDoubleParameter ss_trig_hyst_v("SS_TRIG_HYST_V", CBaseParameter::RW, 0, 0, 0, 40);
+
+// the settings as a whole. Command: 1 - back to the defaults, 2 - send them as JSON in
+// SS_SETTINGS_JSON. A JSON written to SS_SETTINGS_JSON is applied like a client's; the answer of
+// both is SS_SETTINGS_RESULT: 1 applied, 2 refused (the settings stay as they were)
+CIntParameter ss_settings_cmd("SS_SETTINGS_CMD", CBaseParameter::RW, 0, 0, 0, 2);
+CStringParameter ss_settings_json("SS_SETTINGS_JSON", CBaseParameter::RW, "", 0);
+CIntParameter ss_settings_result("SS_SETTINGS_RESULT", CBaseParameter::RW, 0, 0, 0, 2);
+
+// the sample limit of the GPIO input file (gpio_in_samples_limit_sd, 64 bit), 0 - until the stop
+CDoubleParameter ss_gpio_in_samples("SS_GPIO_IN_SAMPLES", CBaseParameter::RW, 0, 0, 0, kMaxSamples);
+
+// the board for the strip of the page: the profile's model name and the MAC of eth0
+CStringParameter ss_board_model("SS_BOARD_MODEL", CBaseParameter::RO, "", 0);
+CStringParameter ss_board_mac("SS_BOARD_MAC", CBaseParameter::RO, "", 0);
+
+// capabilities of the bitstream
+CBooleanParameter ss_gpio_enable("SS_GPIO_IS_ENABLE", CBaseParameter::RO, false, 0);
+CBooleanParameter ss_dac_trig_outputs("SS_DAC_TRIG_OUTPUTS", CBaseParameter::RO, false, 0);
+CBooleanParameter ss_ext_trig_enable("SS_EXT_TRIG_IS_ENABLE", CBaseParameter::RO, false, 0);
+
+// rp_sdk registers a parameter by its address: every one is built once in its final place
+struct IntSetting {
+    CIntParameter param;
+    std::function<bool(CStreamSettings&, int)> set;
+    std::function<int(const CStreamSettings&)> get;
+};
+
+template <typename E>
+auto en(int v) -> E {
+    return static_cast<typename E::_enumerated>(v);
+}
+
+#define SETTING(NAME, LO, HI, SET, GET)                                                                                          \
+    std::unique_ptr<IntSetting>(new IntSetting{CIntParameter(NAME, CBaseParameter::RW, LO, 0, LO, HI),                                \
+                                               [](CStreamSettings& s, int v) -> bool { SET; }, [](const CStreamSettings& s) -> int { return GET; }})
+
+using SS = CStreamSettings;
+std::vector<std::unique_ptr<IntSetting>> g_settings = [] {
+    std::vector<std::unique_ptr<IntSetting>> t;
+    t.reserve(48);
+    // ADC trigger
+    t.push_back(SETTING("SS_TRIG_MODE", 0, 1, s.setADCTriggerMode(en<SS::State>(v)); return true, (int)s.getADCTriggerMode()));
+    t.push_back(SETTING("SS_TRIG_SOURCES", 0, 63, return s.setADCTriggerSources(v), (int)s.getADCTriggerSources()));
+    t.push_back(SETTING("SS_TRIG_LEVEL_LOW", -32768, 32767, return s.setADCTriggerLevelLow(v), s.getADCTriggerLevelLow()));
+    t.push_back(SETTING("SS_TRIG_LEVEL_HIGH", -32768, 32767, return s.setADCTriggerLevelHigh(v), s.getADCTriggerLevelHigh()));
+    t.push_back(SETTING("SS_TRIG_LEVEL_UNIT", 0, 1, s.setADCTriggerLevelUnit(en<SS::LevelUnit>(v)); return true, (int)s.getADCTriggerLevelUnit()));
+    t.push_back(SETTING("SS_TRIG_EDGE", 0, 1, s.setADCTriggerEdge(en<SS::TriggerEdge>(v)); return true, (int)s.getADCTriggerEdge()));
+    t.push_back(SETTING("SS_TRIG_EVENT", -1, 4, s.setADCEventSource(en<SS::EventSource>(v)); return true, (int)s.getADCEventSource()));
+    t.push_back(SETTING("SS_TRIG_BLOCKS", 0, 65535, return s.setADCTriggerBlocks(v), (int)s.getADCTriggerBlocks()));
+    t.push_back(SETTING("SS_TDMS_TIME", 0, 1, s.setTDMSTimeColumn(en<SS::State>(v)); return true, (int)s.getTDMSTimeColumn()));
+    // DAC trigger: bit 0 - OUT1 waits for a trigger, bit 1 - OUT2
+    t.push_back(SETTING("SS_DAC_TRIG_MODE", 0, 3, s.setDACTriggerMode(1, en<SS::State>(v & 1)); s.setDACTriggerMode(2, en<SS::State>((v >> 1) & 1)); return true,
+                        ((int)s.getDACTriggerMode(1) ? 1 : 0) | ((int)s.getDACTriggerMode(2) ? 2 : 0)));
+    t.push_back(SETTING("SS_DAC_TRIG_SOURCES", 0, 63, return s.setDACTriggerSources(v), (int)s.getDACTriggerSources()));
+    t.push_back(SETTING("SS_DAC_EVENT", -1, 4, s.setDACEventSource(en<SS::EventSource>(v)); return true, (int)s.getDACEventSource()));
+    t.push_back(SETTING("SS_DAC_PLAY_GAPS", 0, 1, s.setDACPlayGaps(en<SS::State>(v)); return true, (int)s.getDACPlayGaps()));
+    // external trigger input
+    t.push_back(SETTING("SS_EXT_COND", 0, 1, s.setExtTrigConditioner(en<SS::State>(v)); return true, (int)s.getExtTrigConditioner()));
+    t.push_back(SETTING("SS_EXT_EDGE", 0, 1, s.setExtTrigEdge(en<SS::TriggerEdge>(v)); return true, (int)s.getExtTrigEdge()));
+    t.push_back(SETTING("SS_EXT_DEBOUNCE", 0, 65535, return s.setExtTrigDebounce(v), (int)s.getExtTrigDebounce()));
+    t.push_back(SETTING("SS_EXT_DIO0", 0, 1, s.setExtTrigDio0(en<SS::State>(v)); return true, (int)s.getExtTrigDio0()));
+    // GPIO lines and sampling
+    t.push_back(SETTING("SS_GPIO_OUTPUTS_P", 0, 255, return s.setGPIOOutputsP(v), (int)s.getGPIOOutputsP()));
+    t.push_back(SETTING("SS_GPIO_OUTPUTS_N", 0, 255, return s.setGPIOOutputsN(v), (int)s.getGPIOOutputsN()));
+    t.push_back(SETTING("SS_GPIO_POLARITY", 0, 65535, return s.setGPIOPolarity(v), (int)s.getGPIOPolarity()));
+    t.push_back(SETTING("SS_GPIO_DECIMATION", 1, 131072, return s.setGPIODecimation(v), (int)s.getGPIODecimation()));
+    t.push_back(SETTING("SS_GPIO_RLE", 0, 1, s.setGPIORLE(en<SS::State>(v)); return true, (int)s.getGPIORLE()));
+    t.push_back(SETTING("SS_GPIO_OUT_STEP", 1, 131072, return s.setGPIOOutStep(v), (int)s.getGPIOOutStep()));
+    // GPIO input trigger: the pattern (bit i - P i, bit 8 + i - N i) and the other sources
+    t.push_back(SETTING("SS_GPIO_PAT_MASK", 0, 65535, return s.setGPIOPatternMask(v), (int)s.getGPIOPatternMask()));
+    t.push_back(SETTING("SS_GPIO_PAT_VALUE", 0, 65535, return s.setGPIOPatternValue(v), (int)s.getGPIOPatternValue()));
+    t.push_back(SETTING("SS_GPIO_PAT_POS", 0, 65535, return s.setGPIOPatternPosEdge(v), (int)s.getGPIOPatternPosEdge()));
+    t.push_back(SETTING("SS_GPIO_PAT_NEG", 0, 65535, return s.setGPIOPatternNegEdge(v), (int)s.getGPIOPatternNegEdge()));
+    t.push_back(SETTING("SS_GPIO_TRIG_SOURCES", 0, 63, return s.setGPIOTriggerSources(v), (int)s.getGPIOTriggerSources()));
+    t.push_back(SETTING("SS_GPIO_EVENT", -1, 4, s.setGPIOEventSource(en<SS::EventSource>(v)); return true, (int)s.getGPIOEventSource()));
+    t.push_back(SETTING("SS_GPIO_IN_TRIG_MODE", 0, 1, s.setGPIOInTriggerMode(en<SS::State>(v)); return true, (int)s.getGPIOInTriggerMode()));
+    t.push_back(SETTING("SS_GPIO_OUT_TRIG_MODE", 0, 1, s.setGPIOOutTriggerMode(en<SS::State>(v)); return true, (int)s.getGPIOOutTriggerMode()));
+    t.push_back(SETTING("SS_GPIO_TRIG_BLOCKS", 0, 65535, return s.setGPIOTriggerBlocks(v), (int)s.getGPIOTriggerBlocks()));
+    // GPIO file mode
+    t.push_back(SETTING("SS_GPIO_IN_MODE", 0, 1, s.setGPIOInPassMode(en<SS::PassMode>(v)); return true, (int)s.getGPIOInPassMode()));
+    t.push_back(SETTING("SS_GPIO_IN_FORMAT", 0, 2, s.setGPIOInFormat(en<SS::GPIOFormat>(v)); return true, (int)s.getGPIOInFormat()));
+    t.push_back(SETTING("SS_GPIO_OUT_MODE", 0, 1, s.setGPIOOutPassMode(en<SS::PassMode>(v)); return true, (int)s.getGPIOOutPassMode()));
+    t.push_back(SETTING("SS_GPIO_OUT_REPEAT", -2, 0, s.setGPIOOutRepeat(en<SS::GPIORepeat>(v)); return true, (int)s.getGPIOOutRepeat()));
+    t.push_back(SETTING("SS_GPIO_OUT_REPEAT_COUNT", 1, 2000000000, s.setGPIOOutRepeatCount(v); return true, (int)s.getGPIOOutRepeatCount()));
+    t.push_back(SETTING("SS_GPIO_OUT_PLAY_GAPS", 0, 1, s.setGPIOOutPlayGaps(en<SS::State>(v)); return true, (int)s.getGPIOOutPlayGaps()));
+    return t;
+}();
+#undef SETTING
 
 // ============================================================================
 // Global component pointers
@@ -199,6 +319,18 @@ auto rp_app_init(void) -> int {
         ss_dac_data_pass.SendValue(0);
         ss_gpio_status.SendValue(0);
         ss_gpio_data_pass.SendValue(0);
+        ss_gpio_out_status.SendValue(0);
+        {
+            char* model = nullptr;
+            ss_board_model.SendValue(rp_HPGetModelName(&model) == RP_HP_OK && model ? model : "Red Pitaya");
+            ss_board_mac.SendValue(g_info.mac);
+        }
+        if (g_hw) {
+            auto f = g_hw->features();
+            ss_gpio_enable.SendValue(f.gpio);
+            ss_dac_trig_outputs.SendValue(f.dacTriggerOutputs);
+            ss_ext_trig_enable.SendValue(f.extTrigger);
+        }
         updateUI();
 
 
@@ -274,7 +406,7 @@ void updateUI() {
     // Update DAC settings
     int dac_gain = 0;
     for (int i = 1; i <= 2; i++) {
-        dac_gain |= s.getDACGain(i) ? 1 << (1 - i) : 0;
+        dac_gain |= s.getDACGain(i) ? 1 << (i - 1) : 0;
     }
 
     ss_dac_file_type.SendValue(s.getDACFileType());
@@ -286,7 +418,7 @@ void updateUI() {
 
     // Update common settings
     ss_rate.SendValue(s.getADCDecimation());
-    ss_samples.SendValue(s.getADCSamples());
+    ss_samples.SendValue((double)s.getADCSamples());
     ss_calib.SendValue(s.getADCCalibration());
 
     // Update memory settings
@@ -296,6 +428,13 @@ void updateUI() {
     mem_gpio_in_size.SendValue(s.getGPIOInSize());
     mem_gpio_out_size.SendValue(s.getGPIOOutSize());
     sendMemoryValid();
+
+    for (auto& it : g_settings)
+        it->param.SendValue(it->get(s));
+    ss_gpio_out_file.SendValue(gpioFileList());
+    ss_trig_level_v.SendValue(s.getADCTriggerLevelVolt());
+    ss_trig_hyst_v.SendValue(s.getADCTriggerHysteresisVolt());
+    ss_gpio_in_samples.SendValue((double)s.getGPIOInSamples());
 }
 
 // A change of the page goes to the settings like a client's: checked, applied to the memory
@@ -309,6 +448,22 @@ auto change(F&& f) -> bool {
             return true;
         }
     });
+}
+
+auto sendTriggerWindow() -> void {
+    if (!g_session)
+        return;
+    const auto s = g_session->settings();
+    ss_trig_level_v.SendValue(s.getADCTriggerLevelVolt());
+    ss_trig_hyst_v.SendValue(s.getADCTriggerHysteresisVolt());
+    for (auto& it : g_settings)
+        if (std::string(it->param.GetName()) == "SS_TRIG_LEVEL_LOW" || std::string(it->param.GetName()) == "SS_TRIG_LEVEL_HIGH" ||
+            std::string(it->param.GetName()) == "SS_TRIG_LEVEL_UNIT")
+            it->param.SendValue(it->get(s));
+}
+
+auto gpioFileList() -> std::string {
+    return (g_session ? g_session->settings().getGPIOOutFile() : std::string()) + "*" + CStreamSettings::getGPIOFiles();
 }
 
 auto dacFileList() -> std::string {
@@ -405,7 +560,10 @@ void setConfig(bool _force) {
 
     if (ss_samples.IsNewValue() || _force) {
         ss_samples.Update();
-        change([&](CStreamSettings& s) { s.setADCSamples(ss_samples.Value()); });
+        const double v = ss_samples.Value();
+        if (v >= 0 && v == std::floor(v))  // a whole number of samples, 64 bit
+            change([&](CStreamSettings& s) { s.setADCSamples((uint64_t)v); });
+        ss_samples.SendValue((double)g_session->settings().getADCSamples());
         needUpdate = true;
     }
 
@@ -518,13 +676,75 @@ void setConfig(bool _force) {
         needUpdate = true;
     }
 
+    // triggers, the external input, GPIO: a refused value goes back to the page as the settings keep it
+    for (auto& it : g_settings) {
+        if (it->param.IsNewValue() || _force) {
+            it->param.Update();
+            const int value = it->param.Value();
+            change([&](CStreamSettings& s) { return it->set(s, value); });
+            it->param.SendValue(it->get(g_session->settings()));
+            needUpdate = true;
+        }
+    }
+
+    // the volts of the level window: both in one change, then the codes they make go back
+    if (ss_trig_level_v.IsNewValue() || ss_trig_hyst_v.IsNewValue() || _force) {
+        ss_trig_level_v.Update();
+        ss_trig_hyst_v.Update();
+        const double level = ss_trig_level_v.Value(), hyst = ss_trig_hyst_v.Value();
+        change([&](CStreamSettings& s) {
+            if (!s.setADCTriggerLevelVolt(level) || !s.setADCTriggerHysteresisVolt(hyst))
+                return false;
+            s.setADCTriggerLevelUnit(CStreamSettings::LevelUnit::VOLT);
+            return true;
+        });
+        needUpdate = true;
+    }
+
+    // the edge, the sources and the ranges move the codes of a window in volts: send it after any change
+    if (needUpdate)
+        sendTriggerWindow();
+
+    if (ss_gpio_in_samples.IsNewValue() || _force) {
+        ss_gpio_in_samples.Update();
+        const double v = ss_gpio_in_samples.Value();
+        if (v >= 0 && v == std::floor(v))
+            change([&](CStreamSettings& s) { s.setGPIOInSamples((uint64_t)v); });
+        ss_gpio_in_samples.SendValue((double)g_session->settings().getGPIOInSamples());
+        needUpdate = true;
+    }
+
+    if (ss_gpio_out_file.IsNewValue() || _force) {
+        ss_gpio_out_file.Update();
+        change([&](CStreamSettings& s) { return s.setGPIOOutFile(ss_gpio_out_file.Value()); });
+        ss_gpio_out_file.SendValue(gpioFileList());
+        needUpdate = true;
+    }
+
     g_pageChanges = false;
     if (needUpdate) {
         saveConfigInFile();
     }
 }
 
-void UpdateParams(void) {}
+void UpdateParams(void) {
+    try {
+        if (g_hw && g_session) {
+            static std::string last;
+            auto json = session_lib::triggerStatusOf(*g_hw).toJson();
+            if (json != last) {
+                last = json;
+                ss_trigger_status.SendValue(json);
+            }
+        }
+        if (g_session && g_adcFile) {
+            ss_pass_samples.SendValue(g_session->adcPassSamples());
+            ss_writed_size.SendValue(g_session->adcWrittenSize());
+        }
+    } catch (std::exception& e) {
+        ERROR_LOG("%s", e.what());
+    }
+}
 
 void UpdateParamsFromWeb(void) {
     try {
@@ -553,7 +773,60 @@ void UpdateParamsFromWeb(void) {
             }
         }
 
-        // the page starts the input only: the output plays what a client sends over the network
+        if (ss_settings_cmd.IsNewValue()) {
+            ss_settings_cmd.Update();
+            const int cmd = ss_settings_cmd.Value();
+            if (cmd == 1 && g_session) {
+                const bool ok = change([](CStreamSettings& s) { s.resetDefault(); });
+                if (ok)
+                    saveConfigInFile();
+                updateUI();
+                ss_settings_result.SendValue(ok ? 1 : 2);
+            }
+            if (cmd == 2 && g_session)
+                ss_settings_json.SendValue(g_session->settings().toJson());
+            ss_settings_cmd.SendValue(0);
+        }
+
+        if (ss_settings_json.IsNewValue()) {
+            ss_settings_json.Update();
+            const std::string json = ss_settings_json.Value();
+            bool ok = false;
+            if (g_session && !json.empty()) {
+                ok = change([&](CStreamSettings& s) { return s.parseJson(json); });
+                if (ok)
+                    saveConfigInFile();
+                updateUI();
+            }
+            ss_settings_result.SendValue(ok ? 1 : 2);
+        }
+
+        if (ss_gpio_out_start.IsNewValue()) {
+            ss_gpio_out_start.Update();
+            if (ss_gpio_out_start.Value() == 1) {
+                if (g_session)
+                    g_session->startGPIOOut();
+            } else if (g_session) {
+                g_session->stopGPIOOut(gpio_streaming_lib::GPIOStopReason::NORMAL);
+            }
+        }
+
+        // a command: answered by setting it back to 0, so the same trigger can come again
+        if (ss_soft_trigger.IsNewValue()) {
+            ss_soft_trigger.Update();
+            const int target = ss_soft_trigger.Value();
+            if (g_hw) {
+                auto f = g_hw->features();
+                if (target == 1 && f.adc)
+                    g_hw->adcSoftwareTrigger();
+                if (target == 2 && f.dac)
+                    g_hw->dacSoftwareTrigger();
+                if (target == 3 && f.gpio)
+                    g_hw->gpioSoftwareTrigger();
+            }
+            ss_soft_trigger.SendValue(0);
+        }
+
         if (ss_gpio_start.IsNewValue()) {
             ss_gpio_start.Update();
             if (ss_gpio_start.Value() == 1) {
@@ -564,11 +837,6 @@ void UpdateParamsFromWeb(void) {
             }
         }
 
-        // Update statistics
-        if (g_session && g_adcFile) {
-            ss_pass_samples.SendValue(g_session->adcPassSamples());
-            ss_writed_size.SendValue(g_session->adcWrittenSize());
-        }
     } catch (std::exception& e) {
         // an error of one request, not a reason to end the nginx worker
         ERROR_LOG("%s", e.what());
@@ -710,6 +978,38 @@ class WebCallback : public session_lib::SessionCallback {
         }
         ss_gpio_data_pass.SendValue(0);
         TRACE("Stop gpio input server");
+    }
+
+    void gpioOutStarted() override { ss_gpio_out_status.SendValue(1); }
+
+    void gpioOutStopped(gpio_streaming_lib::GPIOStopReason reason, uint64_t) override {
+        using R = gpio_streaming_lib::GPIOStopReason;
+        switch (reason) {
+            case R::NORMAL:
+            case R::DISCONNECTED:
+                ss_gpio_out_status.SendValue(0);
+                break;
+            case R::DONE:
+                ss_gpio_out_status.SendValue(3);
+                break;
+            case R::MEM_ERROR:
+                ss_gpio_out_status.SendValue(6);
+                break;
+            case R::MEM_MODIFY:
+                ss_gpio_out_status.SendValue(7);
+                break;
+            case R::BROKEN:
+                ss_gpio_out_status.SendValue(4);
+                break;
+            case R::SD_FULL:
+                ss_gpio_out_status.SendValue(2);
+                break;
+            case R::CONFIG_ERROR:
+            case R::MISSING_FILE:
+            case R::EMPTY:
+                ss_gpio_out_status.SendValue(8);
+                break;
+        }
     }
 };
 
