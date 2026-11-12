@@ -205,6 +205,19 @@ else()
     target_link_libraries(${CPP_PROJ} -static config_net_lib dac_streaming_lib converter_lib streaming_lib settings_lib data_lib logger_lib pthread wsock32 ws2_32)
 endif()
 
+if(NOT WIN32 AND NOT CMAKE_CROSSCOMPILING AND BUILD_UNIT_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+
+    ## The suite runs as part of the build, so a regression fails the build.
+    add_custom_target(rp_streaming_api_run_tests ALL
+        COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Running streaming_api unit tests (ctest) - the build fails if any test fails"
+        VERBATIM)
+    add_dependencies(rp_streaming_api_run_tests streaming_api_tests)
+endif()
+
 if(IS_INSTALL)
     install(TARGETS ${CPP_PROJ}
         RUNTIME DESTINATION ${INSTALL_DIR}/streaming/${CPP_PROJ}

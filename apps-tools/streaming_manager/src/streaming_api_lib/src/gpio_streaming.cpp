@@ -51,6 +51,8 @@ struct GPIOStreamClient::Impl {
     std::atomic<uint64_t> m_outWait{0};
     std::atomic<bool> m_inFile{false};   // the board writes the input to a file of its own
     std::atomic<bool> m_outFile{false};  // the board plays a file of its own
+    std::atomic<bool> m_inStarting{false};   // a start of the input waits for the board's answer
+    std::atomic<bool> m_outStarting{false};  // a start of the output waits for the board's answer
 
     std::vector<uint32_t> m_words;
     uint64_t m_repeat = 1;
@@ -74,6 +76,10 @@ class GPIOStreamClient::Impl::ConfigCb : public ConfigCallback {
         m_p->m_inTerminate = true;
         m_p->m_outTerminate = true;
     }
+    void gpioInServerStarted(ConfigStreamClient*, std::string host) override { beginInput(host); }
+    void gpioInServerStartedSD(ConfigStreamClient*, std::string host) override { beginInput(host); }
+    void gpioOutServerStarted(ConfigStreamClient*, std::string host) override { beginOutput(host); }
+    void gpioOutServerStartedSD(ConfigStreamClient*, std::string host) override { beginOutput(host); }
     void gpioInServerStopped(ConfigStreamClient*, std::string host) override { endInput(host); }
     void gpioInServerStoppedMemError(ConfigStreamClient*, std::string host) override { endInput(host); }
     void gpioInServerStoppedConfigError(ConfigStreamClient*, std::string host) override { endInput(host); }
@@ -87,6 +93,26 @@ class GPIOStreamClient::Impl::ConfigCb : public ConfigCallback {
     void gpioOutServerStoppedSDEmpty(ConfigStreamClient*, std::string host) override { endOutputFile(host, GPIO_FILE_EMPTY, 0); }
     void gpioOutServerStoppedSDBroken(ConfigStreamClient*, std::string host) override { endOutputFile(host, GPIO_FILE_BROKEN, 0); }
     void gpioOutServerStoppedSDMissing(ConfigStreamClient*, std::string host) override { endOutputFile(host, GPIO_FILE_MISSING, 0); }
+
+    // The board's answers come in order on the config connection: the start answer before the
+    // stop of the same session. The direction is armed here, at the start answer, and not after
+    // the start request returns: a file that ends right after the start (its stop comes while
+    // startInput()/startOutput() still waits) must not be armed again, or wait() never returns.
+    // A stop of an earlier session comes before the start answer and is dropped by it.
+    auto beginInput(const std::string& host) -> void {
+        if (host != m_p->m_inHost || !m_p->m_inStarting)
+            return;
+        m_p->m_inStopped = false;
+        m_p->m_inTerminate = false;
+    }
+
+    auto beginOutput(const std::string& host) -> void {
+        if (host != m_p->m_outHost || !m_p->m_outStarting)
+            return;
+        m_p->m_outWait = 0;
+        m_p->m_outStopped = false;
+        m_p->m_outTerminate = false;
+    }
 
     auto endInput(const std::string& host) -> void {
         if (host != m_p->m_inHost)
@@ -320,13 +346,15 @@ auto GPIOStreamClient::startInput(std::string host) -> bool {
         return false;
     }
     bool toFile = false;
-    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, false, p.m_verbose, &toFile)) {
+    p.m_inStarting = true;  // the start answer arms the input (ConfigCb::beginInput)
+    const bool started = requestStartGPIOStreamingCommon(p.m_configClient, host, false, p.m_verbose, &toFile);
+    p.m_inStarting = false;
+    if (!started) {
         aprintf(stderr, "%s Can't start the GPIO input of %s\n", getTS(": ").c_str(), host.c_str());
         return false;
     }
     p.m_inFile = toFile;
-    p.m_inStopped = false;
-    p.m_inTerminate = false;  // a stop reply of an earlier session may have come with the start
+    // m_inTerminate is not reset here: the board may have ended the input already
     if (toFile)
         p.m_input = std::thread(&Impl::runUntil, m_pimpl, std::ref(p.m_inTerminate));
     else
@@ -345,14 +373,15 @@ auto GPIOStreamClient::startOutput(std::string host) -> bool {
         return false;
     }
     bool toFile = false;
-    if (!requestStartGPIOStreamingCommon(p.m_configClient, host, true, p.m_verbose, &toFile)) {
+    p.m_outStarting = true;  // the start answer arms the output (ConfigCb::beginOutput)
+    const bool started = requestStartGPIOStreamingCommon(p.m_configClient, host, true, p.m_verbose, &toFile);
+    p.m_outStarting = false;
+    if (!started) {
         aprintf(stderr, "%s Can't start the GPIO output of %s\n", getTS(": ").c_str(), host.c_str());
         return false;
     }
     p.m_outFile = toFile;
-    p.m_outTerminate = false;
-    p.m_outStopped = false;
-    p.m_outWait = 0;
+    // m_outTerminate is not reset here: the board may have ended the output already
     if (toFile)
         p.m_output = std::thread(&Impl::runUntil, m_pimpl, std::ref(p.m_outTerminate));
     else
