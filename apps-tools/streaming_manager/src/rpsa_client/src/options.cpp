@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cerrno>
+#include <cstdint>
 #include <cstring>
 #include <strings.h>
 #include <ctime>
@@ -156,6 +157,25 @@ int get_int(int* value, const char* str, const char* message, int min_value, int
         fprintf(stderr, "%s: %s\n", message, str);
         return -1;
     }
+    return 0;
+}
+
+// Decimal digits only, 64 bit without an overflow, within [min_value, max_value]
+int get_uint64(uint64_t* value, const char* str, const char* message, uint64_t min_value, uint64_t max_value) {
+    uint64_t v = 0;
+    bool ok = str != NULL && *str != '\0';
+    for (auto p = str; ok && *p; ++p) {
+        const unsigned d = (unsigned)(*p - '0');
+        if (*p < '0' || *p > '9' || v > (UINT64_MAX - d) / 10)
+            ok = false;
+        else
+            v = v * 10 + d;
+    }
+    if (!ok || v < min_value || v > max_value) {
+        fprintf(stderr, "%s: %s\n", message, str ? str : "");
+        return -1;
+    }
+    *value = v;
     return 0;
 }
 
@@ -629,8 +649,8 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     break;
                 }
                 case 'l': {
-                    int samp = 0;
-                    if (get_int(&samp, optarg, "[ERROR] Wrong value of --limit (samples, 1-2147483647)", 1, 0x7FFFFFFF) != 0) {
+                    uint64_t samp = 0;
+                    if (get_uint64(&samp, optarg, "[ERROR] Wrong value of --limit (samples, 1-18446744073709551615)", 1, UINT64_MAX) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
@@ -827,8 +847,8 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                     break;
                 }
                 case 'l': {
-                    int samp = 0;
-                    if (get_int(&samp, optarg, "[ERROR] Wrong value of --limit (samples, 1-2147483647)", 1, 0x7FFFFFFF) != 0) {
+                    uint64_t samp = 0;
+                    if (get_uint64(&samp, optarg, "[ERROR] Wrong value of --limit (samples, 1-18446744073709551615)", 1, UINT64_MAX) != 0) {
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }

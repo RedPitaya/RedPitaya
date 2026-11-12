@@ -51,7 +51,7 @@ struct Options {
 
     StreamingType streamign_type{StreamingType::NONE};
     SaveType save_type{SaveType::NONE};
-    int samples{0};
+    uint64_t samples{0};  // per channel; 0 - no limit
     bool tdms_time{false};  // a TDMS column with the time of every sample
     std::string config_item_name{""};
     std::string config_item_value{""};

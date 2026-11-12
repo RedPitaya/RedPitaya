@@ -122,7 +122,7 @@ const char* kStream =
     "  -h, --hosts=IP[,IP]   the boards (default: the first board found)\n"
     "  -f, --format=FORMAT   tdms, wav, csv or bin (%P --help formats)\n"
     "  -d, --dir=DIR         where the files go (default: here)\n"
-    "  -l, --limit=SAMPLES   stop after this many samples per channel, 1-2147483647 (default: no limit)\n"
+    "  -l, --limit=SAMPLES   stop after this many samples per channel, 1-18446744073709551615 (default: no limit)\n"
     "  -m, --mode=MODE       raw   the ADC codes, 8 or 16 bit (default)\n"
     "                        volt  volts as floating point (wav: limited to -1..1)\n"
     "  -t, --timeout=MSEC    stop after this time, milliseconds or 10s, 2m (default: until Ctrl+C)\n"
