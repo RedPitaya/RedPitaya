@@ -426,6 +426,31 @@ auto StreamSession::create(uio_lib::CHardware::Ptr hw, const SessionOptions& opt
     p->options = options;
     const auto mode = hw->features().slave ? broadcast_lib::EMode::AB_SERVER_SLAVE : broadcast_lib::EMode::AB_SERVER_MASTER;
     p->config = std::make_shared<ServerNetConfigManager>(options.configFile, mode, options.host, options.configPort, hw->info().adcChannels);
+    {
+        const auto info = hw->info();
+        const auto features = hw->features();
+        BoardInfoMessage msg;
+        msg.model = info.model;
+        msg.mac = info.mac;
+        msg.master = !features.slave;
+        msg.adcChannels = info.adcChannels;
+        msg.dacChannels = info.dacChannels;
+        msg.adcRate = info.adcRate;
+        msg.dacRate = info.dacRate;
+        msg.adcBits = info.adcBits;
+        msg.adcRanges = info.adcRanges;
+        msg.adcACDC = info.adcACDC;
+        msg.dacGain = info.dacGain;
+        msg.adc = features.adc;
+        msg.adcBlockMode = features.adcBlockMode;
+        msg.dac = features.dac;
+        msg.dacTriggerOutputs = features.dacTriggerOutputs;
+        msg.gpio = features.gpio;
+        msg.extTrigger = features.extTrigger;
+        msg.memorySize = uio_lib::CMemoryManager::instance()->getRAMSize();
+        msg.memoryMaxBlock = uio_lib::CMemoryManager::instance()->getMaxBlockSize();
+        p->config->setBoardInfo(msg);
+    }
 
     // the directory of the ADC files (those of the DAC and the GPIO are made by settings_lib)
     const std::string adcDir = options.adcDir.empty() ? std::string(FILE_PATH) : options.adcDir;

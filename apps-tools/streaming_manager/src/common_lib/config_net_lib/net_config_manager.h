@@ -112,7 +112,11 @@ class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager>
         CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_DONE = 69,  // the file is played to its end
         CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_EMPTY = 70,
         CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_BROKEN = 71,
-        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING = 72
+        CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING = 72,
+
+        // response tag: BoardInfoMessage::toJson(), empty if the server has none to give
+        CS_REQUEST_BOARD_INFO = 73,
+        CS_RESPONSE_BOARD_INFO = 74
     };
 
     // Block that a software trigger is sent to; wire values like ECommands.
@@ -186,5 +190,6 @@ static_assert(CNetConfigManager::CS_RESPONSE_SERVER_MODE_SD == 45);
 static_assert(CNetConfigManager::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_CONFIG_ERROR == 57);
 static_assert(CNetConfigManager::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_CONFIG_ERROR == 63);
 static_assert(CNetConfigManager::CS_RESPONSE_GPIO_OUT_SERVER_STOPPED_SD_MISSING == 72);
+static_assert(CNetConfigManager::CS_RESPONSE_BOARD_INFO == 74);
 
 #endif

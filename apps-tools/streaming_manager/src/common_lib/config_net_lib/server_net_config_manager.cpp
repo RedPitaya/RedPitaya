@@ -153,6 +153,15 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
         }
     }
 
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_BOARD_INFO) {
+        std::string info;
+        {
+            std::lock_guard lock(m_boardInfoMtx);
+            info = m_boardInfo;
+        }
+        m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_BOARD_INFO, info);
+    }
+
     if (c == CNetConfigManager::ECommands::CS_REQUEST_GET_SERVER_MODE) {
         const auto mode = getSettings().getADCPassMode().value;
         if (mode == CStreamSettings::PassMode::FILE) {
@@ -431,6 +440,11 @@ auto ServerNetConfigManager::sendSoftwareTriggerDone(CNetConfigManager::ETrigger
 
 auto ServerNetConfigManager::sendSoftwareTriggerFail(CNetConfigManager::ETriggerTarget target) -> bool {
     return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_SOFTWARE_TRIGGER_FAIL, std::to_string(target));
+}
+
+auto ServerNetConfigManager::setBoardInfo(const BoardInfoMessage& info) -> void {
+    std::lock_guard lock(m_boardInfoMtx);
+    m_boardInfo = info.toJson();
 }
 
 auto ServerNetConfigManager::sendTriggerStatus(const TriggerStatus& status) -> bool {

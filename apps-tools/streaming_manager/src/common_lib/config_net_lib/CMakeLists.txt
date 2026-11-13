@@ -35,6 +35,7 @@ target_compile_definitions(${PROJECT_NAME}
     PUBLIC ASIO_STANDALONE)
 
 list(APPEND headers
+            ${PROJECT_SOURCE_DIR}/board_info.h
             ${PROJECT_SOURCE_DIR}/client_net_config_manager.h
             ${PROJECT_SOURCE_DIR}/config_apply.h
             ${PROJECT_SOURCE_DIR}/net_config_manager.h
@@ -43,6 +44,7 @@ list(APPEND headers
         )
 
 list(APPEND src
+            ${PROJECT_SOURCE_DIR}/board_info.cpp
             ${PROJECT_SOURCE_DIR}/client_net_config_manager.cpp
             ${PROJECT_SOURCE_DIR}/config_apply.cpp
             ${PROJECT_SOURCE_DIR}/net_config_manager.cpp

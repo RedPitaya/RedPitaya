@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <mutex>
+#include "board_info.h"
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
 #include "net_config_manager.h"
@@ -87,6 +88,8 @@ class ServerNetConfigManager {
     auto sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool;
     auto sendSoftwareTriggerFail(CNetConfigManager::ETriggerTarget target) -> bool;
     auto sendTriggerStatus(const TriggerStatus& status) -> bool;
+    // The answer to CS_REQUEST_BOARD_INFO; until it is set the server answers with an empty tag.
+    auto setBoardInfo(const BoardInfoMessage& info) -> void;
 
     auto sendConfigFileMissed() -> bool;
 
@@ -154,6 +157,8 @@ class ServerNetConfigManager {
     std::mutex m_settingsMtx;
     std::function<bool(const CStreamSettings&)> m_validator;
     uint8_t m_maxADCChannels = 0;
+    std::string m_boardInfo;
+    std::mutex m_boardInfoMtx;
 };
 
 #endif

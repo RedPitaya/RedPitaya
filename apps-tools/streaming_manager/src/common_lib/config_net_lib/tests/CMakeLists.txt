@@ -20,6 +20,7 @@ if(NOT TARGET GTest::gtest_main)
 endif()
 
 add_executable(config_net_lib_tests
+    test_board_info.cpp
     test_trigger_status.cpp
     test_net_config.cpp
     test_net_robustness.cpp

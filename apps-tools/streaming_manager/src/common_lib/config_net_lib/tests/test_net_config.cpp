@@ -342,6 +342,41 @@ TEST_F(NetConfig, NoTriggerStatusWithoutAHandler) {
     EXPECT_FALSE(got.load());
 }
 
+TEST_F(NetConfig, TheBoardInfoTravelsAsJson) {
+    BoardInfoMessage info;
+    info.model = 10;
+    info.adcChannels = 4;
+    info.dac = false;
+    info.gpio = true;
+    m_server->setBoardInfo(info);
+    connectClient();
+    std::mutex mutex;
+    bool got = false;
+    BoardInfoMessage received;
+    m_client->getBoardInfoNofiy.connect([&](std::string&, BoardInfoMessage i) {
+        std::lock_guard lock(mutex);
+        received = i;
+        got = true;
+    });
+    ASSERT_TRUE(m_client->requestBoardInfo(m_host));
+    ASSERT_TRUE(WaitFor([&] {
+        std::lock_guard lock(mutex);
+        return got;
+    }));
+    std::lock_guard lock(mutex);
+    EXPECT_EQ(received, info);
+}
+
+TEST_F(NetConfig, NoBoardInfoBeforeTheServerIsGivenOne) {
+    connectClient();
+    std::atomic<bool> failed{false}, got{false};
+    m_client->failBoardInfoNofiy.connect([&](std::string&) { failed = true; });
+    m_client->getBoardInfoNofiy.connect([&](std::string&, BoardInfoMessage) { got = true; });
+    ASSERT_TRUE(m_client->requestBoardInfo(m_host));
+    ASSERT_TRUE(WaitFor([&] { return failed.load(); }));
+    EXPECT_FALSE(got.load());
+}
+
 TEST_F(NetConfig, GpioStreamingWithoutAHandlerIsAConfigError) {
     connectClient();
     std::atomic<bool> error{false}, stopped{false};

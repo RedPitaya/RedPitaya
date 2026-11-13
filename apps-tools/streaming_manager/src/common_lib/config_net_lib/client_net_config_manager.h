@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <mutex>
+#include "board_info.h"
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "data_lib/signal.hpp"
 #include "net_config_manager.h"
@@ -72,6 +73,7 @@ class ClientNetConfigManager : public CStreamSettings {
     auto requestMemoryBlockSize(const std::string& host) -> bool;
     auto requestActiveChannels(const std::string& host) -> bool;
     auto requestTriggerStatus(const std::string& host) -> bool;
+    auto requestBoardInfo(const std::string& host) -> bool;
 
     auto removeHadlers() -> void;
 
@@ -130,6 +132,9 @@ class ClientNetConfigManager : public CStreamSettings {
     sigslot::signal<std::string&, TriggerStatus> getTriggerStatusNofiy;
     // The server has no status to give (no stream running, or a server without triggers).
     sigslot::signal<std::string&> failTriggerStatusNofiy;
+    sigslot::signal<std::string&, BoardInfoMessage> getBoardInfoNofiy;
+    // A server without the board info (an older one answers nothing at all).
+    sigslot::signal<std::string&> failBoardInfoNofiy;
 
     sigslot::signal<std::string&> serverModeTCPNofiy;
     sigslot::signal<std::string&> serverModeSDNofiy;
