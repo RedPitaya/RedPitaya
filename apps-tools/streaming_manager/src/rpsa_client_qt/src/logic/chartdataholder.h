@@ -3,6 +3,7 @@
 
 #include <QMap>
 #include <QObject>
+#include <atomic>
 #include <mutex>
 #include <thread>
 #include "data_lib/buffers_pack.h"
@@ -23,6 +24,10 @@ class ChartDataHolder : public QObject {
     Q_INVOKABLE bool getChartNeedUpdate(QString ip);
     Q_INVOKABLE void clearChartBuffer(QString ip);
 
+    // blocks a second and points across of the preview
+    auto setRate(int perSecond) -> void;
+    auto setPoints(int points) -> void;
+
    public slots:
 
    private:
@@ -35,8 +40,9 @@ class ChartDataHolder : public QObject {
     QMap<QString, uint64_t> m_packId;
 
     std::thread* m_chartThread;
-    bool m_IsWorkThread;
-    uint32_t m_chartWidth;
+    std::atomic<bool> m_IsWorkThread{false};
+    std::atomic<int> m_chartWidth{1000};
+    std::atomic<int> m_intervalMs{500};
     QMap<QString, QVector<qreal>> m_chartPoints[4];
     QList<QString> m_chartNeedDraw;
 };

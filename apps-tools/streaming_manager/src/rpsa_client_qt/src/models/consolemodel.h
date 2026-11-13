@@ -18,10 +18,12 @@ class ConsoleModel : public QAbstractListModel {
     auto deleteByIndex(int index) -> bool;
 
    public slots:
-    void addNewLine(QString str);
+    // level: 0 error, 1 warning, 2 normal, 3 detail
+    void addNewLine(QString str, int level = 2);
 
    private:
     QList<QString> m_lines;
+    QList<int> m_levels;
 };
 
 #endif  // CONSOLEMODEL_H

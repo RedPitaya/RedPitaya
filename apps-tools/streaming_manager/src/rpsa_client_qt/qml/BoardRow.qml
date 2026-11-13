@@ -1,0 +1,119 @@
+import QtQuick
+import QtQuick.Layouts
+import "ui"
+
+// A board as a row of the list (.srow); header: the column titles
+Item {
+    id: root
+    property var b
+    property bool header: false
+    property bool last: false
+    signal openSettings(string tab)
+
+    BoardStatus { id: s; b: root.b }
+    TextMetrics { id: longestState; font.pixelSize: Theme.fsSm; font.bold: true; text: "Taken by another client" }
+    readonly property var stats: b ? b.stats : ({})
+
+    implicitHeight: header ? 28 + Theme.fsAdd : 56 + Theme.fsAdd
+
+    RowLayout {
+        anchors.fill: parent
+        anchors.leftMargin: 10
+        anchors.rightMargin: 10
+        spacing: 12
+
+        // board
+        RowLayout {
+            Layout.preferredWidth: 260 + 8 * Theme.fsAdd; Layout.minimumWidth: 260 + 8 * Theme.fsAdd; Layout.maximumWidth: 260 + 8 * Theme.fsAdd
+            spacing: 10
+            Image {
+                visible: !root.header
+                source: s.running ? "qrc:/img/green_led.png" : "qrc:/img/red_led.png"
+                sourceSize: Qt.size(44, 44)
+                Layout.preferredWidth: 22; Layout.preferredHeight: 22
+            }
+            ColumnLayout {
+                spacing: 1
+                Layout.fillWidth: true
+                Text { text: root.header ? "BOARD" : (b ? b.name : ""); color: root.header ? Theme.muted : Theme.value; font.pixelSize: root.header ? Theme.fsXs : Theme.fsBase; font.bold: !root.header; elide: Text.ElideRight; Layout.fillWidth: true }
+                Label2 { visible: !root.header; kind: "hint"; text: (b ? b.model + " · " + b.ip : ""); wrapMode: Text.NoWrap; elide: Text.ElideRight; Layout.fillWidth: true }
+            }
+        }
+        Item {
+            Layout.preferredWidth: 80 + 4 * Theme.fsAdd; Layout.minimumWidth: 80 + 4 * Theme.fsAdd; Layout.maximumWidth: 80 + 4 * Theme.fsAdd
+            implicitHeight: 24
+            Text { visible: root.header; text: "ROLE"; color: Theme.muted; font.pixelSize: Theme.fsXs; anchors.verticalCenter: parent.verticalCenter }
+            Text { visible: !root.header; text: s.connected ? (b.isMaster ? "Master" : "Slave") : "-"; color: Theme.value; font.pixelSize: Theme.fsMd; anchors.verticalCenter: parent.verticalCenter }
+        }
+        Item {
+            // as wide as the longest state, the same in the header and in every row
+            Layout.preferredWidth: longestState.width + 44; Layout.minimumWidth: longestState.width + 44; Layout.maximumWidth: longestState.width + 44
+            implicitHeight: 24
+            Text { visible: root.header; text: "STATE"; color: Theme.muted; font.pixelSize: Theme.fsXs; anchors.verticalCenter: parent.verticalCenter }
+            Badge { id: stateBadge; visible: !root.header; text: s.stateText; kind: s.stateKind; anchors.verticalCenter: parent.verticalCenter }
+        }
+        Item {
+            Layout.preferredWidth: 180
+            Layout.fillWidth: true
+            implicitHeight: 36
+            Text { visible: root.header; text: "PREVIEW"; color: Theme.muted; font.pixelSize: Theme.fsXs; anchors.verticalCenter: parent.verticalCenter }
+            Rectangle {
+                visible: !root.header
+                anchors.fill: parent
+                color: Theme.plot
+                border.color: Theme.borderSoft
+                radius: Theme.radius
+                Preview {
+                    anchors.fill: parent
+                    anchors.margins: 1
+                    board: root.b
+                    grid: false
+                    channels: s.adcCount
+                    active: !root.header && b && b.chartEnable
+                }
+            }
+        }
+        Cell { title: "SPEED"; value: s.online ? Theme.bytes(stats.speed || 0) + "/s" : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
+        Cell { title: "RECEIVED"; value: s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
+        Cell { title: "LOST"; value: s.online ? Theme.count((stats.lostBoard || 0) + (stats.lostFile || 0)) : "-"; Layout.preferredWidth: 70 + 4 * Theme.fsAdd; Layout.minimumWidth: 70 + 4 * Theme.fsAdd; Layout.maximumWidth: 70 + 4 * Theme.fsAdd }
+        Row {
+            Layout.preferredWidth: 130 + 8 * Theme.fsAdd; Layout.minimumWidth: 130 + 8 * Theme.fsAdd; Layout.maximumWidth: 130 + 8 * Theme.fsAdd
+            layoutDirection: Qt.RightToLeft
+            spacing: 8
+            // takes its place in the header too: the columns line up
+            opacity: root.header ? 0 : 1
+            enabled: !root.header
+            Btn {
+                visible: s.online
+                kind: "outline"; iconSource: "qrc:/img/icons/sliders.svg"
+                implicitWidth: implicitHeight
+                Accessible.name: (b ? b.name : "") + " settings"
+                enabled: s.connected
+                onClicked: root.openSettings("adc")
+            }
+            Btn {
+                visible: s.online && (s.connected || s.running)
+                kind: s.running ? "danger" : "primary"
+                text: s.running ? "Stop" : "Start"
+                implicitWidth: 72
+                enabled: s.connected && s.st !== "stopping"
+                onClicked: s.running ? b.stopStreaming() : b.startStreaming()
+            }
+            Btn { visible: !s.online || !s.connected; kind: s.link === "taken" ? "primary" : "outline"; text: "Reconnect"; onClicked: b.reconnect() }
+        }
+    }
+    Rectangle {
+        visible: !root.last
+        anchors.bottom: parent.bottom
+        x: 10; width: parent.width - 20; height: 1
+        color: root.header ? "#777777" : Theme.borderSoft
+    }
+
+    component Cell: Item {
+        property string title: ""
+        property string value: ""
+        implicitHeight: 24
+        Text { visible: root.header; text: parent.title; color: Theme.muted; font.pixelSize: Theme.fsXs; anchors.verticalCenter: parent.verticalCenter }
+        Text { visible: !root.header; text: parent.value; color: Theme.value; font.family: Theme.mono; font.pixelSize: Theme.fsMd; anchors.verticalCenter: parent.verticalCenter; width: parent.width; elide: Text.ElideRight }
+    }
+}

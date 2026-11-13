@@ -1,847 +1,895 @@
 #include "board.h"
-#include <math.h>
-#include <QDateTime>
+#include <QDesktopServices>
+#include <QDir>
+#include <QFileInfo>
 #include <QQmlEngine>
+#include <QRegularExpression>
 #include <QSettings>
-#include <sstream>
+#include <QUrl>
+#include "asio.hpp"
 
+#include "src/app_settings.h"
 #include "src/logic/chartdataholder.h"
+#include "uio_lib/memory_manager.h"
 
-template <typename T>
-std::string to_string_with_precision(const T a_value, const int n = 6) {
-    std::ostringstream out;
-    out.precision(n);
-    out << std::fixed << a_value;
-    return out.str();
+namespace {
+
+const char* const DEFAULT_NAME_TEMPLATE = "{board}_{date}_{time}";
+
+auto pcSettings() -> QSettings {
+    return QSettings("RedPitaya", "rpsa_client_qt");
 }
 
-auto convertBtoS(uint64_t value) -> std::string {
-    double d = value;
-    std::string s = "";
-    if (value >= 1024 * 1024) {
-        d = round(((double)value * 1000.0) / (1024 * 1024)) / 1000;
-        s = to_string_with_precision(d, 3) + " MB";
-    } else if (value >= 1024) {
-        d = round(((double)value * 1000.0) / (1024)) / 1000;
-        s = to_string_with_precision(d, 3) + " kB";
-    } else {
-        s = std::to_string(value) + " B";
-    }
-    return s;
+auto formatExtension(const QString& format) -> QString {
+    const QString f = format.toLower();
+    return f == "tdms" ? ".tdms" : f == "bin" ? ".bin" : ".wav";
 }
 
-auto convertBtoST(uint64_t value) -> std::string {
-    std::string s = "";
-    auto h = value / (60 * 60 * 1000);
-    auto m = (value - h * 60 * 60 * 1000) / (60 * 1000);
-    auto sec = (value - h * 60 * 60 * 1000 - m * 60 * 1000) / (1000);
-    auto ms = value % 1000;
-    s = std::to_string(h) + ":" + std::to_string(m) + ":" + std::to_string(sec) + "." + std::to_string(ms);
-    return s;
-}
+}  // namespace
 
-auto convertBtoSpeed(uint64_t value, uint64_t time) -> std::string {
-    double d = value;
-    double t = time;
-    t = t / 1000;
-    d = d / t;
-    std::string s = "";
-    if (value >= 1024 * 1024) {
-        d = round(((double)d * 1000.0) / (1024 * 1024)) / 1000;
-        s = to_string_with_precision(d, 3) + " MB/s";
-    } else if (value >= 1024) {
-        d = round(((double)d * 1000.0) / (1024)) / 1000;
-        s = to_string_with_precision(d, 3) + " kB/s";
-    } else {
-        s = std::to_string(d) + " B/s";
-    }
-    return s;
-}
-
-CBoard::CBoard(QString ip)
-    : QObject{nullptr},
-      m_offlineTimer(nullptr),
-      m_IsOnline(false),
-      m_ip(ip),
-      m_lastOnline(0),
-      m_mode(broadcast_lib::AB_NONE),
-      m_chartEnable(false),
-      m_isADCStarted(false),
-      m_testMode(false),
-      m_adcChannels(2),
-      m_IsACDC(false),
-      m_IsAttenuator(false) {
-    QSettings setting("RedPitaya", "rpsa_cient_qt_" + m_ip);
-    m_chartEnable = setting.value("chartEnable", false).toBool();
-    m_testMode = setting.value("testMode", false).toBool();
-
+CBoard::CBoard(QString ip, bool manual) : QObject{nullptr}, m_ip(ip), m_manual(manual) {
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
+    m_chartEnable = pcValue("preview").toBool();
+
     m_offlineTimer = new QTimer(this);
-    connect(m_offlineTimer, &QTimer::timeout, this, QOverload<>::of(&CBoard::updateOffline));
-    m_offlineTimer->start(10000);
+    connect(m_offlineTimer, &QTimer::timeout, this, &CBoard::updateOffline);
+    m_offlineTimer->start(2000);
+
+    // the settings connection again while the board is away or its application is not running;
+    // not when another client took the board: the two would take it from each other for ever
+    m_reconnectTimer = new QTimer(this);
+    connect(m_reconnectTimer, &QTimer::timeout, this, [this]() {
+        if (m_autoReconnect && !m_configManager->isConnected(m_ip.toStdString()) && (m_manual || m_broadcastOnline))
+            connectConfig();
+    });
+    m_reconnectTimer->start(5000);
+
+    m_statTimer = new QTimer(this);
+    connect(m_statTimer, &QTimer::timeout, this, &CBoard::updateSpeed);
+    m_statTimer->start(500);
+
+    m_trigTimer = new QTimer(this);
+    connect(m_trigTimer, &QTimer::timeout, this, &CBoard::pollTrigger);
+    m_trigTimer->start(1000);
+
     m_configManager = new ClientNetConfigManager("", false);
-
-    m_configManager->serverConnectedNofiy.connect(&CBoard::configManagerConnected, this);
-    m_configManager->errorNofiy.connect(&CBoard::configMangerError, this);
-    m_configManager->getNewSettingsNofiy.connect(&CBoard::getNewSettings, this);
-    m_configManager->successSendConfigNofiy.connect(&CBoard::sendSettings, this);
-
-    m_configManager->serverStartedTCPNofiy.connect([=](auto host) {
-        addLog("Streaming started");
-        m_configManager->requestMemoryBlockSize(host);
-    });
-
-    m_configManager->serverStartedSDNofiy.connect([=](auto host) {
-        addLog("Streaming started in SD mode");
-        m_configManager->sendADCFPGAStart(m_ip.toStdString());
-    });
-
-    m_configManager->serverStoppedNofiy.connect([=](auto host) {
-        addLog("Streaming stopped");
-        m_isADCStarted = false;
-        ChartDataHolder::instance()->removeRP(ip);
-        Q_EMIT isADCStartedChanged();
-    });
-
-    m_configManager->serverStoppedMemErrorNofiy.connect([=](auto host) {
-        addLog("Streaming stopped. Not enough DMA memory.");
-        m_isADCStarted = false;
-        ChartDataHolder::instance()->removeRP(ip);
-        Q_EMIT isADCStartedChanged();
-    });
-
-    m_configManager->serverStoppedMemModifyNofiy.connect([=](auto host) {
-        addLog("Streaming stopped. The memory manager has changed.");
-        m_isADCStarted = false;
-        ChartDataHolder::instance()->removeRP(ip);
-        Q_EMIT isADCStartedChanged();
-    });
-
-    m_configManager->serverStoppedNoActiveChannelsNofiy.connect([=](auto host) {
-        addLog("Streaming stopped. No active channels.");
-        m_isADCStarted = false;
-        ChartDataHolder::instance()->removeRP(ip);
-        Q_EMIT isADCStartedChanged();
-    });
-
-    m_configManager->getMemBlockSizeNofiy.connect([=](auto host, auto size) {
-        addLog(" Memory block size of " + QString::fromStdString(size));
-        m_blockSize = std::stoi(size);
-        m_configManager->requestActiveChannels(host);
-    });
-
-    m_configManager->getActiveChannelsNofiy.connect([=](auto host, auto channels) {
-        addLog(" Active channels " + QString::fromStdString(channels.format().c_str()));
-        m_activeChannels = channels;
-        createStreaming();
-        ChartDataHolder::instance()->regRP(ip);
-        Q_EMIT updateSaveFileName();
-    });
-
-    m_configManager->serverStoppedSDFullNofiy.connect([=](auto host) {
-        addLog("Streaming stopped SD FULL");
-        m_isADCStarted = false;
-        Q_EMIT isADCStartedChanged();
-    });
-
-    m_configManager->serverStoppedSDDoneNofiy.connect([=](auto host) {
-        addLog("Streaming stopped SD mode done");
-        m_isADCStarted = false;
-        Q_EMIT isADCStartedChanged();
-    });
-
-    m_configManager->startADCDoneNofiy.connect([=](auto host) {
-        addLog("ADC started");
-        m_isADCStarted = true;
-        Q_EMIT isADCStartedChanged();
-    });
-
-    std::vector ipList{ip.toStdString()};
-    m_configManager->connectToServers(ipList, NET_CONFIG_PORT);
-}
-
-auto CBoard::addLog(QString msg) -> void {
-    QMetaObject::invokeMethod(&m_consoleModel,
-                              "addNewLine",
-                              Qt::AutoConnection  // Can also use any other except DirectConnection
-                              ,
-                              Q_ARG(QString, msg));  // And some more args if needed
+    connectHandlers();
+    connectConfig();
 }
 
 CBoard::~CBoard() {
+    closeStreaming();
+    // joins the threads of the connection: no handler runs after this
     delete m_configManager;
+    ChartDataHolder::instance()->removeRP(m_ip);
 }
 
-auto CBoard::createStreaming() -> void {
-    m_buffer = DataLib::CBuffersCached::create();
-    m_stat = SStat();
-    auto startTime = QDateTime::currentMSecsSinceEpoch();
-    auto df = m_configManager->getADCFormat();
-    //    auto samples = m_configManager->getSamples();
+auto CBoard::post(std::function<void()> f) -> void {
+    QMetaObject::invokeMethod(this, f, Qt::QueuedConnection);
+}
 
-    bool convert_v = m_configManager->getADCType().value == CStreamSettings::DataType::VOLT;
-
-    std::string dir = "output";
-    m_file_manager = streaming_lib::CStreamingFile::create(df, dir, -1, convert_v, m_testMode);
-    QString str = m_ip + "_" + m_streamingDT.toString("yyyy-MM-dd_HH-mm-ss");
-    m_file_manager->run(str.toStdString());
-
-    auto g_s_file_w = std::weak_ptr<streaming_lib::CStreamingFile>(m_file_manager);
-    auto g_s_buffers_w = std::weak_ptr<DataLib::CBuffersCached>(m_buffer);
-
-    m_asionet = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_ip.toStdString(), NET_ADC_STREAMING_PORT, m_buffer);
-
-    m_asionet->reciveNotify.connect([=](std::error_code error, DataLib::CDataBuffersPackDMA::Ptr pack) {
-        if (!error) {
-            auto obj = g_s_file_w.lock();
-            auto obj2 = g_s_buffers_w.lock();
-            if (obj && obj2) {
-                pack->getInfoFromHeaderADC();
-                uint64_t sempCh1 = 0;
-                uint64_t sempCh2 = 0;
-                uint64_t sempCh3 = 0;
-                uint64_t sempCh4 = 0;
-                uint64_t sizeCh1 = 0;
-                uint64_t sizeCh2 = 0;
-                uint64_t sizeCh3 = 0;
-                uint64_t sizeCh4 = 0;
-                uint64_t lostRate = 0;
-                uint64_t packId = 0;
-                auto ch1 = pack->getBuffer(DataLib::CH1);
-                auto ch2 = pack->getBuffer(DataLib::CH2);
-                auto ch3 = pack->getBuffer(DataLib::CH3);
-                auto ch4 = pack->getBuffer(DataLib::CH4);
-
-                if (ch1) {
-                    sempCh1 = ch1->getSamplesCount();
-                    sizeCh1 = ch1->getDataLenght();
-                    lostRate += ch1->getLostSamplesAll();
-                    packId = std::max(packId, ch1->getADCPackId());
-                }
-
-                if (ch2) {
-                    sempCh2 = ch2->getSamplesCount();
-                    sizeCh2 = ch2->getDataLenght();
-                    lostRate += ch2->getLostSamplesAll();
-                    packId = std::max(packId, ch2->getADCPackId());
-                }
-
-                if (ch3) {
-                    sempCh3 = ch3->getSamplesCount();
-                    sizeCh3 = ch3->getDataLenght();
-                    lostRate += ch3->getLostSamplesAll();
-                    packId = std::max(packId, ch3->getADCPackId());
-                }
-
-                if (ch4) {
-                    sempCh4 = ch4->getSamplesCount();
-                    sizeCh4 = ch4->getDataLenght();
-                    lostRate += ch4->getLostSamplesAll();
-                    packId = std::max(packId, ch4->getADCPackId());
-                }
-
-                auto flost = obj->getFileLost();
-
-                m_stat.bytes += sizeCh1 + sizeCh2 + sizeCh3 + sizeCh4;
-                m_stat.bw = convertBtoSpeed(m_stat.bytes, QDateTime::currentMSecsSinceEpoch() - startTime);
-                m_stat.samples1 += sempCh1;
-                m_stat.samples2 += sempCh2;
-                m_stat.samples3 += sempCh3;
-                m_stat.samples4 += sempCh4;
-
-                m_stat.lost += lostRate;
-                m_stat.flost += flost;
-                m_stat.broken_b = 0;
-                obj->passBuffers(pack);
-                Q_EMIT updateStatistic();
-                ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_chartEnable);
-                obj2->unlockBufferRead();
-            }
+auto CBoard::addLog(const QString& msg, Log level) -> void {
+    const QString tag = level == Log::Error ? "Error: " : level == Log::Warning ? "Warning: " : "";
+    const QString line = QTime::currentTime().toString("hh:mm:ss") + "  " + tag + msg;
+    post([this, line, level]() {
+        // consoleLevel: 0 errors and warnings, 1 normal, 2 detailed
+        if (static_cast<int>(level) > pcValue("consoleLevel").toInt() + 1)
+            return;
+        m_consoleModel.addNewLine(line, static_cast<int>(level));
+        if (m_consoleFile.isOpen()) {
+            m_consoleFile.write((line + "\n").toUtf8());
+            m_consoleFile.flush();
         }
     });
-
-    m_asionet->clientConnectNotify.connect([=](std::string host) {
-        QString msg = "Connect for streaming";
-        addLog(msg);
-        startADCFPGAStreaming();
-    });
-
-    m_asionet->clientErrorNotify.connect([=](std::error_code err) {
-#if defined(Q_OS_WIN)
-        std::wstringstream ws;
-        ws << err.message().c_str();
-        QString msg = "Error " + QString::fromWCharArray(ws.str().c_str());
-#else
-        QString msg = "Error " + QString::fromStdString(err.message());
-#endif
-        addLog(msg);
-        stopStreaming();
-    });
-
-    m_asionet->start();
 }
 
-auto CBoard::startADCFPGAStreaming() -> void {
-    auto memoryManager = new uio_lib::CMemoryManager();
-    memoryManager->setMemoryBlockSize(m_blockSize);
-    memoryManager->reallocateBlocks();
-    auto blocks = memoryManager->getFreeBlockCount();
-    auto reserved __attribute__((unused)) = memoryManager->reserveMemory(uio_lib::MM_ADC, blocks, m_activeChannels.count());
-    m_buffer->generateBuffersEmptyADC(m_activeChannels, memoryManager->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
-    TRACE_SHORT("Reserved blocks %d", reserved)
-    m_configManager->sendADCFPGAStart(m_ip.toStdString());
+auto CBoard::setState(const QString& state) -> void {
+    if (m_state == state)
+        return;
+    m_state = state;
+    Q_EMIT stateChanged();
+}
+
+auto CBoard::setLink(const QString& link) -> bool {
+    if (m_link == link)
+        return false;
+    m_link = link;
+    Q_EMIT configManagerConnectedChanged();
+    return true;
+}
+
+auto CBoard::connectConfig() -> void {
+    if (m_link != "refused" && m_link != "unreachable")
+        setLink("connecting");
+    addLog("Connecting to " + m_ip + ":" + QString::number(NET_CONFIG_PORT), Log::Detail);
+    std::vector<std::string> hosts{m_ip.toStdString()};
+    m_configManager->connectToServers(hosts, NET_CONFIG_PORT);
+}
+
+auto CBoard::connectHandlers() -> void {
+    auto* cm = m_configManager;
+
+    cm->serverConnectedNofiy.connect([this](std::string&) {
+        post([this]() {
+            m_connected = true;
+            setMode(m_configManager->getModeByHost(m_ip.toStdString()));
+            setLink("connected");
+            addLog("Connected to " + m_ip + " (" + (getIsMaster() ? "clock master" : "daisy chain slave") + ")");
+            Q_EMIT configManagerConnectedChanged();
+            Q_EMIT isOnlineChanged();
+            m_configManager->requestBoardInfo(m_ip.toStdString());
+            m_configManager->requestConfig(m_ip.toStdString());
+        });
+    });
+
+    cm->errorNofiy.connect([this](ClientNetConfigManager::Errors error, std::string, std::error_code err) {
+        const QString msg = QString::fromStdString(err.message());
+        const bool closed = err == asio::error::eof || err == asio::error::connection_reset || err == asio::error::broken_pipe;
+        const bool refused = err == asio::error::connection_refused;
+        const bool timeout = error == ClientNetConfigManager::Errors::CONNECT_TIMEOUT || err == asio::error::timed_out ||
+                             err == asio::error::host_unreachable || err == asio::error::network_unreachable;
+        post([this, msg, closed, refused, timeout]() {
+            const bool was = m_connected;
+            m_connected = m_configManager->isConnected(m_ip.toStdString());
+            if (was && !m_connected && m_state != "stopped")
+                adcStopped("the connection to the board is lost", true);
+            if (was && !m_connected && closed) {
+                // the board serves one client: a new one closes the connection of the old one
+                m_autoReconnect = false;
+                setLink("taken");
+                addLog("The board closed the connection: another client took it (another copy of this program, rpsa_client, "
+                       "a script with the streaming API or the Streaming page of the board), or its streaming application stopped. "
+                       "The board serves one client at a time. Reconnect takes it back.",
+                       Log::Error);
+            } else if (refused) {
+                if (setLink("refused"))
+                    addLog(m_ip + " refuses the connection on port " + QString::number(NET_CONFIG_PORT) +
+                               ": the streaming application is not running on the board. Start it in the web interface of the "
+                               "board (Streaming); the client connects by itself.",
+                           Log::Error);
+            } else if (timeout) {
+                if (setLink("unreachable"))
+                    addLog("No answer from " + m_ip + ": the board is off, booting or not reachable from this computer. "
+                               "Trying again every 5 s.",
+                           Log::Error);
+            } else if (was && !m_connected) {
+                setLink("unreachable");
+                addLog("The connection to the board is lost: " + msg, Log::Error);
+            } else if (!m_connected) {
+                addLog("No connection: " + msg, Log::Detail);
+            }
+            Q_EMIT configManagerConnectedChanged();
+            Q_EMIT isOnlineChanged();
+        });
+    });
+
+    cm->getBoardInfoNofiy.connect([this](std::string&, BoardInfoMessage info) { post([this, info]() { applyBoardInfo(info); }); });
+    cm->failBoardInfoNofiy.connect([this](std::string&) {
+        addLog("The streaming application of the board is older and does not tell what the board has: the client goes by its model",
+               Log::Warning);
+    });
+
+    cm->getNewSettingsNofiy.connect([this](std::string&) {
+        post([this]() {
+            const bool first = !m_settingsLoaded;
+            m_settingsLoaded = true;
+            m_settingsRev++;
+            if (first)
+                addLog("Settings read from the board. ADC: " + adcSummary());
+            Q_EMIT settingsChanged();
+        });
+    });
+    cm->getNewSettingsItemNofiy.connect([this](std::string&) {
+        post([this]() {
+            m_settingsRev++;
+            Q_EMIT settingsChanged();
+        });
+    });
+    cm->failSendConfigNofiy.connect([this](std::string&) {
+        post([this]() {
+            addLog("The board refused the last setting (see the log of the board): the settings are read again", Log::Error);
+            m_configManager->requestConfig(m_ip.toStdString());
+        });
+    });
+
+    // ADC: 17 start -> 25 TCP (or 26 SD) -> block size -> channels -> data connection -> 27 -> 28
+    cm->serverStartedTCPNofiy.connect([this](std::string& host) {
+        addLog("The board is ready to send; asking for its buffers", Log::Detail);
+        m_configManager->requestMemoryBlockSize(host);
+    });
+    cm->serverStartedSDNofiy.connect([this](std::string&) {
+        post([this]() {
+            addLog("The ADC writes to the SD card of the board (/home/redpitaya/streaming_files): nothing comes to this computer");
+            setState("sd");
+            m_configManager->sendADCFPGAStart(m_ip.toStdString());
+        });
+    });
+    cm->getMemBlockSizeNofiy.connect([this](std::string& host, std::string size) {
+        try {
+            m_blockSize = std::stoul(size);
+        } catch (...) {
+            m_blockSize = 0;
+        }
+        addLog("Buffers of " + QString::fromStdString(size) + " bytes", Log::Detail);
+        m_configManager->requestActiveChannels(host);
+    });
+    cm->getActiveChannelsNofiy.connect([this](std::string&, adc_channels_t channels) {
+        post([this, channels]() mutable {
+            m_activeChannels = channels;
+            addLog("Inputs on the board: " + QString::fromStdString(channels.format()), Log::Detail);
+            if (m_stopRequested)
+                return;
+            createStreaming();
+        });
+    });
+    cm->startADCDoneNofiy.connect([this](std::string&) {
+        post([this]() {
+            if (m_state == "starting")
+                setState("streaming");
+            addLog("ADC started: " + adcSummary());
+        });
+    });
+
+    auto stopped = [this](const char* why, bool error) {
+        return [this, why, error](std::string&) { post([this, why, error]() { adcStopped(why, error); }); };
+    };
+    cm->serverStoppedNofiy.connect(stopped("", false));
+    cm->serverStoppedMemErrorNofiy.connect(stopped("not enough DMA memory for the ADC (Memory tab)", true));
+    cm->serverStoppedMemModifyNofiy.connect(stopped("the memory settings changed", true));
+    cm->serverStoppedNoActiveChannelsNofiy.connect(stopped("no input is on (ADC tab, Channels)", true));
+    cm->serverStoppedConfigErrorNofiy.connect(stopped("the board cannot stream with these settings (see the log of the board)", true));
+    cm->serverStoppedSDFullNofiy.connect(stopped("the SD card is full", true));
+    cm->serverStoppedSDDoneNofiy.connect(stopped("the sample limit is written to the SD card", false));
+
+    cm->getTriggerStatusNofiy.connect([this](std::string&, TriggerStatus status) {
+        post([this, status]() {
+            m_adcArmed = status.adcArmed;
+            if (m_state == "streaming" && m_adcArmed)
+                setState("armed");
+            else if (m_state == "armed" && !m_adcArmed)
+                setState("streaming");
+        });
+    });
+    cm->softwareTriggerDoneNofiy.connect([this](std::string&, CNetConfigManager::ETriggerTarget) { addLog("Software trigger sent"); });
+    cm->softwareTriggerFailNofiy.connect([this](std::string&, CNetConfigManager::ETriggerTarget) {
+        addLog("Software trigger: the ADC does not wait for a trigger", Log::Warning);
+    });
+}
+
+auto CBoard::applyBoardInfo(const BoardInfoMessage& info) -> void {
+    m_info = info;
+    m_infoFromBoard = true;
+    m_model = info.model;
+    if (!info.mac.empty() && info.mac != "NONE")
+        m_mac = QString::fromStdString(info.mac);
+    m_gpio = info.gpio;
+    setMode(info.master ? broadcast_lib::AB_SERVER_MASTER : broadcast_lib::AB_SERVER_SLAVE);
+    Q_EMIT modelChanged();
+    addLog(getModel() + ", MAC " + m_mac + ": ADC " + QString::number(info.adcChannels) + " ch " +
+               QString::number(info.adcRate / 1e6, 'g', 6) + " MHz " + QString::number(info.adcBits) + " bit, DAC " +
+               (info.dac && info.dacChannels ? QString::number(info.dacChannels) + " ch" : QString("none")) + ", GPIO " +
+               (info.gpio ? "yes" : "no") + ", DMA memory " + QString::number(info.memorySize / 1048576.0, 'f', 1) + " MB",
+           Log::Detail);
+}
+
+namespace {
+
+auto bytesText(double b) -> QString {
+    if (b >= 1073741824)
+        return QString::number(b / 1073741824, 'f', 2) + " GB";
+    if (b >= 1048576)
+        return QString::number(b / 1048576, 'f', 2) + " MB";
+    if (b >= 1024)
+        return QString::number(b / 1024, 'f', 1) + " kB";
+    return QString::number(b, 'f', 0) + " B";
+}
+
+auto rateText(double r) -> QString {
+    if (r >= 1e6)
+        return QString::number(r / 1e6, 'g', 6) + " MS/s";
+    if (r >= 1e3)
+        return QString::number(r / 1e3, 'g', 6) + " kS/s";
+    return QString::number(r, 'g', 6) + " S/s";
+}
+
+}  // namespace
+
+auto CBoard::adcSummary() -> QString {
+    auto s = settings();
+    if (!s)
+        return "-";
+    const int n = getCaps()["adcChannels"].toInt();
+    QStringList on;
+    for (int i = 1; i <= n; i++)
+        if (s->getADCChannels(i).value == CStreamSettings::State::ON)
+            on << "IN" + QString::number(i);
+    const uint32_t dec = std::max<uint32_t>(1, s->getADCDecimation());
+    const double rate = getCaps()["adcRate"].toDouble() / dec;
+    const bool sd = s->getADCPassMode().value == CStreamSettings::PassMode::FILE;
+    const uint64_t limit = s->getADCSamples();
+    return (on.isEmpty() ? QString("no input on") : on.join(" ")) + ", decimation " + QString::number(dec) + " (" + rateText(rate) +
+           " per channel), " + (s->getADCResolution().value == CStreamSettings::Resolution::BIT_8 ? "8" : "16") + " bit, " +
+           QString(s->getADCFormat().name()) + " to " + (sd ? "the SD card of the board" : "this PC") +
+           (limit ? ", " + QString::number(limit) + " samples per channel" : QString(", until the stop"));
+}
+
+auto CBoard::statSummary() -> QString {
+    SStat s;
+    {
+        std::lock_guard lock(m_statMtx);
+        s = m_stat;
+    }
+    uint64_t samples = 0;
+    for (auto v : s.samples)
+        samples = std::max(samples, v);
+    return bytesText(double(s.bytes)) + " received, " + QString::number(samples) + " samples per channel, lost " +
+           QString::number(s.lostBoard) + " on the board and " + QString::number(s.lostFile) + " on this PC";
+}
+
+auto CBoard::adcStopped(const QString& why, bool error) -> void {
+    const bool wasStreaming = m_state != "stopped";
+    const bool recorded = m_file_manager != nullptr;
+    const QString file = m_fileName;
+    closeStreaming();
+    m_adcArmed = false;
+    m_stopRequested = false;
+    setState("stopped");
+    if (wasStreaming || !why.isEmpty())
+        addLog(why.isEmpty() ? "ADC stopped" : "ADC stopped: " + why, error ? Log::Error : Log::Normal);
+    if (recorded)
+        addLog("Recording done: " + statSummary() + ". File " + file);
+    if (error)
+        Q_EMIT dataLost();
+}
+
+auto CBoard::settings() -> CStreamSettings* {
+    return m_configManager->getLocalSettingsOfHost(m_ip.toStdString());
 }
 
 auto CBoard::updateOffline() -> void {
-    if (QDateTime::currentMSecsSinceEpoch() - m_lastOnline > 10000) {
-        m_IsOnline = false;
+    const bool broadcast = QDateTime::currentMSecsSinceEpoch() - m_lastOnline <= 10000;
+    if (broadcast != m_broadcastOnline) {
+        m_broadcastOnline = broadcast;
         Q_EMIT isOnlineChanged();
+        if (!broadcast && !m_manual) {
+            addLog("The board stopped answering the broadcast search", Log::Warning);
+            // it went away: once it is back the client connects again by itself
+            m_autoReconnect = true;
+        }
     }
 }
 
-QObject* CBoard::getConsoleModel() {
-    return &m_consoleModel;
+auto CBoard::setOnline() -> void {
+    m_lastOnline = QDateTime::currentMSecsSinceEpoch();
+    if (!m_broadcastOnline) {
+        m_broadcastOnline = true;
+        Q_EMIT isOnlineChanged();
+        addLog("Found by the broadcast search", Log::Detail);
+        if (m_autoReconnect && !m_configManager->isConnected(m_ip.toStdString()))
+            connectConfig();
+    }
 }
 
-auto CBoard::setOnline() -> void {
-    m_IsOnline = true;
-    m_lastOnline = QDateTime::currentMSecsSinceEpoch();
-    Q_EMIT isOnlineChanged();
+auto CBoard::isOnline() -> bool {
+    return m_broadcastOnline || m_connected;
 }
 
 auto CBoard::getIP() -> QString {
     return m_ip;
 }
 
+auto CBoard::getName() -> QString {
+    const QString host = hostNameFromMac(m_mac);
+    return host.isEmpty() ? m_ip : host;
+}
+
+auto CBoard::isManual() -> bool {
+    return m_manual;
+}
+
+auto CBoard::setManual(bool manual) -> void {
+    if (m_manual == manual)
+        return;
+    m_manual = manual;
+    Q_EMIT sourceChanged();
+}
+
 auto CBoard::setMode(broadcast_lib::EMode mode) -> void {
+    if (mode == broadcast_lib::AB_NONE || mode == m_mode)
+        return;
     m_mode = mode;
     Q_EMIT isMasterChanged();
 }
 
 auto CBoard::setModel(uint8_t model) -> void {
-
-    // typedef enum {
-    //     STEM_125_10_v1_0 = 0,
-    //     STEM_125_14_v1_0 = 1,
-    //     STEM_125_14_v1_1 = 2,
-    //     STEM_122_16SDR_v1_0 = 3,
-    //     STEM_122_16SDR_v1_1 = 4,
-    //     STEM_125_14_LN_v1_1 = 5,
-    //     STEM_125_14_Z7020_v1_0 = 6,
-    //     STEM_125_14_Z7020_LN_v1_1 = 7,
-    //     STEM_125_14_Z7020_4IN_v1_0 = 8,
-    //     STEM_125_14_Z7020_4IN_v1_2 = 9,
-    //     STEM_125_14_Z7020_4IN_v1_3 = 10,
-    //     STEM_250_12_v1_0 = 11,
-    //     STEM_250_12_v1_1 = 12,
-    //     STEM_250_12_v1_2 = 13,
-    //     STEM_250_12_120 = 14,
-    //     STEM_250_12_v1_2a = 15,
-    //     STEM_250_12_v1_2b = 16,
-    //     STEM_125_14_LN_BO_v1_1 = 17,
-    //     STEM_125_14_LN_CE1_v1_1 = 18,
-    //     STEM_125_14_LN_CE2_v1_1 = 19,
-
-    //     STEM_125_14_v2_0 = 20,
-    //     STEM_125_14_Pro_v2_0 = 21,
-    //     STEM_125_14_Z7020_Pro_v2_0 = 22,
-    //     STEM_125_14_Z7020_Ind_v2_0 = 23,
-    //     STEM_125_14_Z7020_Pro_v1_0 = 24,  // Prototype
-
-    //     STEM_125_14_Z7020_LL_v1_1 = 25,
-    //     STEM_65_16_Z7020_LL_v1_1 = 26,
-    //     STEM_125_14_Z7020_LL_v1_2 = 27,
-    //     STEM_125_14_Z7020_TI_v1_3 = 28,
-    //     STEM_65_16_Z7020_TI_v1_3 = 29,
-
-    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
-
-    //     STEM_125_14_BO_v2_0 = 31,
-    //     STEM_125_14_Pro_BO_v2_0 = 32,
-    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
-    // } rp_HPeModels_t;
-
-    switch (model) {
-        case 0:
-        case 1:
-        case 2:
-        case 5:
-        case 6:
-        case 7:
-        case 17:
-        case 18:
-        case 19:
-        case 20:
-        case 21:
-        case 22:
-        case 23:
-        case 24:
-        case 25:
-        case 26:
-        case 27:
-        case 28:
-        case 29:
-        case 31:
-        case 32:
-        case 33: {
-            m_adcChannels = 2;
-            m_IsACDC = false;
-            m_IsAttenuator = true;
-            break;
-        }
-        case 3:
-        case 4: {
-            m_adcChannels = 2;
-            m_IsACDC = false;
-            m_IsAttenuator = false;
-            break;
-        }
-
-        case 8:
-        case 9:
-        case 10:
-        case 30: {
-            m_adcChannels = 4;
-            m_IsACDC = false;
-            m_IsAttenuator = true;
-            break;
-        }
-
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16: {
-            m_adcChannels = 2;
-            m_IsACDC = true;
-            m_IsAttenuator = true;
-            break;
-        }
-
-        default:
-            m_IsAttenuator = false;
-            m_adcChannels = 0;
-            m_IsACDC = false;
-    }
+    if (m_infoFromBoard || model == m_model)
+        return;
     m_model = model;
     Q_EMIT modelChanged();
 }
 
-auto CBoard::getIsMaster() -> bool {
-    return m_mode == broadcast_lib::AB_SERVER_MASTER;
+auto CBoard::setMac(const QString& mac) -> void {
+    if (m_infoFromBoard || mac.isEmpty() || mac == m_mac)
+        return;
+    m_mac = mac;
+    Q_EMIT modelChanged();
+}
+
+auto CBoard::setGpio(bool gpio) -> void {
+    if (m_infoFromBoard || gpio == m_gpio)
+        return;
+    m_gpio = gpio;
+    Q_EMIT modelChanged();
 }
 
 auto CBoard::getModel() -> QString {
-
-    // typedef enum {
-    //     STEM_125_10_v1_0 = 0,
-    //     STEM_125_14_v1_0 = 1,
-    //     STEM_125_14_v1_1 = 2,
-    //     STEM_122_16SDR_v1_0 = 3,
-    //     STEM_122_16SDR_v1_1 = 4,
-    //     STEM_125_14_LN_v1_1 = 5,
-    //     STEM_125_14_Z7020_v1_0 = 6,
-    //     STEM_125_14_Z7020_LN_v1_1 = 7,
-    //     STEM_125_14_Z7020_4IN_v1_0 = 8,
-    //     STEM_125_14_Z7020_4IN_v1_2 = 9,
-    //     STEM_125_14_Z7020_4IN_v1_3 = 10,
-    //     STEM_250_12_v1_0 = 11,
-    //     STEM_250_12_v1_1 = 12,
-    //     STEM_250_12_v1_2 = 13,
-    //     STEM_250_12_120 = 14,
-    //     STEM_250_12_v1_2a = 15,
-    //     STEM_250_12_v1_2b = 16,
-    //     STEM_125_14_LN_BO_v1_1 = 17,
-    //     STEM_125_14_LN_CE1_v1_1 = 18,
-    //     STEM_125_14_LN_CE2_v1_1 = 19,
-
-    //     STEM_125_14_v2_0 = 20,
-    //     STEM_125_14_Pro_v2_0 = 21,
-    //     STEM_125_14_Z7020_Pro_v2_0 = 22,
-    //     STEM_125_14_Z7020_Ind_v2_0 = 23,
-    //     STEM_125_14_Z7020_Pro_v1_0 = 24,  // Prototype
-
-    //     STEM_125_14_Z7020_LL_v1_1 = 25,
-    //     STEM_65_16_Z7020_LL_v1_1 = 26,
-    //     STEM_125_14_Z7020_LL_v1_2 = 27,
-    //     STEM_125_14_Z7020_TI_v1_3 = 28,
-    //     STEM_65_16_Z7020_TI_v1_3 = 29,
-
-    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
-
-    //     STEM_125_14_BO_v2_0 = 31,
-    //     STEM_125_14_Pro_BO_v2_0 = 32,
-    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
-
-    // } rp_HPeModels_t;
-
-    switch (m_model) {
-        case 0:
-            return "STEMlab 125-10 v1.0";
-        case 1:
-            return "STEMlab 125-14 v1.0";
-        case 2:
-            return "STEMlab 125-14 v1.1";
-        case 3:
-            return "SDRlab 122-16 v1.0";
-        case 4:
-            return "SDRlab 122-16 v1.1";
-        case 5:
-            return "STEMlab 125-14 LN v1.1";
-        case 6:
-            return "STEMlab 125-14 Z7020 v1.0";
-        case 7:
-            return "STEMlab 125-14 LN-Z7020 v1.1";
-        case 8:
-            return "STEMlab 125-14 4-Input v1.0";
-        case 9:
-            return "STEMlab 125-14 4-Input v1.2";
-        case 10:
-            return "STEMlab 125-14 4-Input v1.3";
-
-        case 11:
-            return "SIGNALlab 250-12 v1.0";
-        case 12:
-            return "SIGNALlab 250-12 v1.1";
-        case 13:
-            return "SIGNALlab 250-12 v1.2";
-        case 14:
-            return "SIGNALlab 250-12/120";
-        case 15:
-            return "SIGNALlab 250-12 v1.2a";
-        case 16:
-            return "SIGNALlab 250-12 v1.2b";
-
-        case 17:
-            return "STEMlab 125-14 LN BO v1.1";
-        case 18:
-            return "STEMlab 125-14 LN CE1 v1.1";
-        case 19:
-            return "STEMlab 125-14 LN CE2 v1.1";
-
-        case 20:
-            return "STEMlab 125-14 v2.0";
-        case 21:
-            return "STEMlab 125-14 Pro v2.0";
-        case 22:
-            return "STEMlab 125-14-Z7020 Pro v2.0";
-        case 23:
-            return "STEMlab 125-14 Ind v2.0";
-        case 24:
-            return "STEMlab 125-14-Z7020 Pro v1.0";
-
-        case 25:
-            return "STEMlab 125-14 LL v1.1";
-        case 26:
-            return "STEMlab 65-16 LL v1.1";
-        case 27:
-            return "STEMlab 125-14 LL v1.2";
-        case 28:
-            return "STEMlab 125-14 TI v1.3";
-        case 29:
-            return "STEMlab 65-16 TI v1.3";
-        case 30:
-            return "STEMlab 125-14 4-Input BO v1.3";
-        case 31:
-            return "STEMlab 125-14 BO v2.0";
-        case 32:
-            return "STEMlab 125-14 Pro BO v2.0";
-        case 33:
-            return "STEMlab 125-14-Z7020 Pro BO v2.0";
-        default:
-            break;
-    }
-    return "Unknown";
+    if (m_model == 255)
+        return m_connected ? "Red Pitaya" : "Unknown board";
+    return modelCaps(m_model).name;
 }
 
-auto CBoard::configManagerConnected(std::string host) -> void {
-    addLog("Connected to the configuration server");
-    Q_EMIT configManagerConnectedChanged();
-    getConfig();
-}
-
-auto CBoard::configMangerError(ClientNetConfigManager::Errors errors, std::string host, std::error_code err) -> void {
-    QString msg = "Error from configuratoin server: " + QString::fromStdString(err.message());
-    addLog(msg);
-    Q_EMIT configManagerConnectedChanged();
+auto CBoard::getIsMaster() -> bool {
+    return m_mode != broadcast_lib::AB_SERVER_SLAVE;
 }
 
 auto CBoard::getConfigManagerConnected() -> bool {
-    return m_configManager->isServersConnected();
+    return m_connected;
 }
 
-void CBoard::setChartEnable(bool enable) {
-    m_chartEnable = enable;
-    QSettings setting("RedPitaya", "rpsa_cient_qt_" + m_ip);
-    setting.setValue("chartEnable", enable);
-}
-
-bool CBoard::getChartEnable() {
-    return m_chartEnable;
-}
-
-void CBoard::sendConfig() {
-    if (!m_configManager->isServersConnected()) {
-        QString msg = "Error: Configuration server not connected";
-        addLog(msg);
-        return;
-    }
-    m_configManager->sendConfig(m_ip.toStdString());
-}
-
-void CBoard::getConfig() {
-    if (!m_configManager->isServersConnected()) {
-        QString msg = "Error: Configuration server not connected";
-        addLog(msg);
-        return;
-    }
-    m_configManager->requestConfig(m_ip.toStdString());
-}
-
-auto CBoard::getNewSettings(std::string host) -> void {
-    QString msg = "Get settings from server";
-    addLog(msg);
-    Q_EMIT getNewSettingSignal();
-}
-
-auto CBoard::sendSettings(std::string host) -> void {
-    QString msg = "Settings sent to server";
-    addLog(msg);
-    m_configManager->sendSaveToFile(m_ip.toStdString());
-}
-
-auto CBoard::getSaveType() -> int {
-    auto mode = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCPassMode();
-    m_configManager->setADCPassMode(mode);
-    return mode;
-}
-
-void CBoard::setSaveType(int mode) {
-    m_configManager->setADCPassMode((CStreamSettings::PassMode::_enumerated)mode);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCPassMode((CStreamSettings::PassMode::_enumerated)mode);
-}
-
-auto CBoard::getDecimation() -> int {
-    auto dec = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCDecimation();
-    m_configManager->setADCDecimation(dec);
-    return dec;
-}
-
-void CBoard::setDecimation(int dec) {
-    if ((dec >= 16 && dec <= 65535) || (dec == 1) || (dec == 2) || (dec == 4) || (dec == 8)) {
-        m_configManager->setADCDecimation(dec);
-        m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCDecimation(dec);
-    }
-}
-
-auto CBoard::getSampleLimit() -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCSamples();
-    m_configManager->setADCSamples(x);
-    return x;
-}
-
-void CBoard::setSampleLimit(int s) {
-    m_configManager->setADCSamples(s);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCSamples(s);
-}
-
-auto CBoard::getResolution() -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCResolution();
-    m_configManager->setADCResolution(x);
-    return x;
-}
-
-void CBoard::setResolution(int r) {
-    m_configManager->setADCResolution((CStreamSettings::Resolution::_enumerated)r);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCResolution((CStreamSettings::Resolution::_enumerated)r);
-}
-
-auto CBoard::getAttenuator(int _channel) -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCAttenuator(_channel);
-    m_configManager->setADCAttenuator(_channel, x);
-    return x;
-}
-
-void CBoard::setAttenuator(int _channel, int a) {
-    m_configManager->setADCAttenuator(_channel, (CStreamSettings::Attenuator::_enumerated)a);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCAttenuator(_channel, (CStreamSettings::Attenuator::_enumerated)a);
-}
-
-auto CBoard::getCalibration() -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCCalibration();
-    m_configManager->setADCCalibration(x);
-    return x;
-}
-
-void CBoard::setCalibration(int a) {
-    m_configManager->setADCCalibration((CStreamSettings::State::_enumerated)a);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCCalibration((CStreamSettings::State::_enumerated)a);
-}
-
-auto CBoard::getChannels(int channel) -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCChannels(channel);
-    m_configManager->setADCChannels(channel, x);
-    return x;
-}
-
-void CBoard::setChannels(int channel, int x) {
-    m_configManager->setADCChannels(channel, (CStreamSettings::State::_enumerated)x);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCChannels(channel, (CStreamSettings::State::_enumerated)x);
-}
-
-auto CBoard::getDataFormat() -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCFormat();
-    m_configManager->setADCFormat(x);
-    return x;
-}
-
-void CBoard::setDataFormat(int x) {
-    m_configManager->setADCFormat((CStreamSettings::DataFormat::_enumerated)x);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCFormat((CStreamSettings::DataFormat::_enumerated)x);
-}
-
-auto CBoard::getType() -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCType();
-    m_configManager->setADCType(x);
-    return x;
-}
-
-void CBoard::setType(int x) {
-    m_configManager->setADCType((CStreamSettings::DataType::_enumerated)x);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCType((CStreamSettings::DataType::_enumerated)x);
-}
-
-auto CBoard::getCoupling(int channel) -> int {
-    auto x = m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->getADCAC_DC(channel);
-    m_configManager->setADCAC_DC(channel, x);
-    return x;
-}
-
-void CBoard::setCoupling(int channel, int x) {
-    m_configManager->setADCAC_DC(channel, (CStreamSettings::AC_DC::_enumerated)x);
-    m_configManager->getLocalSettingsOfHost(m_ip.toStdString())->setADCAC_DC(channel, (CStreamSettings::AC_DC::_enumerated)x);
-}
-
-void CBoard::startStreaming(QDateTime time) {
-    m_streamingDT = time;
-    m_configManager->sendADCServerStart(m_ip.toStdString());
-}
-
-void CBoard::stopStreaming() {
-    m_asionet = nullptr;
-    if (m_file_manager)
-        m_file_manager->stopAndFlush();
-    m_file_manager = nullptr;
-    m_configManager->sendADCServerStop(m_ip.toStdString());
+auto CBoard::getLink() -> QString {
+    return m_connected ? "connected" : m_link;
 }
 
 auto CBoard::getIsADCStarted() -> bool {
-    return m_isADCStarted;
+    return m_state != "stopped";
 }
 
-QString CBoard::getRecivedBytes() {
-    return QString::fromStdString(convertBtoS(m_stat.bytes));
+auto CBoard::getCaps() -> QVariantMap {
+    const ModelCaps mc = modelCaps(m_model);
+    QVariantMap c;
+    if (m_infoFromBoard) {
+        c["adcChannels"] = m_info.adcChannels;
+        c["adcRate"] = double(m_info.adcRate);
+        c["adcBits"] = m_info.adcBits;
+        c["dacChannels"] = m_info.dac ? m_info.dacChannels : 0;
+        c["dacRate"] = double(m_info.dacRate);
+        c["adcRanges"] = m_info.adcRanges;
+        c["adcACDC"] = m_info.adcACDC;
+        c["dacGain"] = m_info.dacGain;
+        c["adc"] = m_info.adc;
+        c["dac"] = m_info.dac && m_info.dacChannels > 0;
+        c["gpio"] = m_info.gpio;
+        c["adcBlockMode"] = m_info.adcBlockMode;
+        c["dacTriggerOutputs"] = m_info.dacTriggerOutputs;
+        c["extTrigger"] = m_info.extTrigger;
+        c["memorySize"] = double(m_info.memorySize);
+        c["memoryMaxBlock"] = double(m_info.memoryMaxBlock);
+    } else {
+        c["adcChannels"] = mc.adcChannels;
+        c["adcRate"] = double(mc.adcRate);
+        c["adcBits"] = mc.adcBits;
+        c["dacChannels"] = mc.dacChannels;
+        c["dacRate"] = double(mc.dacRate);
+        c["adcRanges"] = mc.adcRanges;
+        c["adcACDC"] = mc.adcACDC;
+        c["dacGain"] = mc.dacGain;
+        c["adc"] = true;
+        c["dac"] = mc.dacChannels > 0;
+        c["gpio"] = m_gpio;
+        c["adcBlockMode"] = false;
+        c["dacTriggerOutputs"] = false;
+        c["extTrigger"] = false;
+        c["memorySize"] = 0.0;
+        c["memoryMaxBlock"] = 0.0;
+    }
+    c["extTriggerLevel"] = mc.extTriggerLevel;
+    c["fixedRange"] = mc.fixedRange;
+    c["headerSize"] = DataLib::sizeHeader();
+    c["fromBoard"] = m_infoFromBoard;
+    c["mac"] = m_mac;
+    return c;
 }
 
-QString CBoard::getBandwidth() {
-    return QString::fromStdString(m_stat.bw);
+auto CBoard::getState() -> QString {
+    return m_state;
 }
 
-QString CBoard::getSamplesCH1() {
-    return QString::number(m_stat.samples1);
+auto CBoard::getStats() -> QVariantMap {
+    SStat s;
+    {
+        std::lock_guard lock(m_statMtx);
+        s = m_stat;
+    }
+    QVariantMap m;
+    m["received"] = double(s.bytes);
+    m["speed"] = m_speed;
+    uint64_t samples = 0;
+    for (auto v : s.samples)
+        samples = std::max(samples, v);
+    m["samples"] = double(samples);
+    m["lostBoard"] = double(s.lostBoard);
+    m["lostFile"] = double(s.lostFile);
+    m["file"] = m_fileName;
+    return m;
 }
 
-QString CBoard::getSamplesCH2() {
-    return QString::number(m_stat.samples2);
+auto CBoard::updateSpeed() -> void {
+    uint64_t bytes = 0, lost = 0, lostBoard = 0, lostFile = 0;
+    {
+        std::lock_guard lock(m_statMtx);
+        bytes = m_stat.bytes;
+        lostBoard = m_stat.lostBoard;
+        lostFile = m_stat.lostFile;
+        lost = lostBoard + lostFile;
+    }
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    if (m_lastBytesTime && now > m_lastBytesTime && bytes >= m_lastBytes) {
+        const double inst = double(bytes - m_lastBytes) * 1000.0 / double(now - m_lastBytesTime);
+        // smoothed over about two seconds
+        m_speed = m_speed == 0 ? inst : m_speed * 0.75 + inst * 0.25;
+    }
+    if (m_state == "stopped")
+        m_speed = 0;
+    m_lastBytes = bytes;
+    m_lastBytesTime = now;
+    if (lost > m_reportedLost) {
+        m_reportedLost = lost;
+        Q_EMIT dataLost();
+    }
+    // the losses in the console, at most every 5 s
+    if (lost > m_loggedLost && now - m_lastLossLog >= 5000) {
+        addLog("Data lost: " + QString::number(lostBoard) + " samples on the board (the network or this computer does not keep up with " +
+                   bytesText(m_speed) + "/s: a higher decimation, 8 bit or fewer inputs help), " + QString::number(lostFile) +
+                   " on this PC (the disk is too slow)",
+               Log::Warning);
+        m_loggedLost = lost;
+        m_lastLossLog = now;
+    }
+    Q_EMIT statsChanged();
 }
 
-QString CBoard::getSamplesCH3() {
-    return QString::number(m_stat.samples3);
+auto CBoard::pollTrigger() -> void {
+    if ((m_state == "streaming" || m_state == "armed") && value("adc_trigger_mode") == "ON")
+        m_configManager->requestTriggerStatus(m_ip.toStdString());
 }
 
-QString CBoard::getSamplesCH4() {
-    return QString::number(m_stat.samples4);
+auto CBoard::settingsRev() -> int {
+    return m_settingsRev;
 }
 
-QString CBoard::getLostCount() {
-    return QString::number(m_stat.lost);
+auto CBoard::settingsLoaded() -> bool {
+    return m_settingsLoaded;
 }
 
-QString CBoard::getFLostCount() {
-    return QString::number(m_stat.flost);
+auto CBoard::pcRev() -> int {
+    return m_pcRev;
 }
 
-QString CBoard::getSaveFileName() {
+QObject* CBoard::getConsoleModel() {
+    return &m_consoleModel;
+}
+
+QString CBoard::value(const QString& key) {
+    auto s = settings();
+    return s ? QString::fromStdString(s->getValue(key.toStdString())) : QString();
+}
+
+bool CBoard::setValue(const QString& key, const QString& value) {
+    auto s = settings();
+    if (!s || !m_connected) {
+        addLog("Not connected: the setting is not sent", Log::Error);
+        return false;
+    }
+    if (QString::fromStdString(s->getValue(key.toStdString())) == value)
+        return true;
+    CStreamSettings probe = *s;
+    if (!probe.setValue(key.toStdString(), value.toStdString())) {
+        addLog("Not a valid value of " + key + ": " + value, Log::Error);
+        Q_EMIT settingRefused(key);
+        m_settingsRev++;
+        Q_EMIT settingsChanged();
+        return false;
+    }
+    s->setValue(key.toStdString(), value.toStdString());
+    if (!m_configManager->sendConfigVariable(m_ip.toStdString(), key.toStdString(), value.toStdString())) {
+        addLog("The setting is not sent: " + key, Log::Error);
+        return false;
+    }
+    addLog("Set " + key + " = " + value);
+    m_settingsRev++;
+    Q_EMIT settingsChanged();
+    return true;
+}
+
+void CBoard::readSettings() {
+    if (!m_configManager->requestConfig(m_ip.toStdString()))
+        addLog("Not connected: the settings are not read", Log::Error);
+}
+
+void CBoard::saveDefaults() {
+    auto s = settings();
+    if (!s || !m_connected)
+        return;
+    CStreamSettings defaults;
+    defaults.resetDefault();
+    // sendConfig sends the settings of the manager itself
+    static_cast<CStreamSettings&>(*m_configManager).copy(defaults);
+    if (!m_configManager->sendConfig(m_ip.toStdString())) {
+        addLog("Not connected: the defaults are not sent", Log::Error);
+        return;
+    }
+    addLog("The default settings are sent");
+    m_configManager->requestConfig(m_ip.toStdString());
+}
+
+QString CBoard::settingsJson() {
+    auto s = settings();
+    return s ? QString::fromStdString(s->toJson()) : QString();
+}
+
+bool CBoard::loadSettingsJson(const QString& json) {
+    CStreamSettings parsed;
+    if (!parsed.parseJson(json.toStdString()))
+        return false;
+    if (!m_connected)
+        return false;
+    static_cast<CStreamSettings&>(*m_configManager).copy(parsed);
+    if (!m_configManager->sendConfig(m_ip.toStdString()))
+        return false;
+    addLog("Settings sent from a file");
+    m_configManager->requestConfig(m_ip.toStdString());
+    return true;
+}
+
+auto CBoard::pcKey(const QString& key) -> QString {
+    return "board/" + m_ip + "/" + key;
+}
+
+QVariant CBoard::pcValue(const QString& key) {
+    auto s = pcSettings();
+    if (key == "nameTemplate")
+        return s.value(pcKey(key), DEFAULT_NAME_TEMPLATE);
+    if (key == "consoleLevel")
+        return s.value(pcKey(key), 1);
+    if (key == "preview")
+        return s.value(pcKey(key), true);
+    if (key == "openFolderOnStop" || key == "saveConsole")
+        return s.value(pcKey(key), false);
+    return s.value(pcKey(key), "");
+}
+
+void CBoard::setPcValue(const QString& key, const QVariant& value) {
+    auto s = pcSettings();
+    if (s.value(pcKey(key)) == value)
+        return;
+    s.setValue(pcKey(key), value);
+    m_pcRev++;
+    Q_EMIT pcSettingsChanged();
+}
+
+auto CBoard::getChartEnable() -> bool {
+    return m_chartEnable;
+}
+
+auto CBoard::setChartEnable(bool enable) -> void {
+    m_chartEnable = enable;
+    setPcValue("preview", enable);
+}
+
+QString CBoard::recordDir() {
+    const QString own = pcValue("recordDir").toString().trimmed();
+    if (own.isEmpty())
+        return QDir::toNativeSeparators(AppSettings::instance()->recordDirFor(getName()));
+    return QDir::toNativeSeparators(QDir::cleanPath(AppSettings::expandHome(own)));
+}
+
+auto CBoard::fileBaseName() -> QString {
+    QString name = pcValue("nameTemplate").toString().trimmed();
+    if (name.isEmpty())
+        name = DEFAULT_NAME_TEMPLATE;
+    const QDateTime t = m_streamingDT.isValid() ? m_streamingDT : QDateTime::currentDateTime();
+    name.replace("{board}", getName());
+    name.replace("{ip}", m_ip);
+    name.replace("{date}", t.toString("yyyy-MM-dd"));
+    name.replace("{time}", t.toString("HH-mm-ss"));
+    // no folders or characters a file system refuses
+    static const QRegularExpression bad(R"([\\/:*?"<>|])");
+    name.replace(bad, "_");
+    return name;
+}
+
+QString CBoard::exampleFileName() {
+    return fileBaseName() + formatExtension(value("format_sd"));
+}
+
+void CBoard::openRecordFolder() {
+    const QString dir = recordDir();
+    QDir().mkpath(dir);
+    QDesktopServices::openUrl(QUrl::fromLocalFile(dir));
+}
+
+auto CBoard::note(const QString& msg, bool error) -> void {
+    addLog(msg, error ? Log::Error : Log::Normal);
+}
+
+void CBoard::startStreaming() {
+    startStreaming(QDateTime::currentDateTime());
+}
+
+auto CBoard::startStreaming(QDateTime time) -> void {
+    if (m_state != "stopped")
+        return;
+    if (!m_connected) {
+        addLog("Not connected to the board", Log::Error);
+        return;
+    }
+    m_streamingDT = time;
+    m_stopRequested = false;
+    setState("starting");
+    addLog("Starting the ADC: " + adcSummary());
+    if (!m_configManager->sendADCServerStart(m_ip.toStdString())) {
+        addLog("The start is not sent", Log::Error);
+        setState("stopped");
+    }
+}
+
+void CBoard::stopStreaming() {
+    if (m_state == "stopped")
+        return;
+    m_stopRequested = true;
+    addLog("Stopping the ADC");
+    const QString file = m_fileName;
+    const bool recorded = m_file_manager != nullptr;
+    const QString summary = statSummary();
+    closeStreaming();
+    if (recorded)
+        addLog("Recording done: " + summary + ". File " + file);
+    setState("stopping");
+    if (!m_configManager->sendADCServerStop(m_ip.toStdString()))
+        adcStopped("", false);
+}
+
+void CBoard::softwareTrigger() {
+    m_configManager->sendSoftwareTrigger(m_ip.toStdString(), CNetConfigManager::TT_ADC);
+}
+
+void CBoard::reconnect() {
+    m_autoReconnect = true;
+    setLink("connecting");
+    addLog("Reconnecting to " + m_ip + ": another client connected to the board loses it");
+    connectConfig();
+}
+
+auto CBoard::closeStreaming() -> void {
+    const bool recording = m_file_manager != nullptr;
+    m_asionet = nullptr;
     if (m_file_manager) {
-        return QString::fromStdString(m_file_manager->getCSVFileName());
+        m_file_manager->disableNotify();
+        m_file_manager->stopAndFlush();
+        m_file_manager = nullptr;
     }
-    return "";
-}
-
-bool CBoard::getCouplingVisible() {
-
-    // typedef enum {
-    //     STEM_125_10_v1_0 = 0,
-    //     STEM_125_14_v1_0 = 1,
-    //     STEM_125_14_v1_1 = 2,
-    //     STEM_122_16SDR_v1_0 = 3,
-    //     STEM_122_16SDR_v1_1 = 4,
-    //     STEM_125_14_LN_v1_1 = 5,
-    //     STEM_125_14_Z7020_v1_0 = 6,
-    //     STEM_125_14_Z7020_LN_v1_1 = 7,
-    //     STEM_125_14_Z7020_4IN_v1_0 = 8,
-    //     STEM_125_14_Z7020_4IN_v1_2 = 9,
-    //     STEM_125_14_Z7020_4IN_v1_3 = 10,
-    //     STEM_250_12_v1_0 = 11,
-    //     STEM_250_12_v1_1 = 12,
-    //     STEM_250_12_v1_2 = 13,
-    //     STEM_250_12_120 = 14,
-    //     STEM_250_12_v1_2a = 15,
-    //     STEM_250_12_v1_2b = 16,
-    //     STEM_125_14_LN_BO_v1_1 = 17,
-    //     STEM_125_14_LN_CE1_v1_1 = 18,
-    //     STEM_125_14_LN_CE2_v1_1 = 19,
-
-    //     STEM_125_14_v2_0 = 20,
-    //     STEM_125_14_Pro_v2_0 = 21,
-    //     STEM_125_14_Z7020_Pro_v2_0 = 22,
-    //     STEM_125_14_Z7020_Ind_v2_0 = 23,
-    //     STEM_125_14_Z7020_Pro_v1_0 = 24,  // Prototype
-
-    //     STEM_125_14_Z7020_LL_v1_1 = 25,
-    //     STEM_65_16_Z7020_LL_v1_1 = 26,
-    //     STEM_125_14_Z7020_LL_v1_2 = 27,
-    //     STEM_125_14_Z7020_TI_v1_3 = 28,
-    //     STEM_65_16_Z7020_TI_v1_3 = 29,
-
-    //     STEM_125_14_Z7020_4IN_BO_v1_3 = 30,
-
-    //     STEM_125_14_BO_v2_0 = 31,
-    //     STEM_125_14_Pro_BO_v2_0 = 32,
-    //     STEM_125_14_Z7020_Pro_BO_v2_0 = 33,
-
-    // } rp_HPeModels_t;
-
-    switch (m_model) {
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
-            return true;
-        default:
-            return false;
+    ChartDataHolder::instance()->removeRP(m_ip);
+    m_buffer = nullptr;
+    // the preview may still read a pack of these buffers for a moment
+    if (m_memory) {
+        auto memory = m_memory;
+        m_memory = nullptr;
+        QTimer::singleShot(3000, [memory]() {});
     }
+    if (m_consoleFile.isOpen())
+        m_consoleFile.close();
+    if (recording && pcValue("openFolderOnStop").toBool())
+        openRecordFolder();
 }
 
-bool CBoard::getTestMode() {
-    return m_testMode;
+auto CBoard::createStreaming() -> void {
+    auto s = settings();
+    if (!s)
+        return;
+    m_buffer = DataLib::CBuffersCached::create();
+    {
+        std::lock_guard lock(m_statMtx);
+        m_stat = SStat();
+    }
+    m_reportedLost = 0;
+    m_loggedLost = 0;
+    m_speed = 0;
+    m_lastBytes = 0;
+
+    const bool convertVolts = s->getADCType().value == CStreamSettings::DataType::VOLT;
+    const uint64_t limit = s->getADCSamples();
+    std::string dir = recordDir().toStdString();
+    QDir().mkpath(recordDir());
+    const QString file = QDir(recordDir()).filePath(fileBaseName() + formatExtension(value("format_sd")));
+    m_file_manager = streaming_lib::CStreamingFile::create(s->getADCFormat(), dir, limit ? limit : static_cast<uint64_t>(-1), convertVolts, false);
+    m_file_manager->setTDMSTimeColumn(s->getTDMSTimeColumn().value == CStreamSettings::State::ON);
+    m_file_manager->stopNotify.connect([this](streaming_lib::CStreamingFile::EStopReason reason) {
+        post([this, reason]() {
+            if (reason == streaming_lib::CStreamingFile::REACH_LIMIT)
+                addLog("The sample limit is written");
+            else if (reason == streaming_lib::CStreamingFile::OUT_SPACE)
+                addLog("The disk of this computer is full", Log::Error);
+            stopStreaming();
+        });
+    });
+    m_file_manager->run("", file.toStdString());
+    m_fileName = QDir::toNativeSeparators(file);
+    addLog("Recording to " + m_fileName);
+    if (pcValue("saveConsole").toBool()) {
+        m_consoleFile.setFileName(file + ".console.txt");
+        if (!m_consoleFile.open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
+            addLog("The console file cannot be written", Log::Error);
+    }
+
+    auto fileW = std::weak_ptr<streaming_lib::CStreamingFile>(m_file_manager);
+    auto buffersW = std::weak_ptr<DataLib::CBuffersCached>(m_buffer);
+
+    m_asionet = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_ip.toStdString(), NET_ADC_STREAMING_PORT, m_buffer);
+
+    // the data thread: counts, writes and hands a pack now and then to the preview
+    m_asionet->reciveNotify.connect([this, fileW, buffersW](std::error_code error, DataLib::CDataBuffersPackDMA::Ptr pack) {
+        if (error)
+            return;
+        auto fileObj = fileW.lock();
+        auto buffers = buffersW.lock();
+        if (!fileObj || !buffers)
+            return;
+        pack->getInfoFromHeaderADC();
+        uint64_t bytes = 0, lost = 0, packId = 0;
+        uint64_t samples[4] = {0, 0, 0, 0};
+        const DataLib::EDataBuffersPackChannel chs[4] = {DataLib::CH1, DataLib::CH2, DataLib::CH3, DataLib::CH4};
+        for (int i = 0; i < 4; i++) {
+            auto ch = pack->getBuffer(chs[i]);
+            if (!ch)
+                continue;
+            samples[i] = ch->getSamplesCount();
+            bytes += ch->getDataLenght();
+            lost += ch->getLostSamplesAll();
+            packId = std::max(packId, ch->getADCPackId());
+        }
+        const uint64_t fileLost = fileObj->getFileLost();
+        {
+            std::lock_guard lock(m_statMtx);
+            m_stat.bytes += bytes;
+            for (int i = 0; i < 4; i++)
+                m_stat.samples[i] += samples[i];
+            m_stat.lostBoard += lost;
+            m_stat.lostFile = fileLost;
+        }
+        fileObj->passBuffers(pack);
+        ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_chartEnable);
+        buffers->unlockBufferRead();
+    });
+
+    m_asionet->clientConnectNotify.connect([this](std::string) {
+        post([this]() {
+            addLog("Data connection open", Log::Detail);
+            startADCFPGAStreaming();
+        });
+    });
+
+    m_asionet->clientErrorNotify.connect([this](std::error_code err) {
+        const QString msg = QString::fromStdString(err.message());
+        post([this, msg]() {
+            if (m_state == "stopped" || m_state == "stopping")
+                return;
+            addLog("Data connection: " + msg, Log::Error);
+            stopStreaming();
+        });
+    });
+
+    ChartDataHolder::instance()->regRP(m_ip);
+    m_asionet->start();
 }
 
-void CBoard::setTestMode(bool mode) {
-    QSettings setting("RedPitaya", "rpsa_cient_qt_" + m_ip);
-    setting.setValue("testMode", mode);
-    m_testMode = mode;
+auto CBoard::startADCFPGAStreaming() -> void {
+    if (!m_buffer)
+        return;
+    m_memory = std::make_shared<uio_lib::CMemoryManager>();
+    m_memory->setMemoryBlockSize(m_blockSize);
+    m_memory->reallocateBlocks();
+    const auto blocks = m_memory->getFreeBlockCount();
+    m_memory->reserveMemory(uio_lib::MM_ADC, blocks, m_activeChannels.count());
+    m_buffer->generateBuffersEmptyADC(m_activeChannels, m_memory->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
+    m_configManager->sendADCFPGAStart(m_ip.toStdString());
 }

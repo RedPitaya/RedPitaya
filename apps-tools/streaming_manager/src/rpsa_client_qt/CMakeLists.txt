@@ -43,12 +43,14 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core Quick Gui Qml REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH}  NO_DEFAULT_PATH)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick Gui Charts Widgets REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH} NO_DEFAULT_PATH)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core Quick QuickControls2 Gui Widgets Network Svg REQUIRED PATHS ${QT_DIR} ${CMAKE_PREFIX_PATH} NO_DEFAULT_PATH)
 
 set(CMAKE_AUTOUIC OFF)
 
 set(HEADER_FILES
+        src/app_settings.h
         src/ui_controller.h
+        src/models/board_models.h
         src/models/boardsmodel.h
         src/models/board.h
         src/models/consolemodel.h
@@ -59,7 +61,9 @@ set(HEADER_FILES
 
 set(PROJECT_SOURCES
         src/main.cpp
+        src/app_settings.cpp
         src/ui_controller.cpp
+        src/models/board_models.cpp
         src/models/boardsmodel.cpp
         src/models/board.cpp
         src/models/consolemodel.cpp
@@ -108,10 +112,11 @@ target_sources( ${PROJECT_NAME}
                 ${HEADER_FILES})
 
 target_compile_definitions(rpsa_client_qt
-  PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>)
+  PRIVATE $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>
+          CLIENT_VERSION="${VERSION}-${REVISION}")
 
 target_link_libraries(rpsa_client_qt
-  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Charts Qt${QT_VERSION_MAJOR}::Qml  Qt${QT_VERSION_MAJOR}::Widgets)
+  PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::QuickControls2 Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Svg Qt${QT_VERSION_MAJOR}::Qml  Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE config_net_lib dac_streaming_lib converter_lib streaming_lib data_lib settings_lib uio_lib logger_lib)
 

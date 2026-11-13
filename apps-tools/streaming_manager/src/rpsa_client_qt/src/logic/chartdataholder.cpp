@@ -36,6 +36,8 @@ auto ChartDataHolder::regRP(const QString& ip) -> void {
 auto ChartDataHolder::removeRP(const QString& ip) -> void {
     std::lock_guard<std::mutex> lock(m_add_mutex);
     m_rp.removeAll(ip);
+    m_pack.remove(ip);
+    m_packId.remove(ip);
 }
 
 auto ChartDataHolder::addBuffer(DataLib::CDataBuffersPackDMA::Ptr pack, uint64_t id, const QString& ip, bool skip) -> void {
@@ -74,7 +76,7 @@ auto ChartDataHolder::chartPackThread() -> void {
     while (m_IsWorkThread) {
         QMap<QString, DataLib::CDataBuffersPackDMA::Ptr> packForWork;
         m_add_mutex.lock();
-        auto chartWidth = 1000;
+        const int chartWidth = m_chartWidth;
         bool canGet = m_rp.size();
         for (auto& i : m_rp) {
             canGet &= m_packId[i] != 0;
@@ -90,13 +92,14 @@ auto ChartDataHolder::chartPackThread() -> void {
         auto pack = [&](const QString ip, int index, DataLib::CDataBufferDMA::Ptr buf) {
             if (!buf)
                 return;
-            auto pointsCount = buf->getSamplesCount();
+            const int pointsCount = static_cast<int>(buf->getSamplesCount());
             auto bitSize = buf->getBitBySample();
             auto buffer = buf->getMappedDataMemory();
-            int step = buf->getSamplesCount() / chartWidth;
-            m_chartPoints[index][ip].resize(chartWidth);
+            int step = pointsCount / chartWidth;
             if (step <= 1) {
-                for (auto i = 0u; i < pointsCount; i++) {
+                // every sample: fewer than two of them per point
+                m_chartPoints[index][ip].resize(pointsCount);
+                for (int i = 0; i < pointsCount; i++) {
                     if (bitSize == 8) {
                         auto b = reinterpret_cast<int8_t*>(buffer);
                         m_chartPoints[index][ip][i] = (float)b[i] / 128.0;
@@ -107,7 +110,8 @@ auto ChartDataHolder::chartPackThread() -> void {
                     }
                 }
             } else {
-                for (auto i = 1, w = 0; i < pointsCount - 1 && w < chartWidth; i += step, w++) {
+                m_chartPoints[index][ip].resize(chartWidth);
+                for (int i = 1, w = 0; i < pointsCount - 1 && w < chartWidth; i += step, w++) {
                     int64_t sum = 0;
                     for (int j = 0u; j < step && i + j < pointsCount; j++) {
                         if (bitSize == 8) {
@@ -140,8 +144,18 @@ auto ChartDataHolder::chartPackThread() -> void {
             }
             m_chartGetPointMutex.unlock();
         }
-        QThread::usleep(1000 * 500);
+        // in short steps, so the end of the application does not wait for a long one
+        for (int waited = 0; waited < m_intervalMs && m_IsWorkThread; waited += 20)
+            QThread::usleep(1000 * 20);
     }
+}
+
+auto ChartDataHolder::setRate(int perSecond) -> void {
+    m_intervalMs = 1000 / qBound(1, perSecond, 10);
+}
+
+auto ChartDataHolder::setPoints(int points) -> void {
+    m_chartWidth = qBound(200, points, 4000);
 }
 
 QVector<qreal> ChartDataHolder::getChartSignal(QString ip, int index) {

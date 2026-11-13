@@ -1,77 +1,69 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.5
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Window
+import "ui"
 
 ApplicationWindow {
-    id: appId
-    width: 1980
-    height: 1080
+    id: win
+    // the screen may be smaller than the design size (or scaled): the window fits it
+    width: Math.min(1440, Screen.desktopAvailableWidth - 40)
+    height: Math.min(900, Screen.desktopAvailableHeight - 60)
+    minimumWidth: 720
+    minimumHeight: 520
     visible: true
-    title: qsTr("Red Pitaya X-Streaming")
-    // visibility : Window.Maximized
+    title: "Red Pitaya streaming client"
+    color: Theme.bg
 
-    property int nativeWidth: 1980
-    property int nativeHeight: 1080
-    property double aspectRate: nativeWidth / nativeHeight
+    Binding { target: Theme; property: "fsAdd"; value: app.textSize }
 
-    property color  baseRedColor: "#d02321"
-    property color  baseRedSwitchColor: "#999"
-    property color  baseGreenColor: "#10AF10"
-    property color  baseTextColor: "#999"
-    property color  basebuttonTextColor: "#101010"
-
-    property color  baseBackGroundColor: "#343433"
-    property color  baseGrayColor: "#999"
-    property color  baseHoverColor: "#40999999"
-
-
-    property double baseSpace: 5
-
-    property FontLoader applicationFontBold:FontLoader {
-            source: "qrc:/fonts/BarlowSemiCondensed-Bold.ttf"
+    Dashboard {
+        id: dash
+        anchors.fill: parent
+        onOpenBoard: (board, tab) => boardDialog.openFor(board, tab)
+        onOpenApp: appDialog.open()
+        onAddBoard: addDialog.open()
     }
 
-    property FontLoader applicationFont:FontLoader {
-            source: "qrc:/fonts/BarlowSemiCondensed-Regular.ttf"
-    }
+    BoardDialog { id: boardDialog }
+    AppDialog { id: appDialog; onAddBoard: addDialog.open() }
+    AddBoardDialog { id: addDialog }
 
-    function getWidth() {
-        var aspect = appId.width / appId.height
-        if (aspect < appId.aspectRate) {
-            return width
-        } else {
-            return height * appId.aspectRate
-        }
-    }
-
-    function getHeight() {
-        var aspect = appId.width / appId.height
-        if (aspect < appId.aspectRate) {
-            return width / appId.aspectRate
-        } else {
-            return height
-        }
-    }
-
-    color: baseBackGroundColor
-
-    Item {
-            id: mainRootWindowId
-            anchors.fill: parent
-            Item {
-                id: mainVisibleRootWindowId
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.horizontalCenter: parent.horizontalCenter
-//                height: appId.getHeight()
-//                width: appId.getWidth()
-                height: parent.height
-                width: parent.width
-                property double scaleFactor: mainVisibleRootWindowId.height / nativeHeight
-
-                MainView {
-                    anchors.fill: parent
-                    anchors.margins: 20 * mainVisibleRootWindowId.scaleFactor
+    // RPSA_QT_UI: steps run at the start, for tests and screenshots, separated by ";":
+    // list | cards | app | add | board:<index>:<tab> | set:<index>:<key>=<value> | start:<index> |
+    // stop:<index> | wait:<ms> | size:<w>x<h> | console:<index> | reconnect:<index> | startall | stopall
+    Timer {
+        id: script
+        property var steps: uiScript === "" ? [] : uiScript.split(";")
+        interval: 1500
+        running: steps.length > 0
+        repeat: true
+        onTriggered: {
+            interval = 300
+            while (steps.length > 0) {
+                const p = steps[0].split(":")
+                steps = steps.slice(1)
+                if (p[0] === "wait") { interval = Number(p[1]); return }
+                if (p[0] === "size") { const wh = p[1].split("x"); win.width = Number(wh[0]); win.height = Number(wh[1]) }
+                else if (p[0] === "list") app.view = "list"
+                else if (p[0] === "startall") boards.runAll()
+                else if (p[0] === "stopall") boards.stopAll()
+                else if (p[0] === "console" && boards.board(Number(p[1]))) boards.board(Number(p[1])).chartEnable = false
+                else if (p[0] === "reconnect" && boards.board(Number(p[1]))) boards.board(Number(p[1])).reconnect()
+                else if (p[0] === "set") {
+                    const kv = p.slice(2).join(":").split("=")
+                    const b = boards.board(Number(p[1]))
+                    if (b) b.setValue(kv[0], kv[1])
+                }
+                else if (p[0] === "start" && boards.board(Number(p[1]))) boards.board(Number(p[1])).startStreaming()
+                else if (p[0] === "stop" && boards.board(Number(p[1]))) boards.board(Number(p[1])).stopStreaming()
+                else if (p[0] === "cards") app.view = "cards"
+                else if (p[0] === "app") appDialog.open()
+                else if (p[0] === "add") addDialog.open()
+                else if (p[0] === "board") {
+                    const b = boards.board(Number(p[1] || 0))
+                    if (b) boardDialog.openFor(b, p[2] || "adc")
                 }
             }
+        }
     }
-
 }
