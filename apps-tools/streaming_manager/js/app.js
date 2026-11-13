@@ -667,6 +667,60 @@
 
     // ---------------------------------------------------------------------------------------
     // rendering
+    // The new markup is laid onto the nodes that are there: only what differs changes. A
+    // rebuild (innerHTML) on every update of the stream replaced the button under the mouse,
+    // its hover flickered and a click whose press and release hit different buttons was lost.
+    function syncAttrs(from, to) {
+        for (const { name } of Array.from(from.attributes)) {
+            if (!to.hasAttribute(name)) from.removeAttribute(name);
+        }
+        for (const { name, value } of Array.from(to.attributes)) {
+            if (from.getAttribute(name) !== value) from.setAttribute(name, value);
+        }
+        // the state the user changes lives in properties, not in attributes
+        if (from.tagName === 'INPUT') {
+            if (from.type === 'checkbox' || from.type === 'radio') {
+                const on = to.hasAttribute('checked');
+                if (from.checked !== on) from.checked = on;
+            } else {
+                const val = to.getAttribute('value') || '';
+                if (from.value !== val) from.value = val;
+            }
+        } else if (from.tagName === 'OPTION') {
+            const on = to.hasAttribute('selected');
+            if (from.selected !== on) from.selected = on;
+        }
+    }
+    function morphChildren(from, to) {
+        const a = Array.from(from.childNodes), b = Array.from(to.childNodes);
+        for (let i = 0; i < b.length; i++) {
+            const n = b[i], o = a[i];
+            if (!o) {
+                from.appendChild(n);
+            } else if (o.nodeType !== n.nodeType || o.nodeName !== n.nodeName) {
+                from.replaceChild(n, o);
+            } else if (o.nodeType === Node.ELEMENT_NODE) {
+                syncAttrs(o, n);
+                morphChildren(o, n);
+            } else if (o.nodeValue !== n.nodeValue) {
+                o.nodeValue = n.nodeValue;
+            }
+        }
+        for (let i = a.length - 1; i >= b.length; i--) from.removeChild(a[i]);
+        // a select takes the selected option once its options are in place
+        if (from.tagName === 'SELECT') {
+            const s = Array.from(from.options).findIndex((x) => x.hasAttribute('selected'));
+            if (s >= 0 && from.selectedIndex !== s) from.selectedIndex = s;
+        }
+    }
+    // always compared with the live DOM: a red border of flash() or a checkbox the board did
+    // not take goes back to the markup
+    function patch(el, html) {
+        const t = document.createElement('template');
+        t.innerHTML = html;
+        morphChildren(el, t.content);
+    }
+
     let pending = false;
     function render() {
         pending = false;
@@ -677,12 +731,13 @@
             return;
         }
         if ((S.section === 'dac' && !hasDac()) || (S.section === 'gpio' && !hasGpio())) S.section = 'overview';
-        document.getElementById('nav').innerHTML = navHtml();
+        patch(document.getElementById('nav'), navHtml());
         const html = { overview: overviewHtml, adc: adcHtml, dac: dacHtml, gpio: gpioHtml, trig: trigHtml, mem: memHtml, files: filesHtml, set: setHtml }[S.section]();
         const main = document.getElementById('main');
         const focusId = a && a.id && main.contains(a) ? a.id : '';
-        main.innerHTML = html;
-        if (focusId) {
+        patch(main, html);
+        // a node of another kind in its place loses the focus: give it to the new one
+        if (focusId && document.activeElement !== a) {
             const el = document.getElementById(focusId);
             if (el) el.focus();
         }
