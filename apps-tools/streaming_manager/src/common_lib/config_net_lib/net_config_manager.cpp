@@ -1,6 +1,9 @@
 #include "net_config_manager.h"
 #include <time.h>
+#include <algorithm>
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <thread>
 #include "data_lib/neon_asm.h"
 #include "logger_lib/file_logger.h"
@@ -233,10 +236,12 @@ auto CNetConfigManager::rejectStream(const char* reason) -> void {
 }
 
 auto CNetConfigManager::dyn_buffer::push_back(uint8_t* _src, uint32_t _size) -> void {
-    if (_size + m_data_size > m_size) {
-        resize(_size + m_data_size);
-    }
-    memcpy_neon((&(*m_buffers) + m_data_size), _src, _size);
+    // The socket hands over 4 KB at a time: growing to the exact size copied the whole buffer
+    // for every piece, a packet of the largest size took ~128 MB of copies.
+    const uint64_t need = uint64_t(m_data_size) + _size;
+    if (need > m_size)
+        resize(uint32_t(std::max<uint64_t>(need, std::min<uint64_t>(uint64_t(m_size) * 2, UINT32_MAX))));
+    memcpy_neon(m_buffers + m_data_size, _src, _size);
     m_data_size += _size;
 }
 
@@ -245,17 +250,13 @@ auto CNetConfigManager::dyn_buffer::resize(uint32_t _size) -> void {
         delete[] m_buffers;
         m_buffers = nullptr;
         m_size = 0;
+        m_data_size = 0;
         return;
     }
-    if (_size < m_size) {
-        m_size = _size;
-    }
     uint8_t* new_buff = new uint8_t[_size];
-    if (m_buffers) {
-        for (uint32_t i = 0; i < m_size; i++) {
-            new_buff[i] = m_buffers[i];
-        }
-    }
+    m_data_size = std::min(m_data_size, _size);
+    if (m_buffers && m_data_size)
+        memcpy(new_buff, m_buffers, m_data_size);
     m_size = _size;
     delete[] m_buffers;
     m_buffers = new_buff;
@@ -264,9 +265,8 @@ auto CNetConfigManager::dyn_buffer::resize(uint32_t _size) -> void {
 auto CNetConfigManager::dyn_buffer::removeAtStart(uint32_t _size) -> void {
     if (_size > m_data_size)
         throw std::runtime_error("Remove buffer wrong size");
-    for (uint32_t i = 0; i < m_data_size - _size; i++) {
-        m_buffers[i] = (&(*m_buffers) + _size)[i];
-    }
+    if (_size < m_data_size)
+        memmove(m_buffers, m_buffers + _size, m_data_size - _size);
     m_data_size -= _size;
 }
 

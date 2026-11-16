@@ -41,7 +41,7 @@ auto WaitFor(const std::function<bool()>& done, std::chrono::milliseconds timeou
 }
 
 auto NextPort() -> uint16_t {
-    static std::atomic<uint16_t> port{29600};
+    static std::atomic<uint16_t> port{29800};  // session_lib starts at 29600 and may run at the same time
     return port++;
 }
 
