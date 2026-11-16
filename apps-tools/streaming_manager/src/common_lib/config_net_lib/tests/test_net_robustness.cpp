@@ -288,6 +288,21 @@ TEST(ApplyConfigJson, EveryGivenValueMustBeTaken) {
     EXPECT_EQ(s.toJson(), before);
 }
 
+// A board with a trigger level of 0.3 V: its whole config was refused by the client (rp32,
+// 2026-11-16, the desktop client showed "settings not read yet").
+TEST(ApplyConfigJson, FractionsAreTaken) {
+    CStreamSettings s;
+    EXPECT_TRUE(applyConfigJson(R"({"adc_streaming":{"adc_trigger_level_unit":"VOLT","adc_trigger_level_v":0.29999999999999999,)"
+                                R"("adc_trigger_hysteresis_v":0.00020000000000000001},"dac_streaming":{},"memory_manager":{}})",
+                                s));
+    EXPECT_DOUBLE_EQ(s.getADCTriggerLevelVolt(), 0.3);
+    EXPECT_DOUBLE_EQ(s.getADCTriggerHysteresisVolt(), 0.0002);
+    // what the settings write is what they read
+    CStreamSettings again;
+    EXPECT_TRUE(applyConfigJson(s.toJson(), again));
+    EXPECT_EQ(again.toJson(), s.toJson());
+}
+
 TEST(ApplyConfigJson, UnknownSectionsAndKeysAreIgnored) {
     CStreamSettings s;
     EXPECT_TRUE(applyConfigJson(R"({"adc_streaming":{"adc_decimation":4,"from_the_future":1},"dac_streaming":{},"memory_manager":{},"later":{"x":1}})", s));
