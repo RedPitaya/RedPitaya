@@ -1,4 +1,5 @@
 #include "asio_common.h"
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -108,4 +109,10 @@ auto net_lib::pinSenderThread() -> int {
 #else
     return -1;
 #endif
+}
+
+auto net_lib::zeroCopyMaxPending(size_t ringSize, size_t writerHeld) -> size_t {
+    if (ringSize <= writerHeld + 1)
+        return 0;
+    return std::min(ringSize / 2, ringSize - writerHeld - 1);
 }

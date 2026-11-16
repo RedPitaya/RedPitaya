@@ -196,8 +196,11 @@ auto GPIOInStreamServer::Impl::sendWork() -> void {
     try {
         while (run) {
             auto pack = ring->readBuffer();
-            if (!pack)
+            if (!pack) {
+                // the writer may wait for a pack the kernel is done with: no later send frees it
+                net->releaseSentZeroCopy();
                 continue;
+            }
             if (net->isConnected()) {
                 auto buffer = bufferOf(pack);
                 DataLib::GPIOHeader h;
@@ -376,8 +379,8 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
             });
         } else {
             p.net = net_lib::CAsioNet::create(net_lib::M_SERVER, options.host, NET_GPIO_IN_STREAMING_PORT, nullptr);
-            // the FPGA holds two packs, half the ring in flight at most leaves the rest free
-            p.net->setZeroCopy(memory->isZeroCopy(), std::max<size_t>(1, p.ring->ringSize() / 2));
+            // the FPGA thread holds two packs
+            p.net->setZeroCopy(memory->isZeroCopy(), net_lib::zeroCopyMaxPending(p.ring->ringSize(), 2));
             // the client is gone: nothing reads the input any more
             p.net->serverDisconnectNotify.connect([selfW](std::string&) {
                 if (auto impl = selfW.lock())

@@ -83,6 +83,10 @@ auto CAsioNet::flushZeroCopy(std::chrono::milliseconds timeout) -> void {
     m_server->flushZeroCopy(timeout);
 }
 
+auto CAsioNet::releaseSentZeroCopy() -> void {
+    m_server->releaseSentZeroCopy();
+}
+
 auto CAsioNet::zeroCopyStats(uint64_t& sends, uint64_t& copied) -> bool {
     auto s = m_server->zeroCopyStats();
     sends = s.sends;

@@ -55,12 +55,16 @@ class CAsioSocketDMA {
     auto sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer, Release release) -> bool;
     // Zero copy for the sends with a release; the pack memory must be pinnable (the rp_resmem
     // driver mapping, not /dev/mem: the kernel refuses that one and the send copies). At most
-    // maxPending packs wait for their completion, a send waits beyond that: a ring of N packs
-    // needs maxPending < N, or its writer and its reader can wait for each other. Before start.
+    // maxPending packs wait for their completion, a send waits beyond that (0: for every pack).
+    // The writer of the ring needs a free pack while the sender waits for a full one: see
+    // zeroCopyMaxPending(), or the two wait for each other. Before start.
     auto setZeroCopy(bool enable, size_t maxPending) -> void;
     // Waits up to timeout for the packs in flight, then releases those left. From the sender
     // thread, before the memory of the packs goes.
     auto flushZeroCopy(std::chrono::milliseconds timeout) -> void;
+    // Releases the packs whose sends are complete, without waiting. From the sender thread while
+    // it has nothing to send: a pack is never held only because no other send came.
+    auto releaseSentZeroCopy() -> void;
     struct ZeroCopyStats {
         bool used = false;     // zero copy was on for the last connection
         uint64_t sends = 0;    // sends with MSG_ZEROCOPY

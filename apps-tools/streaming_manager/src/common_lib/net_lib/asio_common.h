@@ -30,6 +30,10 @@ auto createBuffer(uint64_t size) -> net_buffer;
 auto senderCpu() -> int;
 // Pins the calling thread to senderCpu(); returns the CPU, or -1 when the thread stays unpinned.
 auto pinSenderThread() -> int;
+// How many packs of a ring of ringSize may wait for their zero copy completions. The writer holds
+// writerHeld packs and needs one more free to hand a full one over, while the sender waiting for
+// that pack reads no completions; at most half the ring. 0: every send waits for its completion.
+auto zeroCopyMaxPending(size_t ringSize, size_t writerHeld) -> size_t;
 }  // namespace net_lib
 
 #endif

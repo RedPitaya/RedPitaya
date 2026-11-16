@@ -36,6 +36,8 @@ class CAsioNet {
     auto setZeroCopy(bool enable, size_t maxPending) -> void;
     // From the sender thread when it ends: waits for the packs in flight, releases the rest.
     auto flushZeroCopy(std::chrono::milliseconds timeout) -> void;
+    // From the sender thread with nothing to send: releases the packs whose sends are complete.
+    auto releaseSentZeroCopy() -> void;
     // sends with MSG_ZEROCOPY on the last connection and how many of them the kernel copied
     auto zeroCopyStats(uint64_t& sends, uint64_t& copied) -> bool;
     // the kind of the packs received, DataLib::ID_PACK_*; by default a client takes ADC packs and

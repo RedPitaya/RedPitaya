@@ -496,6 +496,58 @@ TEST(DataChannel, StreamingNetWithZeroCopyUnlocksEveryPack) {
     EXPECT_EQ(unlocked, taken);
     EXPECT_EQ(client.broken, 0);
 }
+
+// The board with 4 channels in 12 blocks: a ring of 3 packs, the FPGA thread holds 2 and hands a
+// full one over only for a free one. A pack left waiting for its completion while the sender
+// waits for the next one stalled the stream after its first pack (rp32, 2026-11-16).
+static auto StreamRingOfThree(size_t maxPending) -> void {
+    constexpr size_t kRing = 3, kWriterHeld = 2;
+    const uint16_t port = NextPort();
+    std::string host = "127.0.0.1";
+    auto net = streaming_lib::CStreamingNet::create(host, port);
+    net->setZeroCopy(true, maxPending);
+    SenderPacks tx(kRing, true);
+    std::atomic<uint64_t> taken{0}, unlocked{0};
+    AdcClient client(port);
+    bool settled = false;
+    net->getBuffer = [&]() -> CDataBuffersPackDMA::Ptr {
+        if (client.connects == 0) {
+            std::this_thread::sleep_for(1ms);
+            return nullptr;
+        }
+        if (!settled) {
+            std::this_thread::sleep_for(100ms);
+            settled = true;
+        }
+        // the writer needs a free pack besides its two to hand a full one over
+        if (taken - unlocked >= kRing - kWriterHeld) {
+            std::this_thread::sleep_for(1ms);
+            return nullptr;
+        }
+        return tx.prepare(taken++);
+    };
+    net->unlockBufferF = [&]() { unlocked++; };
+    net->run();
+    client.net->start();
+    EXPECT_TRUE(WaitFor([&] { return client.packs >= 100; }, 10000ms)) << "stalled at " << client.packs << " packs";
+    net->stop();
+    EXPECT_EQ(unlocked, taken);
+    EXPECT_EQ(client.broken, 0);
+}
+
+TEST(DataChannel, StreamingNetWithZeroCopyKeepsARingOfThreeGoing) {
+    if (!ZeroCopySupported())
+        GTEST_SKIP() << "no SO_ZEROCOPY here";
+    StreamRingOfThree(net_lib::zeroCopyMaxPending(3, 2));
+}
+
+// The sender with nothing to send takes the completions itself: even a pending limit the ring
+// cannot afford (the one of the stall) slows the stream down, it does not stop it.
+TEST(DataChannel, AnIdleSenderReleasesTheSentPacksSoATooHighLimitDoesNotStall) {
+    if (!ZeroCopySupported())
+        GTEST_SKIP() << "no SO_ZEROCOPY here";
+    StreamRingOfThree(1);
+}
 #endif
 
 // ---- stopping with a client that does not read ----
@@ -678,3 +730,13 @@ TEST(SenderCpu, TheVariableSetsTheCpuAndMinusOneLeavesTheThreadUnpinned) {
         setenv("RP_STREAMING_SENDER_CPU", saved.c_str(), 1);
 }
 #endif
+
+TEST(ZeroCopy, APackWaitsOnlyWhileTheWriterHasAFreeOne) {
+    // 4 channels in 12 blocks: a ring of 3, the FPGA thread holds 2; a waiting pack stalled it
+    EXPECT_EQ(net_lib::zeroCopyMaxPending(3, 2), 0u);
+    EXPECT_EQ(net_lib::zeroCopyMaxPending(2, 2), 0u);
+    EXPECT_EQ(net_lib::zeroCopyMaxPending(0, 2), 0u);
+    EXPECT_EQ(net_lib::zeroCopyMaxPending(4, 2), 1u);
+    EXPECT_EQ(net_lib::zeroCopyMaxPending(6, 2), 3u);
+    EXPECT_EQ(net_lib::zeroCopyMaxPending(12, 2), 6u);
+}

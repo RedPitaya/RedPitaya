@@ -102,6 +102,9 @@ auto CStreamingNet::task() -> void {
             auto pack = getBuffer();
             if (pack)
                 sendBuffers(pack);
+            else if (m_asionet)
+                // the writer may wait for a pack the kernel is done with: no later send frees it
+                m_asionet->releaseSentZeroCopy();
         }
     }
     if (m_asionet) {

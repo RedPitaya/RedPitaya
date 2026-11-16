@@ -521,7 +521,7 @@ auto CAsioSocketDMA::setZeroCopy(bool enable, size_t maxPending) -> void {
     (void)enable;
     m_zcEnabled = false;
 #endif
-    m_zcMaxPending = maxPending ? maxPending : 1;
+    m_zcMaxPending = maxPending;
 }
 
 auto CAsioSocketDMA::zeroCopyStats() -> ZeroCopyStats {
@@ -661,6 +661,12 @@ auto CAsioSocketDMA::zcReleaseAll() -> void {
         if (release)
             release();
     }
+}
+
+auto CAsioSocketDMA::releaseSentZeroCopy() -> void {
+    std::lock_guard send(m_sendMtx);
+    if (!m_zcPending.empty())
+        zcReap();
 }
 
 auto CAsioSocketDMA::flushZeroCopy(std::chrono::milliseconds timeout) -> void {

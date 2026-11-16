@@ -324,10 +324,10 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         });
 
         if (p.net) {
-            // zero copy needs the memory of the ring mapped by rp_resmem; half the ring in flight
-            // at most leaves the writer room while the reader waits for completions
+            // zero copy needs the memory of the ring mapped by rp_resmem; the FPGA thread holds two
+            // packs (4 channels in 12 blocks are a ring of 3: no pack may wait, it stalled)
             const bool zeroCopy = memory->isZeroCopy();
-            p.net->setZeroCopy(zeroCopy, std::max<size_t>(1, p.buffer->ringSize() / 2));
+            p.net->setZeroCopy(zeroCopy, net_lib::zeroCopyMaxPending(p.buffer->ringSize(), 2));
             if (p.verbose)
                 aprintf(stdout, "[Streaming] Zero copy send: %s\n", zeroCopy ? "on" : "off");
             p.net->run();
