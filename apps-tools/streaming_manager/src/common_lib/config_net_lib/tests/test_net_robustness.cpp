@@ -364,13 +364,18 @@ TEST(NetConfigTransport, StoppingFromInsideAHandlerNeitherHangsNorCrashes) {
     auto client = std::make_unique<CNetConfigManager>();
     std::atomic<bool> stopped{false};
     client->receivedCommandNotify.connect([&](uint32_t, std::string) {
-        if (!stopped.exchange(true))
+        if (!stopped.exchange(true)) {
             client->stopAsioNet();
+            // the test thread destroys the client meanwhile: the handler is still running on it
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
     });
     client->startAsioNet(net_lib::M_CLIENT, "127.0.0.1", port);
     ASSERT_TRUE(WaitFor([&] { return stopped.load(); }));
     auto destroyed = std::async(std::launch::async, [&]() { client.reset(); });
     EXPECT_EQ(destroyed.wait_for(std::chrono::seconds(5)), std::future_status::ready);
+    // a handler the destruction did not wait for would run on freed memory now (CI build 912)
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
     std::error_code ec;
     std::filesystem::remove(TempFile(port), ec);
 }

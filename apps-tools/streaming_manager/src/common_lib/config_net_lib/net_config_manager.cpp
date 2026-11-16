@@ -77,6 +77,15 @@ auto deleteAsioNet(net_lib::CAsioNetSimple* net) -> void {
 
 CNetConfigManager::~CNetConfigManager() {
     stopAsioNet();
+    // A handler that stopped the connection may still be running on it (an owner without a
+    // shared_ptr gets no protection from weak_from_this()): the last release of the connection
+    // here joins its io thread before the buffer goes.
+    std::shared_ptr<net_lib::CAsioNetSimple> retired;
+    {
+        std::lock_guard lock(m_netMtx);
+        retired = std::move(m_retired);
+    }
+    retired.reset();
     delete[] m_buffers.m_buffers;
 }
 
@@ -107,6 +116,13 @@ auto CNetConfigManager::stopAsioNet() -> bool {
     // A sender may still hold it (the last owner deletes it through deleteAsioNet); whatever it
     // reports from now on is not ours.
     net->disconnectSignals();
+    // Stopped from its own handler: the handler goes on with this object after we return, so the
+    // connection is kept until the destructor can wait for it (released here, it would be deleted
+    // on a thread of its own while this object goes).
+    if (net->runningInIoThread()) {
+        std::lock_guard lock(m_netMtx);
+        m_retired = std::move(net);
+    }
     return true;
 }
 
