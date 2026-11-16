@@ -1,5 +1,6 @@
 // The block size check of the memory manager (the host build's heap manager)
 
+#include <cstdlib>
 #include <gtest/gtest.h>
 
 #include "data_lib/network_header.h"
@@ -51,4 +52,13 @@ TEST_F(MemoryBlockSize, RefusesBlocksTheRAMDoesNotHold) {
     // 12 blocks are the least a stream needs
     EXPECT_FALSE(mm->setMemoryBlockSize(ram / 12));
     EXPECT_TRUE(mm->setMemoryBlockSize(ram / 12 - DataLib::sizeHeader()));
+}
+
+// The tests run with RP_STREAMING_RAM_LIMIT (the CMake of the tests): the RAM of the host
+// does not change what they check.
+TEST(MemoryRam, TheEnvironmentLimitsTheRam) {
+    const char* limit = getenv("RP_STREAMING_RAM_LIMIT");
+    if (!limit)
+        GTEST_SKIP() << "RP_STREAMING_RAM_LIMIT is not set";
+    EXPECT_LE(CMemoryManager::instance()->getRAMSize(), 128u << 20) << "RP_STREAMING_RAM_LIMIT=" << limit;
 }

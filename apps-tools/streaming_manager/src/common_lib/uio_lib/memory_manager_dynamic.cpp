@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <algorithm>
+#include <cstdlib>
 #include <format>
 
 #ifndef _WIN32
@@ -17,6 +18,7 @@
 
 #define MR_MEMORY_BLOCK_SIZE (32 * 1024)
 #define MIN_RAM_SIZE 10 * 1024 * 1024
+#define MAX_RAM_SIZE 0x80000000u
 #define MIN_BLOCK_COUNT 12
 #define MIN_ADC_BLOCK MIN_BLOCK_COUNT
 #define MIN_DAC_BLOCK MIN_BLOCK_COUNT
@@ -43,10 +45,39 @@ auto CMemoryManager::instance() -> Ptr {
     return s;
 }
 
+// RP_STREAMING_RAM_LIMIT caps the memory taken for the blocks: bytes, or with a K, M or G
+// suffix. The tests set it, so that what they check does not depend on the RAM of the host.
+static auto ramLimitFromEnv() -> uint64_t {
+    const char* v = getenv("RP_STREAMING_RAM_LIMIT");
+    if (!v || !*v)
+        return 0;
+    char* end = nullptr;
+    uint64_t n = strtoull(v, &end, 10);
+    switch (end ? *end : '\0') {
+        case 'K':
+        case 'k':
+            n <<= 10;
+            break;
+        case 'M':
+        case 'm':
+            n <<= 20;
+            break;
+        case 'G':
+        case 'g':
+            n <<= 30;
+            break;
+        default:
+            break;
+    }
+    return n;
+}
+
 CMemoryManager::CMemoryManager() : m_lowReservedAddress(0), m_highReservedAddress(0), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()), m_dacStreamMode(false) {
-    auto totalSize = getTotalSystemMemory();
-    auto calc = totalSize * 0.05;
-    m_ramSize = MIN_RAM_SIZE > calc ? MIN_RAM_SIZE : calc;
+    uint64_t size = std::max<uint64_t>(MIN_RAM_SIZE, getTotalSystemMemory() / 20);  // 5% of the RAM
+    if (const uint64_t limit = ramLimitFromEnv(); limit)
+        size = std::min(size, std::max<uint64_t>(limit, MIN_RAM_SIZE));
+    // the size is 32 bits: 5% of a host with more than 80 GB used to wrap around
+    m_ramSize = static_cast<uint32_t>(std::min<uint64_t>(size, MAX_RAM_SIZE));
 }
 
 CMemoryManager::~CMemoryManager() {

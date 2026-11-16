@@ -34,4 +34,5 @@ target_link_libraries(dac_streaming_lib_tests PRIVATE
 target_compile_features(dac_streaming_lib_tests PRIVATE cxx_std_20)
 
 include(GoogleTest)
-gtest_discover_tests(dac_streaming_lib_tests PROPERTIES LABELS dac_streaming_lib TIMEOUT 120)
+## The blocks take 5% of the host RAM: a fixed limit keeps the results the same on every host
+gtest_discover_tests(dac_streaming_lib_tests PROPERTIES LABELS dac_streaming_lib ENVIRONMENT RP_STREAMING_RAM_LIMIT=128M TIMEOUT 120)
