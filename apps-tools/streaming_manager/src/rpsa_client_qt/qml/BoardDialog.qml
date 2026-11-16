@@ -16,6 +16,9 @@ Dialog2 {
     title: (b ? b.name : "") + " settings"
     subtitle: b ? b.model + " · " + b.ip + (s.connected ? " · " + (b.isMaster ? "Master" : "Slave") : "") : ""
 
+    // for the UI script of the tests: the end of a long tab
+    function scrollToEnd() { sv.ScrollBar.vertical.position = 1.0 - sv.ScrollBar.vertical.size }
+
     function openFor(board, t) {
         b = board
         tab = t || "adc"

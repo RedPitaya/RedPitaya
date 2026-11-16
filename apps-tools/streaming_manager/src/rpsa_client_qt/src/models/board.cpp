@@ -123,6 +123,13 @@ auto CBoard::connectHandlers() -> void {
     });
 
     cm->errorNofiy.connect([this](ClientNetConfigManager::Errors error, std::string, std::error_code err) {
+        if (error == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG) {
+            // the connection is fine: a value of the board did not fit the settings of this program
+            addLog("The settings of the board could not be taken: one of its values is not accepted by this program "
+                   "(an older or newer version?). The settings shown are not the ones of the board.",
+                   Log::Error);
+            return;
+        }
         const QString msg = QString::fromStdString(err.message());
         const bool closed = err == asio::error::eof || err == asio::error::connection_reset || err == asio::error::broken_pipe;
         const bool refused = err == asio::error::connection_refused;
@@ -243,6 +250,12 @@ auto CBoard::connectHandlers() -> void {
 
     cm->getTriggerStatusNofiy.connect([this](std::string&, TriggerStatus status) {
         post([this, status]() {
+            if (!m_trigKnown || m_adcArmed != status.adcArmed || m_adcTriggerCount != status.adcTriggerCount) {
+                m_trigKnown = true;
+                m_adcTriggerCount = status.adcTriggerCount;
+                m_adcArmed = status.adcArmed;
+                emit triggerChanged();
+            }
             m_adcArmed = status.adcArmed;
             if (m_state == "streaming" && m_adcArmed)
                 setState("armed");
@@ -332,6 +345,11 @@ auto CBoard::adcStopped(const QString& why, bool error) -> void {
     const QString file = m_fileName;
     closeStreaming();
     m_adcArmed = false;
+    if (m_trigKnown) {
+        m_trigKnown = false;
+        m_adcTriggerCount = 0;
+        emit triggerChanged();
+    }
     m_stopRequested = false;
     setState("stopped");
     if (wasStreaming || !why.isEmpty())
@@ -488,6 +506,14 @@ auto CBoard::getCaps() -> QVariantMap {
     c["fromBoard"] = m_infoFromBoard;
     c["mac"] = m_mac;
     return c;
+}
+
+auto CBoard::getTrigger() -> QVariantMap {
+    QVariantMap t;
+    t["known"] = m_trigKnown;
+    t["armed"] = m_adcArmed;
+    t["count"] = double(m_adcTriggerCount);
+    return t;
 }
 
 auto CBoard::getState() -> QString {

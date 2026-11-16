@@ -30,7 +30,10 @@ ApplicationWindow {
 
     // RPSA_QT_UI: steps run at the start, for tests and screenshots, separated by ";":
     // list | cards | app | add | board:<index>:<tab> | set:<index>:<key>=<value> | start:<index> |
-    // stop:<index> | wait:<ms> | size:<w>x<h> | console:<index> | reconnect:<index> | startall | stopall
+    // stop:<index> | wait:<ms> | size:<w>x<h> | console:<index> | reconnect:<index> | startall | stopall |
+    // scroll (the open board dialog to its end) | trigger:<index> (software trigger)
+    // <index> may be the IP of the board instead (the order of the boards follows the broadcast)
+    function scriptBoard(id) { return String(id).indexOf(".") >= 0 ? boards.boardByIp(id) : boards.board(Number(id || 0)) }
     Timer {
         id: script
         property var steps: uiScript === "" ? [] : uiScript.split(";")
@@ -47,20 +50,22 @@ ApplicationWindow {
                 else if (p[0] === "list") app.view = "list"
                 else if (p[0] === "startall") boards.runAll()
                 else if (p[0] === "stopall") boards.stopAll()
-                else if (p[0] === "console" && boards.board(Number(p[1]))) boards.board(Number(p[1])).chartEnable = false
-                else if (p[0] === "reconnect" && boards.board(Number(p[1]))) boards.board(Number(p[1])).reconnect()
+                else if (p[0] === "console" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).chartEnable = false
+                else if (p[0] === "reconnect" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).reconnect()
                 else if (p[0] === "set") {
                     const kv = p.slice(2).join(":").split("=")
-                    const b = boards.board(Number(p[1]))
+                    const b = win.scriptBoard(p[1])
                     if (b) b.setValue(kv[0], kv[1])
                 }
-                else if (p[0] === "start" && boards.board(Number(p[1]))) boards.board(Number(p[1])).startStreaming()
-                else if (p[0] === "stop" && boards.board(Number(p[1]))) boards.board(Number(p[1])).stopStreaming()
+                else if (p[0] === "start" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).startStreaming()
+                else if (p[0] === "stop" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).stopStreaming()
+                else if (p[0] === "scroll") boardDialog.scrollToEnd()
+                else if (p[0] === "trigger" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).softwareTrigger()
                 else if (p[0] === "cards") app.view = "cards"
                 else if (p[0] === "app") appDialog.open()
                 else if (p[0] === "add") addDialog.open()
                 else if (p[0] === "board") {
-                    const b = boards.board(Number(p[1] || 0))
+                    const b = win.scriptBoard(p[1])
                     if (b) boardDialog.openFor(b, p[2] || "adc")
                 }
             }

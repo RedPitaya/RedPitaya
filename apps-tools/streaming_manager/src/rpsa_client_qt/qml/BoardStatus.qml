@@ -58,5 +58,8 @@ QtObject {
         : (inputsOn.length ? inputsOn.join(" ") : "no input on") + " · " + sampleBytes * 8 + " bit · dec " + decimation
           + " · " + Theme.rate(perChannel) + " → " + (toSd ? format + " on the SD card" : format + " on this PC")
     readonly property bool trigOn: v("adc_trigger_mode") === "ON"
-    readonly property string trigText: !b || !b.settingsLoaded ? "-" : trigOn ? "Waits for a trigger" : "Off (continuous)"
+    readonly property int trigSources: Number(v("adc_trigger_sources")) || 0
+    // waiting for a trigger with no source: only the software trigger starts the ADC
+    readonly property bool trigNoSource: trigOn && trigSources === 0
+    readonly property string trigText: !b || !b.settingsLoaded ? "-" : trigNoSource ? "Waits, no source chosen" : trigOn ? "Waits for a trigger" : "Off (continuous)"
 }

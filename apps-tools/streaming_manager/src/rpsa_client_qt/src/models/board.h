@@ -44,6 +44,9 @@ class CBoard : public QObject {
     Q_PROPERTY(bool isADCStarted READ getIsADCStarted NOTIFY stateChanged)
     // received, speed (bytes a second), samples (per channel), lostBoard, lostFile, file
     Q_PROPERTY(QVariantMap stats READ getStats NOTIFY statsChanged)
+    // the ADC trigger while streaming in the trigger mode: known (the board answered), armed,
+    // count (triggers the FPGA has seen)
+    Q_PROPERTY(QVariantMap trigger READ getTrigger NOTIFY triggerChanged)
     // bumped when the settings of the board change: bindings that read value() depend on it
     Q_PROPERTY(int settingsRev READ settingsRev NOTIFY settingsChanged)
     Q_PROPERTY(bool settingsLoaded READ settingsLoaded NOTIFY settingsChanged)
@@ -76,6 +79,7 @@ class CBoard : public QObject {
     auto getCaps() -> QVariantMap;
     auto getState() -> QString;
     auto getStats() -> QVariantMap;
+    auto getTrigger() -> QVariantMap;
     auto settingsRev() -> int;
     auto settingsLoaded() -> bool;
     auto pcRev() -> int;
@@ -120,6 +124,7 @@ class CBoard : public QObject {
     void configManagerConnectedChanged();
     void stateChanged();
     void statsChanged();
+    void triggerChanged();
     void settingsChanged();
     void pcSettingsChanged();
     // a stream lost data (for Stop all on loss)
@@ -186,6 +191,8 @@ class CBoard : public QObject {
     ConsoleModel m_consoleModel;
     QString m_state = "stopped";
     bool m_adcArmed = false;
+    bool m_trigKnown = false;
+    uint32_t m_adcTriggerCount = 0;
     bool m_stopRequested = false;
     QDateTime m_streamingDT;
     QString m_fileName;

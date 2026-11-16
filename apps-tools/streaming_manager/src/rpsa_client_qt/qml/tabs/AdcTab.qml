@@ -216,4 +216,9 @@ ColumnLayout {
             }
         }
     }
+
+    AdcTrigger {
+        b: root.b
+        Layout.fillWidth: true
+    }
 }
