@@ -80,6 +80,22 @@ Rectangle {
                     currentIndex: b && b.chartEnable ? 0 : 1
                     onPicked: (i) => b.chartEnable = i === 0
                 }
+                Seg {
+                    visible: b && b.chartEnable
+                    small: true
+                    options: ["Full Y", "Fit Y"]
+                    currentIndex: b && b.previewFit ? 1 : 0
+                    onPicked: (i) => b.previewFit = i === 1
+                }
+                Select {
+                    visible: b && b.chartEnable
+                    implicitHeight: 24 + Theme.fsAdd
+                    implicitWidth: 150 + 6 * Theme.fsAdd
+                    font.pixelSize: Theme.fsSm
+                    options: Theme.previewDecimations
+                    value: b ? b.previewDecimation : 1
+                    onPicked: (x) => b.previewDecimation = Number(x)
+                }
                 Item { Layout.fillWidth: true }
                 Repeater {
                     model: b && b.chartEnable ? s.adcCount : 0
@@ -103,6 +119,10 @@ Rectangle {
                     visible: b && b.chartEnable
                     board: root.b
                     channels: s.adcCount
+                    fit: !!(b && b.previewFit)
+                    decimation: b ? b.previewDecimation : 1
+                    sampleRate: s.perChannel
+                    blockSamples: s.blockSamples
                 }
                 Rectangle {
                     anchors.centerIn: parent

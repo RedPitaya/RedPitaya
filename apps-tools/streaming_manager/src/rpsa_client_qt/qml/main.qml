@@ -31,7 +31,8 @@ ApplicationWindow {
     // RPSA_QT_UI: steps run at the start, for tests and screenshots, separated by ";":
     // list | cards | app | add | board:<index>:<tab> | set:<index>:<key>=<value> | start:<index> |
     // stop:<index> | wait:<ms> | size:<w>x<h> | console:<index> | reconnect:<index> | startall | stopall |
-    // scroll (the open board dialog to its end) | trigger:<index> (software trigger)
+    // scroll (the open board dialog to its end) | trigger:<index> (software trigger) |
+    // signal:<index> | fit:<index> | fullY:<index> | pdec:<index>:<n> (the preview of a board)
     // <index> may be the IP of the board instead (the order of the boards follows the broadcast)
     function scriptBoard(id) { return String(id).indexOf(".") >= 0 ? boards.boardByIp(id) : boards.board(Number(id || 0)) }
     Timer {
@@ -51,6 +52,10 @@ ApplicationWindow {
                 else if (p[0] === "startall") boards.runAll()
                 else if (p[0] === "stopall") boards.stopAll()
                 else if (p[0] === "console" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).chartEnable = false
+                else if (p[0] === "signal" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).chartEnable = true
+                else if (p[0] === "fit" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).previewFit = true
+                else if (p[0] === "pdec" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).previewDecimation = Number(p[2])
+                else if (p[0] === "fullY" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).previewFit = false
                 else if (p[0] === "reconnect" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).reconnect()
                 else if (p[0] === "set") {
                     const kv = p.slice(2).join(":").split("=")

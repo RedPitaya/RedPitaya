@@ -54,6 +54,10 @@ class CBoard : public QObject {
     Q_PROPERTY(int pcRev READ pcRev NOTIFY pcSettingsChanged)
     // the preview shows the signal (else the console)
     Q_PROPERTY(bool chartEnable READ getChartEnable WRITE setChartEnable NOTIFY pcSettingsChanged)
+    // the preview fits its Y range to the signal (else the full range of the inputs)
+    Q_PROPERTY(bool previewFit READ previewFit WRITE setPreviewFit NOTIFY pcSettingsChanged)
+    // samples of the stream per point of the preview (0: the whole block on the width)
+    Q_PROPERTY(int previewDecimation READ previewDecimation WRITE setPreviewDecimation NOTIFY pcSettingsChanged)
 
    public:
     using Ptr = std::shared_ptr<CBoard>;
@@ -85,6 +89,10 @@ class CBoard : public QObject {
     auto pcRev() -> int;
     auto getChartEnable() -> bool;
     auto setChartEnable(bool enable) -> void;
+    auto previewFit() -> bool;
+    auto setPreviewFit(bool fit) -> void;
+    auto previewDecimation() -> int;
+    auto setPreviewDecimation(int samplesPerPoint) -> void;
 
     Q_INVOKABLE QObject* getConsoleModel();
 
@@ -188,6 +196,10 @@ class CBoard : public QObject {
     int m_settingsRev = 0;
     int m_pcRev = 0;
     bool m_chartEnable = true;
+    // the stream gives blocks to the preview: the card shows the signal or the list is shown
+    // (the list has no console); read by the data thread
+    std::atomic<bool> m_previewWanted{true};
+    auto updatePreviewWanted() -> void;
     ConsoleModel m_consoleModel;
     QString m_state = "stopped";
     bool m_adcArmed = false;

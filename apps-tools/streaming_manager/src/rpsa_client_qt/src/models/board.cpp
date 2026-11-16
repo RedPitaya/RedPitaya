@@ -30,6 +30,9 @@ auto formatExtension(const QString& format) -> QString {
 CBoard::CBoard(QString ip, bool manual) : QObject{nullptr}, m_ip(ip), m_manual(manual) {
     QQmlEngine::setObjectOwnership(this, QQmlEngine::CppOwnership);
     m_chartEnable = pcValue("preview").toBool();
+    updatePreviewWanted();
+    ChartDataHolder::instance()->setDecimation(m_ip, previewDecimation());
+    connect(AppSettings::instance(), &AppSettings::changed, this, &CBoard::updatePreviewWanted);
 
     m_offlineTimer = new QTimer(this);
     connect(m_offlineTimer, &QTimer::timeout, this, &CBoard::updateOffline);
@@ -679,7 +682,9 @@ QVariant CBoard::pcValue(const QString& key) {
         return s.value(pcKey(key), 1);
     if (key == "preview")
         return s.value(pcKey(key), true);
-    if (key == "openFolderOnStop" || key == "saveConsole")
+    if (key == "previewDecimation")
+        return s.value(pcKey(key), 1);
+    if (key == "openFolderOnStop" || key == "saveConsole" || key == "previewFit")
         return s.value(pcKey(key), false);
     return s.value(pcKey(key), "");
 }
@@ -699,7 +704,29 @@ auto CBoard::getChartEnable() -> bool {
 
 auto CBoard::setChartEnable(bool enable) -> void {
     m_chartEnable = enable;
+    updatePreviewWanted();
     setPcValue("preview", enable);
+}
+
+auto CBoard::updatePreviewWanted() -> void {
+    m_previewWanted = m_chartEnable || AppSettings::instance()->view() == "list";
+}
+
+auto CBoard::previewFit() -> bool {
+    return pcValue("previewFit").toBool();
+}
+
+auto CBoard::setPreviewFit(bool fit) -> void {
+    setPcValue("previewFit", fit);
+}
+
+auto CBoard::previewDecimation() -> int {
+    return std::max(0, pcValue("previewDecimation").toInt());
+}
+
+auto CBoard::setPreviewDecimation(int samplesPerPoint) -> void {
+    ChartDataHolder::instance()->setDecimation(m_ip, std::max(0, samplesPerPoint));
+    setPcValue("previewDecimation", std::max(0, samplesPerPoint));
 }
 
 QString CBoard::recordDir() {
@@ -883,7 +910,7 @@ auto CBoard::createStreaming() -> void {
             m_stat.lostFile = fileLost;
         }
         fileObj->passBuffers(pack);
-        ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_chartEnable);
+        ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_previewWanted);
         buffers->unlockBufferRead();
     });
 

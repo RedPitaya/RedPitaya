@@ -1,4 +1,5 @@
 #include "chartdataholder.h"
+#include <algorithm>
 #include <QQmlEngine>
 #include <QThread>
 
@@ -75,6 +76,7 @@ auto ChartDataHolder::addBuffer(DataLib::CDataBuffersPackDMA::Ptr pack, uint64_t
 auto ChartDataHolder::chartPackThread() -> void {
     while (m_IsWorkThread) {
         QMap<QString, DataLib::CDataBuffersPackDMA::Ptr> packForWork;
+        QMap<QString, int> decimation;
         m_add_mutex.lock();
         const int chartWidth = m_chartWidth;
         bool canGet = m_rp.size();
@@ -83,6 +85,7 @@ auto ChartDataHolder::chartPackThread() -> void {
         }
         if (canGet) {
             packForWork = m_pack;
+            decimation = m_decimation;
             for (auto i : m_packId.keys()) {
                 m_packId[i] = 0;
             }
@@ -95,6 +98,23 @@ auto ChartDataHolder::chartPackThread() -> void {
             const int pointsCount = static_cast<int>(buf->getSamplesCount());
             auto bitSize = buf->getBitBySample();
             auto buffer = buf->getMappedDataMemory();
+            auto sample = [&](int i) -> int {
+                return bitSize == 8 ? reinterpret_cast<int8_t*>(buffer)[i] << 8 : reinterpret_cast<int16_t*>(buffer)[i];
+            };
+            const int dec = decimation.value(ip, 1);
+            if (dec > 0) {
+                // a window from the start of the block: dec samples (their mean) per point
+                const int count = std::min(chartWidth, pointsCount / dec);
+                auto& out = m_chartPoints[index][ip];
+                out.resize(count);
+                for (int w = 0; w < count; w++) {
+                    int64_t sum = 0;
+                    for (int j = 0; j < dec; j++)
+                        sum += sample(w * dec + j);
+                    out[w] = (float)(sum / dec) / 32768.0;
+                }
+                return;
+            }
             int step = pointsCount / chartWidth;
             if (step <= 1) {
                 // every sample: fewer than two of them per point
@@ -152,6 +172,11 @@ auto ChartDataHolder::chartPackThread() -> void {
 
 auto ChartDataHolder::setRate(int perSecond) -> void {
     m_intervalMs = 1000 / qBound(1, perSecond, 10);
+}
+
+auto ChartDataHolder::setDecimation(const QString& ip, int samplesPerPoint) -> void {
+    std::lock_guard<std::mutex> lock(m_add_mutex);
+    m_decimation[ip] = std::max(0, samplesPerPoint);
 }
 
 auto ChartDataHolder::setPoints(int points) -> void {

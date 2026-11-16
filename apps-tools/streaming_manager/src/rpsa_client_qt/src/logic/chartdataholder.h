@@ -27,6 +27,9 @@ class ChartDataHolder : public QObject {
     // blocks a second and points across of the preview
     auto setRate(int perSecond) -> void;
     auto setPoints(int points) -> void;
+    // samples of the stream per point of the preview of a board, from the start of each block;
+    // 0: the whole block (each point the mean of its share)
+    auto setDecimation(const QString& ip, int samplesPerPoint) -> void;
 
    public slots:
 
@@ -38,6 +41,7 @@ class ChartDataHolder : public QObject {
     QList<QString> m_rp;
     QMap<QString, DataLib::CDataBuffersPackDMA::Ptr> m_pack;
     QMap<QString, uint64_t> m_packId;
+    QMap<QString, int> m_decimation;
 
     std::thread* m_chartThread;
     std::atomic<bool> m_IsWorkThread{false};

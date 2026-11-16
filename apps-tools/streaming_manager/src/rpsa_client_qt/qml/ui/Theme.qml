@@ -54,6 +54,10 @@ QtObject {
 
     readonly property string mono: "Menlo, Consolas, Liberation Mono, DejaVu Sans Mono, monospace"
 
+    // the choices of the samples per point of the signal preview
+    readonly property var previewDecimations: [[1, "Every sample"], [2, "Dec 2"], [4, "Dec 4"], [8, "Dec 8"],
+        [16, "Dec 16"], [32, "Dec 32"], [64, "Dec 64"], [128, "Dec 128"], [256, "Dec 256"], [1024, "Dec 1024"],
+        [0, "Whole block"]]
     function bytes(b) {
         if (b >= 1073741824) return (b / 1073741824).toFixed(2) + " GB"
         if (b >= 1048576) return (b / 1048576).toFixed(2) + " MB"

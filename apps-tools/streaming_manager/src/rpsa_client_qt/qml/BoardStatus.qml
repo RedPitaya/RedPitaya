@@ -51,6 +51,7 @@ QtObject {
     readonly property int decimation: Math.max(1, Number(v("adc_decimation")) || 1)
     readonly property double perChannel: (caps.adcRate || 125000000) / decimation
     readonly property int sampleBytes: v("resolution") === "BIT_8" ? 1 : 2
+    readonly property int blockSamples: Math.floor((Number(v("block_size")) || 65536) / sampleBytes)
     readonly property bool toSd: v("adc_pass_mode") === "FILE"
     readonly property string format: (v("format_sd") || "WAV")
 

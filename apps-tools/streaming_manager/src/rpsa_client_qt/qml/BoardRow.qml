@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import "ui"
 
@@ -64,12 +65,31 @@ Item {
                 border.color: Theme.borderSoft
                 radius: Theme.radius
                 Preview {
+                    id: rowPreview
                     anchors.fill: parent
                     anchors.margins: 1
                     board: root.b
                     grid: false
                     channels: s.adcCount
-                    active: !root.header && b && b.chartEnable
+                    // the list has no console: the signal always
+                    active: !root.header && !!b
+                    fit: !!(b && b.previewFit)
+                    decimation: b ? b.previewDecimation : 1
+                    sampleRate: s.perChannel
+                    blockSamples: s.blockSamples
+                }
+                // a click switches the Y range: full or fitted to the signal
+                MouseArea {
+                    id: pvMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: b.previewFit = !b.previewFit
+                    ToolTip.visible: containsMouse
+                    ToolTip.delay: 600
+                    ToolTip.text: (rowPreview.windowSec > 0 ? rowPreview.timeText(rowPreview.windowSec) + " across · " : "")
+                        + "Y " + (b && b.previewFit ? rowPreview.scaleText : "Full")
+                        + "\nClick: " + (b && b.previewFit ? "the full range of the inputs" : "fit Y to the signal")
                 }
             }
         }

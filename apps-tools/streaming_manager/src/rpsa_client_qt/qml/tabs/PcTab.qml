@@ -79,6 +79,28 @@ ColumnLayout {
                 checked: b ? b.chartEnable : false
                 onClicked: b.chartEnable = checked
             }
+            Label2 {
+                kind: "hint"
+                Layout.fillWidth: true
+                text: "For the cards; the list always shows the signal."
+            }
+            Flip {
+                label: "Fit Y to the signal (else the full range of the inputs)"
+                Layout.fillWidth: true
+                checked: b ? b.previewFit : false
+                onClicked: b.previewFit = checked
+            }
+            Field {
+                label: "Samples per point of the preview"
+                hint: "Fewer: a short piece of each block, every detail. The whole block: the mean of a share of it per point, a fast signal is lost."
+                Layout.fillWidth: true
+                Select {
+                    Layout.preferredWidth: 220
+                    options: Theme.previewDecimations
+                    value: b ? b.previewDecimation : 1
+                    onPicked: (x) => b.previewDecimation = Number(x)
+                }
+            }
             Field {
                 label: "Console messages"
                 Layout.fillWidth: true
