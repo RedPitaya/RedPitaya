@@ -137,3 +137,19 @@ tr.sel td{background:rgba(71,178,209,.08)}
 @media (max-width:760px){.app-nav{max-width:none;flex-basis:100%}.app-main{padding:16px 0 0}}
 .field label.srci{font-size:var(--fs-md);font-weight:400}
 .field>.seg,.field>.dst+.seg{align-self:flex-start}
+
+/* a message in place of the loader: no streaming service in the OS, a service that does not start */
+.service-msg {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: min(560px, calc(100vw - 32px));
+    padding: 20px 24px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background: #2b2b2a;
+    color: #e8e8e6;
+    font: 15px/1.5 sans-serif;
+    text-align: center;
+}

@@ -1,7 +1,12 @@
 /*
  * Red Pitaya stream server application: the connection to the board.
  *
- * CLIENT: the parameters of the application module (websocket /wss, rp_sdk). The globals
+ * The application runs as a service (redpitaya_streaming.service): streaming-server with the
+ * backend of this page (rp_sdk). The page starts it when it is not running, talks to it through
+ * nginx (/streaming_ws) and leaves it running when it closes: the streams go on. The Exit button
+ * stops it.
+ *
+ * CLIENT: the parameters of the application module (websocket /streaming_ws, rp_sdk). The globals
  * CLIENT.state.socket_opened, CLIENT.params.orig, CLIENT.parametersCache and
  * CLIENT.sendParameters() keep the names of the old page (the regression test uses them).
  * RP_CLIENT: the liveness socket (ping every second), the loader and the "connection lost" /
@@ -10,21 +15,20 @@
 (function () {
     'use strict';
 
-    const APP = 'streaming_manager';
     const https = location.protocol === 'https:';
 
     // ---------------------------------------------------------------------------------------
     // the parameters
     const CLIENT = {
         config: {
-            start_app_url: '/bazaar?start=' + APP + '?type=run',
-            stop_app_url: '/bazaar?stop=' + APP,
-            socket_url: (https ? 'wss://' : 'ws://') + location.host + '/wss'
+            service_url: '/streaming_manager_service',
+            socket_url: (https ? 'wss://' : 'ws://') + location.host + '/streaming_ws'
         },
         state: { socket_opened: false, app_started: false },
         params: { orig: {} },
         parametersCache: {},
         ws: null,
+        retries: 0,
         listeners: [],
         openListeners: []
     };
@@ -104,6 +108,7 @@
         CLIENT.ws = ws;
         ws.onopen = () => {
             CLIENT.state.socket_opened = true;
+            CLIENT.retries = 0;
             CLIENT.parametersCache = {};
             // plain JSON when the browser cannot unzip it
             if (typeof DecompressionStream === 'undefined') {
@@ -115,6 +120,12 @@
             }
         };
         ws.onclose = () => {
+            // a service that has just started opens its socket a little later: try again first
+            if (!CLIENT.state.socket_opened && CLIENT.retries < 15) {
+                CLIENT.retries++;
+                setTimeout(CLIENT.connectWebSocket, 500);
+                return;
+            }
             CLIENT.state.socket_opened = false;
             setTimeout(RP_CLIENT.reloadPage, 2000);
         };
@@ -122,20 +133,74 @@
         ws.onmessage = onMessage;
     };
 
-    CLIENT.startApp = () => {
-        fetch(CLIENT.config.start_app_url, { cache: 'no-store' })
-            .then((r) => r.json())
-            .then((r) => {
-                if (r.status === 'OK') {
-                    CLIENT.state.app_started = true;
-                    CLIENT.connectWebSocket();
-                    RP_CLIENT.connectWebSocket();
-                } else {
-                    console.warn('start of the application:', r.reason || r.status);
-                    setTimeout(CLIENT.startApp, 2000);
-                }
-            })
-            .catch(() => setTimeout(CLIENT.startApp, 2000));
+    // the streams that run (their status 1): the Exit button asks before it stops them
+    CLIENT.running = () => ['SS_STATUS', 'SS_DAC_STATUS', 'SS_GPIO_STATUS', 'SS_GPIO_OUT_STATUS']
+        .filter((n) => Number(CLIENT.value(n, 0)) === 1).length;
+
+    const service = (cmd) => fetch(CLIENT.config.service_url + (cmd ? '?cmd=' + cmd : ''),
+        { method: cmd ? 'POST' : 'GET', cache: 'no-store' }).then((r) => r.json());
+
+    // the overlay of the loader with a message of its own (no service in this OS, ...)
+    const fail = (text) => {
+        const d = document.getElementById('loader-wrapper');
+        if (d) d.innerHTML = '<div class="service-msg">' + text + '</div>';
+    };
+
+    // The service: running - connect; stopped - stop the bazaar application (it holds the FPGA and
+    // the port of the liveness socket), start the service and connect once its socket answers.
+    CLIENT.startApp = async () => {
+        let st;
+        try {
+            st = await service();
+        } catch (e) {
+            setTimeout(CLIENT.startApp, 2000);
+            return;
+        }
+        if (!st.unit) {
+            fail('This Red Pitaya OS has no streaming service. Update the OS to 3.04 or later.');
+            return;
+        }
+        if (st.active !== 'active' && st.active !== 'activating') {
+            if (st.scpi === 'active' && !confirm('The SCPI server is running. The streaming server takes the FPGA and stops it. Go on?')) {
+                location.href = '/';
+                return;
+            }
+            try {
+                await fetch('/bazaar?stop=', { cache: 'no-store' });
+                st = await service('start');
+            } catch (e) {
+                setTimeout(CLIENT.startApp, 2000);
+                return;
+            }
+            if (st.active !== 'active' && st.active !== 'activating') {
+                fail('The streaming server does not start (' + st.active + '). See: journalctl -u redpitaya_streaming');
+                return;
+            }
+        }
+        CLIENT.state.app_started = true;
+        CLIENT.connectWebSocket();
+        RP_CLIENT.connectWebSocket();
+    };
+
+    // Exit: stop the service and go to the applications (the root page shows this page while the
+    // service runs)
+    CLIENT.exitApp = async () => {
+        const n = CLIENT.running();
+        if (n && !confirm(n + (n === 1 ? ' stream runs' : ' streams run') + ' on the board: the exit stops ' + (n === 1 ? 'it' : 'them') + '. Exit?')) {
+            return;
+        }
+        for (const w of [CLIENT.ws, RP_CLIENT.ws]) {
+            if (w) {
+                w.onclose = null;
+                w.close();
+            }
+        }
+        try {
+            await service('stop');
+        } catch (e) {
+            // the root page shows this one again if the service still runs
+        }
+        location.href = '/';
     };
 
     // ---------------------------------------------------------------------------------------
@@ -218,26 +283,24 @@
 
     // ---------------------------------------------------------------------------------------
     window.addEventListener('load', () => {
+        const exit = document.getElementById('exit');
+        if (exit) {
+            exit.addEventListener('click', (e) => {
+                e.preventDefault();
+                CLIENT.exitApp();
+            });
+        }
         fetch('/set_client_id', { method: 'POST', body: RP_CLIENT.client_id }).catch(() => {});
         setTimeout(CLIENT.startApp, 500);
     });
 
+    // the service goes on when the page closes: only the sockets close
     window.addEventListener('beforeunload', () => {
-        if (CLIENT.ws) {
-            CLIENT.ws.onclose = null;
-            CLIENT.ws.close();
-        }
-        if (RP_CLIENT.ws) {
-            RP_CLIENT.ws.onclose = null;
-            RP_CLIENT.ws.close();
-        }
-        // synchronous: the module must stop before the page goes
-        try {
-            const x = new XMLHttpRequest();
-            x.open('GET', CLIENT.config.stop_app_url, false);
-            x.send();
-        } catch (e) {
-            // the page goes anyway
+        for (const w of [CLIENT.ws, RP_CLIENT.ws]) {
+            if (w) {
+                w.onclose = null;
+                w.close();
+            }
         }
     });
 
