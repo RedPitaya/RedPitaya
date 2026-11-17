@@ -99,8 +99,10 @@ auto wordsAt(uint32_t address) -> uint32_t* {
     return nullptr;
 }
 
+// Waits for a success only, returning at once on it: the limit is for the slow machines (the
+// emulated ARM of CI, the sanitizers), not for the time a test takes.
 template <typename P>
-auto waitFor(P done, std::chrono::milliseconds limit = 5000ms) -> bool {
+auto waitFor(P done, std::chrono::milliseconds limit = 20000ms) -> bool {
     auto end = std::chrono::steady_clock::now() + limit;
     while (!done()) {
         if (std::chrono::steady_clock::now() > end)

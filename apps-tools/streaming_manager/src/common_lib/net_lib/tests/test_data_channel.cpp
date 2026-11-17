@@ -39,7 +39,9 @@ namespace {
 
 constexpr size_t kBlock = 16 * 1024;
 
-auto WaitFor(const std::function<bool()>& done, std::chrono::milliseconds timeout = 5000ms) -> bool {
+// Waits for a success only, returning at once on it: the limit is for the slow machines (the
+// emulated ARM of CI, the sanitizers), not for the time a test takes.
+auto WaitFor(const std::function<bool()>& done, std::chrono::milliseconds timeout = 20000ms) -> bool {
     const auto end = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < end) {
         if (done())

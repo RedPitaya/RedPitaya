@@ -26,7 +26,9 @@ using Cmd = CNetConfigManager::ECommands;
 
 namespace {
 
-auto WaitFor(const std::function<bool()>& done, std::chrono::milliseconds timeout = std::chrono::milliseconds(3000)) -> bool {
+// Waits for a success only, returning at once on it: the limit is for the slow machines (the
+// emulated ARM of CI, the sanitizers), not for the time a test takes.
+auto WaitFor(const std::function<bool()>& done, std::chrono::milliseconds timeout = std::chrono::milliseconds(20000)) -> bool {
     const auto end = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < end) {
         if (done())
