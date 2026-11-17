@@ -90,6 +90,10 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
     auto startADCStreaming() -> bool {
         std::lock_guard mem(memoryMtx);
         std::lock_guard lock(adcMtx);
+        // a start the config channel asked for while the session stopped: stop() sets stopped
+        // before it takes this mutex to stop the stream, so either it stops this one or none starts
+        if (stopped)
+            return false;
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_ADC, s.getADCSize());
         streaming_lib::ADCStreamOptions o;
@@ -119,6 +123,10 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
     auto startDAC(dac_channels_t channels) -> bool {
         std::lock_guard mem(memoryMtx);
         std::lock_guard lock(dacMtx);
+        // a start the config channel asked for while the session stopped: stop() sets stopped
+        // before it takes this mutex to stop the stream, so either it stops this one or none starts
+        if (stopped)
+            return false;
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_DAC, s.getDACSize());
         dac->setVerbose(options.verbose);
@@ -139,6 +147,10 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
     auto startGPIOIn() -> bool {
         std::lock_guard mem(memoryMtx);
         std::lock_guard lock(gpioInMtx);
+        // a start the config channel asked for while the session stopped: stop() sets stopped
+        // before it takes this mutex to stop the stream, so either it stops this one or none starts
+        if (stopped)
+            return false;
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_GPIO_IN, s.getGPIOInSize());
         gpioIn->setVerbose(options.verbose);
@@ -159,6 +171,10 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
     auto startGPIOOut() -> bool {
         std::lock_guard mem(memoryMtx);
         std::lock_guard lock(gpioOutMtx);
+        // a start the config channel asked for while the session stopped: stop() sets stopped
+        // before it takes this mutex to stop the stream, so either it stops this one or none starts
+        if (stopped)
+            return false;
         auto s = config->getSettings();
         uio_lib::CMemoryManager::instance()->setReserverdMemory(uio_lib::MM_GPIO_OUT, s.getGPIOOutSize());
         gpioOut->setVerbose(options.verbose);

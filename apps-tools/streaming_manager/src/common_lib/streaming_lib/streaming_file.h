@@ -1,6 +1,7 @@
 #ifndef STREAMING_LIB_STREAMING_FILE_H
 #define STREAMING_LIB_STREAMING_FILE_H
 
+#include <atomic>
 #include <memory>
 
 #include "data_lib/signal.hpp"
@@ -74,7 +75,8 @@ class CStreamingFile {
 
     bool m_testMode;
     bool m_volt_mode;
-    bool m_disableNotify;
+    // set by the stop (FPGA or file thread) and by the teardown of the server: atomic
+    std::atomic<bool> m_disableNotify{false};
     bool m_rp_mode;
     bool m_tdmsTimeColumn = false;
     bool m_tdmsStarted = false;  // the first segment, with the properties of the recording, is written

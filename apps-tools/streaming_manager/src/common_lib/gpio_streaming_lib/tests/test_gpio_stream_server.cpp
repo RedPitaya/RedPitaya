@@ -485,7 +485,7 @@ TEST_F(GPIOServer, TheInputAndTheOutputRunOnTheirOwn) {
     ASSERT_TRUE(outClient.start());
     for (uint32_t k = 0; k < 4; k++)
         ASSERT_TRUE(outClient.send(outBuffer(k)));
-    ASSERT_TRUE(waitFor([&]() { return uio_lib::dummy::gpioState().outRunning; }));
+    ASSERT_TRUE(waitFor([&]() { return uio_lib::dummy::gpioState().outRunning.load(); }));
     const int inStops = uio_lib::dummy::gpioState().inStops;
     out->stop(GPIOStopReason::NORMAL);
     EXPECT_FALSE(uio_lib::dummy::gpioState().outRunning);

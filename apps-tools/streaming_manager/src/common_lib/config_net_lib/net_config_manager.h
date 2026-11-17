@@ -178,8 +178,8 @@ class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager>
     std::string m_host;
     uint16_t m_port;
     std::shared_ptr<net_lib::CAsioNetSimple> m_asionet;
-    // A connection stopped from its own io thread: released by the destructor, whose deletion
-    // of it joins that thread, so no handler of it runs on this object any more.
+    // A connection stopped from its own io thread, kept from the moment it is taken: the
+    // destructor stops and waits for its thread, so no handler of it runs on this object any more.
     std::shared_ptr<net_lib::CAsioNetSimple> m_retired;
     std::mutex m_netMtx;
     net_lib::EMode m_mode;

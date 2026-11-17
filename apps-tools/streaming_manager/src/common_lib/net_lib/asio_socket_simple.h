@@ -38,6 +38,8 @@ class CAsioSocketSimple {
     // True only while a connection is established.
     auto isConnected() -> bool;
     auto runningInIoThread() -> bool;
+    // Stops the io thread and waits for the handler running on it; not from that thread.
+    auto stopThread() -> void;
 
     // Buffers are written whole and in order. With async == false the call waits until the
     // buffer is written, except on the asio thread, where it only queues it.

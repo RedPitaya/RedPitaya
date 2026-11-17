@@ -1,4 +1,6 @@
 #include <chrono>
+#include <mutex>
+#include <new>
 #include <thread>
 
 #include "gpio.h"
@@ -12,7 +14,10 @@ auto uio_lib::dummy::gpioState() -> GpioState& {
 }
 
 auto uio_lib::dummy::resetGpioState() -> void {
-    gpioState() = GpioState();
+    // the atomics cannot be assigned: made anew in place
+    auto& s = gpioState();
+    s.~GpioState();
+    new (&s) GpioState();
 }
 
 namespace {
@@ -71,6 +76,7 @@ auto CGpio::setDataSize(uint32_t bytes) -> bool {
 }
 
 auto CGpio::setInAddress(uint8_t index, uint32_t addr) -> bool {
+    std::lock_guard lock(m_lock);
     S().inAddress[index & 1] = addr;
     return true;
 }
@@ -92,31 +98,37 @@ auto CGpio::isOutBufferDone(uint8_t index) -> bool {
 
 auto CGpio::prepareInput() -> void {
     stopInput();
+    std::lock_guard lock(m_lock);
     S().inPrepares++;
     S().inFull = {false, false};
 }
 
 auto CGpio::prepareOutput() -> void {
     stopOutput();
+    std::lock_guard lock(m_lock);
     S().outPrepares++;
 }
 
 auto CGpio::startInput() -> void {
+    std::lock_guard lock(m_lock);
     S().inRunning = true;
     S().inStarts++;
 }
 
 auto CGpio::startOutput() -> void {
+    std::lock_guard lock(m_lock);
     S().outRunning = true;
     S().outStarts++;
 }
 
 auto CGpio::stopInput() -> void {
+    std::lock_guard lock(m_lock);
     S().inRunning = false;
     S().inStops++;
 }
 
 auto CGpio::stopOutput() -> void {
+    std::lock_guard lock(m_lock);
     S().outRunning = false;
     S().outStops++;
 }
@@ -141,18 +153,22 @@ auto CGpio::stop() -> void {
 }
 
 auto CGpio::softwareTrigger() -> void {
+    std::lock_guard lock(m_lock);
     S().softwareTriggers++;
 }
 
 auto CGpio::isRunning() -> bool {
+    std::lock_guard lock(m_lock);
     return S().inRunning || S().outRunning;
 }
 
 auto CGpio::isInputRunning() -> bool {
+    std::lock_guard lock(m_lock);
     return S().inRunning;
 }
 
 auto CGpio::isOutputRunning() -> bool {
+    std::lock_guard lock(m_lock);
     return S().outRunning;
 }
 
@@ -215,18 +231,33 @@ auto CGpio::hasWaitCounter() -> bool {
     return S().features & GPIO_FEATURE_WAIT;
 }
 
-// The input fills a buffer when the test says so; until then the wait takes a millisecond
+// The input fills a buffer when the test says so; until then the wait takes a millisecond.
+// The state is shared with the threads that start and stop the block: under m_lock, as the
+// registers of the real one; the fill of the test and the sleep run unlocked.
 auto CGpio::waitIn(uint8_t index, int) -> bool {
     auto& s = S();
     index &= 1;
-    if (!s.inFull[index] && s.inRunning && s.inFill)
-        s.inFull[index] = s.inFill(index, s.inAddress[index]);
-    if (!s.inFull[index])
+    bool full = false;
+    bool running = false;
+    uint32_t address = 0;
+    {
+        std::lock_guard lock(m_lock);
+        full = s.inFull[index];
+        running = s.inRunning;
+        address = s.inAddress[index];
+    }
+    if (!full && running && s.inFill) {
+        full = s.inFill(index, address);
+        std::lock_guard lock(m_lock);
+        s.inFull[index] = full;
+    }
+    if (!full)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    return s.inFull[index];
+    return full;
 }
 
 auto CGpio::clearInBuffer(uint8_t index) -> void {
+    std::lock_guard lock(m_lock);
     S().inFull[index & 1] = false;
 }
 

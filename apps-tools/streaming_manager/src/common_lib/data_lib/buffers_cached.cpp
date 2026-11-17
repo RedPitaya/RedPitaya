@@ -251,6 +251,8 @@ inline auto CBuffersCached::getFreeSize() -> uint32_t {
     if (m_ringSize == 0) {
         return 0;
     }
+    // the reader and the writer move the ends under m_mtx
+    std::lock_guard lock(m_mtx);
     const uint32_t used = (m_ringEnd - m_ringStart + m_ringSize) % m_ringSize;
     return m_ringSize - used;
 }
@@ -259,6 +261,7 @@ auto CBuffersCached::fullPercent() -> float {
     if (m_ringSize == 0) {
         return 0;
     }
+    std::lock_guard lock(m_mtx);
     auto usedBuff = (m_ringEnd - m_ringStart + m_ringSize) % m_ringSize;
     return static_cast<float>(usedBuff) / m_ringSize;
 }

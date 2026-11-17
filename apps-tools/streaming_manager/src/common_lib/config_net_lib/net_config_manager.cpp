@@ -76,25 +76,37 @@ auto deleteAsioNet(net_lib::CAsioNetSimple* net) -> void {
 }  // namespace
 
 CNetConfigManager::~CNetConfigManager() {
-    stopAsioNet();
-    // A handler that stopped the connection may still be running on it (an owner without a
-    // shared_ptr gets no protection from weak_from_this()): the last release of the connection
-    // here joins its io thread before the buffer goes.
-    std::shared_ptr<net_lib::CAsioNetSimple> retired;
+    // A handler may still run on a connection, the current one or one a handler stopped (it goes
+    // on with this object after stopAsioNet returns), and a handler may hold the last reference
+    // (deleted then on a thread of its own, nothing to wait for). So the io thread of each is
+    // stopped and waited for here, before anything of this object goes.
+    std::shared_ptr<net_lib::CAsioNetSimple> nets[2];
     {
         std::lock_guard lock(m_netMtx);
-        retired = std::move(m_retired);
+        nets[0] = std::move(m_asionet);
+        nets[1] = std::move(m_retired);
     }
-    retired.reset();
+    for (auto& net : nets) {
+        if (!net)
+            continue;
+        net->disconnect();
+        net->disconnectSignals();
+        net->stopThread();
+        net.reset();
+    }
     delete[] m_buffers.m_buffers;
 }
 
 auto CNetConfigManager::startAsioNet(net_lib::EMode _mode, std::string _host, uint16_t _port) -> bool {
-    m_mode = _mode;
-    m_host = _host;
-    m_port = _port;
+    {
+        // read by getHost() from other threads (the client list is searched by host)
+        std::lock_guard lock(m_netMtx);
+        m_mode = _mode;
+        m_host = _host;
+        m_port = _port;
+    }
     // a server without a host listens on every interface
-    if ((m_mode != net_lib::EMode::M_SERVER && m_host == "") || m_port == 0)
+    if ((_mode != net_lib::EMode::M_SERVER && _host == "") || _port == 0)
         return false;
     return start();
 }
@@ -105,24 +117,45 @@ auto CNetConfigManager::net() -> std::shared_ptr<net_lib::CAsioNetSimple> {
 }
 
 auto CNetConfigManager::stopAsioNet() -> bool {
+    // The owners (ServerNetConfigManager, ClientNetConfigManager) take the handlers on their own
+    // members: after a stop from another thread no handler may run any more. Waiting only when
+    // the last reference went was not enough: a handler that sends holds a copy, and a connection
+    // a handler stopped before is kept in m_retired. So off the io thread the io thread of each
+    // is stopped and waited for here.
     std::shared_ptr<net_lib::CAsioNetSimple> net;
+    std::shared_ptr<net_lib::CAsioNetSimple> retired;  // stopped by a handler before: waited for
+    std::shared_ptr<net_lib::CAsioNetSimple> older;    // replaced in m_retired: released unlocked
+    net_lib::CAsioNetSimple* raw = nullptr;
     {
         std::lock_guard lock(m_netMtx);
-        net = std::move(m_asionet);
+        if (m_retired && !m_retired->runningInIoThread())
+            retired = std::move(m_retired);
+        if (m_asionet) {
+            raw = m_asionet.get();
+            // Stopped from its own handler: the handler goes on with this object after we return,
+            // so the connection is kept, from this very moment, for a later stop or the destructor
+            // to wait for. Kept a step later, a destructor in between found nothing to wait for
+            // (CI build 913).
+            if (raw->runningInIoThread()) {
+                older = std::move(m_retired);
+                m_retired = std::move(m_asionet);
+            } else {
+                net = std::move(m_asionet);
+            }
+        }
     }
-    if (!net)
+    if (retired) {
+        retired->disconnectSignals();
+        retired->stopThread();
+    }
+    if (!raw)
         return false;
-    net->disconnect();
+    raw->disconnect();
     // A sender may still hold it (the last owner deletes it through deleteAsioNet); whatever it
     // reports from now on is not ours.
-    net->disconnectSignals();
-    // Stopped from its own handler: the handler goes on with this object after we return, so the
-    // connection is kept until the destructor can wait for it (released here, it would be deleted
-    // on a thread of its own while this object goes).
-    if (net->runningInIoThread()) {
-        std::lock_guard lock(m_netMtx);
-        m_retired = std::move(net);
-    }
+    raw->disconnectSignals();
+    if (net)
+        net->stopThread();
     return true;
 }
 
@@ -132,14 +165,25 @@ auto CNetConfigManager::waitSent(std::chrono::milliseconds timeout) -> bool {
 }
 
 bool CNetConfigManager::start() {
+    net_lib::EMode mode;
+    std::string host;
+    uint16_t port;
+    {
+        std::lock_guard lock(m_netMtx);
+        mode = m_mode;
+        host = m_host;
+        port = m_port;
+    }
     // a server without a host listens on every interface
-    if ((m_mode != net_lib::EMode::M_SERVER && m_host == "") || m_port == 0)
+    if ((mode != net_lib::EMode::M_SERVER && host == "") || port == 0)
         return false;
 
+    // off the io thread this waits for the handlers of the old connection: none touches
+    // m_buffers any more
     stopAsioNet();
     m_buffers.clear();
 
-    auto asionet = std::shared_ptr<net_lib::CAsioNetSimple>(new net_lib::CAsioNetSimple(m_mode, m_host, m_port), deleteAsioNet);
+    auto asionet = std::shared_ptr<net_lib::CAsioNetSimple>(new net_lib::CAsioNetSimple(mode, host, port), deleteAsioNet);
 
     asionet->connectNotify.connect([=, this](auto& host) {
         // A new peer starts a new stream: nothing left over from the previous one.
@@ -304,9 +348,11 @@ auto CNetConfigManager::dyn_buffer::clear() -> void {
 }
 
 auto CNetConfigManager::getHost() -> std::string {
+    std::lock_guard lock(m_netMtx);
     return m_host;
 }
 
 auto CNetConfigManager::getPort() -> uint16_t {
+    std::lock_guard lock(m_netMtx);
     return m_port;
 }

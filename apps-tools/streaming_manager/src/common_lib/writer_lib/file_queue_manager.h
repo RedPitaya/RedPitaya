@@ -41,9 +41,16 @@ class FileQueueManager : public Queue {
    private:
     auto task() -> void;
     auto outSpaceNotifyThread() -> void;
+    // Waits for the thread of the out-of-space notify, unless called on it.
+    auto joinSpaceThread() -> void;
 
     std::fstream fs;
     std::thread* th;
+    // The out-of-space notify runs on a thread of its own (its handler stops the writer, which
+    // cannot join itself): once per write, waited for by the next start and the destructor, so
+    // it never runs on a freed object.
+    std::thread m_spaceThread;
+    std::atomic<bool> m_spaceNotified{false};
     std::atomic_bool m_ThreadRun;
     std::atomic_bool m_threadWork;
     int m_waitAllWrite;

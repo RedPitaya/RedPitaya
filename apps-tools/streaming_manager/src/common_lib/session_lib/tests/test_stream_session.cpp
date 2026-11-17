@@ -94,10 +94,11 @@ class Peer {
 
     auto close() -> void {
         asio::error_code ec;
+        // the shutdown ends the read of the reader; the socket is closed once it is out of it
         m_socket.shutdown(asio::ip::tcp::socket::shutdown_both, ec);
-        m_socket.close(ec);
         if (m_reader.joinable())
             m_reader.join();
+        m_socket.close(ec);
     }
 
    private:

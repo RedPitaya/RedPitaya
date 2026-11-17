@@ -146,10 +146,9 @@ auto CStreamingFile::stop(CStreamingFile::EStopReason reason, bool _flush) -> vo
     }
     if (m_fileLogger && !m_testMode)
         m_fileLogger->dumpToFile();
-    if (!m_disableNotify) {
+    // once: the teardown may disable it from another thread at the same time
+    if (!m_disableNotify.exchange(true))
         stopNotify(reason);
-        m_disableNotify = true;
-    }
 }
 
 auto CStreamingFile::stopImmediately() -> void {

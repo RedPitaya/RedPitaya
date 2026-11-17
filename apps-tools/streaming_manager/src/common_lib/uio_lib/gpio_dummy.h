@@ -2,6 +2,7 @@
 #define UIO_LIB_GPIO_DUMMY_H
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <functional>
 
@@ -38,18 +39,20 @@ struct GpioState {
     uint16_t triggerBlocks = 0;
     std::array<uint32_t, 2> inAddress{};
     std::array<bool, 2> inFull{};
-    bool inRunning = false;
-    bool outRunning = false;
-    int inPrepares = 0;
-    int outPrepares = 0;
-    int inStarts = 0;
-    int outStarts = 0;
-    int inStops = 0;
-    int outStops = 0;
-    int softwareTriggers = 0;
+    // set by the threads of the servers, read by the tests while they run
+    std::atomic<bool> inRunning{false};
+    std::atomic<bool> outRunning{false};
+    std::atomic<int> inPrepares{0};
+    std::atomic<int> outPrepares{0};
+    std::atomic<int> inStarts{0};
+    std::atomic<int> outStarts{0};
+    std::atomic<int> inStops{0};
+    std::atomic<int> outStops{0};
+    std::atomic<int> softwareTriggers{0};
 };
 
 auto gpioState() -> GpioState&;
+// Between the tests, with no server running.
 auto resetGpioState() -> void;
 
 }  // namespace uio_lib::dummy

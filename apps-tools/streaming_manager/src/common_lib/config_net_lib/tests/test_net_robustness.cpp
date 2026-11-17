@@ -378,19 +378,55 @@ TEST(NetConfigTransport, StoppingFromInsideAHandlerNeitherHangsNorCrashes) {
     ServerNetConfigManager server(TempFile(port), broadcast_lib::AB_SERVER_MASTER, "127.0.0.1", port, 2);
     auto client = std::make_unique<CNetConfigManager>();
     std::atomic<bool> stopped{false};
-    client->receivedCommandNotify.connect([&](uint32_t, std::string) {
+    std::atomic<bool> handlerDone{false};
+    // stopAsioNet closes the connection and reports it at once, on the same thread: the test
+    // thread destroys the client meanwhile (CI build 913: the destructor came between the two
+    // steps of stopAsioNet, found nothing to wait for, and the report ran on freed memory)
+    client->disconnectNotify.connect([&](std::string) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    });
+    // the handler keeps its own pointer: the test thread resets the unique_ptr meanwhile
+    CNetConfigManager* const self = client.get();
+    client->receivedCommandNotify.connect([&, self](uint32_t, std::string) {
         if (!stopped.exchange(true)) {
-            client->stopAsioNet();
-            // the test thread destroys the client meanwhile: the handler is still running on it
+            self->stopAsioNet();
+            // the handler goes on with the client after the stop
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            handlerDone = true;
         }
     });
     client->startAsioNet(net_lib::M_CLIENT, "127.0.0.1", port);
     ASSERT_TRUE(WaitFor([&] { return stopped.load(); }));
     auto destroyed = std::async(std::launch::async, [&]() { client.reset(); });
     EXPECT_EQ(destroyed.wait_for(std::chrono::seconds(5)), std::future_status::ready);
-    // a handler the destruction did not wait for would run on freed memory now (CI build 912)
-    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    // the destruction waited for the handler (CI build 912: it did not, the handler ran on
+    // freed memory)
+    EXPECT_TRUE(handlerDone.load());
+    std::error_code ec;
+    std::filesystem::remove(TempFile(port), ec);
+}
+
+// The owners (ServerNetConfigManager, ClientNetConfigManager) take the handlers on their own
+// members and free them after stopAsioNet from their thread: that stop must wait for a handler
+// still running, also one that stopped the connection itself before (it went to m_retired and the
+// stop from outside returned at once).
+TEST(NetConfigTransport, AStopFromAnotherThreadWaitsForAHandlerStillRunning) {
+    const uint16_t port = NextPort();
+    ServerNetConfigManager server(TempFile(port), broadcast_lib::AB_SERVER_MASTER, "127.0.0.1", port, 2);
+    CNetConfigManager client;
+    std::atomic<bool> stopped{false};
+    std::atomic<bool> handlerDone{false};
+    client.receivedCommandNotify.connect([&](uint32_t, std::string) {
+        if (!stopped.exchange(true)) {
+            client.stopAsioNet();
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            handlerDone = true;
+        }
+    });
+    client.startAsioNet(net_lib::M_CLIENT, "127.0.0.1", port);
+    ASSERT_TRUE(WaitFor([&] { return stopped.load(); }));
+    client.stopAsioNet();
+    EXPECT_TRUE(handlerDone.load());
     std::error_code ec;
     std::filesystem::remove(TempFile(port), ec);
 }

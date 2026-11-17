@@ -58,6 +58,11 @@ auto CAsioNetSimple::runningInIoThread() -> bool {
     return m_server && m_server->runningInIoThread();
 }
 
+auto CAsioNetSimple::stopThread() -> void {
+    if (m_server)
+        m_server->stopThread();
+}
+
 auto CAsioNetSimple::disconnectSignals() -> void {
     connectNotify.disconnect_all();
     disconnectNotify.disconnect_all();

@@ -33,6 +33,11 @@ auto CAsioSocketSimple::runningInIoThread() -> bool {
     return m_asio->runningInThisThread();
 }
 
+auto CAsioSocketSimple::stopThread() -> void {
+    if (!runningInIoThread())
+        m_asio->stop();
+}
+
 auto CAsioSocketSimple::isCurrentLocked(const socket_ptr& socket) -> bool {
     return socket && m_tcp_socket == socket;
 }

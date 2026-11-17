@@ -40,6 +40,9 @@ class CAsioNetSimple {
     auto runningInIoThread() -> bool;
     // Nothing is reported to the owner after this, for an object that outlives it.
     auto disconnectSignals() -> void;
+    // Stops the io thread and waits for the handler running on it: no handler of this object
+    // runs after the return. Not from the io thread (it cannot wait for itself: nothing done).
+    auto stopThread() -> void;
 
    private:
     CAsioNetSimple(const CAsioNetSimple&) = delete;

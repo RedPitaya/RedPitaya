@@ -23,6 +23,16 @@ FileQueueManager::FileQueueManager(bool testMode) : Queue() {
 
 FileQueueManager::~FileQueueManager() {
     this->stopWrite(false);
+    joinSpaceThread();
+}
+
+auto FileQueueManager::joinSpaceThread() -> void {
+    if (!m_spaceThread.joinable())
+        return;
+    if (m_spaceThread.get_id() == std::this_thread::get_id())
+        m_spaceThread.detach();  // the owner is destroyed by its own handler: nothing to wait for
+    else
+        m_spaceThread.join();
 }
 
 auto FileQueueManager::deleteFile() -> void {
@@ -82,6 +92,8 @@ auto FileQueueManager::startWrite(CStreamSettings::DataFormat _fileType) -> void
     m_waitAllWrite = true;
     m_hasErrorWrite = false;
     m_IsOutOfSpace = false;
+    joinSpaceThread();
+    m_spaceNotified = false;
     th = new std::thread(&FileQueueManager::task, this);
 }
 
@@ -168,9 +180,12 @@ auto FileQueueManager::writeToFile(std::chrono::milliseconds wait) -> int {
 }
 
 auto FileQueueManager::outSpaceNotifyThread() -> void {
+    // from the writer thread, once per write: the thread of the previous write is waited for by
+    // startWrite
+    if (m_spaceNotified.exchange(true))
+        return;
     try {
-        std::thread th([this]() { outSpaceNotify(); });
-        th.detach();
+        m_spaceThread = std::thread([this]() { outSpaceNotify(); });
     } catch (std::exception& e) {}
 }
 
