@@ -75,3 +75,14 @@ if(IS_INSTALL)
               DESTINATION ${INSTALL_DIR}/bin)
 
 endif()
+
+## The same module for streaming-server, which runs the page as a service (a static library: the
+## server links rp_sdk and the parameters of the page in).
+add_library(web_backend STATIC ${src})
+target_compile_options(web_backend PRIVATE -DRP_PLATFORM -Wno-reorder -Wno-pedantic -Wno-unused-parameter)
+target_include_directories(web_backend
+    PUBLIC  ${PROJECT_SOURCE_DIR}
+            ${CMAKE_BINARY_DIR}/bin/include
+            ${INSTALL_DIR}/include ${INSTALL_DIR}/rp_sdk ${INSTALL_DIR}/rp_sdk/libjson)
+target_link_directories(web_backend PUBLIC ${INSTALL_DIR}/lib/ ${INSTALL_DIR}/lib/web ${INSTALL_DIR}/rp_sdk)
+target_link_libraries(web_backend PUBLIC session_lib settings_lib board_lib rp_sdk rp rp-hw rp-hw-calib rp-hw-profiles rp-client rp-i2c rp-spi rp-gpio i2c z pthread stdc++)

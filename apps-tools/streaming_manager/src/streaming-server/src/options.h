@@ -24,9 +24,16 @@ struct Options {
     std::string conf_file;
     std::string listen;  // the config and data ports: empty - every interface
     bool verbose;
+    // the web page: a WebSocket on 127.0.0.1 that nginx proxies to the page; 0 - none
+    uint16_t webPort;
 
     Options() {
         verbose = false;
+#ifdef STREAMING_WEB
+        webPort = 18906;
+#else
+        webPort = 0;
+#endif
         background = false;
 #ifdef RP_PLATFORM
         conf_file = std::string("/root/.config/redpitaya/apps/streaming/streaming_config.json");

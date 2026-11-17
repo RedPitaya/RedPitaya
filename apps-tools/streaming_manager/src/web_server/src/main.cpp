@@ -38,6 +38,10 @@ auto gpioFileList() -> std::string;
 // ============================================================================
 
 static constexpr char config_file[] = "/root/.config/redpitaya/apps/streaming/streaming_config.json";
+// set by streaming-server, which runs this module as the service of the page
+std::string g_configFile = config_file;
+std::string g_listenHost;
+bool g_verbose = false;
 
 auto memmanager = uio_lib::CMemoryManager::instance();
 // The board (profile, calibration, relays) before the parameters of the page, which take its data;
@@ -278,6 +282,12 @@ const char* rp_app_desc(void) {
 // Application initialization
 // ============================================================================
 
+void rp_app_set_session_options(const char* configFile, const char* listenHost, bool verbose) {
+    g_configFile = configFile && *configFile ? configFile : config_file;
+    g_listenHost = listenHost ? listenHost : "";
+    g_verbose = verbose;
+}
+
 auto rp_app_init(void) -> int {
     fprintf(stderr, "Loading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
 
@@ -301,7 +311,9 @@ auto rp_app_init(void) -> int {
 
             TRACE("ss_ip_addr %s", ss_ip_addr.Value().c_str());
             session_lib::SessionOptions options;
-            options.configFile = config_file;
+            options.configFile = g_configFile;
+            options.host = g_listenHost;
+            options.verbose = g_verbose;
             // the config and data ports on every interface: the address of the page is 127.0.0.1
             // until the page sets it, and it is the announced one, not a filter of the clients
             options.broadcastHost = ss_ip_addr.Value();

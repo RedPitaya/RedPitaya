@@ -21,10 +21,11 @@ static struct option long_options[] = {
     {"file", required_argument, 0, 'f'},
     {"listen", required_argument, 0, 'l'},
     {"verbose", no_argument, 0, 'v'},
+    {"web", required_argument, 0, 'w'},
     {"help", no_argument, 0, 'h'},
     {0, 0, 0, 0}};
 
-static constexpr char optstring[] = "bf:hl:v";
+static constexpr char optstring[] = "bf:hl:vw:";
 
 std::vector<std::string> ClientOpt::split(const std::string& s, char seperator) {
     std::vector<std::string> output;
@@ -57,8 +58,8 @@ auto ClientOpt::usage(char const* progName) -> void {
         name = arr[arr.size() - 1];
     const char* format =
         "Usage: \n"
-        "\t%s [-b] [-f PATH] [-l ADDRESS] [-v]\n"
-        "\t%s [--background] [--file=PATH] [--listen=ADDRESS] [--verbose]\n"
+        "\t%s [-b] [-f PATH] [-l ADDRESS] [-w PORT] [-v]\n"
+        "\t%s [--background] [--file=PATH] [--listen=ADDRESS] [--web=PORT] [--verbose]\n"
         "\n"
         "\t--background          -b        Run service in background.\n"
         "\t--file=PATH           -f FILE   Path to configuration file.\n"
@@ -66,6 +67,8 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\t--listen=ADDRESS      -l ADDRESS The address of the board the config and data ports listen on,\n"
         "\t                                for example 127.0.0.1 for the clients of the board only.\n"
         "\t                                By default every interface.\n"
+        "\t--web=PORT            -w PORT   The port of the web page on 127.0.0.1 (nginx proxies the page to it);\n"
+        "\t                                0 - no web page. By default 18906 on the board.\n"
         "\t--verbose             -v        Displays information.\n"
         "\n"
         "\t Example:\n"
@@ -113,8 +116,25 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 opt.listen = optarg;
                 break;
 
+            case 'w': {
+                char* end = nullptr;
+                const long port = strtol(optarg, &end, 10);
+                if (!end || *end != '\0' || port < 0 || port > 65535) {
+                    printWithLog(LOG_ERR, stderr, "[ERROR] Wrong value of --web: %s (a port, 0 - no web page)\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
+#ifndef STREAMING_WEB
+                if (port != 0) {
+                    printWithLog(LOG_ERR, stderr, "[ERROR] --web: this build has no web page\n");
+                    exit(EXIT_FAILURE);
+                }
+#endif
+                opt.webPort = (uint16_t)port;
+                break;
+            }
+
             default: {
-                printWithLog(LOG_ERR, stderr, "[ERROR] Unknown parameter\n");
+                printWithLog(LOG_ERR, stderr, "[ERROR] Unknown parameter (--help lists them)\n");
                 exit(EXIT_FAILURE);
             }
         }

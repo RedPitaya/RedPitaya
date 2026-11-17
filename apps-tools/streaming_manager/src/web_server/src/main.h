@@ -34,6 +34,9 @@ extern "C" {
 const char* rp_app_desc(void);
 int rp_app_init(void);
 int rp_app_exit(void);
+// In streaming-server (the service of the page): the options of the session, before rp_app_init.
+// Without a call the module keeps its own: the default config file, every interface.
+void rp_app_set_session_options(const char* configFile, const char* listenHost, bool verbose);
 
 auto isDACAviable() -> bool;
 

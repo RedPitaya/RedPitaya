@@ -27,9 +27,12 @@
 #include "options.h"
 #include "session_lib/stream_session.h"
 #include "uio_lib/hardware.h"
+#ifdef STREAMING_WEB
+#include "web_page.h"
+#endif
 
-session_lib::StreamSession::Ptr g_session = nullptr;
-std::atomic_bool g_run(true);
+static session_lib::StreamSession::Ptr g_session = nullptr;
+static std::atomic_bool g_run(true);
 
 static void termSignalHandler(int) {
     printWithLog(LOG_INFO, stdout, "\nReceived terminate signal. Exiting...\n");
@@ -109,6 +112,14 @@ int main(int argc, char* argv[]) {
     }
 #endif
 
+#ifdef STREAMING_WEB
+    // with the web page its module owns the session (as the nginx module did): the page and the
+    // clients of the board drive the same streams
+    if (opt.webPort) {
+        web_page::start(opt.webPort, opt.conf_file, opt.listen, verbMode);
+        printWithLog(LOG_INFO, stdout, "The web page connects on 127.0.0.1:%u\n", (unsigned)opt.webPort);
+    } else
+#endif
     try {
         // The FPGA blocks for the whole process; the daisy chain role is read from the scope
         auto hw = uio_lib::CHardware::create(board_lib::createBoard());
@@ -139,7 +150,12 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        g_session->stop();
+#ifdef STREAMING_WEB
+        if (opt.webPort)
+            web_page::stop();
+#endif
+        if (g_session)
+            g_session->stop();
         g_session = nullptr;
     } catch (std::exception& e) {
         printWithLog(LOG_ERR, stderr, "Error: main() %s\n", e.what());

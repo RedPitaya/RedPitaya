@@ -65,6 +65,13 @@ target_link_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME} PUBLIC session_lib settings_lib board_lib)
 
+## On the board the server also runs the web page (web_server/src/main.cpp): see src/web_page.h
+if (BUILD_WEB_APP_SERVER AND RP_PLATFORM)
+    target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/web_page.cpp)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE STREAMING_WEB)
+    target_link_libraries(${PROJECT_NAME} PUBLIC web_backend web_lib)
+endif()
+
 if(NOT WIN32 )
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++)
 else()
