@@ -20,7 +20,6 @@ DOCKER_BUILD     ?=
 
 JOBS = $(shell ./get_cpu_ram.sh)
 
-CONTROLLER = controllerhf.so
 ZIP        = ../../$(APP)-$(LINUX_VER)-$(BUILD_NUMBER)-$(REVISION).zip
 
 
@@ -198,8 +197,9 @@ install_client_qt_win:
 $(ZIP): install_servers
 	rm target -rf
 	mkdir -p target/$(APP)
-	mv $(INSTALL_DIR)/bin/libweb_server.so target/$(APP)/$(CONTROLLER)
-	cp -r fpga.conf nginx.conf css img *.html fpga.sh info js target/$(APP)
+	# a static page: streaming-server runs its backend as redpitaya_streaming.service (no bazaar
+	# module, no bitstream of bazaar)
+	cp -r nginx.conf css img *.html info js target/$(APP)
 	sed -i target/$(APP)/info/info.json -e 's/REVISION/$(REVISION)/'
 	sed -i target/$(APP)/info/info.json -e 's/VERSION/$(VERSION)/'
 	cd target; zip -r ../$(ZIP) *

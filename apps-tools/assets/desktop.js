@@ -258,6 +258,14 @@
             image_path: "../assets/images/pack/tutors",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
+        // the streaming page runs a service (redpitaya_streaming), not a bazaar module: without a
+        // controllerhf.so bazaar does not list it, it is listed here as the SCPI page is
+        { id: "streaming_manager", name: "Data stream control",
+            description: "Enable server for stream data from ADC to file or TCP/IP",
+            url: "/streaming_manager/",
+            image_path: "../streaming_manager/info/icon",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "wifi", name: "Network manager",
             description: "Simple way to establish wireless connection with the Red Pitaya",
             url: "/network_manager/",

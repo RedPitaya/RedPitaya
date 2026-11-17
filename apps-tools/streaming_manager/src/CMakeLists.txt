@@ -118,7 +118,7 @@ endif()
 
 if (BUILD_WEB_APP_SERVER AND RP_PLATFORM)
     add_subdirectory(web_server)
-    add_dependencies(web_server common_lib)
+    add_dependencies(web_backend common_lib)
 endif()
 
 if (BUILD_RPSA_CLIENT)
