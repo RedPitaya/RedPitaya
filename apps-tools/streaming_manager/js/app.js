@@ -53,6 +53,9 @@
     // the codes of a configuration error: the board did not take the settings, the reason is in its log
     const CONFIG_ERROR = { adc: 7, dac: 9, gin: 8, gout: 9 };
 
+    // the destination of the current or last run (0 none yet, 1 network, 2 SD): the status texts
+    // and the statistics follow the run, not the destination switch
+    const runMode = (key) => Number(v(key === 'adc' ? 'SS_ADC_RUN_MODE' : 'SS_GPIO_RUN_MODE', 0));
     function stream(key) {
         const def = {
             adc: { name: 'ADC', status: 'SS_STATUS', start: 'SS_START', table: ADC_STATE, sec: 'adc' },
@@ -66,9 +69,9 @@
         const known = Object.prototype.hasOwnProperty.call(def.table, code);
         const bad = BAD[key].includes(code) || !known;
         let state = known ? def.table[code] : 'Unknown status ' + code;
-        if (run && key === 'adc') state = v('SS_USE_FILE', false) ? 'Writing to SD' : 'Streaming to the client';
+        if (run && key === 'adc') state = runMode('adc') === 2 ? 'Writing to SD' : 'Streaming to the client';
         if (run && key === 'dac') state = v('SS_DAC_MODE', 0) ? 'Playing a file' : 'Playing from the client';
-        if (run && key === 'gin') state = v('SS_GPIO_IN_MODE', 0) ? 'Writing to SD' : 'Streaming to the client';
+        if (run && key === 'gin') state = runMode('gin') === 2 ? 'Writing to SD' : 'Streaming to the client';
         if (run && key === 'gout') state = v('SS_GPIO_OUT_MODE', 0) ? 'Playing a file' : 'Playing from the client';
         // the reason is in the log of the server only
         const hint = code === CONFIG_ERROR[key] ? 'The board did not take the settings. The reason: journalctl -u redpitaya_streaming' : '';
@@ -142,8 +145,8 @@
     // ---------------------------------------------------------------------------------------
     // templates
     const sel = (opts, cur) => opts.map(([val, label]) => `<option value="${esc(val)}"${String(val) === String(cur) ? ' selected' : ''}>${esc(label)}</option>`).join('');
-    const seg = (label, items) => `<div class="seg" role="group" aria-label="${esc(label)}">${items.map(([act, arg, text, on]) =>
-        `<button type="button" style="${on ? ON : OFF}" data-act="${act}" data-arg="${esc(arg)}" aria-pressed="${on}">${esc(text)}</button>`).join('')}</div>`;
+    const seg = (label, items) => `<div class="seg" role="group" aria-label="${esc(label)}">${items.map(([act, arg, text, on, off]) =>
+        `<button type="button" style="${on ? ON : OFF}${off && !on ? '; opacity: .45; cursor: not-allowed' : ''}" data-act="${off ? 'none' : act}" data-arg="${esc(arg)}" aria-pressed="${on}"${off ? ` disabled title="${esc(off)}"` : ''}>${esc(text)}</button>`).join('')}</div>`;
     const flip = (attrs, checked, label, small) => `<input type="checkbox" class="flipswitch${small ? ' sm' : ''}" data-on="ON" data-off="OFF" ${attrs}${checked ? ' checked' : ''}${label ? ` aria-label="${esc(label)}"` : ''}>`;
     const secHead = (title, sub, right) => `<div class="card-h"><div class="sec-h"><h1>${esc(title)}</h1><p class="sub">${sub}</p></div>${right ? `<div class="row">${right}</div>` : ''}</div>`;
     const badge = (s) => `<span class="badge" style="${s.badge}"${s.hint ? ` title="${esc(s.hint)}"` : ''}><span class="dot" style="${s.dot}"></span>${esc(s.state)}</span>`;
@@ -166,17 +169,7 @@
             `<div class="foot"><div class="sep"></div>
                <div class="hint kvl"><span>IP</span><b class="mono">${esc(S.ip || '-')}</b></div>
                <div class="hint kvl"><span>Mode</span><b>${master}</b></div>
-               <div class="hint kvl"><span>SD free</span><b class="mono">${S.sdFree ? fmtBytes(S.sdFree[0]) : '-'}</b></div></div>`;
-    }
-
-    // The SD card: its measured write speed against the data rate, and the queue in memory. The
-    // queue holds what the card writes in 20 s at most: when it is full the data are lost.
-    function sdRateHtml() {
-        const rate = Number(v('SS_WRITE_RATE', 0)), fill = Number(v('SS_FILE_QUEUE', 0));
-        if (!rate) return '';
-        const data = adcRate() / adcDec() * chList().length * (Number(v('SS_RESOLUTION', 1)) ? 2 : 1);
-        const slow = data > rate;
-        return `<p class="hint${slow ? ' bad' : ''}" style="margin: 0">SD card: <b class="mono">${fmtBytes(rate)}/s</b> for ${fmtBytes(data)}/s of data · queue <b class="mono">${Math.round(fill * 100)}%</b>${slow ? ' - the card is slower: the data are lost once the queue is full' : ''}</p>`;
+               <div class="hint kvl"><span>SD free</span><b class="mono">${sdSpace() ? fmtBytes(sdSpace()[0]) : '-'}</b></div></div>`;
     }
 
     // ---- losses of the last run (the server resets them at a start, keeps them after the stop):
@@ -194,12 +187,87 @@
         const pct = whole ? all / whole * 100 : 0;
         return all.toLocaleString('en-US') + ' · ' + (pct < 0.01 ? '<0.01' : pct.toFixed(2)) + '%';
     };
-    function lostHtml(key, sd) {
+    // the losses of a network run (an SD run has them in its recording block)
+    function lostHtml(key) {
         const l = lostOf(key), all = l.board + l.file;
-        const n = (x) => `<b class="mono" style="color: ${x ? '#ff8f86' : '#e8e8e6'}">${x.toLocaleString('en-US')}</b>`;
-        return `<p class="hint${all ? ' bad' : ''}" style="margin: 0">Lost: ${n(all)} samples per channel` +
-            (sd && key === 'adc' ? ` · on the board ${n(l.board)} · SD write queue ${n(l.file)}` : '') +
-            (all ? `<br><span style="color: #a8a8a6">${sd ? 'On the board: no free buffer, the card is slower than the data; the file marks the places.' + (key === 'adc' ? ' The queue: the memory for the card was full; those buffers are missing from the file, its report counts them.' : '') : 'No free buffer on the board: the client or the network is slower than the data; rpsa_client marks the places in its file.'}</span>` : '') + '</p>';
+        const n = `<b class="mono" style="color: ${all ? '#ff8f86' : '#e8e8e6'}">${all.toLocaleString('en-US')}</b>`;
+        return `<p class="hint${all ? ' bad' : ''}" style="margin: 0">Lost: ${n} samples per channel` +
+            (all ? '<br><span style="color: #a8a8a6">No free buffer on the board: the client or the network is slower than the data; rpsa_client marks the places in its file.</span>' : '') + '</p>';
+    }
+
+    // ---- the progress of an SD recording: the limit, the free space, the time left
+    // [free, total] bytes of the SD card: the server sends them with the parameters (SS_SD_FREE,
+    // SS_SD_TOTAL); an older one does not, then the request of the Files section serves
+    const sdSpace = () => (Number(v('SS_SD_TOTAL', 0)) ? [Number(v('SS_SD_FREE', 0)), Number(v('SS_SD_TOTAL', 0))] : S.sdFree);
+    const fmtDur = (sec) => {
+        if (!Number.isFinite(sec) || sec < 0) return '-';
+        sec = Math.round(sec);
+        if (sec < 90) return sec + ' s';
+        if (sec < 5400) return Math.round(sec / 60) + ' min';
+        return Math.floor(sec / 3600) + ' h ' + String(Math.round(sec % 3600 / 60)).padStart(2, '0') + ' min';
+    };
+    // bytes a second of the data the stream gives to its file (before the card: the card may be slower)
+    const dataRateOf = (key) => key === 'adc'
+        ? adcRate() / adcDec() * chList().length * (Number(v('SS_SAVE_MODE', 0)) ? 4 : (Number(v('SS_RESOLUTION', 1)) ? 2 : 1))
+        : gpioClock() / Math.max(1, Number(v('SS_GPIO_DECIMATION', 1))) * 4;
+    function sdProgress(key) {
+        const adc = key === 'adc';
+        const s = stream(key);
+        const limit = Number(v(adc ? 'SS_SAMPLES' : 'SS_GPIO_IN_SAMPLES', 0));
+        const done = Number(v(adc ? 'SS_PASS_SAMPLES' : 'SS_GPIO_FILE_SAMPLES', 0));
+        const perCh = adc ? adcRate() / adcDec() : gpioClock() / Math.max(1, Number(v('SS_GPIO_DECIMATION', 1)));
+        const card = Number(v(adc ? 'SS_WRITE_RATE' : 'SS_GPIO_WRITE_RATE', 0));
+        const sp = sdSpace(), free = sp ? sp[0] : 0, total = sp ? sp[1] : 0;
+        const data = dataRateOf(key);
+        const need = limit * data / perCh;  // bytes the limit takes
+        // what goes to the card a second: the data, or the card when it is slower. The measured
+        // speed alone overstates a card the data do not keep busy (the page cache takes them).
+        const thru = card ? Math.min(card, data) : data;
+        return { run: s.run, limit, done, perCh, card, data, thru, free, total, need, frac: limit ? Math.min(1, done / limit) : (total ? 1 - free / total : 0) };
+    }
+    const pbar = (frac, color) => `<div class="bar" style="height: 8px; margin: 2px 0"><div style="width: ${(frac * 100).toFixed(1)}%; background: ${color}"></div></div>`;
+    // before a recording (or while the stream runs to the network): does the limit fit the card
+    function progressHtml(key) {
+        const p = sdProgress(key);
+        const freeText = p.total ? fmtBytes(p.free) + ' free of ' + fmtBytes(p.total) : 'free space unknown';
+        if (!p.limit) return `<p class="hint" style="margin: 0">SD card: ${freeText} · the data: ${fmtBytes(p.data)}/s</p>`;
+        const fits = !p.total || p.need <= p.free;
+        return `<p class="hint${fits ? '' : ' bad'}" style="margin: 0">The limit takes about ${fmtBytes(p.need)} · SD card: ${freeText}${fits ? '' : ' - it does not fit'}</p>`;
+    }
+    // One block for an SD recording: a bar (the limit, else the card), then Recorded, Time left,
+    // SD card, Lost; a note under it only when something is wrong. Before the first run: a line.
+    function recordingHtml(key) {
+        const p = sdProgress(key), l = lostOf(key), all = l.board + l.file;
+        const adc = key === 'adc';
+        const written = Number(v(adc ? 'SS_WRITED_SIZE' : 'SS_GPIO_WRITTEN', 0));
+        if (runMode(key) !== 2 || (!p.run && !p.done)) return progressHtml(key);
+        const red = ' style="color: #ff8f86"';
+        const slow = p.card && p.data > p.card;
+        const low = p.total && p.free < p.total * 0.05;
+        const left = p.limit ? fmtDur((p.limit - p.done) / p.perCh) : 'SD full in ' + fmtDur(p.free / p.thru);
+        const cell = (k, b, sub, bad) => `<div class="scell"><span>${k}</span><b${bad ? red : ''}>${b}</b><span>${sub}</span></div>`;
+        const cells = [
+            cell('Recorded', p.limit ? Math.round(p.frac * 100) + '% of the limit' : p.done.toLocaleString('en-US') + ' samples',
+                (p.limit ? p.done.toLocaleString('en-US') + ' of ' + p.limit.toLocaleString('en-US') : 'no limit') + (written ? ' · ' + fmtBytes(written) : '')),
+            cell('Time left', p.run ? left : (p.limit && p.done >= p.limit ? 'done' : 'stopped'), p.run ? (p.limit ? 'to the limit at ' + fmtRate(p.perCh) : 'at ' + fmtBytes(p.thru) + '/s') : ''),
+            p.run ? cell('SD card', fmtBytes(p.thru) + '/s · queue ' + Math.round(Number(v(adc ? 'SS_FILE_QUEUE' : 'SS_GPIO_FILE_QUEUE', 0)) * 100) + '%',
+                p.total ? fmtBytes(p.free) + ' free of ' + fmtBytes(p.total) : '', slow || low)
+                : cell('SD card', fmtBytes(p.free) + ' free', p.total ? 'of ' + fmtBytes(p.total) : '', low),
+            cell('Lost', all ? lostShort(key) : '0', adc ? 'board ' + l.board.toLocaleString('en-US') + ' · queue ' + l.file.toLocaleString('en-US') : 'on the board', all > 0)];
+        const notes = [];
+        if (slow && p.run) notes.push(`The card writes ${fmtBytes(p.card)}/s of ${fmtBytes(p.data)}/s of data: the data are lost once the queue is full.`);
+        if (low) notes.push('Less than 5% of the card is free.');
+        if (all) notes.push('On the board: no free buffer, the card is slower than the data; the file marks the places.' + (adc ? ' The queue: those buffers are missing from the file, its report counts them.' : ''));
+        return pbar(p.frac, low ? '#e0675d' : p.limit ? '#47b2d1' : '#7a7a78') +
+            `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px">${cells.join('')}</div>` +
+            notes.map((n) => `<p class="hint bad" style="margin: 0">${esc(n)}</p>`).join('');
+    }
+    // the overview: a word on the progress under the state
+    function progressShort(key) {
+        const p = sdProgress(key);
+        if (!p.run || runMode(key) !== 2) return '';
+        if (p.limit) return Math.round(p.frac * 100) + '% · ' + fmtDur((p.limit - p.done) / p.perCh) + ' left';
+        return 'SD full in ' + fmtDur(p.free / p.thru);
     }
 
     // ---- overview
@@ -209,7 +277,7 @@
             k: [['Destination', v('SS_USE_FILE', false) ? 'SD · ' + ['WAV', 'TDMS', 'BIN'][Number(v('SS_FORMAT', 0))] : 'Network'],
                 ['Channels', chList().join(', ') || 'none'], ['Rate', fmtRate(adcRate() / adcDec())],
                 // four cells fit the row: the speed of the card goes with the written size (the queue: ADC card)
-                v('SS_USE_FILE', false) ? ['Written', fmtBytes(Number(v('SS_WRITED_SIZE', 0))) + (Number(v('SS_WRITE_RATE', 0)) ? ' · ' + fmtBytes(Number(v('SS_WRITE_RATE', 0))) + '/s' : '')] : ['Port', '18900']]
+                v('SS_USE_FILE', false) ? ['Written', fmtBytes(Number(v('SS_WRITED_SIZE', 0))) + (adc.run && runMode('adc') === 2 ? ' · ' + fmtBytes(sdProgress('adc').thru) + '/s' : '')] : ['Port', '18900']]
         })];
         if (hasDac()) {
             const d = stream('dac');
@@ -238,7 +306,7 @@
             `<div class="ovb"><section class="card srows" aria-label="Streams">${rows.map((s) => `
               <div class="srow">
                 <div class="sname"><img src="${s.led}" alt="" style="width: 22px; height: 22px; flex: none">
-                  <div class="scell"><b style="font-size: var(--fs-base)">${s.name}</b><span style="${s.stateColor}">${esc(s.state)}</span>${(s.key === 'adc' || s.key === 'gin') && lostShort(s.key) !== '0' ? `<span style="color: #ff8f86">lost ${esc(lostShort(s.key))}</span>` : ''}</div></div>
+                  <div class="scell"><b style="font-size: var(--fs-base)">${s.name}</b><span style="${s.stateColor}">${esc(s.state)}</span>${(s.key === 'adc' && v('SS_USE_FILE', false) || s.key === 'gin' && Number(v('SS_GPIO_IN_MODE', 0))) && progressShort(s.key) ? `<span class="hint">${esc(progressShort(s.key))}</span>` : ''}${(s.key === 'adc' || s.key === 'gin') && lostShort(s.key) !== '0' ? `<span style="color: #ff8f86">lost ${esc(lostShort(s.key))}</span>` : ''}</div></div>
                 ${s.k.map(([k, val]) => `<div class="scell"><span>${esc(k)}</span><b title="${esc(val)}">${esc(val)}</b></div>`).join('')}
                 <div class="sact">${runBtn(s, '; min-width: 72px; justify-content: center')}
                   ${s.sec ? `<button class="btn ibtn" type="button" aria-label="${s.name} settings" data-go="${s.sec}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="9" cy="6" r="2.2" fill="#2b2b2a"></circle><circle cx="15" cy="12" r="2.2" fill="#2b2b2a"></circle><circle cx="8" cy="18" r="2.2" fill="#2b2b2a"></circle></svg></button>` : '<span class="btn ibtn" style="visibility: hidden"></span>'}
@@ -276,8 +344,9 @@
         C.parametersCache.SS_GPIO_PAT_NEG = { value: neg };
         C.sendParameters();
     }
-    const tiles = (label, aria, items) => `<div class="field"><label>${label}</label><div class="dst" role="radiogroup" aria-label="${aria}">${items.map(([arg, title, desc, on]) =>
-        `<button type="button" role="radio" class="dsti${on ? ' dsti-on' : ''}" aria-checked="${on}" data-act="setv" data-arg="${arg}"><i></i><div><b>${title}</b><span>${desc}</span></div></button>`).join('')}</div></div>`;
+    // locked (a reason): while the stream runs its destination stays
+    const tiles = (label, aria, items, locked) => `<div class="field"><label>${label}</label><div class="dst" role="radiogroup" aria-label="${aria}"${locked ? ` title="${esc(locked)}"` : ''}>${items.map(([arg, title, desc, on]) =>
+        `<button type="button" role="radio" class="dsti${on ? ' dsti-on' : ''}" aria-checked="${on}" data-act="${locked ? 'none' : 'setv'}" data-arg="${arg}"${locked && !on ? ' disabled style="opacity: .45; cursor: not-allowed"' : ''}><i></i><div><b>${title}</b><span>${desc}</span></div></button>`).join('')}</div></div>`;
 
     function gpioHtml() {
         const gi = stream('gin'), go = stream('gout');
@@ -318,12 +387,12 @@
             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(340px, 1fr))">
               <section class="card">
                 <div class="card-h"><h2 class="card-t">Input</h2><div class="row">${badge(gi)}${inTrig ? softBtn(3) : ''}${runBtn(gi)}</div></div>
-                ${tiles('Destination', 'GPIO input destination', [['SS_GPIO_IN_MODE:0', 'Network client', 'port 18904 · rpsa_client, the API', !inSd], ['SS_GPIO_IN_MODE:1', 'File on SD card', 'BIN, CSV or VCD', inSd]])}
-                ${lostHtml('gin', inSd)}
+                ${tiles('Destination', 'GPIO input destination', [['SS_GPIO_IN_MODE:0', 'Network client', 'port 18904 · rpsa_client, the API', !inSd], ['SS_GPIO_IN_MODE:1', 'File on SD card', 'BIN, CSV or VCD', inSd]], gi.run && 'Stop the input to change the destination')}
+                ${!inSd && runMode('gin') === 1 ? lostHtml('gin') : ''}
                 ${inSd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))">
                     <div class="field"><label for="gfmt">Format</label><select id="gfmt" data-param="SS_GPIO_IN_FORMAT">${sel([[0, 'BIN'], [1, 'CSV'], [2, 'VCD']], v('SS_GPIO_IN_FORMAT', 0))}</select></div>
                     <div class="field"><label for="glim">Samples</label><input id="glim" class="mono" value="${esc(v('SS_GPIO_IN_SAMPLES', 0))}" data-act="int" data-arg="SS_GPIO_IN_SAMPLES"><span class="hint">0 - until the stop</span></div>
-                  </div>` : ''}
+                  </div>${recordingHtml('gin')}` : ''}
                 <div class="field"><label>Trigger</label><label class="check">${flip('data-act="flag" data-arg="SS_GPIO_IN_TRIG_MODE"', inTrig)}Wait for a trigger, then capture</label></div>
                 ${inTrig ? `<div class="field"><div class="lnh"><label>Pattern trigger (lines that must match)</label><button type="button" class="lnb" data-act="gpatClear">clear</button><span class="lnm">${patSet ? 'mask ' + hex4(PM) + ' value ' + hex4(PV) + ' rise ' + hex4(PP) + ' fall ' + hex4(PN) : 'no line: the pattern never fires'}</span></div>
                     ${lineGrid((row, i, k) => {
@@ -342,7 +411,7 @@
               </section>
               <section class="card">
                 <div class="card-h"><h2 class="card-t">Output</h2><div class="row">${badge(go)}${runBtn(go)}</div></div>
-                ${tiles('Source', 'GPIO output source', [['SS_GPIO_OUT_MODE:0', 'Network client', 'port 18905 · rpsa_client, the API', !outSd], ['SS_GPIO_OUT_MODE:1', 'File on SD card', 'a BIN pattern or a recording', outSd]])}
+                ${tiles('Source', 'GPIO output source', [['SS_GPIO_OUT_MODE:0', 'Network client', 'port 18905 · rpsa_client, the API', !outSd], ['SS_GPIO_OUT_MODE:1', 'File on SD card', 'a BIN pattern or a recording', outSd]], go.run && 'Stop the output to change the source')}
                 ${outSd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))">
                     <div class="field"><label for="gofile">File (BIN)</label>${gf.list.length
                         ? `<select id="gofile" data-act="gfile">${gf.cur && !gf.list.includes(gf.cur) ? `<option value="${esc(gf.cur)}" selected>${esc(gf.cur)} (missing)</option>` : ''}${sel(gf.list.map((x) => [x, x]), gf.cur)}</select>`
@@ -483,21 +552,18 @@
               <td>${ranges ? `<select aria-label="${name} range" data-act="bitsel" data-arg="SS_ATTENUATOR:${bit}">${sel([[0, '1:1 (±1 V)'], [1, '1:20 (±20 V)']], att & bit ? 1 : 0)}</select>` : '<span class="hint">one range</span>'}</td>
               <td>${acdc ? `<select aria-label="${name} coupling" data-act="bitsel" data-arg="SS_AC_DC:${bit}">${sel([[0, 'DC'], [1, 'AC']], ac & bit ? 1 : 0)}</select>` : '<span class="hint">DC only</span>'}</td></tr>`;
         }
-        const pass = Number(v('SS_PASS_SAMPLES', 0)), written = Number(v('SS_WRITED_SIZE', 0));
         const tdms = sd && Number(v('SS_FORMAT', 0)) === 1;
         return secHead('ADC', `The inputs ${ins} to a network client or to a file on the SD card.`, badge(s) + (v('SS_TRIG_MODE', 0) ? softBtn(1) : '') + runBtn(s)) + errNote(s) +
             `<section class="card">
-              <div class="card-h"><h2 class="card-t">Destination</h2>${seg('ADC destination', [['adcSd', 0, 'Network client', !sd], ['adcSd', 1, 'File on SD card', sd]])}</div>
+              <div class="card-h"><h2 class="card-t">Destination</h2>${seg('ADC destination', [['adcSd', 0, 'Network client', !sd, s.run && 'Stop the ADC to change the destination'], ['adcSd', 1, 'File on SD card', sd, s.run && 'Stop the ADC to change the destination']])}</div>
               ${sd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))">
                   <div class="field"><label for="fmt">Format</label><select id="fmt" data-param="SS_FORMAT">${sel([[0, 'WAV'], [1, 'TDMS'], [2, 'BIN']], v('SS_FORMAT', 0))}</select></div>
                   <div class="field"><label for="dtype">Values</label><select id="dtype" data-param="SS_SAVE_MODE">${sel([[0, 'Raw ADC codes'], [1, 'Volts']], v('SS_SAVE_MODE', 0))}</select></div>
                   <div class="field"><label for="lim">Samples per channel</label><input id="lim" class="mono" value="${esc(v('SS_SAMPLES', 0))}" data-act="int" data-arg="SS_SAMPLES"><span class="hint">0 - until the stop</span></div>
                   ${tdms ? `<div class="field"><label for="tcol">TDMS time column</label><select id="tcol" data-param="SS_TDMS_TIME">${sel([[0, 'Off'], [1, 'On']], v('SS_TDMS_TIME', 0))}</select></div>` : ''}
                 </div>
-                <p class="hint" style="margin: 0">Recorded: <b class="mono" style="color: #e8e8e6">${pass.toLocaleString('en-US')} samples · ${fmtBytes(written)}</b></p>
-                ${lostHtml('adc', true)}
-                ${sdRateHtml()}`
-              : '<p class="sub">A client takes the data on port <span class="mono">18900</span>: rpsa_client or the streaming API.</p>' + lostHtml('adc', false)}
+                ${recordingHtml('adc')}`
+              : '<p class="sub">A client takes the data on port <span class="mono">18900</span>: rpsa_client or the streaming API.</p>' + (runMode('adc') === 1 ? lostHtml('adc') : '')}
             </section>
             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr))">
               <section class="card"><h2 class="card-t">Channels</h2>
@@ -650,7 +716,7 @@
         const tabs = [['fileTab', 'adc', 'ADC recordings', S.fileTab === 'adc']];
         if (hasDac()) tabs.push(['fileTab', 'dac', 'DAC files', S.fileTab === 'dac']);
         if (hasGpio()) tabs.push(['fileTab', 'gpio', 'GPIO files', S.fileTab === 'gpio']);
-        return secHead('Files on the SD card', '/home/redpitaya/streaming_files' + (S.sdFree ? ' · ' + fmtBytes(S.sdFree[0]) + ' free of ' + fmtBytes(S.sdFree[1]) : ''), seg('Folder', tabs)) +
+        return secHead('Files on the SD card', '/home/redpitaya/streaming_files' + (sdSpace() ? ' · ' + fmtBytes(sdSpace()[0]) + ' free of ' + fmtBytes(sdSpace()[1]) : ''), seg('Folder', tabs)) +
             `<section class="card">
               <div class="row">
                 ${dir !== 'adc' ? `<button class="btn" type="button" style="${NEUTRAL}" data-act="upload"><img src="img/upload.png" alt="" style="width: 18px; height: 18px">Upload…</button>` : ''}

@@ -55,6 +55,7 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/src/main.h
             ${PROJECT_SOURCE_DIR}/src/options.h
             ${PROJECT_SOURCE_DIR}/src/remote.h
+            ${PROJECT_SOURCE_DIR}/src/records.h
             ${PROJECT_SOURCE_DIR}/src/search.h
             ${PROJECT_SOURCE_DIR}/src/streaming.h
             ${PROJECT_SOURCE_DIR}/src/test_helper.h
@@ -69,6 +70,7 @@ list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/main.cpp
             ${PROJECT_SOURCE_DIR}/src/options.cpp
             ${PROJECT_SOURCE_DIR}/src/remote.cpp
+            ${PROJECT_SOURCE_DIR}/src/records.cpp
             ${PROJECT_SOURCE_DIR}/src/search.cpp
             ${PROJECT_SOURCE_DIR}/src/streaming.cpp
             ${PROJECT_SOURCE_DIR}/src/test_helper.cpp

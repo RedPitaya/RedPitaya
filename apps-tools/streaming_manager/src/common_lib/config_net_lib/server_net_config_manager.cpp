@@ -145,6 +145,14 @@ auto ServerNetConfigManager::receiveCommand(uint32_t command, std::string tag) -
         }
     }
 
+    if (c == CNetConfigManager::ECommands::CS_REQUEST_RECORD_STATUS) {
+        if (recordStatusRequestNofiy.slot_count() == 0) {
+            m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_RECORD_STATUS, "");
+        } else {
+            recordStatusRequestNofiy();
+        }
+    }
+
     if (c == CNetConfigManager::ECommands::CS_REQUEST_TRIGGER_STATUS) {
         if (triggerStatusRequestNofiy.slot_count() == 0) {
             m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_TRIGGER_STATUS, "");
@@ -445,6 +453,10 @@ auto ServerNetConfigManager::sendSoftwareTriggerFail(CNetConfigManager::ETrigger
 auto ServerNetConfigManager::setBoardInfo(const BoardInfoMessage& info) -> void {
     std::lock_guard lock(m_boardInfoMtx);
     m_boardInfo = info.toJson();
+}
+
+auto ServerNetConfigManager::sendRecordStatus(const RecordStatus& status) -> bool {
+    return m_pNetConfManager->sendCommand(CNetConfigManager::ECommands::CS_RESPONSE_RECORD_STATUS, status.toJson());
 }
 
 auto ServerNetConfigManager::sendTriggerStatus(const TriggerStatus& status) -> bool {

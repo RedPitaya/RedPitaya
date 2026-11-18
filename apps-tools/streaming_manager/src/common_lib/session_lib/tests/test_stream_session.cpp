@@ -362,6 +362,11 @@ TEST_F(Session, TheTriggerStatusIsAnswered) {
     EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_TRIGGER_STATUS));
 }
 
+TEST_F(Session, TheRecordStatusIsAnswered) {
+    peer.send(Command(Cmd::CS_REQUEST_RECORD_STATUS));
+    EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_RECORD_STATUS));
+}
+
 // The GPIO file mode over the protocol: the input writes its file up to the sample limit
 TEST_F(Session, TheGpioInputWritesAFileAndSaysSo) {
     const auto dir = std::filesystem::temp_directory_path() / ("session_gpio_" + std::to_string(m_port));
@@ -377,6 +382,14 @@ TEST_F(Session, TheGpioInputWritesAFileAndSaysSo) {
     peer.send(Command(Cmd::CS_REQUEST_GPIO_IN_SERVER_START));
     EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_GPIO_IN_SERVER_STARTED_SD));
     EXPECT_TRUE(peer.waitFor(Cmd::CS_RESPONSE_GPIO_IN_SERVER_STOPPED_SD_DONE));
+    // the record of the run stays after its end (item 1.5)
+    const auto rs = session->recordStatus();
+    EXPECT_EQ(rs.gpioIn.mode, StreamRecordStatus::SD);
+    EXPECT_EQ(rs.gpioIn.limit, 1u);
+    EXPECT_GE(rs.gpioIn.samples, 1u);
+    EXPECT_GT(rs.gpioIn.written, 0u);
+    EXPECT_EQ(rs.adc.mode, StreamRecordStatus::NONE) << "the ADC did not run";
+    EXPECT_GT(rs.sdTotal, 0u);
     bool vcd = false;
     for (const auto& e : std::filesystem::directory_iterator(dir))
         vcd |= e.path().extension() == ".vcd";

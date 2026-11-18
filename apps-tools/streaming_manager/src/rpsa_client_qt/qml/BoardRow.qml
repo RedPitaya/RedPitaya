@@ -14,6 +14,14 @@ Item {
     BoardStatus { id: s; b: root.b }
     TextMetrics { id: longestState; font.pixelSize: Theme.fsSm; font.bold: true; text: "Taken by another client" }
     readonly property var stats: b ? b.stats : ({})
+    // a board writing its SD card has no preview: the progress of its recording takes the place
+    readonly property var rec: b ? b.record : ({})
+    readonly property bool onSd: rec.dest === "sd" && rec.mode === 2
+    readonly property double recRate: rec.rate > 0 ? rec.rate : s.perChannel
+    readonly property double dataRate: s.perChannel * Math.max(1, s.inputsOn.length) * (s.v("data_type_sd") === "VOLT" ? 4 : s.sampleBytes)
+    readonly property double thru: rec.write > 0 ? Math.min(rec.write, dataRate) : dataRate
+    readonly property real recFrac: rec.limit ? Math.min(1, (rec.samples || 0) / rec.limit) : (rec.total ? 1 - rec.free / rec.total : 0)
+    function dur(sec) { if (!(sec >= 0)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h" }
 
     implicitHeight: header ? 28 + Theme.fsAdd : 56 + Theme.fsAdd
 
@@ -64,7 +72,16 @@ Item {
                 color: Theme.plot
                 border.color: Theme.borderSoft
                 radius: Theme.radius
+                Item {
+                    visible: root.onSd
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    Rectangle { anchors.top: parent.top; width: parent.width; height: 6; radius: 3; color: Theme.border
+                        Rectangle { width: parent.width * root.recFrac; height: parent.height; radius: 3; color: rec.limit ? Theme.accent : Theme.muted } }
+                    Text { anchors.bottom: parent.bottom; text: rec.running ? (rec.limit ? Math.round(root.recFrac * 100) + "% · " + root.dur((rec.limit - rec.samples) / root.recRate) + " left" : "SD full in " + root.dur(rec.free / root.thru)) : Theme.bytes(rec.free) + " free on the SD card"; color: Theme.muted; font.pixelSize: Theme.fsXs }
+                }
                 Preview {
+                    visible: !root.onSd
                     id: rowPreview
                     anchors.fill: parent
                     anchors.margins: 1
@@ -93,10 +110,10 @@ Item {
                 }
             }
         }
-        Cell { title: "SPEED"; value: s.online ? Theme.bytes(stats.speed || 0) + "/s" : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
-        Cell { title: "RECEIVED"; value: s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
-        Cell { title: "LOST"; value: s.online ? Theme.count((stats.lostBoard || 0) + (stats.lostFile || 0)) : "-"; Layout.preferredWidth: 70 + 4 * Theme.fsAdd; Layout.minimumWidth: 70 + 4 * Theme.fsAdd; Layout.maximumWidth: 70 + 4 * Theme.fsAdd }
-        Cell { title: "QUEUE"; value: s.online && stats.fileRate > 0 ? Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; tip: stats.fileRate > 0 ? "Disk write " + Theme.bytes(stats.fileRate) + "/s" : ""; Layout.preferredWidth: 60 + 4 * Theme.fsAdd; Layout.minimumWidth: 60 + 4 * Theme.fsAdd; Layout.maximumWidth: 60 + 4 * Theme.fsAdd }
+        Cell { title: "SPEED"; value: onSd ? (rec.running ? Theme.bytes(root.thru) + "/s" : "-") : s.online ? Theme.bytes(stats.speed || 0) + "/s" : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
+        Cell { title: "RECEIVED"; value: onSd ? Theme.bytes(rec.written || 0) : s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
+        Cell { title: "LOST"; value: onSd ? Theme.count((rec.lostBoard || 0) + (rec.lostQueue || 0)) : s.online ? Theme.count((stats.lostBoard || 0) + (stats.lostFile || 0)) : "-"; Layout.preferredWidth: 70 + 4 * Theme.fsAdd; Layout.minimumWidth: 70 + 4 * Theme.fsAdd; Layout.maximumWidth: 70 + 4 * Theme.fsAdd }
+        Cell { title: "QUEUE"; value: onSd ? (rec.running ? Math.round(rec.queue * 100) + " %" : "-") : s.online && stats.fileRate > 0 ? Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; tip: stats.fileRate > 0 ? "Disk write " + Theme.bytes(stats.fileRate) + "/s" : ""; Layout.preferredWidth: 60 + 4 * Theme.fsAdd; Layout.minimumWidth: 60 + 4 * Theme.fsAdd; Layout.maximumWidth: 60 + 4 * Theme.fsAdd }
         Row {
             Layout.preferredWidth: 130 + 8 * Theme.fsAdd; Layout.minimumWidth: 130 + 8 * Theme.fsAdd; Layout.maximumWidth: 130 + 8 * Theme.fsAdd
             layoutDirection: Qt.RightToLeft

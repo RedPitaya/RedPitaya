@@ -55,6 +55,11 @@ class CGpioFileWriter {
     auto samples() const -> uint64_t { return m_position; }
     auto samplesLimit() const -> uint64_t { return m_rec.samplesLimit; }
     auto path() const -> const std::string& { return m_path; }
+    // while open: the bytes written, the write speed of the card (0 before it is measured), the
+    // fill of the write queue 0..1
+    auto writtenBytes() -> uint64_t;
+    auto writeRate() -> double;
+    auto queueFill() -> double;
 
     // the disk filled up while writing
     sigslot::signal<> outOfSpaceNotify;

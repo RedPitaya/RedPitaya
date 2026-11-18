@@ -49,6 +49,18 @@ class GPIOInStreamServer {
     // board (the FPGA found no free buffer) and the samples it gave
     auto getBoardLost() -> uint64_t;
     auto getBoardSamples() -> uint64_t;
+    // The recording of the current or last run (kept after the stop): where it goes, the file
+    struct Record {
+        int mode = 0;  // 0 none yet, 1 network, 2 SD
+        bool running = false;
+        uint64_t samples = 0;  // the time line of the file in samples (the gaps included)
+        uint64_t limit = 0;
+        uint64_t written = 0;  // bytes
+        double writeRate = 0;
+        double queue = 0;
+        std::string file;
+    };
+    auto getRecord() -> Record;
     // the file of the file mode, "" in the network mode
     auto filePath() -> std::string;
 

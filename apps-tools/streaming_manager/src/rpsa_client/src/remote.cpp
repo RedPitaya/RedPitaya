@@ -1,6 +1,7 @@
 #include "remote.h"
 #include <mutex>
 #include "config.h"
+#include "records.h"
 #include "logger_lib/file_logger.h"
 
 #ifdef _WIN32
@@ -148,6 +149,11 @@ auto startRemote(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options&
             const auto mode = g_roption.remote_mode;
             return remoteGpio(cl, connected_hosts, mode == ClientOpt::RemoteMode::START_GPIO_IN || mode == ClientOpt::RemoteMode::START_GPIO_OUT,
                               mode == ClientOpt::RemoteMode::START_GPIO_OUT || mode == ClientOpt::RemoteMode::STOP_GPIO_OUT);
+        }
+
+        case ClientOpt::RemoteMode::WATCH:
+        case ClientOpt::RemoteMode::STATUS: {
+            return watchRecords(cl, connected_hosts, g_roption, g_roption.remote_mode == ClientOpt::RemoteMode::STATUS, [] { return g_rexit_flag.load(); });
         }
 
         default: {
@@ -750,6 +756,16 @@ auto startStopStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<st
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
     auto curTime = beginTime;
     g_roption.timeout = g_roption.timeout == 0 ? 1000 : g_roption.timeout;
+    if (!runned_hosts) {
+        // -r start_stop: the boards writing their SD cards are shown while it waits (it ends at the
+        // timeout or when they are done; then the wait below goes on)
+        std::list<std::string> hosts(masterHosts.begin(), masterHosts.end());
+        hosts.insert(hosts.end(), slaveHosts.begin(), slaveHosts.end());
+        watchRecords(cl, hosts, g_roption, false, [&] {
+            const auto now = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
+            return g_rexit_flag.load() || now - beginTime > g_roption.timeout;
+        }, false);
+    }
     while ((curTime - beginTime <= g_roption.timeout) && (masterHosts.size() > 0 || slaveHosts.size() > 0)) {
         sleepMs(1);
         if (g_rexit_flag)

@@ -344,6 +344,42 @@ TEST_F(NetConfig, NoTriggerStatusWithoutAHandler) {
     EXPECT_FALSE(got.load());
 }
 
+TEST_F(NetConfig, TheRecordStatusTravelsAsJson) {
+    RecordStatus status;
+    status.adc.mode = StreamRecordStatus::SD;
+    status.adc.running = true;
+    status.adc.samples = 187500000;
+    status.adc.limit = 250000000;
+    status.sdFree = 26950000000ull;
+    m_server->recordStatusRequestNofiy.connect([&]() { m_server->sendRecordStatus(status); });
+    connectClient();
+    std::mutex mutex;
+    bool got = false;
+    RecordStatus received;
+    m_client->getRecordStatusNofiy.connect([&](std::string&, RecordStatus s) {
+        std::lock_guard lock(mutex);
+        received = s;
+        got = true;
+    });
+    ASSERT_TRUE(m_client->requestRecordStatus(m_host));
+    ASSERT_TRUE(WaitFor([&] {
+        std::lock_guard lock(mutex);
+        return got;
+    }));
+    std::lock_guard lock(mutex);
+    EXPECT_EQ(received, status);
+}
+
+TEST_F(NetConfig, NoRecordStatusWithoutAHandler) {
+    connectClient();
+    std::atomic<bool> failed{false}, got{false};
+    m_client->failRecordStatusNofiy.connect([&](std::string&) { failed = true; });
+    m_client->getRecordStatusNofiy.connect([&](std::string&, RecordStatus) { got = true; });
+    ASSERT_TRUE(m_client->requestRecordStatus(m_host));
+    ASSERT_TRUE(WaitFor([&] { return failed.load(); }));
+    EXPECT_FALSE(got.load());
+}
+
 TEST_F(NetConfig, TheBoardInfoTravelsAsJson) {
     BoardInfoMessage info;
     info.model = 10;

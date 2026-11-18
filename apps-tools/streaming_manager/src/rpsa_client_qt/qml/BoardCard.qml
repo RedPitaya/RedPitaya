@@ -17,6 +17,24 @@ Rectangle {
 
     BoardStatus { id: s; b: root.b }
     readonly property var stats: b ? b.stats : ({})
+    // the recording (streaming_improvements 1.5): dest "pc" or "sd" (the board's RecordStatus).
+    // The counters of the board's card show the last run to the card only, not one to this PC.
+    readonly property var rec: b ? b.record : ({})
+    readonly property bool onSd: rec.dest === "sd" && rec.mode === 2
+    readonly property bool sdDest: rec.dest === "sd"
+    // samples a second (the board's, else the sample rate) and bytes a second of the data
+    readonly property double recRate: rec.rate > 0 ? rec.rate : s.perChannel
+    readonly property double dataRate: s.perChannel * Math.max(1, s.inputsOn.length) * (s.v("data_type_sd") === "VOLT" ? 4 : s.sampleBytes)
+    // what goes to the disk a second: the data, or the disk when it is slower (the measured speed
+    // alone overstates a disk the data do not keep busy)
+    readonly property double thru: rec.write > 0 ? Math.min(rec.write, dataRate) : dataRate
+    function dur(sec) { if (!(sec >= 0)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h " + String(Math.round(sec % 3600 / 60)).padStart(2, "0") + " min" }
+    readonly property real recFrac: rec.limit ? Math.min(1, (rec.samples || 0) / rec.limit) : (rec.total ? 1 - rec.free / rec.total : 0)
+    readonly property string recText: !rec.dest ? "" : sdDest && !rec.known ? "The board does not report its recording (a streaming server older than 2026-11-18)" : rec.running
+        ? (rec.limit ? Math.round(recFrac * 100) + "% of the limit · " + Theme.count(rec.samples) + " of " + Theme.count(rec.limit) + " · about " + dur((rec.limit - rec.samples) / recRate) + " left"
+                     : (sdDest ? "SD card" : "PC disk") + " full in about " + dur(rec.free / thru) + " at " + Theme.bytes(thru) + "/s")
+          + " · " + Theme.bytes(rec.free) + " free of " + Theme.bytes(rec.total)
+        : (sdDest ? "SD card: " : "PC disk: ") + Theme.bytes(rec.free) + " free of " + Theme.bytes(rec.total)
 
     color: Theme.card
     border.color: Theme.border
@@ -176,14 +194,28 @@ Rectangle {
             columns: root.big && root.width >= 1150 ? 7 : 4
             columnSpacing: 14
             rowSpacing: 8
-            Kv { label: "Received"; value: s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
-            Kv { label: "Speed"; value: s.online ? Theme.bytes(stats.speed || 0) + "/s" : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
-            Kv { label: "Samples per channel"; value: s.online ? Theme.count(stats.samples || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
-            Kv { label: "Lost on the board"; value: s.online ? Theme.count(stats.lostBoard || 0) : "-"; valueColor: stats.lostBoard > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
-            Kv { label: "Lost on this PC"; value: s.online ? Theme.count(stats.lostFile || 0) : "-"; valueColor: stats.lostFile > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv { label: onSd ? "Written on the board" : "Received"; value: onSd ? Theme.bytes(rec.written || 0) : s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv { label: onSd ? "SD card" : "Speed"; value: onSd ? (rec.running ? Theme.bytes(root.thru) + "/s · " + Math.round(rec.queue * 100) + " %" : Theme.bytes(rec.free) + " free") : s.online ? Theme.bytes(stats.speed || 0) + "/s" : "-"; valueColor: onSd && rec.running && rec.write > 0 && rec.write < root.dataRate ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv { label: "Samples per channel"; value: onSd ? Theme.count(rec.samples || 0) : s.online ? Theme.count(stats.samples || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv { label: "Lost on the board"; value: onSd ? Theme.count(rec.lostBoard || 0) : s.online ? Theme.count(stats.lostBoard || 0) : "-"; valueColor: (onSd ? rec.lostBoard : stats.lostBoard) > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv { label: onSd ? "Lost by the SD queue" : "Lost on this PC"; value: onSd ? Theme.count(rec.lostQueue || 0) : s.online ? Theme.count(stats.lostFile || 0) : "-"; valueColor: (onSd ? rec.lostQueue : stats.lostFile) > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             // the write speed of the file on this PC and the fill of its queue in memory (half full: red, the data are lost once it is full)
-            Kv { label: "Disk write"; value: s.online && stats.fileRate > 0 ? Theme.bytes(stats.fileRate) + "/s · " + Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv { label: onSd ? "Time left" : "Disk write"; value: onSd ? (rec.running ? (rec.limit ? dur((rec.limit - rec.samples) / recRate) : "SD full in " + dur(rec.free / root.thru)) : (rec.limit && rec.samples >= rec.limit ? "done" : "stopped")) : s.online && stats.fileRate > 0 ? Theme.bytes(stats.fileRate) + "/s · " + Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: !onSd && stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: "Trigger"; value: s.trigText; valueColor: s.trigNoSource ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+        }
+        // the progress of the recording: the limit, else the disk or the SD card
+        ColumnLayout {
+            visible: !!rec.dest && (rec.total > 0 || (sdDest && !rec.known))
+            Layout.fillWidth: true
+            spacing: 4
+            Rectangle {
+                Layout.fillWidth: true
+                height: 6
+                radius: 3
+                color: Theme.border
+                Rectangle { width: parent.width * root.recFrac; height: parent.height; radius: 3; color: rec.limit ? Theme.accent : Theme.muted }
+            }
+            Text { text: root.recText; color: rec.running && rec.write > 0 && rec.write < root.dataRate ? Theme.dangerText : Theme.muted; font.pixelSize: Theme.fsSm; Layout.fillWidth: true; elide: Text.ElideRight }
         }
         RowLayout {
             id: fileRow
@@ -191,7 +223,7 @@ Rectangle {
             spacing: 8
             Label2 { text: "File"; kind: "hint"; wrapMode: Text.NoWrap }
             Text {
-                text: stats.file || (b ? b.recordDir() : "")
+                text: sdDest ? (rec.file || "/home/redpitaya/streaming_files/adc") + " (on the board)" : stats.file || (b ? b.recordDir() : "")
                 color: stats.file ? Theme.value : Theme.muted
                 font.family: Theme.mono
                 font.pixelSize: Theme.fsSm

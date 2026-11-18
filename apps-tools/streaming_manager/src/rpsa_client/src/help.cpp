@@ -108,6 +108,10 @@ const char* kRemote =
     "                        start_gpio_out   start the GPIO output (stop_gpio_out to stop it)\n"
     "                          with gpio_in_pass_mode / gpio_out_pass_mode=FILE the board writes\n"
     "                          or plays a file of its own (%P --help gpio)\n"
+    "                        watch            follow the recordings of the boards on their SD cards:\n"
+    "                          a panel (a line a board every 5 s without a terminal) until they end;\n"
+    "                          leaving does not stop them. start_stop shows it while it waits\n"
+    "                        status           the recordings once, key=value lines for scripts\n"
     "  -t, --timeout=MSEC    for start_stop and start_stop_dac, milliseconds or 5s, 2m (default 1000)\n"
     "  -v, --verbose         report every step\n";
 
@@ -238,7 +242,7 @@ const std::map<std::string, Section>& sections() {
     static const std::map<std::string, Section> s = {
         {"detect", {kDetect, "Usage: %P -d [-t SEC]\n"}},
         {"config", {kConfig, "Usage: %P -c [-h IPs] -g V|V1|VV|F | -s M|F [-f FILE] | -i NAME[=VALUE] [-w] [-v]\n"}},
-        {"remote", {kRemote, "Usage: %P -r [-h IPs] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac [-t MSEC] [-v]\n"}},
+        {"remote", {kRemote, "Usage: %P -r [-h IPs] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac|watch|status [-t MSEC] [-v]\n"}},
         {"stream", {kStream, "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC] [--tdms_time] [-v]\n"}},
         {"dac", {kDac, "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [-v]\n"}},
         {"gpio", {kGpio, "Usage: %P -G [-h IP] [--in FILE [-f bin|csv|vcd] [-l SAMPLES]] [--out FILE.bin [-r inf|COUNT] [--gaps]] [-t MSEC] [-v]\n"}},

@@ -118,6 +118,17 @@ CDoubleParameter ss_adc_samples("SS_ADC_SAMPLES", CBaseParameter::RO, 0, 0, 0, 1
 CDoubleParameter ss_adc_file_lost("SS_ADC_FILE_LOST", CBaseParameter::RO, 0, 0, 0, 1e20);
 CDoubleParameter ss_gpio_lost("SS_GPIO_LOST", CBaseParameter::RO, 0, 0, 0, 1e20);
 CDoubleParameter ss_gpio_samples("SS_GPIO_SAMPLES", CBaseParameter::RO, 0, 0, 0, 1e20);
+// The recordings of the current or last run (RecordStatus): where the run goes (0 none yet,
+// 1 network, 2 SD; the status texts follow it, not the destination switch), the GPIO input file,
+// the SD card. The ADC file is in SS_PASS_SAMPLES, SS_WRITED_SIZE, SS_WRITE_RATE, SS_FILE_QUEUE.
+CIntParameter ss_adc_run_mode("SS_ADC_RUN_MODE", CBaseParameter::RO, 0, 0, 0, 2);
+CIntParameter ss_gpio_run_mode("SS_GPIO_RUN_MODE", CBaseParameter::RO, 0, 0, 0, 2);
+CDoubleParameter ss_gpio_file_samples("SS_GPIO_FILE_SAMPLES", CBaseParameter::RO, 0, 0, 0, 1e20);
+CDoubleParameter ss_gpio_written("SS_GPIO_WRITTEN", CBaseParameter::RO, 0, 0, 0, 1e20);
+CDoubleParameter ss_gpio_write_rate("SS_GPIO_WRITE_RATE", CBaseParameter::RO, 0, 0, 0, 1e12);
+CDoubleParameter ss_gpio_file_queue("SS_GPIO_FILE_QUEUE", CBaseParameter::RO, 0, 0, 0, 1);
+CDoubleParameter ss_sd_free("SS_SD_FREE", CBaseParameter::RO, 0, 0, 0, 1e20);
+CDoubleParameter ss_sd_total("SS_SD_TOTAL", CBaseParameter::RO, 0, 0, 0, 1e20);
 
 // ============================================================================
 // Memory parameters
@@ -257,7 +268,6 @@ uio_lib::CHardware::Ptr g_hw = nullptr;
 
 // the streaming of the board: the settings, the config server and the streams
 session_lib::StreamSession::Ptr g_session = nullptr;
-std::atomic_bool g_adcFile(false);  // the ADC writes a file: its statistics go to the page
 std::atomic_bool g_pageChanges(false);  // the page changes the settings: no update of the page back
 
 auto makeWebCallback() -> std::shared_ptr<session_lib::SessionCallback>;
@@ -755,11 +765,22 @@ void UpdateParams(void) {
             ss_gpio_lost.SendValue(g_session->gpioInBoardLost());
             ss_gpio_samples.SendValue(g_session->gpioInBoardSamples());
         }
-        if (g_session && g_adcFile) {
-            ss_pass_samples.SendValue(g_session->adcPassSamples());
-            ss_writed_size.SendValue(g_session->adcWrittenSize());
-            ss_write_rate.SendValue(g_session->adcWriteRate());
-            ss_file_queue.SendValue(g_session->adcFileQueueFill());
+        if (g_session) {
+            // the values of the last run stay after its stop; the network run has no file
+            const auto rs = g_session->recordStatus();
+            const bool adcSd = rs.adc.mode == StreamRecordStatus::SD;
+            ss_adc_run_mode.SendValue(rs.adc.mode);
+            ss_pass_samples.SendValue(adcSd ? rs.adc.samples : 0);
+            ss_writed_size.SendValue(rs.adc.written);
+            ss_write_rate.SendValue(rs.adc.writeRate);
+            ss_file_queue.SendValue(rs.adc.queue);
+            ss_gpio_run_mode.SendValue(rs.gpioIn.mode);
+            ss_gpio_file_samples.SendValue(rs.gpioIn.mode == StreamRecordStatus::SD ? rs.gpioIn.samples : 0);
+            ss_gpio_written.SendValue(rs.gpioIn.written);
+            ss_gpio_write_rate.SendValue(rs.gpioIn.writeRate);
+            ss_gpio_file_queue.SendValue(rs.gpioIn.queue);
+            ss_sd_free.SendValue(rs.sdFree);
+            ss_sd_total.SendValue(rs.sdTotal);
         }
     } catch (std::exception& e) {
         ERROR_LOG("%s", e.what());
@@ -894,9 +915,8 @@ class WebCallback : public session_lib::SessionCallback {
             updateUI();
     }
 
-    void adcStarted(bool file) override {
+    void adcStarted(bool) override {
         m_adcOn = true;
-        g_adcFile = file;
         ss_status.SendValue(1);
         TRACE("Start server");
     }
@@ -905,7 +925,6 @@ class WebCallback : public session_lib::SessionCallback {
 
     void adcStopped(streaming_lib::ADCStopReason reason) override {
         using R = streaming_lib::ADCStopReason;
-        g_adcFile = false;
         if (idleStop(m_adcOn, reason == R::NORMAL))
             return;
         switch (reason) {

@@ -61,6 +61,21 @@ class ADCStreamServer {
     // network or the SD card too slow), given by the FPGA, and not taken by the SD file (its write
     // queue was full; those buffers are missing from the file).
     auto getBoardLost() -> uint64_t;
+    // The recording of the current or last run, for the page and the clients: where it goes, how
+    // far its file is, what the SD card takes. Kept after the stop (the file is gone by then); it
+    // does not wait for a stop that writes the queue out (the values seen last serve).
+    struct Record {
+        int mode = 0;  // 0 none yet, 1 network, 2 SD
+        bool running = false;
+        uint64_t samples = 0;  // the file: samples per channel written (the losses included)
+        uint64_t limit = 0;
+        uint64_t written = 0;  // bytes
+        double writeRate = 0;
+        double queue = 0;
+        std::string file;
+    };
+    auto getRecord() -> Record;
+    auto getRunMode() -> int;
     auto getBoardSamples() -> uint64_t;
     auto getFileDropped() -> uint64_t;
     auto getQueueFill() -> double;

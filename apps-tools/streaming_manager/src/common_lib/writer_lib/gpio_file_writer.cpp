@@ -124,6 +124,18 @@ auto CGpioFileWriter::write(const uint32_t* words, size_t count, uint64_t lost, 
     return Result::OK;
 }
 
+auto CGpioFileWriter::writtenBytes() -> uint64_t {
+    return m_file ? m_file->getWritedSize() : 0;
+}
+
+auto CGpioFileWriter::writeRate() -> double {
+    return m_file ? m_file->writeRate() : 0;
+}
+
+auto CGpioFileWriter::queueFill() -> double {
+    return m_file ? m_file->queueFill() : 0;
+}
+
 auto CGpioFileWriter::close() -> void {
     if (!m_open)
         return;

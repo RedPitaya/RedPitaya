@@ -138,6 +138,14 @@ TEST_F(ADCServer, TheLossesOfARunAreCountedKeptAndResetByTheNextStart) {
     EXPECT_EQ(lost / 7 * perBuffer, samples) << "every buffer counted once: " << lost / 7 << " buffers of " << perBuffer;
     EXPECT_EQ(server->getFileDropped(), 0u);
     EXPECT_EQ(server->getBoardLost(), lost) << "kept after the stop";
+    // the record of the run (item 1.5): the file it wrote, kept after the stop
+    const auto rec = server->getRecord();
+    EXPECT_EQ(rec.mode, 2);
+    EXPECT_FALSE(rec.running);
+    EXPECT_EQ(rec.limit, 20000u);
+    EXPECT_GE(rec.samples, 20000u) << "the limit is reached";
+    EXPECT_GT(rec.written, 0u);
+    EXPECT_EQ(rec.file.rfind(dir.string(), 0), 0u) << rec.file;
 
     uio_lib::dummy::oscState().lost = nullptr;
     ASSERT_TRUE(server->start(fileSettings(s, 20000), options));

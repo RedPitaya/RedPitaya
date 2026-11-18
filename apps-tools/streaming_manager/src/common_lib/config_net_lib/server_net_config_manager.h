@@ -10,6 +10,7 @@
 #include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
 #include "trigger_status.h"
+#include "record_status.h"
 
 class ServerNetConfigManager {
    public:
@@ -88,6 +89,7 @@ class ServerNetConfigManager {
     auto sendSoftwareTriggerDone(CNetConfigManager::ETriggerTarget target) -> bool;
     auto sendSoftwareTriggerFail(CNetConfigManager::ETriggerTarget target) -> bool;
     auto sendTriggerStatus(const TriggerStatus& status) -> bool;
+    auto sendRecordStatus(const RecordStatus& status) -> bool;
     // The answer to CS_REQUEST_BOARD_INFO; until it is set the server answers with an empty tag.
     auto setBoardInfo(const BoardInfoMessage& info) -> void;
 
@@ -133,6 +135,8 @@ class ServerNetConfigManager {
     // handler the request is answered here: trigger fail, empty status, GPIO config error.
     sigslot::signal<CNetConfigManager::ETriggerTarget> softwareTriggerNofiy;
     sigslot::signal<> triggerStatusRequestNofiy;
+    // answered with sendRecordStatus; without a handler with an empty status
+    sigslot::signal<> recordStatusRequestNofiy;
 
     sigslot::signal<ServerNetConfigManager::Errors> errorNofiy;
 

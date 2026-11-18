@@ -195,6 +195,40 @@ struct StreamSession::Impl : public std::enable_shared_from_this<StreamSession::
 
 namespace {
 
+// the record status of the session (StreamSession::recordStatus, CS_REQUEST_RECORD_STATUS)
+auto recordStatusOf(StreamSession::Impl& p) -> RecordStatus {
+    RecordStatus st;
+    auto fill = [](StreamRecordStatus& s, int mode, bool running, uint64_t samples, uint64_t limit, uint64_t written, double rate, double queue,
+                   const std::string& file) {
+        s.mode = static_cast<uint8_t>(mode);
+        s.running = running;
+        s.samples = samples;
+        s.limit = limit;
+        s.written = written;
+        s.writeRate = rate;
+        s.queue = queue;
+        s.file = file;
+    };
+    const auto a = p.adc->getRecord();
+    // the network: the samples the FPGA gave, the file has none
+    fill(st.adc, a.mode, a.running, a.mode == 2 ? a.samples : p.adc->getBoardSamples(), a.limit, a.written, a.writeRate, a.queue, a.file);
+    st.adc.lostBoard = p.adc->getBoardLost();
+    st.adc.lostQueue = p.adc->getFileDropped();
+    if (p.gpioIn) {
+        const auto g = p.gpioIn->getRecord();
+        fill(st.gpioIn, g.mode, g.running, g.mode == 2 ? g.samples : p.gpioIn->getBoardSamples(), g.limit, g.written, g.writeRate, g.queue, g.file);
+        st.gpioIn.lostBoard = p.gpioIn->getBoardLost();
+    }
+    std::error_code ec;
+    const std::string dir = p.options.adcDir.empty() ? std::string(FILE_PATH) : p.options.adcDir;
+    const auto space = std::filesystem::space(dir, ec);
+    if (!ec) {
+        st.sdFree = space.available;
+        st.sdTotal = space.capacity;
+    }
+    return st;
+}
+
 using Weak = std::weak_ptr<StreamSession::Impl>;
 
 // The events of the streams: the reply of the config protocol, then the application's
@@ -539,6 +573,12 @@ auto StreamSession::create(uio_lib::CHardware::Ptr hw, const SessionOptions& opt
             s->stopGPIOOut(GPIOStopReason::NORMAL, false);
     });
     connectTriggerCommands(p->config, hw);
+    c.recordStatusRequestNofiy.connect([w]() {
+        auto s = w.lock();
+        if (!s || !s->config)
+            return;
+        s->config->sendRecordStatus(recordStatusOf(*s));
+    });
 
     // The announcement: on every interface with its own address; listening on one address, that one
     // only, on its interface (or as a broadcast to all when no interface has it); a loopback
@@ -658,6 +698,10 @@ auto StreamSession::adcPassSamples() -> uint64_t {
 
 auto StreamSession::adcWrittenSize() -> uint64_t {
     return m_pimpl->adc->getWritedSize();
+}
+
+auto StreamSession::recordStatus() -> RecordStatus {
+    return recordStatusOf(*m_pimpl);
 }
 
 auto StreamSession::adcBoardLost() -> uint64_t {

@@ -41,6 +41,7 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/net_config_manager.h
             ${PROJECT_SOURCE_DIR}/server_net_config_manager.h
             ${PROJECT_SOURCE_DIR}/trigger_status.h
+            ${PROJECT_SOURCE_DIR}/record_status.h
         )
 
 list(APPEND src
@@ -50,6 +51,7 @@ list(APPEND src
             ${PROJECT_SOURCE_DIR}/net_config_manager.cpp
             ${PROJECT_SOURCE_DIR}/server_net_config_manager.cpp
             ${PROJECT_SOURCE_DIR}/trigger_status.cpp
+            ${PROJECT_SOURCE_DIR}/record_status.cpp
         )
 
 target_sources(${PROJECT_NAME} PRIVATE ${src})

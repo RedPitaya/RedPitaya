@@ -545,8 +545,12 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                         opt.remote_mode = RemoteMode::START_GPIO_OUT;
                     } else if (same(optarg, "stop_gpio_out")) {
                         opt.remote_mode = RemoteMode::STOP_GPIO_OUT;
+                    } else if (same(optarg, "watch")) {
+                        opt.remote_mode = RemoteMode::WATCH;
+                    } else if (same(optarg, "status")) {
+                        opt.remote_mode = RemoteMode::STATUS;
                     } else {
-                        fprintf(stderr, "[ERROR] Wrong value of --mode: %s (start, stop, start_stop, start_dac, stop_dac, start_stop_dac,\n        start_gpio_in, stop_gpio_in, start_gpio_out or stop_gpio_out)\n", optarg);
+                        fprintf(stderr, "[ERROR] Wrong value of --mode: %s (start, stop, start_stop, start_dac, stop_dac, start_stop_dac,\n        start_gpio_in, stop_gpio_in, start_gpio_out, stop_gpio_out, watch or status)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }

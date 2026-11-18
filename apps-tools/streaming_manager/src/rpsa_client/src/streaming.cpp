@@ -1,5 +1,6 @@
 #include <atomic>
 #include "streaming.h"
+#include "records.h"
 #include "config.h"
 #include "converter_lib/converter.h"
 #include "logger_lib/file_logger.h"
@@ -264,17 +265,23 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
     std::vector<std::string> lines;
 
     // the head: what, where, how far
+    // the directory last: a narrow terminal cuts it, not the progress
     std::string head = Panel::bold("rpsa_client -s") + "  " + std::to_string(files.size()) + (files.size() == 1 ? " board  " : " boards  ") +
-                       formats[(int)g_soption.streamign_type] + " -> " + g_soption.save_dir;
+                       formats[(int)g_soption.streamign_type];
     double fraction = -1;
+    double left = -1;  // seconds to the end of the run, -1 unknown
     if (g_soption.timeout > 0) {
         fraction = secs * 1000.0 / g_soption.timeout;
+        left = std::max(0.0, g_soption.timeout / 1000.0 - secs);
         snprintf(buf, sizeof(buf), "   %.1f s of %.1f s ", secs, g_soption.timeout / 1000.0);
     } else if (g_soption.samples > 0) {
         uint64_t least = UINT64_MAX;
         for (auto& [h, st] : stats)
             least = std::min(least, st.samples);
         fraction = stats.empty() ? 0 : (double)least / g_soption.samples;
+        // at the rate so far
+        if (!stats.empty() && least > 0 && secs > 1)
+            left = (g_soption.samples - std::min<uint64_t>(least, g_soption.samples)) / (least / secs);
         snprintf(buf, sizeof(buf), "   %.1f s ", secs);  // the limit in samples: the bar
     } else {
         snprintf(buf, sizeof(buf), "   %.1f s ", secs);
@@ -283,7 +290,10 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
     if (fraction >= 0) {
         snprintf(buf, sizeof(buf), " %3.0f%%", std::min(fraction, 1.0) * 100);
         head += Panel::bar(fraction, 16) + buf;
+        if (left >= 0)
+            head += "  " + durationText(left) + " left";
     }
+    head += "  -> " + g_soption.save_dir;
     lines.push_back(head);
     lines.push_back("");
     lines.push_back(Panel::dim(Panel::left("  board", 16) + Panel::left("state", 11) + Panel::right("samples/ch", 11) + Panel::right("kS/s", 9) +
@@ -342,7 +352,23 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
     }
     lines.push_back("");
     const auto free = getFreeSpaceDisk(g_soption.save_dir);
-    lines.push_back(Panel::dim("  disk free " + sizeText(free) + "    " + (keys ? "[q] stop   " : "") + "[Ctrl+C] stop"));
+    // when the disk is full: at what the files take a second together (the data received; the
+    // measured speed of the disk overstates one the data do not keep busy); red when that comes first
+    double disk = 0;
+    if (secs > 1) {
+        uint64_t bytes = 0;
+        for (auto& [h, st] : stats)
+            bytes += st.bytes;
+        disk = bytes / secs;
+    }
+    std::string space = "  disk " + sizeText(free) + " free";
+    bool full = false;
+    if (disk > 0) {
+        const double fullIn = free / disk;
+        space += ", full in " + durationText(fullIn) + " at " + sizeText(static_cast<uint64_t>(disk)) + "/s";
+        full = left >= 0 ? fullIn < left : fullIn < 600;
+    }
+    lines.push_back((full ? Panel::red(space) : Panel::dim(space)) + Panel::dim(std::string("   ") + (keys ? "[q] " : "") + "[Ctrl+C] stop"));
     return lines;
 }
 

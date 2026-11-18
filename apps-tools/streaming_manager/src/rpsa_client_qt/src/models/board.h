@@ -48,6 +48,12 @@ class CBoard : public QObject {
     // the ADC trigger while streaming in the trigger mode: known (the board answered), armed,
     // count (triggers the FPGA has seen)
     Q_PROPERTY(QVariantMap trigger READ getTrigger NOTIFY triggerChanged)
+    // The recording of the ADC (streaming_improvements 1.5): dest "sd" (the board writes its card:
+    // its RecordStatus, asked every second) or "pc" (this computer writes the file); known,
+    // running, limit, samples (per channel), rate (samples a second, 0 unknown), written, write
+    // (bytes a second the disk takes), queue (0..1), lostBoard, lostQueue, free, total (bytes of
+    // the disk of the file), file
+    Q_PROPERTY(QVariantMap record READ getRecord NOTIFY recordChanged)
     // bumped when the settings of the board change: bindings that read value() depend on it
     Q_PROPERTY(int settingsRev READ settingsRev NOTIFY settingsChanged)
     Q_PROPERTY(bool settingsLoaded READ settingsLoaded NOTIFY settingsChanged)
@@ -85,6 +91,7 @@ class CBoard : public QObject {
     auto getState() -> QString;
     auto getStats() -> QVariantMap;
     auto getTrigger() -> QVariantMap;
+    auto getRecord() -> QVariantMap;
     auto settingsRev() -> int;
     auto settingsLoaded() -> bool;
     auto pcRev() -> int;
@@ -134,6 +141,7 @@ class CBoard : public QObject {
     void stateChanged();
     void statsChanged();
     void triggerChanged();
+    void recordChanged();
     void settingsChanged();
     void pcSettingsChanged();
     // a stream lost data (for Stop all on loss)
@@ -227,6 +235,19 @@ class CBoard : public QObject {
     qint64 m_lastBytesTime = 0;
     double m_speed = 0;
     uint64_t m_reportedLost = 0;
+
+    // the recording on the SD card of the board (RecordStatus) and the samples a second seen
+    StreamRecordStatus m_sdRecord;
+    uint64_t m_sdFree = 0;
+    uint64_t m_sdTotal = 0;
+    bool m_recordKnown = false;
+    uint64_t m_recSamples = 0;
+    qint64 m_recTime = 0;
+    double m_recRate = 0;
+    // the disk of the files on this computer, read every second
+    uint64_t m_pcFree = 0;
+    uint64_t m_pcTotal = 0;
+    auto pollRecord() -> void;
 };
 
 #endif  // BOARD_H

@@ -10,6 +10,7 @@
 #include "settings_lib/channels.hpp"
 #include "settings_lib/stream_settings.h"
 #include "trigger_status.h"
+#include "record_status.h"
 
 class ClientNetConfigManager : public CStreamSettings {
    public:
@@ -74,6 +75,9 @@ class ClientNetConfigManager : public CStreamSettings {
     auto requestActiveChannels(const std::string& host) -> bool;
     auto requestTriggerStatus(const std::string& host) -> bool;
     auto requestBoardInfo(const std::string& host) -> bool;
+    // The recordings of the board on its SD card: getRecordStatusNofiy, failRecordStatusNofiy (an
+    // empty or broken answer). An older server does not answer at all.
+    auto requestRecordStatus(const std::string& host) -> bool;
 
     auto removeHadlers() -> void;
 
@@ -132,6 +136,8 @@ class ClientNetConfigManager : public CStreamSettings {
     sigslot::signal<std::string&, TriggerStatus> getTriggerStatusNofiy;
     // The server has no status to give (no stream running, or a server without triggers).
     sigslot::signal<std::string&> failTriggerStatusNofiy;
+    sigslot::signal<std::string&, RecordStatus> getRecordStatusNofiy;
+    sigslot::signal<std::string&> failRecordStatusNofiy;
     sigslot::signal<std::string&, BoardInfoMessage> getBoardInfoNofiy;
     // A server without the board info (an older one answers nothing at all).
     sigslot::signal<std::string&> failBoardInfoNofiy;

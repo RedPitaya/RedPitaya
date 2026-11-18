@@ -50,6 +50,15 @@ struct ADCStreamServer::Impl {
     std::array<std::atomic<uint64_t>, 4> boardLost{};
     std::array<std::atomic<uint64_t>, 4> boardSamples{};
     std::atomic<uint64_t> fileDropped{0};
+    // the losses count while the stream takes the data: not after its file ended (the sample
+    // limit, a full card) or its client left, when the scope runs on until the stop with nobody
+    // reading
+    std::atomic<bool> counting{false};
+    // the run: its destination (0 none yet, 1 network, 2 SD) and the file seen last
+    std::atomic<int> runMode{0};
+    std::mutex recMtx;
+    ADCStreamServer::Record lastRecord;  // under recMtx
+    auto refreshRecord() -> void;  // from the file, under mtx
 
     auto teardown() -> void;
     // of: the session the stop was asked in, none for a stop of whatever runs; own: asked by
@@ -72,6 +81,7 @@ struct ADCStreamServer::Impl {
 // The acquisition stops first, then what is queued for the SD card still goes into the file
 auto ADCStreamServer::Impl::teardown() -> void {
     active = false;
+    counting = false;
     if (file)
         file->disableNotify();
     if (buffer)
@@ -84,6 +94,7 @@ auto ADCStreamServer::Impl::teardown() -> void {
     if (file) {
         file->stopAndFlush();
         fileDropped = file->getDroppedSamples();
+        refreshRecord();
     }
     buffer = nullptr;
     net = nullptr;
@@ -152,12 +163,20 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         for (uint8_t ch = 0; ch < 4; ch++)
             p.boardLost[ch] = p.boardSamples[ch] = 0;
         p.fileDropped = 0;
+        p.counting = true;
         if (!p.hw)
             return false;
 
         auto board = p.hw->info();
         auto passMode = settings.getADCPassMode();
         bool net = passMode.value == CStreamSettings::PassMode::NET;
+        p.runMode = net ? 1 : 2;
+        {
+            std::lock_guard rec(p.recMtx);
+            p.lastRecord = Record();
+            p.lastRecord.mode = p.runMode;
+            p.lastRecord.limit = net ? 0 : settings.getADCSamples();
+        }
         auto decimation = settings.getADCDecimation();
         uint8_t bits = settings.getADCResolution().value == CStreamSettings::Resolution::BIT_8 ? 8 : 16;
 #ifdef RP_PLATFORM
@@ -196,8 +215,10 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
             // the client of the data is gone: nothing reads the stream any more
             auto selfW = std::weak_ptr<Impl>(m_pimpl);
             p.net->clientGone = [selfW]() {
-                if (auto impl = selfW.lock())
+                if (auto impl = selfW.lock()) {
+                    impl->counting = false;
                     impl->stopNonBlocking(ADCStopReason::DISCONNECTED, true);
+                }
             };
         } else {
             auto path = options.filePath.empty() ? std::string(FILE_PATH) : options.filePath;
@@ -209,6 +230,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
                 auto impl = self.lock();
                 if (!impl)
                     return;
+                impl->counting = false;  // the file takes no more
                 switch (r) {
                     case CStreamingFile::EStopReason::NORMAL:
                         impl->stopNonBlocking(ADCStopReason::NORMAL, true);
@@ -327,7 +349,7 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         auto selfW = std::weak_ptr<Impl>(m_pimpl);
         p.fpga->oscNotify.connect([selfW](CDataBuffersPackDMA::Ptr pack) {
             auto impl = selfW.lock();
-            if (!impl || !pack)
+            if (!impl || !pack || !impl->counting)
                 return;
             for (uint8_t ch = 0; ch < 4; ch++) {
                 auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)ch);
@@ -423,6 +445,38 @@ auto ADCStreamServer::removeCallback() -> void {
 auto ADCStreamServer::getPassSamples() -> uint64_t {
     std::lock_guard lock(m_pimpl->mtx);
     return m_pimpl->file ? m_pimpl->file->getPassSamples() : 0;
+}
+
+auto ADCStreamServer::Impl::refreshRecord() -> void {
+    if (!file)
+        return;
+    std::lock_guard rec(recMtx);
+    lastRecord.samples = file->getPassSamples();
+    lastRecord.written = file->getWritedSize();
+    lastRecord.writeRate = file->getWriteRate();
+    lastRecord.queue = file->getQueueFill();
+    lastRecord.file = file->getCSVFileName();
+}
+
+auto ADCStreamServer::getRunMode() -> int {
+    return m_pimpl->runMode;
+}
+
+auto ADCStreamServer::getRecord() -> Record {
+    auto& p = *m_pimpl;
+    {
+        std::unique_lock lock(p.mtx, std::try_to_lock);
+        if (lock)
+            p.refreshRecord();
+    }
+    Record r;
+    {
+        std::lock_guard rec(p.recMtx);
+        r = p.lastRecord;
+    }
+    r.mode = p.runMode;
+    r.running = p.active;
+    return r;
 }
 
 auto ADCStreamServer::getBoardLost() -> uint64_t {

@@ -74,6 +74,14 @@ struct GPIOInStreamServer::Impl {
     // reset by start(), kept after the stop
     std::atomic<uint64_t> boardLost{0};
     std::atomic<uint64_t> boardSamples{0};
+    // the run: its destination (0 none yet, 1 network, 2 SD) and its file, updated by the file
+    // thread after every write
+    std::atomic<int> runMode{0};
+    std::atomic<uint64_t> fileSamples{0};
+    std::atomic<uint64_t> fileLimit{0};
+    std::atomic<uint64_t> fileWritten{0};
+    std::atomic<double> fileRate{0};
+    std::atomic<double> fileQueue{0};
 
     auto teardown() -> void;
     // of: the session the stop was asked in, none for a stop of whatever runs
@@ -240,6 +248,10 @@ auto GPIOInStreamServer::Impl::fileWork() -> void {
             const auto* words = static_cast<const uint32_t*>(buffer->getMappedDataMemory());
             const auto result = file->write(words, buffer->getDataLenght() / 4, h.lostFPGA, h.waitFPGA, h.triggerCount);
             ring->unlockBufferRead();
+            fileSamples = file->samples();
+            fileWritten = file->writtenBytes();
+            fileRate = file->writeRate();
+            fileQueue = file->queueFill();
             if (result == CGpioFileWriter::Result::OK)
                 continue;
             if (result == CGpioFileWriter::Result::LIMIT) {
@@ -284,6 +296,10 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
         p.active = true;
         p.boardLost = 0;
         p.boardSamples = 0;
+        p.runMode = settings.getGPIOInPassMode().value == CStreamSettings::PassMode::FILE ? 2 : 1;
+        p.fileSamples = p.fileWritten = 0;
+        p.fileRate = p.fileQueue = 0;
+        p.fileLimit = p.runMode == 2 ? settings.getGPIOInSamples() : 0;
         if (!p.hw)
             return false;
         if (!p.hw->features().gpio) {
@@ -425,6 +441,23 @@ auto GPIOInStreamServer::stopNonBlocking(GPIOStopReason reason) -> void {
 auto GPIOInStreamServer::filePath() -> std::string {
     std::lock_guard lock(m_pimpl->mtx);
     return m_pimpl->file ? m_pimpl->file->path() : std::string();
+}
+
+auto GPIOInStreamServer::getRecord() -> Record {
+    auto& p = *m_pimpl;
+    Record r;
+    r.mode = p.runMode;
+    r.running = p.active;
+    r.samples = p.fileSamples;
+    r.limit = p.fileLimit;
+    r.written = p.fileWritten;
+    r.writeRate = p.fileRate;
+    r.queue = p.fileQueue;
+    // the path is set at the start under mtx and kept after the stop
+    std::unique_lock lock(p.mtx, std::try_to_lock);
+    if (lock && p.file)
+        r.file = p.file->path();
+    return r;
 }
 
 auto GPIOInStreamServer::getBoardLost() -> uint64_t {

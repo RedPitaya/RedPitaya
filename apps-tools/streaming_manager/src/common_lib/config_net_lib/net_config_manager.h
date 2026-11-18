@@ -116,7 +116,12 @@ class CNetConfigManager : public std::enable_shared_from_this<CNetConfigManager>
 
         // response tag: BoardInfoMessage::toJson(), empty if the server has none to give
         CS_REQUEST_BOARD_INFO = 73,
-        CS_RESPONSE_BOARD_INFO = 74
+        CS_RESPONSE_BOARD_INFO = 74,
+
+        // response tag: RecordStatus::toJson(), empty if the server has none to give. An older
+        // server does not answer: a client asks again later and keeps what it has.
+        CS_REQUEST_RECORD_STATUS = 75,
+        CS_RESPONSE_RECORD_STATUS = 76
     };
 
     // Block that a software trigger is sent to; wire values like ECommands.

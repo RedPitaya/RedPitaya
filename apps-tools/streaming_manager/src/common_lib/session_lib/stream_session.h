@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+#include "config_net_lib/record_status.h"
 #include "config_net_lib/server_net_config_manager.h"
 #include "dac_streaming_lib/dac_stream_server.h"
 #include "gpio_streaming_lib/gpio_in_stream_server.h"
@@ -98,6 +99,9 @@ class StreamSession {
     auto adcFileDropped() -> uint64_t;
     auto gpioInBoardLost() -> uint64_t;
     auto gpioInBoardSamples() -> uint64_t;
+    // The recordings of the ADC and the GPIO input and the SD card, as the clients get them
+    // (CS_REQUEST_RECORD_STATUS): kept after a stop, reset by a start
+    auto recordStatus() -> RecordStatus;
     auto adcFileQueueFill() -> double;
 
     auto setCallback(std::shared_ptr<SessionCallback> callback) -> void;

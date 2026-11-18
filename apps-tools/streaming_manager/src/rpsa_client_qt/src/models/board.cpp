@@ -5,6 +5,7 @@
 #include <QQmlEngine>
 #include <QRegularExpression>
 #include <QSettings>
+#include <QStorageInfo>
 #include <QUrl>
 #include "asio.hpp"
 
@@ -54,6 +55,9 @@ CBoard::CBoard(QString ip, bool manual) : QObject{nullptr}, m_ip(ip), m_manual(m
     m_trigTimer = new QTimer(this);
     connect(m_trigTimer, &QTimer::timeout, this, &CBoard::pollTrigger);
     m_trigTimer->start(1000);
+    connect(m_trigTimer, &QTimer::timeout, this, &CBoard::pollRecord);
+    // the destination may change: the record of the other one at once
+    connect(this, &CBoard::settingsChanged, this, &CBoard::recordChanged);
 
     m_configManager = new ClientNetConfigManager("", false);
     connectHandlers();
@@ -250,6 +254,27 @@ auto CBoard::connectHandlers() -> void {
     cm->serverStoppedConfigErrorNofiy.connect(stopped("the board cannot stream with these settings (see the log of the board)", true));
     cm->serverStoppedSDFullNofiy.connect(stopped("the SD card is full", true));
     cm->serverStoppedSDDoneNofiy.connect(stopped("the sample limit is written to the SD card", false));
+
+    cm->getRecordStatusNofiy.connect([this](std::string&, RecordStatus st) {
+        post([this, st]() {
+            const qint64 now = QDateTime::currentMSecsSinceEpoch();
+            const auto& a = st.adc;
+            // the samples a second between two answers; a new run starts again
+            if (a.samples < m_recSamples || !m_recTime || !a.running) {
+                m_recRate = 0;
+            } else if (now > m_recTime + 200 && a.samples > m_recSamples) {
+                const double inst = double(a.samples - m_recSamples) * 1000.0 / double(now - m_recTime);
+                m_recRate = m_recRate > 0 ? 0.7 * m_recRate + 0.3 * inst : inst;
+            }
+            m_recSamples = a.samples;
+            m_recTime = now;
+            m_sdRecord = a;
+            m_sdFree = st.sdFree;
+            m_sdTotal = st.sdTotal;
+            m_recordKnown = true;
+            Q_EMIT recordChanged();
+        });
+    });
 
     cm->getTriggerStatusNofiy.connect([this](std::string&, TriggerStatus status) {
         post([this, status]() {
@@ -577,6 +602,70 @@ auto CBoard::updateSpeed() -> void {
         m_lastLossLog = now;
     }
     Q_EMIT statsChanged();
+}
+
+// every second: the board writing its SD card is asked for its record (an older server does
+// not answer, the card then shows no progress); this computer: the space on the disk of the files
+auto CBoard::pollRecord() -> void {
+    if (value("adc_pass_mode") == "FILE") {
+        if (getConfigManagerConnected())
+            m_configManager->requestRecordStatus(m_ip.toStdString());
+        return;
+    }
+    const QStorageInfo disk(recordDir());
+    const uint64_t free = disk.isValid() ? static_cast<uint64_t>(disk.bytesAvailable()) : 0;
+    const uint64_t total = disk.isValid() ? static_cast<uint64_t>(disk.bytesTotal()) : 0;
+    if (free != m_pcFree || total != m_pcTotal || m_state != "stopped") {
+        m_pcFree = free;
+        m_pcTotal = total;
+        Q_EMIT recordChanged();
+    }
+}
+
+auto CBoard::getRecord() -> QVariantMap {
+    QVariantMap r;
+    if (value("adc_pass_mode") == "FILE") {
+        r["dest"] = "sd";
+        r["known"] = m_recordKnown;
+        r["running"] = m_sdRecord.running && m_sdRecord.mode == StreamRecordStatus::SD;
+        r["limit"] = double(m_sdRecord.limit);
+        r["samples"] = double(m_sdRecord.samples);
+        r["rate"] = m_recRate;
+        r["written"] = double(m_sdRecord.written);
+        r["write"] = m_sdRecord.writeRate;
+        r["queue"] = m_sdRecord.queue;
+        r["lostBoard"] = double(m_sdRecord.lostBoard);
+        r["lostQueue"] = double(m_sdRecord.lostQueue);
+        r["free"] = double(m_sdFree);
+        r["total"] = double(m_sdTotal);
+        r["file"] = QString::fromStdString(m_sdRecord.file);
+        r["mode"] = int(m_sdRecord.mode);
+        return r;
+    }
+    SStat s;
+    {
+        std::lock_guard lock(m_statMtx);
+        s = m_stat;
+    }
+    uint64_t samples = 0;
+    for (auto v : s.samples)
+        samples = std::max(samples, v);
+    r["dest"] = "pc";
+    r["known"] = true;
+    r["running"] = m_state != "stopped" && m_state != "stopping";
+    const QString limit = value("samples_limit_sd");
+    r["limit"] = limit.toDouble();
+    r["samples"] = double(samples);
+    r["rate"] = 0.0;  // the card of the board takes the sample rate of the settings
+    r["written"] = double(s.bytes);
+    r["write"] = s.fileRate;
+    r["queue"] = s.fileQueue;
+    r["lostBoard"] = double(s.lostBoard);
+    r["lostQueue"] = double(s.lostFile);
+    r["free"] = double(m_pcFree);
+    r["total"] = double(m_pcTotal);
+    r["file"] = m_fileName;
+    return r;
 }
 
 auto CBoard::pollTrigger() -> void {

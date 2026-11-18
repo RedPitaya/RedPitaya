@@ -342,8 +342,9 @@ auto CStreamingFile::getFileLost() -> uint64_t {
     return 0;
 }
 
+// Without m_stopMtx: a stop holds it while the queue goes into the file (seconds), and the page
+// and the record status ask every 100 ms. m_file_manager lives as long as this object.
 auto CStreamingFile::getQueueFill() -> double {
-    std::lock_guard<std::mutex> lock(m_stopMtx);
     return m_file_manager ? m_file_manager->queueFill() : 0;
 }
 
@@ -361,7 +362,6 @@ auto CStreamingFile::getPassSamples() -> uint64_t {
 }
 
 auto CStreamingFile::getWriteRate() -> double {
-    std::lock_guard<std::mutex> lock(m_stopMtx);
     return m_file_manager ? m_file_manager->writeRate() : 0;
 }
 

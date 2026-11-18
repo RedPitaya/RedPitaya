@@ -83,6 +83,8 @@ auto ClientNetConfigManager::removeHadlers() -> void {
     softwareTriggerFailNofiy.disconnect_all();
     getTriggerStatusNofiy.disconnect_all();
     failTriggerStatusNofiy.disconnect_all();
+    getRecordStatusNofiy.disconnect_all();
+    failRecordStatusNofiy.disconnect_all();
     getBoardInfoNofiy.disconnect_all();
     failBoardInfoNofiy.disconnect_all();
 
@@ -383,6 +385,15 @@ auto ClientNetConfigManager::receiveCommand(uint32_t command, std::string tag, s
         }
     }
 
+    if (c == CNetConfigManager::ECommands::CS_RESPONSE_RECORD_STATUS) {
+        RecordStatus status;
+        if (RecordStatus::fromJson(tag, status)) {
+            getRecordStatusNofiy(sender->m_manager->getHost(), status);
+        } else {
+            failRecordStatusNofiy(sender->m_manager->getHost());
+        }
+    }
+
     if (c == CNetConfigManager::ECommands::CS_RESPONSE_TRIGGER_STATUS) {
         TriggerStatus status;
         if (TriggerStatus::fromJson(tag, status)) {
@@ -568,6 +579,11 @@ auto ClientNetConfigManager::requestActiveChannels(const std::string& host) -> b
 auto ClientNetConfigManager::requestBoardInfo(const std::string& host) -> bool {
     auto c = findClient(host, false);
     return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_BOARD_INFO);
+}
+
+auto ClientNetConfigManager::requestRecordStatus(const std::string& host) -> bool {
+    auto c = findClient(host, false);
+    return c && c->m_manager->sendCommand(CNetConfigManager::ECommands::CS_REQUEST_RECORD_STATUS);
 }
 
 auto ClientNetConfigManager::requestTriggerStatus(const std::string& host) -> bool {
