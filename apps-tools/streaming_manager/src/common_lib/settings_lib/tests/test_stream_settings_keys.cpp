@@ -259,6 +259,9 @@ TEST(StreamSettingsKeys, TheDACFileKeyTakesANameOnly) {
     EXPECT_FALSE(s.setValue("file_sd", std::string(256, 'a')));
     EXPECT_TRUE(s.setValue("file_sd", std::string(255, 'a')));
     EXPECT_FALSE(s.setDACFile(std::string("a\0b", 3)));
+    // the page lists the files separated by '*' and line ends (streaming_improvements 1.9)
+    for (const char* bad : {"a*b.wav", "a\nb.wav", "a\rb.wav", "a\tb.wav", "a\x7f.wav"})
+        EXPECT_FALSE(s.setValue("file_sd", bad)) << bad;
 }
 
 TEST(StreamSettingsKeys, TheBlockSizeIsAMultipleOf128) {
@@ -290,7 +293,7 @@ TEST(StreamSettingsKeys, EveryChannelKeyAddressesItsOwnChannel) {
 TEST(StreamSettingsKeys, TheGpioOutputFileIsANameOnly) {
     CStreamSettings s;
     EXPECT_TRUE(s.setValue("gpio_out_file_sd", "lines.bin"));
-    for (const char* bad : {"../lines.bin", "/tmp/lines.bin", "dir/lines.bin", ".."}) {
+    for (const char* bad : {"../lines.bin", "/tmp/lines.bin", "dir/lines.bin", "..", "a*b.bin", "a\nb.bin"}) {
         EXPECT_FALSE(s.setValue("gpio_out_file_sd", bad)) << bad;
         EXPECT_EQ(s.getValue("gpio_out_file_sd"), "lines.bin") << bad;
     }

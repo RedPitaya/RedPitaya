@@ -657,6 +657,10 @@ auto CStreamSettings::isValidFileName(const std::string& _name) -> bool {
         return true;
     if (_name.size() > 255 || _name == "." || _name == "..")
         return false;
+    // a name only, and one the web page can list: '*' and the line ends separate its lists
+    for (const unsigned char c : _name)
+        if (c < 0x20 || c == 0x7f || c == '*')
+            return false;
     return _name.find_first_of(std::string("/\\\0", 3)) == std::string::npos;
 }
 

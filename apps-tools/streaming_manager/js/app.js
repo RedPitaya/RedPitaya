@@ -34,6 +34,7 @@
         sdFree: null,    // [free, total] bytes of the card
         setMsg: '',      // the answer to the last settings command
         upload: '',      // the text of a running upload
+        uploadBad: false,  // that text is a refusal or a failure (red)
         uploadDir: '',   // its folder: dac or gpio
         memBlockCustom: false
     };
@@ -420,7 +421,7 @@
                     <div class="field"><label for="gorep">Repeat</label><select id="gorep" data-param="SS_GPIO_OUT_REPEAT">${sel([[-1, 'Once'], [0, 'N times'], [-2, 'Forever']], rep)}</select></div>
                     ${rep === '0' ? `<div class="field"><label for="gocnt">Times</label><input id="gocnt" class="mono" value="${esc(v('SS_GPIO_OUT_REPEAT_COUNT', 1))}" data-act="int" data-arg="SS_GPIO_OUT_REPEAT_COUNT"></div>` : ''}
                   </div>
-                  ${S.upload && S.uploadDir === 'gpio' ? `<p class="hint" style="margin: 0">${esc(S.upload)}</p>` : ''}
+                  ${S.upload && S.uploadDir === 'gpio' ? `<p class="hint${S.uploadBad ? ' bad' : ''}" style="margin: 0">${esc(S.upload)}</p>` : ''}
                   <label class="check">${flip('data-act="flag" data-arg="SS_GPIO_OUT_PLAY_GAPS"', Number(v('SS_GPIO_OUT_PLAY_GAPS', 0)))}A recording: play its gaps (the lines hold), in its own time</label>` : ''}
                 <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))">
                   <div class="field"><label for="gstep">Step</label><input id="gstep" class="mono" value="${esc(v('SS_GPIO_OUT_STEP', 1))}" data-act="int" data-arg="SS_GPIO_OUT_STEP"><span class="hint">clocks per word</span></div>
@@ -686,7 +687,7 @@
                   <div class="field"><label for="drep">Repeat</label><select id="drep" data-param="SS_DAC_REPEAT">${sel([[-1, 'Once'], [0, 'N times'], [-2, 'Forever']], rep)}</select></div>
                   ${rep === '0' ? `<div class="field"><label for="dcnt">Times</label><input id="dcnt" class="mono" value="${esc(v('SS_DAC_REPEAT_COUNT', 1))}" data-act="int" data-arg="SS_DAC_REPEAT_COUNT"></div>` : ''}
                 </div>
-                ${S.upload && S.uploadDir === 'dac' ? `<p class="hint" style="margin: 0">${esc(S.upload)}</p>` : ''}
+                ${S.upload && S.uploadDir === 'dac' ? `<p class="hint${S.uploadBad ? ' bad' : ''}" style="margin: 0">${esc(S.upload)}</p>` : ''}
                 <p class="hint" style="margin: 0">WAV, TDMS or a BIN recording of the ADC.</p>
                 <label class="check">${flip('data-act="flag" data-arg="SS_DAC_PLAY_GAPS"', Number(v('SS_DAC_PLAY_GAPS', 0)))}BIN recording: play the samples it lost or waited for a trigger (as 0, in its own time)</label>`
               : '<p class="sub">A client sends the data on port <span class="mono">18903</span>; with an endless repeat the board loops what it got.</p>'}
@@ -724,7 +725,7 @@
                 <button class="btn" type="button" style="${NEUTRAL}" data-act="refreshFiles">Refresh</button>
                 <span class="hint">${{ adc: 'Recordings of the ADC with their reports (.log.txt)', dac: 'WAV, TDMS or BIN files the DAC plays', gpio: 'Recordings of the GPIO input and files for the output' }[dir]}</span>
               </div>
-              ${S.upload && S.uploadDir === dir ? `<p class="hint" style="margin: 0">${esc(S.upload)}</p>` : ''}
+              ${S.upload && S.uploadDir === dir ? `<p class="hint${S.uploadBad ? ' bad' : ''}" style="margin: 0">${esc(S.upload)}</p>` : ''}
               ${S.filesError ? `<p class="hint bad" style="margin: 0">${esc(S.filesError)}</p>` : ''}
               <div style="overflow-x: auto"><table>
                 <thead><tr><th scope="col" style="width: 1%"><input type="checkbox" class="cbx${any && !all ? ' cbx-mixed' : ''}" data-act="selAll"${all ? ' checked' : ''} aria-label="Select all"></th><th scope="col">Name</th><th scope="col">Size</th><th scope="col">Written</th>${dir === 'adc' ? '<th scope="col">Report</th>' : ''}<th scope="col"></th></tr></thead>
@@ -1094,14 +1095,49 @@
         inp.onchange = () => inp.files[0] && then(inp.files[0]);
         inp.click();
     }
+    // the size of a file as the folder listing gives it: bytes, or 12K, 1.2M, 3.4G
+    const listedSize = (t) => (/^\d+$/.test(t) ? fmtBytes(Number(t)) : t.replace(/^([\d.]+)([KMG])$/, '$1 $2B'));
+    // Why a name cannot go to the board ('' - it can): the board takes a name only, and the page
+    // lists the files separated by '*' and line ends; a name starting with '.' is hidden
+    function badName(name) {
+        if (!name) return 'it is empty';
+        if (name === '.' || name === '..') return 'it is not a file name';
+        // the board counts bytes (UTF-8), not characters
+        if (new TextEncoder().encode(name).length > 255) return 'it is longer than 255 bytes';
+        if (name.startsWith('.')) return 'it starts with a dot (a hidden file)';
+        const c = [...name].find((ch) => ch === '*' || ch === '/' || ch === '\\' || ch.charCodeAt(0) < 32 || ch.charCodeAt(0) === 127);
+        return c ? 'it has ' + (c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 ? 'a control character' : c) : '';
+    }
     // DAC files through /upload_dac_file (a temporary name, then a rename), GPIO files with a PUT
     async function uploadFile(file, dir) {
+        S.uploadDir = dir;
+        const refuse = (text) => { S.upload = text; S.uploadBad = true; schedule(); };
+        const why = badName(file.name);
+        if (why) return refuse(`The board does not take the name "${file.name}": ${why}. Rename the file and upload it again.`);
+        const sp = sdSpace();
+        if (sp && file.size > sp[0]) return refuse(`${file.name} needs ${fmtBytes(file.size)}, the SD card has ${fmtBytes(sp[0])} free.`);
+        // a file of this name on the board: replace it only when asked
+        const listed = (dir === 'dac' ? dacFiles() : gpioFiles()).list;
+        const had = (S.files[dir] || []).find((f) => f.name === file.name);
+        if (had || listed.includes(file.name)) {
+            const ok = await C.ask({
+                title: 'Replace file',
+                text: `${file.name} is already on the board${had && had.size ? ' (' + listedSize(had.size) + ')' : ''}. Replace it with the new one (${fmtBytes(file.size)})?`,
+                ok: 'Replace', cancel: 'Cancel', danger: true
+            });
+            if (!ok) {
+                S.upload = '';
+                S.uploadBad = false;
+                schedule();
+                return;
+            }
+        }
+        S.uploadBad = false;
         // the GPIO folder appears with the first recording: make it for a PUT (405 when it is there)
         if (dir === 'gpio') await fetch('/streaming_manager/upload/gpio/', { method: 'MKCOL' }).catch(() => {});
         const x = new XMLHttpRequest();
         if (dir === 'dac') x.open('POST', '/upload_dac_file?file=' + encodeURIComponent(file.name));
         else x.open('PUT', '/streaming_manager/upload/gpio/' + encodeURIComponent(file.name));
-        S.uploadDir = dir;
         x.upload.onprogress = (e) => {
             if (e.lengthComputable) { S.upload = 'Uploading ' + file.name + ': ' + Math.round(e.loaded / e.total * 100) + '%'; schedule(); }
         };
@@ -1119,10 +1155,11 @@
                 refreshFiles();
             } else {
                 S.upload = 'Upload of ' + file.name + ' failed: ' + (x.responseText || x.status);
+                S.uploadBad = true;
             }
             schedule();
         };
-        x.onerror = () => { S.upload = 'Upload of ' + file.name + ' failed'; schedule(); };
+        x.onerror = () => { S.upload = 'Upload of ' + file.name + ' failed'; S.uploadBad = true; schedule(); };
         S.upload = 'Uploading ' + file.name + '…';
         schedule();
         x.send(file);
