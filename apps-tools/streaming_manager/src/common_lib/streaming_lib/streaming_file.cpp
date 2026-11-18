@@ -140,6 +140,10 @@ auto CStreamingFile::stop(CStreamingFile::EStopReason reason, bool _flush) -> vo
     std::lock_guard<std::mutex> lock(m_stopMtx);
     if (m_file_manager) {
         m_file_manager->stopWrite(_flush);
+        // the writer thread is done: the tail goes to the card, the file closes
+        m_file_manager->closeFile();
+        if (m_fileLogger)
+            m_fileLogger->setFileWrite(m_file_manager->writeRate(), m_file_manager->queueLimit());
         if (m_testMode) {
             m_file_manager->deleteFile();
         }
@@ -344,6 +348,11 @@ auto CStreamingFile::getPassSamples() -> uint64_t {
         all = std::max(all, m_passSizeSamples[ch]);
     }
     return all;
+}
+
+auto CStreamingFile::getWriteRate() -> double {
+    std::lock_guard<std::mutex> lock(m_stopMtx);
+    return m_file_manager ? m_file_manager->writeRate() : 0;
 }
 
 auto CStreamingFile::getWritedSize() -> uint64_t {

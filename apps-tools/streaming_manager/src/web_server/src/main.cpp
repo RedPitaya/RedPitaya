@@ -107,6 +107,9 @@ CBooleanParameter ss_attenuator_enable("SS_IS_ATTENUATOR", CBaseParameter::RO, g
 
 CDoubleParameter ss_pass_samples("SS_PASS_SAMPLES", CBaseParameter::RW, 0, 0, 0, 1e20);
 CDoubleParameter ss_writed_size("SS_WRITED_SIZE", CBaseParameter::RW, 0, 0, 0, 1e20);
+// the SD file: the measured write speed, bytes per second, and the fill of its queue in memory, 0..1
+CDoubleParameter ss_write_rate("SS_WRITE_RATE", CBaseParameter::RO, 0, 0, 0, 1e12);
+CDoubleParameter ss_file_queue("SS_FILE_QUEUE", CBaseParameter::RO, 0, 0, 0, 1);
 
 // ============================================================================
 // Memory parameters
@@ -740,6 +743,8 @@ void UpdateParams(void) {
         if (g_session && g_adcFile) {
             ss_pass_samples.SendValue(g_session->adcPassSamples());
             ss_writed_size.SendValue(g_session->adcWrittenSize());
+            ss_write_rate.SendValue(g_session->adcWriteRate());
+            ss_file_queue.SendValue(g_session->adcFileQueueFill());
         }
     } catch (std::exception& e) {
         ERROR_LOG("%s", e.what());

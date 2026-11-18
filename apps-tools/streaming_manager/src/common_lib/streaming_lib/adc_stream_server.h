@@ -54,6 +54,9 @@ class ADCStreamServer {
     // the file being written (statistics of the web application), nullptr in the network mode
     auto getPassSamples() -> uint64_t;
     auto getWritedSize() -> uint64_t;
+    // the write speed of the file (bytes per second) and what its queue holds of its limit, 0..1
+    auto getWriteRate() -> double;
+    auto getQueueFill() -> double;
 
    private:
     ADCStreamServer(const ADCStreamServer&) = delete;

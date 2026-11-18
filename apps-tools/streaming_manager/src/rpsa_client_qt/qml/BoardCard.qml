@@ -172,7 +172,8 @@ Rectangle {
         GridLayout {
             id: counters
             Layout.fillWidth: true
-            columns: root.big ? 6 : 3
+            // one row on a wide single card, two otherwise: seven values do not fit a narrow row
+            columns: root.big && root.width >= 1150 ? 7 : 4
             columnSpacing: 14
             rowSpacing: 8
             Kv { label: "Received"; value: s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
@@ -180,6 +181,8 @@ Rectangle {
             Kv { label: "Samples per channel"; value: s.online ? Theme.count(stats.samples || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: "Lost on the board"; value: s.online ? Theme.count(stats.lostBoard || 0) : "-"; valueColor: stats.lostBoard > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: "Lost on this PC"; value: s.online ? Theme.count(stats.lostFile || 0) : "-"; valueColor: stats.lostFile > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            // the write speed of the file on this PC and the fill of its queue in memory (half full: red, the data are lost once it is full)
+            Kv { label: "Disk write"; value: s.online && stats.fileRate > 0 ? Theme.bytes(stats.fileRate) + "/s · " + Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: "Trigger"; value: s.trigText; valueColor: s.trigNoSource ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
         }
         RowLayout {

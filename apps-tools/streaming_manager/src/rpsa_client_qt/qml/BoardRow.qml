@@ -96,6 +96,7 @@ Item {
         Cell { title: "SPEED"; value: s.online ? Theme.bytes(stats.speed || 0) + "/s" : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
         Cell { title: "RECEIVED"; value: s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.preferredWidth: 100 + 6 * Theme.fsAdd; Layout.minimumWidth: 100 + 6 * Theme.fsAdd; Layout.maximumWidth: 100 + 6 * Theme.fsAdd }
         Cell { title: "LOST"; value: s.online ? Theme.count((stats.lostBoard || 0) + (stats.lostFile || 0)) : "-"; Layout.preferredWidth: 70 + 4 * Theme.fsAdd; Layout.minimumWidth: 70 + 4 * Theme.fsAdd; Layout.maximumWidth: 70 + 4 * Theme.fsAdd }
+        Cell { title: "QUEUE"; value: s.online && stats.fileRate > 0 ? Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; tip: stats.fileRate > 0 ? "Disk write " + Theme.bytes(stats.fileRate) + "/s" : ""; Layout.preferredWidth: 60 + 4 * Theme.fsAdd; Layout.minimumWidth: 60 + 4 * Theme.fsAdd; Layout.maximumWidth: 60 + 4 * Theme.fsAdd }
         Row {
             Layout.preferredWidth: 130 + 8 * Theme.fsAdd; Layout.minimumWidth: 130 + 8 * Theme.fsAdd; Layout.maximumWidth: 130 + 8 * Theme.fsAdd
             layoutDirection: Qt.RightToLeft
@@ -130,10 +131,17 @@ Item {
     }
 
     component Cell: Item {
+        id: cell
         property string title: ""
         property string value: ""
+        property color valueColor: Theme.value
+        property string tip: ""
         implicitHeight: 24
         Text { visible: root.header; text: parent.title; color: Theme.muted; font.pixelSize: Theme.fsXs; anchors.verticalCenter: parent.verticalCenter }
-        Text { visible: !root.header; text: parent.value; color: Theme.value; font.family: Theme.mono; font.pixelSize: Theme.fsMd; anchors.verticalCenter: parent.verticalCenter; width: parent.width; elide: Text.ElideRight }
+        MouseArea { id: cellMouse; anchors.fill: parent; hoverEnabled: cell.tip !== ""; acceptedButtons: Qt.NoButton }
+        ToolTip.visible: cellMouse.containsMouse && cell.tip !== "" && !root.header
+        ToolTip.delay: 600
+        ToolTip.text: cell.tip
+        Text { visible: !root.header; text: parent.value; color: parent.valueColor; font.family: Theme.mono; font.pixelSize: Theme.fsMd; anchors.verticalCenter: parent.verticalCenter; width: parent.width; elide: Text.ElideRight }
     }
 }

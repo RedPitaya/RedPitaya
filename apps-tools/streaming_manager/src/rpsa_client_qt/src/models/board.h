@@ -42,7 +42,8 @@ class CBoard : public QObject {
     // stopped, starting, streaming, sd (the board writes its SD card), armed, stopping
     Q_PROPERTY(QString state READ getState NOTIFY stateChanged)
     Q_PROPERTY(bool isADCStarted READ getIsADCStarted NOTIFY stateChanged)
-    // received, speed (bytes a second), samples (per channel), lostBoard, lostFile, file
+    // received, speed (bytes a second), samples (per channel), lostBoard, lostFile, file,
+    // fileRate (the write speed of the file, bytes a second, 0 before it is measured), fileQueue (0..1)
     Q_PROPERTY(QVariantMap stats READ getStats NOTIFY statsChanged)
     // the ADC trigger while streaming in the trigger mode: known (the board answered), armed,
     // count (triggers the FPGA has seen)
@@ -146,6 +147,8 @@ class CBoard : public QObject {
         uint64_t samples[4] = {0, 0, 0, 0};
         uint64_t lostBoard = 0;
         uint64_t lostFile = 0;
+        double fileRate = 0;   // the measured write speed of the file, bytes per second
+        double fileQueue = 0;  // what its queue in memory holds of its limit, 0..1
     };
 
     // Error and Warning show with "Errors only"; the console colours them

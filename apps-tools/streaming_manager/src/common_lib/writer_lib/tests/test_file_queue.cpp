@@ -122,6 +122,57 @@ TEST(FileQueueManager, ChunksAreWrittenInOrderAndAllOfThemOnAFlushingStop) {
     EXPECT_FALSE(m.addChunkToWrite(Chunk("late"))) << "the thread has stopped";
 }
 
+// The write-back runs in windows of 8 MB (limitDirtyPages): a file of several windows, twice in
+// one manager, comes out whole.
+TEST(FileQueueManager, AFileOfSeveralWriteBackWindowsIsWrittenWhole) {
+    FileQueueManager m;
+    for (int run = 0; run < 2; run++) {
+        const auto path = TempPath("windows" + std::to_string(run) + ".bin");
+        m.openFile(path, false);
+        m.startWrite(CStreamSettings::DataFormat::BIN);
+        std::string expected;
+        for (int i = 0; i < 37; i++) {  // 37 x 0.6 MB: the last window is a partial one
+            std::string text(600 * 1024, static_cast<char>('a' + (i + run) % 26));
+            expected += text;
+            while (!m.addChunkToWrite(Chunk(text)))
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        m.stopWrite(true);
+        m.closeFile();
+        EXPECT_EQ(ReadFile(path).size(), expected.size());
+        EXPECT_TRUE(ReadFile(path) == expected) << "run " << run;
+        std::filesystem::remove(path);
+    }
+}
+
+// Before the speed of the file is known the queue takes 32 MB at most; once measured it takes
+// 20 s of writing, from 8 MB up to a quarter of the RAM.
+TEST(FileQueueManager, TheQueueLimitFollowsTheMeasuredSpeed) {
+    const auto path = TempPath("limit.bin");
+    FileQueueManager m;
+    m.openFile(path, false);
+    EXPECT_GE(m.queueLimit(), 8u * 1024 * 1024);
+    EXPECT_LE(m.queueLimit(), 32u * 1024 * 1024);
+    EXPECT_EQ(m.writeRate(), 0);
+    m.startWrite(CStreamSettings::DataFormat::BIN);
+    // a speed sample takes 32 MB (or a second of writing)
+    const std::string text(1024 * 1024, 'q');
+    const auto end = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+    while (m.writeRate() == 0 && std::chrono::steady_clock::now() < end) {
+        m.addChunkToWrite(Chunk(text));
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
+    m.stopWrite(false);
+    m.closeFile();
+    std::filesystem::remove(path);
+    ASSERT_GT(m.writeRate(), 0) << "no speed measured in 20 s";
+    const double want = m.writeRate() * 20;
+    const uint64_t limit = m.queueLimit();
+    EXPECT_GE(limit, 8u * 1024 * 1024);
+    if (want > 8.0 * 1024 * 1024 && limit > 8u * 1024 * 1024)
+        EXPECT_LE(static_cast<double>(limit), want * 1.001) << "the queue takes no more than 20 s of writing";
+}
+
 TEST(FileQueueManager, TheFileThreadSleepsWhileThereIsNothingToWrite) {
     const auto path = TempPath("idle.bin");
     FileQueueManager m;

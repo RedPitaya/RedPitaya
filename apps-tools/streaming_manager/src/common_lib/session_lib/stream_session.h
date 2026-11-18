@@ -89,6 +89,9 @@ class StreamSession {
 
     auto adcPassSamples() -> uint64_t;
     auto adcWrittenSize() -> uint64_t;
+    // the SD file of the ADC: its write speed, bytes per second, and the fill of its queue, 0..1
+    auto adcWriteRate() -> double;
+    auto adcFileQueueFill() -> double;
 
     auto setCallback(std::shared_ptr<SessionCallback> callback) -> void;
     auto removeCallback() -> void;

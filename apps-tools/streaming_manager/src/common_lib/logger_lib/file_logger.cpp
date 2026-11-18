@@ -197,6 +197,12 @@ auto CFileLogger::addMetric(CFileLogger::EMetric _metric, uint64_t _value) -> vo
     }
 }
 
+auto CFileLogger::setFileWrite(double rate, uint64_t queueLimit) -> void {
+    std::lock_guard lock(m_mtx);
+    m_fileWriteRate = rate;
+    m_fileQueueLimit = queueLimit;
+}
+
 auto CFileLogger::getFileLost() -> uint64_t {
     const std::lock_guard<std::mutex> lock(m_mtx);
     return m_fileSystemLostRate;
@@ -332,6 +338,12 @@ void CFileLogger::dumpToFile() {
             log << "\n\n";
         }
         log << "Lost data due to file write buffer overflow:\t" << m_fileSystemLostRate << " buffers\n";
+        if (m_fileWriteRate > 0) {
+            char line[160];
+            snprintf(line, sizeof(line), "File write speed:\t%.1f MB/s\nFile write queue limit:\t%.0f MB\n", m_fileWriteRate / 1e6,
+                     static_cast<double>(m_fileQueueLimit) / (1024 * 1024));
+            log << line;
+        }
         log << "Loss of data due to lack of memory:\t" << m_out_of_memory << " buffers\n";
         log << "\n";
         log << "Total amount of data transferred:\n";

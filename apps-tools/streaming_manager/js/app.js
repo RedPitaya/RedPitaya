@@ -160,6 +160,16 @@
                <div class="hint kvl"><span>SD free</span><b class="mono">${S.sdFree ? fmtBytes(S.sdFree[0]) : '-'}</b></div></div>`;
     }
 
+    // The SD card: its measured write speed against the data rate, and the queue in memory. The
+    // queue holds what the card writes in 20 s at most: when it is full the data are lost.
+    function sdRateHtml() {
+        const rate = Number(v('SS_WRITE_RATE', 0)), fill = Number(v('SS_FILE_QUEUE', 0));
+        if (!rate) return '';
+        const data = adcRate() / adcDec() * chList().length * (Number(v('SS_RESOLUTION', 1)) ? 2 : 1);
+        const slow = data > rate;
+        return `<p class="hint${slow ? ' bad' : ''}" style="margin: 0">SD card: <b class="mono">${fmtBytes(rate)}/s</b> for ${fmtBytes(data)}/s of data · queue <b class="mono">${Math.round(fill * 100)}%</b>${slow ? ' - the card is slower: the data are lost once the queue is full' : ''}</p>`;
+    }
+
     // ---- overview
     function overviewHtml() {
         const adc = stream('adc');
@@ -167,6 +177,7 @@
             k: [['Destination', v('SS_USE_FILE', false) ? 'SD · ' + ['WAV', 'TDMS', 'BIN'][Number(v('SS_FORMAT', 0))] : 'Network'],
                 ['Channels', chList().join(', ') || 'none'], ['Rate', fmtRate(adcRate() / adcDec())],
                 v('SS_USE_FILE', false) ? ['Written', fmtBytes(Number(v('SS_WRITED_SIZE', 0)))] : ['Port', '18900']]
+                .concat(v('SS_USE_FILE', false) && Number(v('SS_WRITE_RATE', 0)) ? [['SD card', fmtBytes(Number(v('SS_WRITE_RATE', 0))) + '/s · queue ' + Math.round(Number(v('SS_FILE_QUEUE', 0)) * 100) + '%']] : [])
         })];
         if (hasDac()) {
             const d = stream('dac');
@@ -450,7 +461,8 @@
                   <div class="field"><label for="lim">Samples per channel</label><input id="lim" class="mono" value="${esc(v('SS_SAMPLES', 0))}" data-act="int" data-arg="SS_SAMPLES"><span class="hint">0 - until the stop</span></div>
                   ${tdms ? `<div class="field"><label for="tcol">TDMS time column</label><select id="tcol" data-param="SS_TDMS_TIME">${sel([[0, 'Off'], [1, 'On']], v('SS_TDMS_TIME', 0))}</select></div>` : ''}
                 </div>
-                <p class="hint" style="margin: 0">Recorded: <b class="mono" style="color: #e8e8e6">${pass.toLocaleString('en-US')} samples · ${fmtBytes(written)}</b></p>`
+                <p class="hint" style="margin: 0">Recorded: <b class="mono" style="color: #e8e8e6">${pass.toLocaleString('en-US')} samples · ${fmtBytes(written)}</b></p>
+                ${sdRateHtml()}`
               : '<p class="sub">A client takes the data on port <span class="mono">18900</span>: rpsa_client or the streaming API.</p>'}
             </section>
             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr))">

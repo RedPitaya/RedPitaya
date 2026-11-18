@@ -398,6 +398,16 @@ auto ADCStreamServer::getPassSamples() -> uint64_t {
     return m_pimpl->file ? m_pimpl->file->getPassSamples() : 0;
 }
 
+auto ADCStreamServer::getWriteRate() -> double {
+    std::lock_guard lock(m_pimpl->mtx);
+    return m_pimpl->file ? m_pimpl->file->getWriteRate() : 0;
+}
+
+auto ADCStreamServer::getQueueFill() -> double {
+    std::lock_guard lock(m_pimpl->mtx);
+    return m_pimpl->file ? m_pimpl->file->getQueueFill() : 0;
+}
+
 auto ADCStreamServer::getWritedSize() -> uint64_t {
     std::lock_guard lock(m_pimpl->mtx);
     return m_pimpl->file ? m_pimpl->file->getWritedSize() : 0;

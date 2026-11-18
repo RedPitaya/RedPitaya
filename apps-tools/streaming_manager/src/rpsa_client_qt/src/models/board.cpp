@@ -539,6 +539,8 @@ auto CBoard::getStats() -> QVariantMap {
     m["lostBoard"] = double(s.lostBoard);
     m["lostFile"] = double(s.lostFile);
     m["file"] = m_fileName;
+    m["fileRate"] = s.fileRate;
+    m["fileQueue"] = s.fileQueue;
     return m;
 }
 
@@ -901,6 +903,8 @@ auto CBoard::createStreaming() -> void {
             packId = std::max(packId, ch->getADCPackId());
         }
         const uint64_t fileLost = fileObj->getFileLost();
+        const double fileRate = fileObj->getWriteRate();
+        const double fileQueue = fileObj->getQueueFill();
         {
             std::lock_guard lock(m_statMtx);
             m_stat.bytes += bytes;
@@ -908,6 +912,8 @@ auto CBoard::createStreaming() -> void {
                 m_stat.samples[i] += samples[i];
             m_stat.lostBoard += lost;
             m_stat.lostFile = fileLost;
+            m_stat.fileRate = fileRate;
+            m_stat.fileQueue = fileQueue;
         }
         fileObj->passBuffers(pack);
         ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_previewWanted);

@@ -472,7 +472,7 @@ int rp_bazaar_start(ngx_http_request_t *r,
      * after a reboot, as their pages do on exit. Removed under them, the overlay took their
      * devices away while they ran. */
     if (system("for s in redpitaya_streaming.service redpitaya_scpi.service; do "
-               "if systemctl is-active --quiet $s; then systemctl stop $s; systemctl disable $s >/dev/null 2>&1; fi; "
+               "if systemctl is-active --quiet $s; then systemctl stop $s; systemctl --no-reload disable $s >/dev/null 2>&1; fi; "
                "done"))
         fprintf(stderr, "[rp_bazaar_start] Problem stopping the FPGA services\n");
 

@@ -130,6 +130,8 @@ auto CGpioFileWriter::close() -> void {
     m_open = false;
     m_file->stopWrite(true);
     m_file->closeFile();
+    if (m_logger)
+        m_logger->setFileWrite(m_file->writeRate(), m_file->queueLimit());
     m_file.reset();
     if (m_logger && !m_testMode)
         m_logger->dumpToFile();

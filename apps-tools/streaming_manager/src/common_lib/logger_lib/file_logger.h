@@ -128,6 +128,9 @@ class CFileLogger {
     // The clocks the board's output waited for the data, from its stop
     auto setGpioOutWait(uint64_t clocks) -> void;
 
+    // the measured write speed of the file (bytes per second, 0: not measured) and the limit of
+    // its queue in memory: in the report
+    auto setFileWrite(double rate, uint64_t queueLimit) -> void;
     auto dumpToFile() -> void;
 
     auto getFileLost() -> uint64_t;
@@ -153,6 +156,8 @@ class CFileLogger {
     bool m_file_open;
     uint64_t m_oscRate;
     uint64_t m_fileSystemLostRate;
+    double m_fileWriteRate = 0;
+    uint64_t m_fileQueueLimit = 0;
     uint64_t m_reciveData;
     uint64_t m_out_of_memory;
     std::ofstream m_fileLost;

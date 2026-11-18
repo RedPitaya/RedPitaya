@@ -660,6 +660,14 @@ auto StreamSession::adcWrittenSize() -> uint64_t {
     return m_pimpl->adc->getWritedSize();
 }
 
+auto StreamSession::adcWriteRate() -> double {
+    return m_pimpl->adc->getWriteRate();
+}
+
+auto StreamSession::adcFileQueueFill() -> double {
+    return m_pimpl->adc->getQueueFill();
+}
+
 auto StreamSession::setCallback(std::shared_ptr<SessionCallback> callback) -> void {
     std::lock_guard lock(m_pimpl->cbMtx);
     m_pimpl->callback = std::move(callback);

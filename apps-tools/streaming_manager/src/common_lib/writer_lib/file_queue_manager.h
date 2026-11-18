@@ -19,7 +19,7 @@ class FileQueueManager : public Queue {
     ~FileQueueManager();
 
     // Queues a chunk for the file thread; false (the chunk dropped) when the thread does not run
-    // or the queue already holds half of the RAM
+    // or the queue is full (queueLimit)
     auto addChunkToWrite(FileChunk::Ptr chunk) -> bool;
     auto closeFile() -> void;
     auto isWork() -> bool { return m_threadWork && !m_hasErrorWrite; }
@@ -34,6 +34,12 @@ class FileQueueManager : public Queue {
     auto getWritedSize() -> uint64_t;
     // what the queue holds of the memory it may take, 0..1
     auto queueFill() -> double;
+    // The memory the queue may take: what the file takes to write in kMaxFlushSeconds at the
+    // speed measured so far (a stop writes the queue out before the server exits, and systemd
+    // waits 30 s for that), at most a quarter of the RAM
+    auto queueLimit() -> uint64_t { return m_queueLimit; }
+    // the measured write speed of the file, bytes per second; 0 before the first second of writing
+    auto writeRate() -> double { return m_rate; }
 
     sigslot::signal<> outSpaceNotify;
     sigslot::signal<> stopNotify;
@@ -43,6 +49,15 @@ class FileQueueManager : public Queue {
     auto outSpaceNotifyThread() -> void;
     // Waits for the thread of the out-of-space notify, unless called on it.
     auto joinSpaceThread() -> void;
+    // Keeps the page cache of the file small (Linux): starts the write-back of each new window of
+    // the file, waits for the window before it and drops it from the cache. Without it the kernel
+    // collects hundreds of MB of dirty pages at a high rate; they squeeze the cache of every other
+    // program out (systemd misses its watchdog) and make the close of the file take tens of
+    // seconds on an SD card.
+    auto limitDirtyPages(bool all) -> void;
+    // Adds a write to the speed measurement and sets queueLimit from it
+    auto measureWrite(uint64_t bytes, std::chrono::steady_clock::duration took) -> void;
+    auto closeSyncFd() -> void;
 
     std::fstream fs;
     std::thread* th;
@@ -62,9 +77,16 @@ class FileQueueManager : public Queue {
     std::atomic_bool m_IsOutOfSpace;
     uint64_t m_freeSize;
     std::atomic<uint64_t> m_hasWriteSize;
-    uint64_t m_aviablePhyMemory;
+    uint64_t m_memoryLimit = 0;  // a quarter of the RAM
+    std::atomic<uint64_t> m_queueLimit{0};
+    std::atomic<double> m_rate{0};
+    uint64_t m_rateBytes = 0;
+    std::chrono::steady_clock::duration m_rateTime{};
     bool m_testMode;
     std::string m_fileName;
+    int m_syncFd = -1;           // the file once more, for sync_file_range / posix_fadvise
+    uint64_t m_syncStarted = 0;  // the write-back runs up to here
+    uint64_t m_syncDone = 0;     // written and dropped from the cache up to here
 };
 
 #endif

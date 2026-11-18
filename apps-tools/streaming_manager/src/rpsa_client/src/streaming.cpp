@@ -34,6 +34,7 @@ struct Levels {
 };
 std::map<std::string, Levels> g_levels;
 std::map<std::string, double> g_queue;  // the fill of the file queue of each board
+std::map<std::string, double> g_diskRate;  // the measured write speed of its file, bytes per second
 std::mutex g_levelsMutex;
 
 // min and max of a buffer of raw ADC codes, in % of the full scale
@@ -205,6 +206,7 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
                             }
                         }
                         g_queue[host] = obj->getQueueFill();
+                        g_diskRate[host] = obj->getWriteRate();
                     }
                     auto flost = obj->getFileLost();
                     auto h = host;
@@ -284,8 +286,8 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
     }
     lines.push_back(head);
     lines.push_back("");
-    lines.push_back(Panel::dim(Panel::left("  board", 16) + Panel::left("state", 11) + Panel::right("samples/ch", 12) + Panel::right("kS/s", 9) +
-                               Panel::right("data", 10) + Panel::right("lost b/f", 10) + Panel::right("queue", 7)));
+    lines.push_back(Panel::dim(Panel::left("  board", 16) + Panel::left("state", 11) + Panel::right("samples/ch", 11) + Panel::right("kS/s", 9) +
+                               Panel::right("data", 10) + Panel::right("lost b/f", 9) + Panel::right("disk/s", 7) + Panel::right("queue", 6)));
     for (auto& [host, file] : files) {
         HostStat st;
         auto it = stats.find(host);
@@ -301,16 +303,27 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
         std::string lost = std::to_string(st.lost) + "/" + std::to_string(st.fileLost);
         if (st.lost || st.fileLost)
             lost = Panel::red(lost);
-        double q = 0;
+        double q = 0, disk = 0;
         {
             const std::lock_guard lock(g_levelsMutex);
             if (g_queue.count(host))
                 q = g_queue[host];
+            if (g_diskRate.count(host))
+                disk = g_diskRate[host];
         }
+        // the write speed of the file: measured each 32 MB or second of writing, "-" before that
+        // short: the line keeps to 80 columns
+        if (disk >= 1024.0 * 1024 * 1024)
+            snprintf(buf, sizeof(buf), "%.1fG", disk / (1024.0 * 1024 * 1024));
+        else if (disk >= 1024.0 * 1024)
+            snprintf(buf, sizeof(buf), "%.1fM", disk / (1024.0 * 1024));
+        else
+            snprintf(buf, sizeof(buf), "%.0fk", disk / 1024.0);
+        const std::string diskText = disk > 0 ? std::string(buf) : "-";
         snprintf(buf, sizeof(buf), "%.0f %%", q * 100);
         std::string queue = q > 0.5 ? Panel::red(buf) : std::string(buf);
-        lines.push_back(Panel::left("  " + host, 16) + Panel::left(state, 11) + Panel::right(std::to_string(st.samples), 12) + Panel::right(rateText, 9) +
-                        Panel::right(sizeText(st.bytes), 10) + Panel::right(lost, 10) + Panel::right(queue, 7));
+        lines.push_back(Panel::left("  " + host, 16) + Panel::left(state, 11) + Panel::right(std::to_string(st.samples), 11) + Panel::right(rateText, 9) +
+                        Panel::right(sizeText(st.bytes), 10) + Panel::right(lost, 9) + Panel::right(diskText, 7) + Panel::right(queue, 6));
         // the levels: min..max of the last second per channel, % of the full scale
         auto lv = levels.find(host);
         std::string l = Panel::left("", 16) + Panel::dim("levels  ");
