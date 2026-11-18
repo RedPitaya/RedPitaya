@@ -35,6 +35,8 @@
         setMsg: '',      // the answer to the last settings command
         upload: '',      // the text of a running upload
         uploadBad: false,  // that text is a refusal or a failure (red)
+        // a Start waiting for its status, per stream: {status: the parameter, silent: 5 s passed}
+        startWait: {},
         uploadDir: '',   // its folder: dac or gpio
         memBlockCustom: false
     };
@@ -45,13 +47,14 @@
 
     // ---------------------------------------------------------------------------------------
     // the streams and their states (web_server MAIN: status codes of the stop reasons)
-    const ADC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'Not enough memory', 5: 'Stopped: memory changed', 6: 'No active channels', 7: 'Configuration error', 8: 'Client disconnected' };
-    const DAC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'Done', 3: 'File is empty', 4: 'File is broken', 5: 'File is missing', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'No active channels', 9: 'Configuration error', 10: 'Client disconnected' };
-    const GPIO_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'File cannot be written', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'Configuration error', 9: 'Client disconnected' };
+    const ADC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'Not enough memory', 5: 'Stopped: memory changed', 6: 'No active channels', 7: 'Start failed', 8: 'Client disconnected' };
+    const DAC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'Done', 3: 'File is empty', 4: 'File is broken', 5: 'File is missing', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'No active channels', 9: 'Start failed', 10: 'Client disconnected' };
+    const GPIO_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'File cannot be written', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'Start failed', 9: 'Client disconnected' };
     // 2 is a stop reason of the input only (gpio_in_stream_server): the output never sends it
-    const GPIO_OUT_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Done', 4: 'File is broken', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'File is missing or empty', 9: 'Configuration error', 10: 'Client disconnected' };
+    const GPIO_OUT_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Done', 4: 'File is broken', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'File is missing or empty', 9: 'Start failed', 10: 'Client disconnected' };
     const BAD = { adc: [2, 4, 6, 7], dac: [3, 4, 5, 6, 8, 9], gin: [2, 4, 6, 8], gout: [2, 4, 6, 8, 9] };
-    // the codes of a configuration error: the board did not take the settings, the reason is in its log
+    // the codes of a failed start: the board did not take the settings or could not start the stream
+    // (the data port taken, ...); the reason is in its log
     const CONFIG_ERROR = { adc: 7, dac: 9, gin: 8, gout: 9 };
 
     // the destination of the current or last run (0 none yet, 1 network, 2 SD): the status texts
@@ -68,14 +71,18 @@
         const run = code === 1;
         // a code the page does not know (a newer server) is shown as a fault, never as a plain state
         const known = Object.prototype.hasOwnProperty.call(def.table, code);
-        const bad = BAD[key].includes(code) || !known;
-        let state = known ? def.table[code] : 'Unknown status ' + code;
+        // a Start the board said nothing about within 5 s (an older server, a start that failed
+        // without its reason)
+        const silent = !run && !!(S.startWait[key] && S.startWait[key].silent);
+        const bad = BAD[key].includes(code) || !known || silent;
+        let state = silent ? 'No answer' : known ? def.table[code] : 'Unknown status ' + code;
         if (run && key === 'adc') state = runMode('adc') === 2 ? 'Writing to SD' : 'Streaming to the client';
         if (run && key === 'dac') state = v('SS_DAC_MODE', 0) ? 'Playing a file' : 'Playing from the client';
         if (run && key === 'gin') state = runMode('gin') === 2 ? 'Writing to SD' : 'Streaming to the client';
         if (run && key === 'gout') state = v('SS_GPIO_OUT_MODE', 0) ? 'Playing a file' : 'Playing from the client';
         // the reason is in the log of the server only
-        const hint = code === CONFIG_ERROR[key] ? 'The board did not take the settings. The reason: journalctl -u redpitaya_streaming' : '';
+        const hint = silent ? 'The board did not start the stream and gave no reason in 5 s. The reason may be in its log: journalctl -u redpitaya_streaming'
+            : code === CONFIG_ERROR[key] ? 'The board did not start the stream: the settings or the board. The reason: journalctl -u redpitaya_streaming' : '';
         return Object.assign(def, {
             key, code, run, state, hint,
             badge: run ? 'background: rgba(59, 168, 69, 0.18); color: #8fdc97' : bad ? 'background: rgba(224, 103, 93, 0.18); color: #ff8f86' : 'background: #444444; color: #cdcccc',
@@ -869,8 +876,23 @@
 
     const ACT = {
         run: (el) => {
-            const s = stream(el.dataset.arg);
+            const key = el.dataset.arg;
+            const s = stream(key);
             C.set(s.start, !s.run);
+            delete S.startWait[key];
+            if (!s.run) {
+                // the board answers a start with a status (running, or why not): wait for it
+                const w = { silent: false, status: s.status };
+                S.startWait[key] = w;
+                setTimeout(() => {
+                    // a reason already shown (the same failure again sends no new status) stays
+                    const now = stream(key);
+                    if (S.startWait[key] === w && !now.run && !BAD[key].includes(now.code)) {
+                        w.silent = true;
+                        schedule();
+                    }
+                }, 5000);
+            }
         },
         adcSd: (el) => C.set('SS_USE_FILE', el.dataset.arg === '1'),
         dacSd: (el) => C.set('SS_DAC_MODE', Number(el.dataset.arg)),
@@ -1203,6 +1225,9 @@
         root.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') ev.target.blur(); });
         root.addEventListener('focusout', () => setTimeout(() => { if (pending) render(); }, 0));
         C.onParameters((names) => {
+            // a status that comes ends the wait of a Start (and its "No answer")
+            for (const [key, w] of Object.entries(S.startWait))
+                if (names.includes(w.status)) delete S.startWait[key];
             if (names.includes('SS_SETTINGS_RESULT') && Number(v('SS_SETTINGS_RESULT', 0))) {
                 S.setMsg = Number(v('SS_SETTINGS_RESULT', 0)) === 1 ? 'Applied and saved on the board.' : 'Refused: the board kept its settings.';
             }

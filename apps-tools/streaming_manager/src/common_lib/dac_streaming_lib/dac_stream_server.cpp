@@ -151,8 +151,10 @@ auto DACStreamServer::start(const CStreamSettings& settings, dac_channels_t chan
         p.teardown();
         p.session++;
         p.active = true;
-        if (!p.hw)
+        if (!p.hw) {
+            p.stopNonBlocking(DACStopReason::CONFIG_ERROR, true);
             return false;
+        }
 
         // the rate, the calibration and the gain of the outputs
         uio_lib::DACConfig dac;
@@ -249,6 +251,10 @@ auto DACStreamServer::start(const CStreamSettings& settings, dac_channels_t chan
             aprintf(stdout, "Reserved memory blocks: %d size: %d\n", reserved, reserved * memory->getMemoryBlockSize());
         p.manager->getBufferManager()->generateBuffersEmptyDAC(channels, memory->getRegions(uio_lib::MM_DAC), DataLib::sizeHeader());
 
+        // the data port opens before Started: a port taken is a failed start, not a start
+        // that never gets data
+        if (!file)
+            p.manager->run();
         p.app = std::make_shared<CDACStreamingApplication>(p.manager, p.hw);
         p.app->setVerboseMode(p.verbose);
 
@@ -260,12 +266,14 @@ auto DACStreamServer::start(const CStreamSettings& settings, dac_channels_t chan
             else
                 cb->startedTCP(this);
         });
-        p.app->runNonBlock();
+        p.app->runNonBlock(!file);
         if (p.verbose)
             aprintf(stdout, "[Streaming] Start dac server\n");
         return true;
     } catch (std::exception& e) {
+        // a start that throws (the data port taken, ...) says so as the other failed starts do
         ERROR_LOG("DACStreamServer::start() %s", e.what())
+        p.stopNonBlocking(DACStopReason::CONFIG_ERROR, true);
     }
     return false;
 }

@@ -366,6 +366,26 @@ TEST_F(DACServer, ANetworkClientThatLeavesStopsThePlayback) {
     EXPECT_EQ(recorder->stops(), std::vector<DACStopReason>{DACStopReason::DISCONNECTED});
 }
 
+// before: the bind failed in the playback thread, the board said Started and no client got in
+TEST_F(DACServer, AStartWhoseDataPortIsTakenIsAFailedStart) {
+    asio::io_context io;
+    asio::ip::tcp::acceptor taken(io);
+    const asio::ip::tcp::endpoint at(asio::ip::make_address("127.0.0.3"), NET_DAC_STREAMING_PORT);
+    taken.open(at.protocol());
+    taken.bind(at);
+    taken.listen();
+    dac_channels_t ch;
+    ch.enable(DACChannels::DAC_CH1);
+    CStreamSettings s;
+    DACStreamOptions o = options;
+    o.host = "127.0.0.3";
+    EXPECT_FALSE(server->start(netSettings(s), ch, o));
+    ASSERT_TRUE(recorder->waitStopped());
+    std::lock_guard lock(recorder->mtx);
+    EXPECT_EQ(recorder->reasons, std::vector<DACStopReason>{DACStopReason::CONFIG_ERROR});
+    EXPECT_EQ(recorder->events, std::vector<std::string>{"stopped"}) << "no Started before it";
+}
+
 TEST_F(DACServer, AStopWithTheClientConnectedIsReportedOnce) {
     dac_channels_t ch;
     ch.enable(DACChannels::DAC_CH1);

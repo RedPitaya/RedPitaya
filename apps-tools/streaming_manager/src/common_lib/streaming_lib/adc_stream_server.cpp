@@ -164,8 +164,10 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
             p.boardLost[ch] = p.boardSamples[ch] = 0;
         p.fileDropped = 0;
         p.counting = true;
-        if (!p.hw)
+        if (!p.hw) {
+            p.stopNonBlocking(ADCStopReason::CONFIG_ERROR, true);
             return false;
+        }
 
         auto board = p.hw->info();
         auto passMode = settings.getADCPassMode();
@@ -394,7 +396,9 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
             aprintf(stdout, "[Streaming] Start server %s\n", options.testMode ? "[Benchmark mode]" : "");
         return true;
     } catch (std::exception& e) {
+        // a start that throws (the data port taken, ...) says so as the other failed starts do
         ERROR_LOG("ADCStreamServer::start() %s", e.what())
+        p.stopNonBlocking(ADCStopReason::CONFIG_ERROR, true);
     }
     return false;
 }

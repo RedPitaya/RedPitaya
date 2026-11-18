@@ -17,7 +17,8 @@ class CDACStreamingApplication {
     CDACStreamingApplication(CDACStreamingManager::Ptr _streamingManager, uio_lib::CHardware::Ptr _hw);
     ~CDACStreamingApplication();
     auto run() -> void;
-    auto runNonBlock() -> void;
+    // managerRunning: the caller started the manager itself (the data port is open)
+    auto runNonBlock(bool managerRunning = false) -> void;
     auto stop() -> bool;
     auto isRun() -> bool { return m_isRun; }
     auto setVerboseMode(bool mode) -> void;

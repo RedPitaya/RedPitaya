@@ -513,7 +513,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
 
         cl->serverStoppedConfigErrorNofiy.connect([](std::string host) {
             g_streamFailed = true;
-            aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the board did not take the ADC settings (journalctl -u redpitaya_streaming on the board)\n",
+            aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the board did not start the ADC: the settings or the board (journalctl -u redpitaya_streaming on the board)\n",
                     getTS(": ").c_str(), host.c_str());
             stopStreaming(host);
         });

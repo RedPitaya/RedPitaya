@@ -54,7 +54,7 @@ static auto remoteGpio(std::shared_ptr<ClientNetConfigManager> cl, const std::li
         cl->serverGpioOutStoppedSDBrokenNofiy.connect([&](std::string h) { answer(h, "stopped: its file is broken", false); });
         cl->serverGpioOutStoppedSDEmptyNofiy.connect([&](std::string h) { answer(h, "stopped: its file is empty", false); });
         cl->serverGpioOutStoppedMemErrorNofiy.connect([&](std::string h) { answer(h, "stopped: not enough memory (gpio_out_size)", false); });
-        cl->serverGpioOutStoppedConfigErrorNofiy.connect([&](std::string h) { answer(h, "stopped: the settings are not taken (no GPIO block?)", false); });
+        cl->serverGpioOutStoppedConfigErrorNofiy.connect([&](std::string h) { answer(h, "did not start: the settings, no GPIO block or the data port taken (journalctl -u redpitaya_streaming on the board)", false); });
     } else {
         cl->serverGpioInStartedNofiy.connect([&](std::string h) { answer(h, "started, it waits for a client to take the data", start); });
         cl->serverGpioInStartedSDNofiy.connect([&](std::string h) { answer(h, "started, it writes a file in streaming_files/gpio", start); });
@@ -63,7 +63,7 @@ static auto remoteGpio(std::shared_ptr<ClientNetConfigManager> cl, const std::li
         cl->serverGpioInStoppedSDFullNofiy.connect([&](std::string h) { answer(h, "stopped: the SD card is full", false); });
         cl->serverGpioInStoppedSDBrokenNofiy.connect([&](std::string h) { answer(h, "stopped: the file cannot be written", false); });
         cl->serverGpioInStoppedMemErrorNofiy.connect([&](std::string h) { answer(h, "stopped: not enough memory (gpio_in_size)", false); });
-        cl->serverGpioInStoppedConfigErrorNofiy.connect([&](std::string h) { answer(h, "stopped: the settings are not taken (no GPIO block?)", false); });
+        cl->serverGpioInStoppedConfigErrorNofiy.connect([&](std::string h) { answer(h, "did not start: the settings, no GPIO block or the data port taken (journalctl -u redpitaya_streaming on the board)", false); });
     }
     count = static_cast<int>(hosts.size());
     for (auto& host : hosts) {
@@ -221,7 +221,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
     cl->serverStoppedConfigErrorNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
         // always: the reason is not seen anywhere else (the log of the board)
-        aprintf(stderr, "%s [ERROR] %s did not take the ADC settings (journalctl -u redpitaya_streaming on the board)\n", getTS(": ").c_str(),
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: the settings or the board (journalctl -u redpitaya_streaming on the board)\n", getTS(": ").c_str(),
                 host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
@@ -392,7 +392,7 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
     cl->serverStoppedConfigErrorNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
         // always: the reason is not seen anywhere else (the log of the board)
-        aprintf(stderr, "%s [ERROR] %s did not take the ADC settings (journalctl -u redpitaya_streaming on the board)\n", getTS(": ").c_str(),
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: the settings or the board (journalctl -u redpitaya_streaming on the board)\n", getTS(": ").c_str(),
                 host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
@@ -458,21 +458,25 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
                        std::map<std::string, dac_channels_t>* activeChannels, std::map<std::string, StateRunnedHosts>* runned_hosts) -> bool {
     connectDACFileEnd(cl, masterHosts, slaveHosts);
     std::atomic<int> rstart_counter;
+    // a board that refused: -r alone (no runned_hosts) exits with 3 then
+    std::atomic<bool> refused{false};
 
     cl->errorNofiy.connect([&](ClientNetConfigManager::Errors errors, std::string host, std::error_code err) {
         const std::lock_guard lock(g_rmutex);
         if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
             aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+            refused = true;
             rstart_counter--;
             masterHosts.remove(host);
             slaveHosts.remove(host);
         }
     });
 
+    // always: the reasons are not seen anywhere else (the log of the board)
     cl->serverDacStoppedMemErrorNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the DAC: not enough memory (dac_size) or no active channels\n", getTS(": ").c_str(), host.c_str());
+        refused = true;
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -480,8 +484,8 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
 
     cl->serverDacStoppedMemModifyNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the DAC: the memory of the streams was split again (a new block size)\n", getTS(": ").c_str(), host.c_str());
+        refused = true;
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -489,8 +493,9 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
 
     cl->serverDacStoppedConfigErrorNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s config error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the DAC: the settings or the board (journalctl -u redpitaya_streaming on the board)\n", getTS(": ").c_str(),
+                host.c_str());
+        refused = true;
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -498,8 +503,8 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
 
     cl->configFileMissedNotify.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the DAC: its config file is missing\n", getTS(": ").c_str(), host.c_str());
+        refused = true;
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -534,6 +539,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
                 host.c_str(),
                 what,
                 host.c_str());
+        refused = true;
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -582,7 +588,7 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std
         return false;
     }
     cl->removeHadlers();
-    return true;
+    return runned_hosts || !refused;
 }
 
 auto stopStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>& masterHosts, std::list<std::string>& slaveHosts,

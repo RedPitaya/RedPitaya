@@ -128,7 +128,7 @@ auto startDirection(std::shared_ptr<ClientNetConfigManager> cl, const std::strin
                 fail("it plays a file of its own (gpio_out_pass_mode=FILE). To play from here: rpsa_client -c -h " + host + " -i gpio_out_pass_mode=NET");
         });
         cl->serverGpioOutStoppedMemErrorNofiy.connect([&](std::string h) { if (h == host) fail("not enough memory for the GPIO output (gpio_out_size)"); });
-        cl->serverGpioOutStoppedConfigErrorNofiy.connect([&](std::string h) { if (h == host) fail("the GPIO output settings are not taken (no GPIO block in the FPGA?)"); });
+        cl->serverGpioOutStoppedConfigErrorNofiy.connect([&](std::string h) { if (h == host) fail("the GPIO output did not start: the settings, no GPIO block in the FPGA or the data port taken (journalctl -u redpitaya_streaming on the board)"); });
         cl->serverGpioOutStoppedNofiy.connect([&](std::string h, uint64_t) { if (h == host) fail("it stopped the output at once"); });
     } else {
         cl->serverGpioInStartedNofiy.connect([&](std::string h) { if (h == host) ok(); });
@@ -137,7 +137,7 @@ auto startDirection(std::shared_ptr<ClientNetConfigManager> cl, const std::strin
                 fail("it writes the input to a file of its own (gpio_in_pass_mode=FILE). To record here: rpsa_client -c -h " + host + " -i gpio_in_pass_mode=NET");
         });
         cl->serverGpioInStoppedMemErrorNofiy.connect([&](std::string h) { if (h == host) fail("not enough memory for the GPIO input (gpio_in_size)"); });
-        cl->serverGpioInStoppedConfigErrorNofiy.connect([&](std::string h) { if (h == host) fail("the GPIO input settings are not taken (no GPIO block in the FPGA?)"); });
+        cl->serverGpioInStoppedConfigErrorNofiy.connect([&](std::string h) { if (h == host) fail("the GPIO input did not start: the settings, no GPIO block in the FPGA or the data port taken (journalctl -u redpitaya_streaming on the board)"); });
         cl->serverGpioInStoppedNofiy.connect([&](std::string h) { if (h == host) fail("it stopped the input at once"); });
     }
     cl->errorNofiy.connect([&](ClientNetConfigManager::Errors e, std::string h, std::error_code err) {

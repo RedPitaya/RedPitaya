@@ -25,15 +25,22 @@ auto CDACStreamingApplication::run() -> void {
     }
 }
 
-auto CDACStreamingApplication::runNonBlock() -> void {
+// A manager that cannot start (the data port taken) is the failure of the start: it goes to the
+// caller, which reports it
+auto CDACStreamingApplication::runNonBlock(bool managerRunning) -> void {
     m_isRun = true;
     m_isRunNonBloking = true;
     m_GenThreadRun = true;  // before the thread: a stop() that comes first is not overwritten
     try {
-        m_streamingManager->run();  // MUST BE INIT FIRST for thread logic
+        if (!managerRunning)
+            m_streamingManager->run();  // MUST BE INIT FIRST for thread logic
         m_Thread = std::thread(&CDACStreamingApplication::genWorker, this);
     } catch (const std::exception& e) {
         ERROR_LOG("%s", e.what())
+        m_GenThreadRun = false;
+        m_isRun = false;
+        m_isRunNonBloking = false;
+        throw;
     }
 }
 

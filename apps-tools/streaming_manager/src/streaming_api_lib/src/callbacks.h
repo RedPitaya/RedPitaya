@@ -121,9 +121,10 @@ class ConfigCallback {
 
     virtual void sigInt() {};
 
-    // The board did not take the ADC settings (the FPGA refused the configuration or the trigger;
-    // the reason is in the log of the board: journalctl -u redpitaya_streaming). Last in the class:
-    // the earlier methods keep their places for programs built before it.
+    // The board did not start the ADC: the FPGA refused the configuration or the trigger, or the
+    // stream could not start (its data port taken, ...). The reason is in the log of the board:
+    // journalctl -u redpitaya_streaming. Last in the class: the earlier methods keep their places
+    // for programs built before it.
     virtual void adcServerStoppedConfigError(ConfigStreamClient*, std::string) {}
 };
 

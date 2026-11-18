@@ -251,7 +251,7 @@ auto CBoard::connectHandlers() -> void {
     cm->serverStoppedMemErrorNofiy.connect(stopped("not enough DMA memory for the ADC (Memory tab)", true));
     cm->serverStoppedMemModifyNofiy.connect(stopped("the memory settings changed", true));
     cm->serverStoppedNoActiveChannelsNofiy.connect(stopped("no input is on (ADC tab, Channels)", true));
-    cm->serverStoppedConfigErrorNofiy.connect(stopped("the board cannot stream with these settings (see the log of the board)", true));
+    cm->serverStoppedConfigErrorNofiy.connect(stopped("the board did not start the stream: the settings or the board (see its log: journalctl -u redpitaya_streaming)", true));
     cm->serverStoppedSDFullNofiy.connect(stopped("the SD card is full", true));
     cm->serverStoppedSDDoneNofiy.connect(stopped("the sample limit is written to the SD card", false));
 

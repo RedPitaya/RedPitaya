@@ -326,6 +326,23 @@ TEST_F(ADCServer, AStopWithTheClientConnectedIsReportedOnce) {
     EXPECT_EQ(recorder->reasons, std::vector<ADCStopReason>{ADCStopReason::NORMAL}) << "the disconnect of our own stop is not a second stop";
 }
 
+// A start that throws (here the data port is taken) says why, as the other failed starts do: the
+// page and the clients got no answer at all (streaming_improvements 1.6)
+TEST_F(ADCServer, AStartWhoseDataPortIsTakenIsAFailedStart) {
+    asio::io_context io;
+    asio::ip::tcp::acceptor taken(io);
+    const asio::ip::tcp::endpoint at(asio::ip::make_address("127.0.0.3"), NET_ADC_STREAMING_PORT);
+    taken.open(at.protocol());
+    taken.bind(at);
+    taken.listen();
+    CStreamSettings s;
+    ADCStreamOptions o;
+    o.host = "127.0.0.3";
+    EXPECT_FALSE(server->start(netSettings(s), o));
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->reasons, std::vector<ADCStopReason>{ADCStopReason::CONFIG_ERROR});
+}
+
 TEST_F(ADCServer, TheDataPortListensOnTheAddressGiven) {
     CStreamSettings s;
     ADCStreamOptions o;
