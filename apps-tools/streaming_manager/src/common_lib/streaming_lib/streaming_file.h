@@ -50,6 +50,9 @@ class CStreamingFile {
     auto getQueueFill() -> double;
     // the measured write speed of the file, bytes per second (0 before it is known)
     auto getWriteRate() -> double;
+    // samples per channel that did not go into the file: the write queue was full or a buffer
+    // could not be converted (memory). Their buffers are missing from the file.
+    auto getDroppedSamples() -> uint64_t { return m_droppedSamples; }
 
     // TDMS: a column with the time of every sample (off by default; the time is always in the
     // wf_* properties of the channels and in the row of every buffer in the group "Buffers")
@@ -65,6 +68,8 @@ class CStreamingFile {
 
     std::atomic_int m_ReadyToPass;
     std::atomic_int m_SendData;
+    std::atomic<uint64_t> m_droppedSamples{0};
+    auto dropped(DataLib::CDataBuffersPackDMA::Ptr pack) -> void;
     FileQueueManager* m_file_manager;
     CWaveWriter* m_waveWriter;
     std::string m_host;

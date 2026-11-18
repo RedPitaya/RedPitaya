@@ -620,6 +620,33 @@ TEST_F(GPIOServer, TheInputWritesABinFileUpToItsLimit) {
     EXPECT_EQ(blocks, 3) << "the third buffer reaches the limit";
 }
 
+// The losses the page shows (item 1.4 of the streaming improvements): what the block reports lost
+// before each buffer, and the samples of the buffers; kept after the stop, reset by the next start
+TEST_F(GPIOServer, TheLossesOfTheInputAreCountedKeptAndResetByTheNextStart) {
+    countingInput();
+    uio_lib::dummy::gpioState().inLost = [](uint8_t) { return uint64_t(5); };
+    const auto dir = FileDir();
+    for (auto& e : std::filesystem::directory_iterator(dir))
+        std::filesystem::remove(e.path());
+    settings.setGPIOInPassMode(CStreamSettings::PassMode::FILE);
+    settings.setGPIOInFormat(CStreamSettings::GPIOFormat::BIN);
+    settings.setGPIOInSamples(3 * kWords);  // no RLE: a word is a sample
+    GPIOStreamOptions o;
+    o.dirPath = dir;
+    ASSERT_TRUE(in->start(settings, o));
+    ASSERT_TRUE(recorder->waitStopped());
+    const uint64_t samples = in->getBoardSamples();
+    ASSERT_GE(samples, 3u * kWords);
+    EXPECT_EQ(samples % kWords, 0u) << "whole buffers";
+    EXPECT_EQ(in->getBoardLost(), samples / kWords * 5) << "5 before each of " << samples / kWords << " buffers";
+
+    uio_lib::dummy::gpioState().inLost = nullptr;
+    settings.setGPIOInPassMode(CStreamSettings::PassMode::NET);
+    ASSERT_TRUE(in->start(settings, GPIOStreamOptions()));
+    EXPECT_EQ(in->getBoardLost(), 0u) << "reset by the start";
+    in->stop(GPIOStopReason::NORMAL);
+}
+
 // A limit the first buffer reaches ends the run at once: started still goes out first (the
 // client takes a stop before the started as a failed start)
 TEST_F(GPIOServer, AFileThatEndsWithItsFirstBufferIsStartedFirst) {

@@ -45,6 +45,10 @@ class GPIOInStreamServer {
     auto stop(GPIOStopReason reason) -> void;
     auto stopNonBlocking(GPIOStopReason reason) -> void;
     auto isRunning() -> bool;
+    // the losses of the last run (reset by start, kept after the stop): samples lost on the
+    // board (the FPGA found no free buffer) and the samples it gave
+    auto getBoardLost() -> uint64_t;
+    auto getBoardSamples() -> uint64_t;
     // the file of the file mode, "" in the network mode
     auto filePath() -> std::string;
 

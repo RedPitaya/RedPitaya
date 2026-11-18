@@ -56,6 +56,13 @@ class ADCStreamServer {
     auto getWritedSize() -> uint64_t;
     // the write speed of the file (bytes per second) and what its queue holds of its limit, 0..1
     auto getWriteRate() -> double;
+    // The losses of the last run (reset by start, kept after the stop), samples per channel (the
+    // channel with the most): lost on the board (the FPGA found no free buffer: the client, the
+    // network or the SD card too slow), given by the FPGA, and not taken by the SD file (its write
+    // queue was full; those buffers are missing from the file).
+    auto getBoardLost() -> uint64_t;
+    auto getBoardSamples() -> uint64_t;
+    auto getFileDropped() -> uint64_t;
     auto getQueueFill() -> double;
 
    private:

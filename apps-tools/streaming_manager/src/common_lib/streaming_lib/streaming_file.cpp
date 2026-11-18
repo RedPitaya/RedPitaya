@@ -325,6 +325,16 @@ auto CStreamingFile::addTDMSBufferRow(TDMS::SegmentBuilder& segment, DataLib::CD
     segment.copySamples("Buffers", "wait", &wait, 1);
 }
 
+auto CStreamingFile::dropped(DataLib::CDataBuffersPackDMA::Ptr pack) -> void {
+    uint64_t samples = 0;
+    for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
+        auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)i);
+        if (buff)
+            samples = std::max<uint64_t>(samples, buff->getSamplesCount());
+    }
+    m_droppedSamples += samples;
+}
+
 auto CStreamingFile::getFileLost() -> uint64_t {
     if (m_fileLogger) {
         return m_fileLogger->getFileLost();
@@ -429,10 +439,12 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
             if (m_file_manager->isWork()) {
                 if (!m_file_manager->addChunkToWrite(buildTDMSChunk(segment))) {
                     m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
+                    dropped(pack);
                 }
             }
         } else {
             m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
+            dropped(pack);
         }
     }
 
@@ -480,10 +492,12 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
             if (m_file_manager->isWork()) {
                 if (!m_file_manager->addChunkToWrite(std::move(chunk))) {
                     m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
+                    dropped(pack);
                 }
             }
         } else {
             m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
+            dropped(pack);
         }
     }
 
@@ -521,6 +535,7 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
         if (m_file_manager->isWork()) {
             if (!m_file_manager->addChunkToWrite(buildBINChunk(pack, map, m_bin))) {
                 m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
+                dropped(pack);
             }
         }
     }

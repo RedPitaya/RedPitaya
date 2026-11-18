@@ -121,6 +121,31 @@ TEST_F(ADCServer, AFileWithASampleLimitEndsDone) {
     EXPECT_FALSE(uio_lib::dummy::oscState().running) << "the scope stopped";
 }
 
+// The losses the page shows (item 1.4 of the streaming improvements): what the FPGA reports lost
+// before each buffer is summed per channel with the samples it gave; kept after the stop, reset
+// by the next start. The file took every buffer: nothing dropped by its queue.
+TEST_F(ADCServer, TheLossesOfARunAreCountedKeptAndResetByTheNextStart) {
+    uio_lib::dummy::oscState().lost = [](uint8_t, uint8_t ch) -> uint64_t { return ch == 0 ? 7 : 0; };
+    CStreamSettings s;
+    ASSERT_TRUE(server->start(fileSettings(s, 20000), options));
+    server->startADC();
+    ASSERT_TRUE(recorder->waitStopped());
+    const uint64_t samples = server->getBoardSamples();
+    const uint64_t lost = server->getBoardLost();
+    ASSERT_GT(samples, 0u);
+    const uint64_t perBuffer = samples / (lost / 7);
+    EXPECT_EQ(lost % 7, 0u) << "7 per buffer";
+    EXPECT_EQ(lost / 7 * perBuffer, samples) << "every buffer counted once: " << lost / 7 << " buffers of " << perBuffer;
+    EXPECT_EQ(server->getFileDropped(), 0u);
+    EXPECT_EQ(server->getBoardLost(), lost) << "kept after the stop";
+
+    uio_lib::dummy::oscState().lost = nullptr;
+    ASSERT_TRUE(server->start(fileSettings(s, 20000), options));
+    EXPECT_EQ(server->getBoardLost(), 0u) << "reset by the start";
+    EXPECT_EQ(server->getBoardSamples(), 0u);
+    server->stop(ADCStopReason::NORMAL);
+}
+
 TEST_F(ADCServer, NoChannelsStopsWithItsReason) {
     CStreamSettings s;
     fileSettings(s, 1000);

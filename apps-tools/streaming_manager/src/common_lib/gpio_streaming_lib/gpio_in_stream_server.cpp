@@ -70,6 +70,10 @@ struct GPIOInStreamServer::Impl {
     CDataBuffersPackDMA::Ptr packs[2];
     DataLib::GPIOHeader header;  // what every buffer of the run carries
     bool rle = false;
+    // the losses of the run: samples lost on the board (no free buffer) and the samples given;
+    // reset by start(), kept after the stop
+    std::atomic<uint64_t> boardLost{0};
+    std::atomic<uint64_t> boardSamples{0};
 
     auto teardown() -> void;
     // of: the session the stop was asked in, none for a stop of whatever runs
@@ -167,6 +171,8 @@ auto GPIOInStreamServer::Impl::fpgaWork() -> void {
             if (next) {
                 auto h = header;
                 h.lostFPGA = info.lost + droppedLost;
+                boardLost += h.lostFPGA;
+                boardSamples += samplesOf(buffer, rle);
                 h.waitFPGA = info.wait + droppedWait;
                 h.triggerCount = info.triggerCount;
                 h.dataSize = buffer->getDataLenght();
@@ -276,6 +282,8 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
         p.file = nullptr;
         p.session++;
         p.active = true;
+        p.boardLost = 0;
+        p.boardSamples = 0;
         if (!p.hw)
             return false;
         if (!p.hw->features().gpio) {
@@ -417,6 +425,14 @@ auto GPIOInStreamServer::stopNonBlocking(GPIOStopReason reason) -> void {
 auto GPIOInStreamServer::filePath() -> std::string {
     std::lock_guard lock(m_pimpl->mtx);
     return m_pimpl->file ? m_pimpl->file->path() : std::string();
+}
+
+auto GPIOInStreamServer::getBoardLost() -> uint64_t {
+    return m_pimpl->boardLost;
+}
+
+auto GPIOInStreamServer::getBoardSamples() -> uint64_t {
+    return m_pimpl->boardSamples;
 }
 
 auto GPIOInStreamServer::isRunning() -> bool {

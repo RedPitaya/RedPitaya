@@ -179,14 +179,37 @@
         return `<p class="hint${slow ? ' bad' : ''}" style="margin: 0">SD card: <b class="mono">${fmtBytes(rate)}/s</b> for ${fmtBytes(data)}/s of data · queue <b class="mono">${Math.round(fill * 100)}%</b>${slow ? ' - the card is slower: the data are lost once the queue is full' : ''}</p>`;
     }
 
+    // ---- losses of the last run (the server resets them at a start, keeps them after the stop):
+    // samples per channel lost on the board (the FPGA found no free buffer: the client, the network
+    // or the SD card too slow) and, for the ADC, not taken by the SD file (its write queue was full).
+    // The GPIO input has no such queue loss: a full queue ends its recording.
+    const lostOf = (key) => key === 'adc'
+        ? { board: Number(v('SS_ADC_LOST', 0)), file: Number(v('SS_ADC_FILE_LOST', 0)), pass: Number(v('SS_ADC_SAMPLES', 0)) }
+        : { board: Number(v('SS_GPIO_LOST', 0)), file: 0, pass: Number(v('SS_GPIO_SAMPLES', 0)) };
+    const lostShort = (key) => {
+        const l = lostOf(key), all = l.board + l.file;
+        if (!all) return '0';
+        // the samples the queue dropped were given by the FPGA: the whole is given plus lost on the board
+        const whole = l.pass + l.board;
+        const pct = whole ? all / whole * 100 : 0;
+        return all.toLocaleString('en-US') + ' · ' + (pct < 0.01 ? '<0.01' : pct.toFixed(2)) + '%';
+    };
+    function lostHtml(key, sd) {
+        const l = lostOf(key), all = l.board + l.file;
+        const n = (x) => `<b class="mono" style="color: ${x ? '#ff8f86' : '#e8e8e6'}">${x.toLocaleString('en-US')}</b>`;
+        return `<p class="hint${all ? ' bad' : ''}" style="margin: 0">Lost: ${n(all)} samples per channel` +
+            (sd && key === 'adc' ? ` · on the board ${n(l.board)} · SD write queue ${n(l.file)}` : '') +
+            (all ? `<br><span style="color: #a8a8a6">${sd ? 'On the board: no free buffer, the card is slower than the data; the file marks the places.' + (key === 'adc' ? ' The queue: the memory for the card was full; those buffers are missing from the file, its report counts them.' : '') : 'No free buffer on the board: the client or the network is slower than the data; rpsa_client marks the places in its file.'}</span>` : '') + '</p>';
+    }
+
     // ---- overview
     function overviewHtml() {
         const adc = stream('adc');
         const rows = [Object.assign(adc, {
             k: [['Destination', v('SS_USE_FILE', false) ? 'SD · ' + ['WAV', 'TDMS', 'BIN'][Number(v('SS_FORMAT', 0))] : 'Network'],
                 ['Channels', chList().join(', ') || 'none'], ['Rate', fmtRate(adcRate() / adcDec())],
-                v('SS_USE_FILE', false) ? ['Written', fmtBytes(Number(v('SS_WRITED_SIZE', 0)))] : ['Port', '18900']]
-                .concat(v('SS_USE_FILE', false) && Number(v('SS_WRITE_RATE', 0)) ? [['SD card', fmtBytes(Number(v('SS_WRITE_RATE', 0))) + '/s · queue ' + Math.round(Number(v('SS_FILE_QUEUE', 0)) * 100) + '%']] : [])
+                // four cells fit the row: the speed of the card goes with the written size (the queue: ADC card)
+                v('SS_USE_FILE', false) ? ['Written', fmtBytes(Number(v('SS_WRITED_SIZE', 0))) + (Number(v('SS_WRITE_RATE', 0)) ? ' · ' + fmtBytes(Number(v('SS_WRITE_RATE', 0))) + '/s' : '')] : ['Port', '18900']]
         })];
         if (hasDac()) {
             const d = stream('dac');
@@ -215,7 +238,7 @@
             `<div class="ovb"><section class="card srows" aria-label="Streams">${rows.map((s) => `
               <div class="srow">
                 <div class="sname"><img src="${s.led}" alt="" style="width: 22px; height: 22px; flex: none">
-                  <div class="scell"><b style="font-size: var(--fs-base)">${s.name}</b><span style="${s.stateColor}">${esc(s.state)}</span></div></div>
+                  <div class="scell"><b style="font-size: var(--fs-base)">${s.name}</b><span style="${s.stateColor}">${esc(s.state)}</span>${(s.key === 'adc' || s.key === 'gin') && lostShort(s.key) !== '0' ? `<span style="color: #ff8f86">lost ${esc(lostShort(s.key))}</span>` : ''}</div></div>
                 ${s.k.map(([k, val]) => `<div class="scell"><span>${esc(k)}</span><b title="${esc(val)}">${esc(val)}</b></div>`).join('')}
                 <div class="sact">${runBtn(s, '; min-width: 72px; justify-content: center')}
                   ${s.sec ? `<button class="btn ibtn" type="button" aria-label="${s.name} settings" data-go="${s.sec}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line><circle cx="9" cy="6" r="2.2" fill="#2b2b2a"></circle><circle cx="15" cy="12" r="2.2" fill="#2b2b2a"></circle><circle cx="8" cy="18" r="2.2" fill="#2b2b2a"></circle></svg></button>` : '<span class="btn ibtn" style="visibility: hidden"></span>'}
@@ -296,6 +319,7 @@
               <section class="card">
                 <div class="card-h"><h2 class="card-t">Input</h2><div class="row">${badge(gi)}${inTrig ? softBtn(3) : ''}${runBtn(gi)}</div></div>
                 ${tiles('Destination', 'GPIO input destination', [['SS_GPIO_IN_MODE:0', 'Network client', 'port 18904 · rpsa_client, the API', !inSd], ['SS_GPIO_IN_MODE:1', 'File on SD card', 'BIN, CSV or VCD', inSd]])}
+                ${lostHtml('gin', inSd)}
                 ${inSd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))">
                     <div class="field"><label for="gfmt">Format</label><select id="gfmt" data-param="SS_GPIO_IN_FORMAT">${sel([[0, 'BIN'], [1, 'CSV'], [2, 'VCD']], v('SS_GPIO_IN_FORMAT', 0))}</select></div>
                     <div class="field"><label for="glim">Samples</label><input id="glim" class="mono" value="${esc(v('SS_GPIO_IN_SAMPLES', 0))}" data-act="int" data-arg="SS_GPIO_IN_SAMPLES"><span class="hint">0 - until the stop</span></div>
@@ -471,8 +495,9 @@
                   ${tdms ? `<div class="field"><label for="tcol">TDMS time column</label><select id="tcol" data-param="SS_TDMS_TIME">${sel([[0, 'Off'], [1, 'On']], v('SS_TDMS_TIME', 0))}</select></div>` : ''}
                 </div>
                 <p class="hint" style="margin: 0">Recorded: <b class="mono" style="color: #e8e8e6">${pass.toLocaleString('en-US')} samples · ${fmtBytes(written)}</b></p>
+                ${lostHtml('adc', true)}
                 ${sdRateHtml()}`
-              : '<p class="sub">A client takes the data on port <span class="mono">18900</span>: rpsa_client or the streaming API.</p>'}
+              : '<p class="sub">A client takes the data on port <span class="mono">18900</span>: rpsa_client or the streaming API.</p>' + lostHtml('adc', false)}
             </section>
             <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr))">
               <section class="card"><h2 class="card-t">Channels</h2>

@@ -660,6 +660,26 @@ auto StreamSession::adcWrittenSize() -> uint64_t {
     return m_pimpl->adc->getWritedSize();
 }
 
+auto StreamSession::adcBoardLost() -> uint64_t {
+    return m_pimpl->adc->getBoardLost();
+}
+
+auto StreamSession::adcBoardSamples() -> uint64_t {
+    return m_pimpl->adc->getBoardSamples();
+}
+
+auto StreamSession::adcFileDropped() -> uint64_t {
+    return m_pimpl->adc->getFileDropped();
+}
+
+auto StreamSession::gpioInBoardLost() -> uint64_t {
+    return m_pimpl->gpioIn ? m_pimpl->gpioIn->getBoardLost() : 0;
+}
+
+auto StreamSession::gpioInBoardSamples() -> uint64_t {
+    return m_pimpl->gpioIn ? m_pimpl->gpioIn->getBoardSamples() : 0;
+}
+
 auto StreamSession::adcWriteRate() -> double {
     return m_pimpl->adc->getWriteRate();
 }

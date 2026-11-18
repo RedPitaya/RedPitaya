@@ -91,6 +91,13 @@ class StreamSession {
     auto adcWrittenSize() -> uint64_t;
     // the SD file of the ADC: its write speed, bytes per second, and the fill of its queue, 0..1
     auto adcWriteRate() -> double;
+    // The losses of the last run of a stream (reset by its start, kept after the stop), samples
+    // per channel: lost on the board, given by the FPGA, not taken by the SD file (ADC).
+    auto adcBoardLost() -> uint64_t;
+    auto adcBoardSamples() -> uint64_t;
+    auto adcFileDropped() -> uint64_t;
+    auto gpioInBoardLost() -> uint64_t;
+    auto gpioInBoardSamples() -> uint64_t;
     auto adcFileQueueFill() -> double;
 
     auto setCallback(std::shared_ptr<SessionCallback> callback) -> void;

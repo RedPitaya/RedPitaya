@@ -1,6 +1,7 @@
 #include "adc_stream_server.h"
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <ctime>
@@ -43,6 +44,12 @@ struct ADCStreamServer::Impl {
     // was asked in; atomic: stopNonBlocking() is also called from start() under mtx.
     std::atomic<uint64_t> session{0};
     std::atomic<bool> active{false};  // the session is not torn down yet
+    // The losses of the run, per channel: samples the FPGA lost on the board (no free buffer) and
+    // the samples it gave; the samples the SD file did not take (kept from the file at its end).
+    // Reset by start(), kept after the stop.
+    std::array<std::atomic<uint64_t>, 4> boardLost{};
+    std::array<std::atomic<uint64_t>, 4> boardSamples{};
+    std::atomic<uint64_t> fileDropped{0};
 
     auto teardown() -> void;
     // of: the session the stop was asked in, none for a stop of whatever runs; own: asked by
@@ -74,8 +81,10 @@ auto ADCStreamServer::Impl::teardown() -> void {
         fpga = nullptr;
     }
     adcStarted = false;
-    if (file)
+    if (file) {
         file->stopAndFlush();
+        fileDropped = file->getDroppedSamples();
+    }
     buffer = nullptr;
     net = nullptr;
     file = nullptr;
@@ -140,6 +149,9 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
         p.teardown();
         p.session++;
         p.active = true;
+        for (uint8_t ch = 0; ch < 4; ch++)
+            p.boardLost[ch] = p.boardSamples[ch] = 0;
+        p.fileDropped = 0;
         if (!p.hw)
             return false;
 
@@ -310,6 +322,21 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
             if (obj)
                 obj->unlockBufferWrite();
         };
+        // every buffer of the FPGA, in both modes: what the board lost before it (a buffer it had to
+        // drop is counted with the next one)
+        auto selfW = std::weak_ptr<Impl>(m_pimpl);
+        p.fpga->oscNotify.connect([selfW](CDataBuffersPackDMA::Ptr pack) {
+            auto impl = selfW.lock();
+            if (!impl || !pack)
+                return;
+            for (uint8_t ch = 0; ch < 4; ch++) {
+                auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)ch);
+                if (!buff)
+                    continue;
+                impl->boardLost[ch] += buff->getLostSamples(DataLib::FPGA);
+                impl->boardSamples[ch] += buff->getSamplesCount();
+            }
+        });
         auto fileW = std::weak_ptr<CStreamingFile>(p.file);
         p.fpga->oscNotify.connect([fileW, bufferW](CDataBuffersPackDMA::Ptr) {
             auto f = fileW.lock();
@@ -396,6 +423,29 @@ auto ADCStreamServer::removeCallback() -> void {
 auto ADCStreamServer::getPassSamples() -> uint64_t {
     std::lock_guard lock(m_pimpl->mtx);
     return m_pimpl->file ? m_pimpl->file->getPassSamples() : 0;
+}
+
+auto ADCStreamServer::getBoardLost() -> uint64_t {
+    uint64_t m = 0;
+    for (auto& v : m_pimpl->boardLost)
+        m = std::max<uint64_t>(m, v);
+    return m;
+}
+
+auto ADCStreamServer::getBoardSamples() -> uint64_t {
+    uint64_t m = 0;
+    for (auto& v : m_pimpl->boardSamples)
+        m = std::max<uint64_t>(m, v);
+    return m;
+}
+
+auto ADCStreamServer::getFileDropped() -> uint64_t {
+    // the page asks every 100 ms: a stop that writes the queue out holds mtx for seconds, then the
+    // last value seen serves
+    std::unique_lock lock(m_pimpl->mtx, std::try_to_lock);
+    if (lock && m_pimpl->file)
+        m_pimpl->fileDropped = m_pimpl->file->getDroppedSamples();
+    return m_pimpl->fileDropped;
 }
 
 auto ADCStreamServer::getWriteRate() -> double {

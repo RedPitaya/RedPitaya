@@ -111,6 +111,13 @@ CDoubleParameter ss_writed_size("SS_WRITED_SIZE", CBaseParameter::RW, 0, 0, 0, 1
 // the SD file: the measured write speed, bytes per second, and the fill of its queue in memory, 0..1
 CDoubleParameter ss_write_rate("SS_WRITE_RATE", CBaseParameter::RO, 0, 0, 0, 1e12);
 CDoubleParameter ss_file_queue("SS_FILE_QUEUE", CBaseParameter::RO, 0, 0, 0, 1);
+// The losses of the last run (reset by a start, kept after the stop), samples per channel: lost
+// on the board (the FPGA found no free buffer), given by the FPGA, not taken by the SD file
+CDoubleParameter ss_adc_lost("SS_ADC_LOST", CBaseParameter::RO, 0, 0, 0, 1e20);
+CDoubleParameter ss_adc_samples("SS_ADC_SAMPLES", CBaseParameter::RO, 0, 0, 0, 1e20);
+CDoubleParameter ss_adc_file_lost("SS_ADC_FILE_LOST", CBaseParameter::RO, 0, 0, 0, 1e20);
+CDoubleParameter ss_gpio_lost("SS_GPIO_LOST", CBaseParameter::RO, 0, 0, 0, 1e20);
+CDoubleParameter ss_gpio_samples("SS_GPIO_SAMPLES", CBaseParameter::RO, 0, 0, 0, 1e20);
 
 // ============================================================================
 // Memory parameters
@@ -740,6 +747,13 @@ void UpdateParams(void) {
                 last = json;
                 ss_trigger_status.SendValue(json);
             }
+        }
+        if (g_session) {
+            ss_adc_lost.SendValue(g_session->adcBoardLost());
+            ss_adc_samples.SendValue(g_session->adcBoardSamples());
+            ss_adc_file_lost.SendValue(g_session->adcFileDropped());
+            ss_gpio_lost.SendValue(g_session->gpioInBoardLost());
+            ss_gpio_samples.SendValue(g_session->gpioInBoardSamples());
         }
         if (g_session && g_adcFile) {
             ss_pass_samples.SendValue(g_session->adcPassSamples());
