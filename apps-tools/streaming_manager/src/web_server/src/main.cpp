@@ -45,7 +45,7 @@ bool g_verbose = false;
 
 auto memmanager = uio_lib::CMemoryManager::instance();
 // The board (profile, calibration, relays) before the parameters of the page, which take its data;
-// the module stays loaded, the board is made once
+// made once for the life of streaming-server
 const std::shared_ptr<uio_lib::IBoard> g_board = board_lib::createBoard();
 const uio_lib::BoardInfo g_info = g_board->info();
 const uint32_t g_dacRate = g_info.dacRate ? g_info.dacRate : 1;
@@ -83,7 +83,6 @@ CBooleanParameter ss_dac_is_enable("SS_DAC_IS_ENABLE", CBaseParameter::RO, isDAC
 CStringParameter ss_dac_file("SS_DAC_FILE", CBaseParameter::RW, "", 0);
 CIntParameter ss_dac_file_ctr("SS_DAC_FILE_CTR", CBaseParameter::RW, 0, 0, 0, 100);
 CIntParameter ss_dac_status("SS_DAC_STATUS", CBaseParameter::RW, 1, 0, 0, 100);
-CBooleanParameter ss_dac_data_pass("SS_DAC_DATA_PASS", CBaseParameter::RW, false, 0);
 CIntParameter ss_dac_file_type("SS_DAC_FILE_TYPE", CBaseParameter::RW, 0, 0, 0, 2);
 CIntParameter ss_dac_gain("SS_DAC_GAIN", CBaseParameter::RW, 0, 0, 0, 256);
 CIntParameter ss_dac_mode("SS_DAC_MODE", CBaseParameter::RW, 0, 0, 0, 1);
@@ -130,7 +129,6 @@ CBooleanParameter mem_gpio_out_size_valid("MM_GPIO_OUT_VALID", CBaseParameter::R
 
 CBooleanParameter ss_gpio_start("SS_GPIO_START", CBaseParameter::RW, false, 0);
 CIntParameter ss_gpio_status("SS_GPIO_STATUS", CBaseParameter::RW, 1, 0, 0, 100);
-CBooleanParameter ss_gpio_data_pass("SS_GPIO_DATA_PASS", CBaseParameter::RW, false, 0);
 // the output: start/stop and the state (codes as SS_GPIO_STATUS)
 CBooleanParameter ss_gpio_out_start("SS_GPIO_OUT_START", CBaseParameter::RW, false, 0);
 CIntParameter ss_gpio_out_status("SS_GPIO_OUT_STATUS", CBaseParameter::RW, 0, 0, 0, 100);
@@ -271,14 +269,6 @@ auto isDACAviable() -> bool {
 }
 
 // ============================================================================
-// Application description & signal handling
-// ============================================================================
-
-const char* rp_app_desc(void) {
-    return (const char*)"Red Pitaya Stream server application.\n";
-}
-
-// ============================================================================
 // Application initialization
 // ============================================================================
 
@@ -328,9 +318,7 @@ auto rp_app_init(void) -> int {
         ss_status.SendValue(0);
         ss_adc_data_pass.SendValue(0);
         ss_dac_status.SendValue(0);
-        ss_dac_data_pass.SendValue(0);
         ss_gpio_status.SendValue(0);
-        ss_gpio_data_pass.SendValue(0);
         ss_gpio_out_status.SendValue(0);
         {
             char* model = nullptr;
@@ -363,10 +351,10 @@ auto rp_app_exit(void) -> int {
         g_session->removeCallback();
         g_session->stop();
     }
-    // the module stays loaded, the next start may find another bitstream
+    // the FPGA blocks go with the session: streaming-server ends after this
     g_session = nullptr;
     g_hw = nullptr;
-    aprintf(stderr, "Unloading stream server version %s-%s.\n", VERSION_STR, REVISION_STR);
+    aprintf(stderr, "Stopping the stream server page backend %s-%s.\n", VERSION_STR, REVISION_STR);
     return 0;
 }
 
@@ -850,7 +838,7 @@ void UpdateParamsFromWeb(void) {
         }
 
     } catch (std::exception& e) {
-        // an error of one request, not a reason to end the nginx worker
+        // an error of one request, not a reason to end the server
         ERROR_LOG("%s", e.what());
     }
 }
@@ -916,7 +904,6 @@ class WebCallback : public session_lib::SessionCallback {
     // before the playback: the stop of a short file comes after it
     void dacStarted(bool) override {
         ss_dac_status.SendValue(1);
-        ss_dac_data_pass.SendValue(1);
         TRACE("Start dac server");
     }
 
@@ -950,13 +937,11 @@ class WebCallback : public session_lib::SessionCallback {
                 ss_dac_status.SendValue(8);
                 break;
         }
-        ss_dac_data_pass.SendValue(0);
         TRACE("Stop dac server");
     }
 
     void gpioInStarted() override {
         ss_gpio_status.SendValue(1);
-        ss_gpio_data_pass.SendValue(1);
         TRACE("Start gpio input server");
     }
 
@@ -988,7 +973,6 @@ class WebCallback : public session_lib::SessionCallback {
                 ss_gpio_status.SendValue(4);
                 break;
         }
-        ss_gpio_data_pass.SendValue(0);
         TRACE("Stop gpio input server");
     }
 

@@ -875,8 +875,8 @@
             schedule();
         },
         delete: () => deleteSelected(),
-        setDefaults: () => {
-            if (!confirm('Set every setting back to its default? A new block size stops the streams.')) return;
+        setDefaults: async () => {
+            if (!(await C.ask({ title: 'Defaults', text: 'Set every setting back to its default? A new block size stops the streams.', ok: 'Set the defaults' }))) return;
             S.setMsg = 'Defaults…';
             C.set('SS_SETTINGS_CMD', 1);
             schedule();
@@ -958,7 +958,7 @@
     async function deleteSelected() {
         const dir = S.fileTab;
         const names = S.files[dir].filter((f) => S.fileSel[f.name]);
-        if (!names.length || !confirm('Delete ' + names.length + ' file' + (names.length === 1 ? '' : 's') + ' from the SD card?')) return;
+        if (!names.length || !(await C.ask({ title: 'Delete files', text: 'Delete ' + names.length + ' file' + (names.length === 1 ? '' : 's') + ' from the SD card?', ok: 'Delete', danger: true }))) return;
         const doomed = [];
         for (const f of names) {
             doomed.push(f.name);

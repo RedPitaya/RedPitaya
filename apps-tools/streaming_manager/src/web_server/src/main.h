@@ -30,8 +30,7 @@
 extern "C" {
 #endif
 
-//Rp app functions
-const char* rp_app_desc(void);
+// The entry points of the page backend; streaming-server calls them (web_page.cpp)
 int rp_app_init(void);
 int rp_app_exit(void);
 // In streaming-server (the service of the page): the options of the session, before rp_app_init.

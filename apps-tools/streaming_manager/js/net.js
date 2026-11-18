@@ -24,7 +24,7 @@
             service_url: '/streaming_manager_service',
             socket_url: (https ? 'wss://' : 'ws://') + location.host + '/streaming_ws'
         },
-        state: { socket_opened: false, app_started: false },
+        state: { socket_opened: false },
         params: { orig: {} },
         parametersCache: {},
         ws: null,
@@ -133,9 +133,55 @@
         ws.onmessage = onMessage;
     };
 
+    // A question in the style of the page (as the dialogs of calib_app: a title with a close button,
+    // the text, two buttons of one width) instead of the browser's confirm(). Resolves true for OK;
+    // Escape, the close button and a click beside the dialog are Cancel, Enter is OK.
+    CLIENT.ask = ({ title, text, ok = 'OK', cancel = 'Cancel', danger = false }) => new Promise((resolve) => {
+        const back = document.createElement('div');
+        back.className = 'dlg-back';
+        back.innerHTML =
+            '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-t">' +
+            '<div class="dlg-h"><h4 id="dlg-t" class="card-t"></h4><button type="button" class="dlg-x" aria-label="Close">&times;</button></div>' +
+            '<p class="dlg-b"></p>' +
+            '<div class="dlg-f"><button type="button" class="btn ' + (danger ? 'btn-d' : 'btn-p') + '" data-r="1"></button>' +
+            '<button type="button" class="btn" data-r="0"></button></div></div>';
+        back.querySelector('.card-t').textContent = title;
+        back.querySelector('.dlg-b').textContent = text;
+        back.querySelector('[data-r="1"]').textContent = ok;
+        back.querySelector('[data-r="0"]').textContent = cancel;
+        const before = document.activeElement;
+        const done = (r) => {
+            document.removeEventListener('keydown', key, true);
+            back.remove();
+            if (before && before.focus) before.focus();
+            resolve(r);
+        };
+        const key = (e) => {
+            if (e.key === 'Escape') { e.preventDefault(); done(false); }
+            if (e.key === 'Enter') { e.preventDefault(); done(true); }
+        };
+        back.addEventListener('click', (e) => {
+            if (e.target === back || e.target.classList.contains('dlg-x')) done(false);
+            else if (e.target.dataset.r) done(e.target.dataset.r === '1');
+        });
+        document.addEventListener('keydown', key, true);
+        document.body.appendChild(back);
+        back.querySelector('[data-r="1"]').focus();
+    });
+
     // the streams that run (their status 1): the Exit button asks before it stops them
     CLIENT.running = () => ['SS_STATUS', 'SS_DAC_STATUS', 'SS_GPIO_STATUS', 'SS_GPIO_OUT_STATUS']
         .filter((n) => Number(CLIENT.value(n, 0)) === 1).length;
+
+    // both sockets, without their reconnects
+    const closeSockets = () => {
+        for (const w of [CLIENT.ws, RP_CLIENT.ws]) {
+            if (w) {
+                w.onclose = null;
+                w.close();
+            }
+        }
+    };
 
     const service = (cmd) => fetch(CLIENT.config.service_url + (cmd ? '?cmd=' + cmd : ''),
         { method: cmd ? 'POST' : 'GET', cache: 'no-store' }).then((r) => r.json());
@@ -149,6 +195,9 @@
     // The service: running - connect; stopped - stop the bazaar application (it holds the FPGA and
     // the port of the liveness socket), start the service and connect once its socket answers.
     CLIENT.startApp = async () => {
+        if (CLIENT.leaving) {
+            return;
+        }
         let st;
         try {
             st = await service();
@@ -161,7 +210,11 @@
             return;
         }
         if (st.active !== 'active' && st.active !== 'activating') {
-            if (st.scpi === 'active' && !confirm('The SCPI server is running. The streaming server takes the FPGA and stops it. Go on?')) {
+            if (st.scpi === 'active' && !(await CLIENT.ask({
+                title: 'SCPI server',
+                text: 'The SCPI server is running. The streaming server takes the FPGA and stops it.',
+                ok: 'Stop SCPI and go on', cancel: 'Back to the applications'
+            }))) {
                 location.href = '/';
                 return;
             }
@@ -177,7 +230,6 @@
                 return;
             }
         }
-        CLIENT.state.app_started = true;
         CLIENT.connectWebSocket();
         RP_CLIENT.connectWebSocket();
     };
@@ -186,17 +238,32 @@
     // service runs)
     CLIENT.exitApp = async () => {
         const n = CLIENT.running();
-        if (n && !confirm(n + (n === 1 ? ' stream runs' : ' streams run') + ' on the board: the exit stops ' + (n === 1 ? 'it' : 'them') + '. Exit?')) {
+        const go = await CLIENT.ask({
+            title: 'Exit',
+            text: n ? n + (n === 1 ? ' stream runs' : ' streams run') + ' on the board: the exit stops the streaming server and ' + (n === 1 ? 'it' : 'them') + '. To leave ' + (n === 1 ? 'it' : 'them') + ' running, close the tab instead.'
+                : 'Stop the streaming server and go to the applications?',
+            ok: 'Exit', cancel: 'Cancel', danger: n > 0
+        });
+        if (!go) {
             return;
         }
-        for (const w of [CLIENT.ws, RP_CLIENT.ws]) {
-            if (w) {
-                w.onclose = null;
-                w.close();
-            }
-        }
+        // no reconnect, no reload, no start from now on
+        CLIENT.leaving = true;
+        RP_CLIENT.stopChecks();
+        closeSockets();
+        const note = document.createElement('div');
+        note.className = 'dlg-back';
+        note.innerHTML = '<div class="dlg" role="alertdialog" aria-live="polite"><div class="dlg-h"><h4 class="card-t">Exit</h4></div>' +
+            '<p class="dlg-b">Stopping the streaming server' + (n ? ': the recordings are written to the end' : '') + '...</p></div>';
+        document.body.appendChild(note);
+        // the stop returns at once; the server may need a while to close its files
         try {
-            await service('stop');
+            let st = await service('stop');
+            const end = Date.now() + 45000;
+            while ((st.active === 'active' || st.active === 'deactivating') && Date.now() < end) {
+                await new Promise((r) => setTimeout(r, 500));
+                st = await service();
+            }
         } catch (e) {
             // the root page shows this one again if the service still runs
         }
@@ -221,6 +288,9 @@
     RP_CLIENT.setConnectionLost = () => { body().add('loaded', 'user_lost'); body().remove('connection_lost'); };
 
     RP_CLIENT.reloadPage = () => {
+        if (CLIENT.leaving) {
+            return;
+        }
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), 10000);
         fetch('/get_client_id', { cache: 'no-store', signal: ctl.signal })
@@ -296,12 +366,8 @@
 
     // the service goes on when the page closes: only the sockets close
     window.addEventListener('beforeunload', () => {
-        for (const w of [CLIENT.ws, RP_CLIENT.ws]) {
-            if (w) {
-                w.onclose = null;
-                w.close();
-            }
-        }
+        RP_CLIENT.stopChecks();
+        closeSockets();
     });
 
     window.CLIENT = CLIENT;
