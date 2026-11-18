@@ -1039,7 +1039,7 @@ class WebCallback : public session_lib::SessionCallback {
             case R::BROKEN:
                 ss_gpio_out_status.SendValue(4);
                 break;
-            case R::SD_FULL:
+            case R::SD_FULL:  // the input's only (gpio_in_stream_server): never for the output
                 ss_gpio_out_status.SendValue(2);
                 break;
             case R::CONFIG_ERROR:

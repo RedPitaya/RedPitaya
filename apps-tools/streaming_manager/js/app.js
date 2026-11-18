@@ -47,8 +47,9 @@
     const ADC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'Not enough memory', 5: 'Stopped: memory changed', 6: 'No active channels', 7: 'Configuration error', 8: 'Client disconnected' };
     const DAC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'Done', 3: 'File is empty', 4: 'File is broken', 5: 'File is missing', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'No active channels', 9: 'Configuration error', 10: 'Client disconnected' };
     const GPIO_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'File cannot be written', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'Configuration error', 9: 'Client disconnected' };
-    const GPIO_OUT_STATE = { 0: 'Stopped', 1: 'Running', 3: 'Done', 4: 'File is broken', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'File is missing or empty', 9: 'Configuration error', 10: 'Client disconnected' };
-    const BAD = { adc: [2, 4, 6, 7], dac: [3, 4, 5, 6, 8, 9], gin: [2, 4, 6, 8], gout: [4, 6, 8, 9] };
+    // 2 is a stop reason of the input only (gpio_in_stream_server): the output never sends it
+    const GPIO_OUT_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Done', 4: 'File is broken', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'File is missing or empty', 9: 'Configuration error', 10: 'Client disconnected' };
+    const BAD = { adc: [2, 4, 6, 7], dac: [3, 4, 5, 6, 8, 9], gin: [2, 4, 6, 8], gout: [2, 4, 6, 8, 9] };
     // the codes of a configuration error: the board did not take the settings, the reason is in its log
     const CONFIG_ERROR = { adc: 7, dac: 9, gin: 8, gout: 9 };
 
@@ -61,8 +62,10 @@
         }[key];
         const code = Number(v(def.status, 0));
         const run = code === 1;
-        const bad = BAD[key].includes(code);
-        let state = def.table[code] || ('Status ' + code);
+        // a code the page does not know (a newer server) is shown as a fault, never as a plain state
+        const known = Object.prototype.hasOwnProperty.call(def.table, code);
+        const bad = BAD[key].includes(code) || !known;
+        let state = known ? def.table[code] : 'Unknown status ' + code;
         if (run && key === 'adc') state = v('SS_USE_FILE', false) ? 'Writing to SD' : 'Streaming to the client';
         if (run && key === 'dac') state = v('SS_DAC_MODE', 0) ? 'Playing a file' : 'Playing from the client';
         if (run && key === 'gin') state = v('SS_GPIO_IN_MODE', 0) ? 'Writing to SD' : 'Streaming to the client';
