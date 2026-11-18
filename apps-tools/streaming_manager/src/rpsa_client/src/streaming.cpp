@@ -485,6 +485,13 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
             stopStreaming(host);
         });
 
+        cl->serverStoppedConfigErrorNofiy.connect([](std::string host) {
+            g_streamFailed = true;
+            aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the board did not take the ADC settings (journalctl -u redpitaya_streaming on the board)\n",
+                    getTS(": ").c_str(), host.c_str());
+            stopStreaming(host);
+        });
+
         cl->serverStoppedSDFullNofiy.connect([](std::string host) {
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the SD card of the board is full\n", getTS(": ").c_str(), host.c_str());

@@ -1,3 +1,4 @@
+#include <atomic>
 #include <cmath>
 #include <filesystem>
 #include <functional>
@@ -858,18 +859,29 @@ void OnNewParams(void) {
 
 namespace {
 
+// The codes of the page (js/app.js: ADC_STATE, DAC_STATE, GPIO_STATE, GPIO_OUT_STATE).
 // SS_STATUS (ADC): 0 stopped, 1 running, 2 SD full, 3 done, 4 memory error, 5 memory changed,
-// 6 no channels. SS_DAC_STATUS: 0 stopped, 1 running, 2 done, 3 empty, 4 broken, 5 missing file,
-// 6 memory error, 7 memory changed, 8 no channels. SS_GPIO_STATUS (the input): 0 stopped,
-// 1 running, 2 SD full, 3 the file has its samples, 4 the file cannot be written, 6 memory error,
-// 7 memory changed, 8 configuration error.
+// 6 no channels, 7 configuration error, 8 client disconnected.
+// SS_DAC_STATUS: 0 stopped, 1 running, 2 done, 3 empty, 4 broken, 5 missing file, 6 memory error,
+// 7 memory changed, 8 no channels, 9 configuration error, 10 client disconnected.
+// SS_GPIO_STATUS (the input): 0 stopped, 1 running, 2 SD full, 3 the file has its samples, 4 the
+// file cannot be written, 6 memory error, 7 memory changed, 8 configuration error, 9 client
+// disconnected. SS_GPIO_OUT_STATUS: 0 stopped, 1 running, 2 SD full, 3 done, 4 broken, 6 memory
+// error, 7 memory changed, 8 missing or empty file, 9 configuration error, 10 client disconnected.
 class WebCallback : public session_lib::SessionCallback {
+    // A stop of a stream that does not run (a client stops the board before its start) is
+    // answered by the server too: it must not hide the reason of the last stop on the page.
+    // (the callbacks come from the threads of the streams)
+    std::atomic<bool> m_adcOn{false}, m_dacOn{false}, m_gpioInOn{false}, m_gpioOutOn{false};
+    static auto idleStop(std::atomic<bool>& on, bool normal) -> bool { return !on.exchange(false) && normal; }
+
     void settingsChanged(const CStreamSettings&, const CStreamSettings&) override {
         if (!g_pageChanges)
             updateUI();
     }
 
     void adcStarted(bool file) override {
+        m_adcOn = true;
         g_adcFile = file;
         ss_status.SendValue(1);
         TRACE("Start server");
@@ -880,11 +892,17 @@ class WebCallback : public session_lib::SessionCallback {
     void adcStopped(streaming_lib::ADCStopReason reason) override {
         using R = streaming_lib::ADCStopReason;
         g_adcFile = false;
+        if (idleStop(m_adcOn, reason == R::NORMAL))
+            return;
         switch (reason) {
             case R::NORMAL:
-            case R::CONFIG_ERROR:
-            case R::DISCONNECTED:
                 ss_status.SendValue(0);
+                break;
+            case R::CONFIG_ERROR:
+                ss_status.SendValue(7);
+                break;
+            case R::DISCONNECTED:
+                ss_status.SendValue(8);
                 break;
             case R::SD_FULL:
                 ss_status.SendValue(2);
@@ -908,20 +926,27 @@ class WebCallback : public session_lib::SessionCallback {
 
     // before the playback: the stop of a short file comes after it
     void dacStarted(bool) override {
+        m_dacOn = true;
         ss_dac_status.SendValue(1);
         TRACE("Start dac server");
     }
 
     void dacStopped(dac_streaming_lib::DACStopReason reason) override {
         using R = dac_streaming_lib::DACStopReason;
+        if (idleStop(m_dacOn, reason == R::NORMAL))
+            return;
         switch (reason) {
             case R::NORMAL:
-            case R::DISCONNECTED:
                 ss_dac_status.SendValue(0);
                 break;
             case R::DONE:
-            case R::CONFIG_ERROR:
                 ss_dac_status.SendValue(2);
+                break;
+            case R::CONFIG_ERROR:
+                ss_dac_status.SendValue(9);
+                break;
+            case R::DISCONNECTED:
+                ss_dac_status.SendValue(10);
                 break;
             case R::EMPTY:
                 ss_dac_status.SendValue(3);
@@ -946,16 +971,21 @@ class WebCallback : public session_lib::SessionCallback {
     }
 
     void gpioInStarted() override {
+        m_gpioInOn = true;
         ss_gpio_status.SendValue(1);
         TRACE("Start gpio input server");
     }
 
     void gpioInStopped(gpio_streaming_lib::GPIOStopReason reason) override {
         using R = gpio_streaming_lib::GPIOStopReason;
+        if (idleStop(m_gpioInOn, reason == R::NORMAL))
+            return;
         switch (reason) {
             case R::NORMAL:
-            case R::DISCONNECTED:
                 ss_gpio_status.SendValue(0);
+                break;
+            case R::DISCONNECTED:
+                ss_gpio_status.SendValue(9);
                 break;
             case R::MEM_ERROR:
                 ss_gpio_status.SendValue(6);
@@ -981,14 +1011,21 @@ class WebCallback : public session_lib::SessionCallback {
         TRACE("Stop gpio input server");
     }
 
-    void gpioOutStarted() override { ss_gpio_out_status.SendValue(1); }
+    void gpioOutStarted() override {
+        m_gpioOutOn = true;
+        ss_gpio_out_status.SendValue(1);
+    }
 
     void gpioOutStopped(gpio_streaming_lib::GPIOStopReason reason, uint64_t) override {
         using R = gpio_streaming_lib::GPIOStopReason;
+        if (idleStop(m_gpioOutOn, reason == R::NORMAL))
+            return;
         switch (reason) {
             case R::NORMAL:
-            case R::DISCONNECTED:
                 ss_gpio_out_status.SendValue(0);
+                break;
+            case R::DISCONNECTED:
+                ss_gpio_out_status.SendValue(10);
                 break;
             case R::DONE:
                 ss_gpio_out_status.SendValue(3);
@@ -1006,6 +1043,8 @@ class WebCallback : public session_lib::SessionCallback {
                 ss_gpio_out_status.SendValue(2);
                 break;
             case R::CONFIG_ERROR:
+                ss_gpio_out_status.SendValue(9);
+                break;
             case R::MISSING_FILE:
             case R::EMPTY:
                 ss_gpio_out_status.SendValue(8);

@@ -43,6 +43,9 @@ class Callback(streaming.ConfigCallback):
     def adcServerStoppedNoActiveChannels(self, client, host: str):
         print(f"ADC server stopped on {host}: No active channels")
 
+    def adcServerStoppedConfigError(self, client, host: str):
+        print(f"ADC server stopped on {host}: the board did not take the settings")
+
     def adcServerStoppedMemError(self, client, host: str):
         print(f"ADC server stopped on {host}: Memory error")
 

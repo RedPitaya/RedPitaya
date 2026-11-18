@@ -43,6 +43,10 @@ class ConfigCallbackImpl : public ConfigCallback {
         std::cout << "ADC server stopped on " << host << ": No active channels" << std::endl;
     }
 
+    void adcServerStoppedConfigError(ConfigStreamClient* client, std::string host) override {
+        std::cout << "ADC server stopped on " << host << ": the board did not take the settings" << std::endl;
+    }
+
     void adcServerStoppedMemError(ConfigStreamClient* client, std::string host) override { std::cout << "ADC server stopped on " << host << ": Memory error" << std::endl; }
 
     void adcServerStoppedMemModify(ConfigStreamClient* client, std::string host) override { std::cout << "ADC server stopped on " << host << ": Memory modified" << std::endl; }

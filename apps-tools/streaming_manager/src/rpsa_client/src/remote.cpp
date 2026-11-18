@@ -101,14 +101,18 @@ auto startRemote(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options&
                 break;
         }
     }
+    // The handlers of a refusal take the board off the lists. -r alone (no runned_hosts) fails then:
+    // exit code 3. The callers with runned_hosts (-s, -o) go on with the boards that started.
+    const size_t boards = masterHosts.size() + slaveHosts.size();
+    auto allStarted = [&](bool ok) { return ok && (runned_hosts || masterHosts.size() + slaveHosts.size() == boards); };
     switch (g_roption.remote_mode) {
         case ClientOpt::RemoteMode::START: {
-            return startStreaming(cl, masterHosts, slaveHosts, runned_hosts);
+            return allStarted(startStreaming(cl, masterHosts, slaveHosts, runned_hosts));
         }
 
         case ClientOpt::RemoteMode::START_WITH_ADC: {
-            if (startStreaming(cl, masterHosts, slaveHosts, runned_hosts)) {
-                return startADC(cl, masterHosts, slaveHosts, runned_hosts);
+            if (allStarted(startStreaming(cl, masterHosts, slaveHosts, runned_hosts))) {
+                return allStarted(startADC(cl, masterHosts, slaveHosts, runned_hosts));
             }
             return false;
         }
@@ -118,7 +122,7 @@ auto startRemote(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options&
         }
 
         case ClientOpt::RemoteMode::START_FPGA_ADC: {
-            return startADC(cl, masterHosts, slaveHosts, runned_hosts);
+            return allStarted(startADC(cl, masterHosts, slaveHosts, runned_hosts));
         }
 
         case ClientOpt::RemoteMode::STOP: {
@@ -203,6 +207,16 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
         const std::lock_guard lock(g_rmutex);
         if (g_roption.verbous)
             aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        rstart_counter--;
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+    });
+
+    cl->serverStoppedConfigErrorNofiy.connect([&](std::string host) {
+        const std::lock_guard lock(g_rmutex);
+        // always: the reason is not seen anywhere else (the log of the board)
+        aprintf(stderr, "%s [ERROR] %s did not take the ADC settings (journalctl -u redpitaya_streaming on the board)\n", getTS(": ").c_str(),
+                host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -364,6 +378,16 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
         const std::lock_guard lock(g_rmutex);
         if (g_roption.verbous)
             aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        rstart_counter--;
+        masterHosts.remove(host);
+        slaveHosts.remove(host);
+    });
+
+    cl->serverStoppedConfigErrorNofiy.connect([&](std::string host) {
+        const std::lock_guard lock(g_rmutex);
+        // always: the reason is not seen anywhere else (the log of the board)
+        aprintf(stderr, "%s [ERROR] %s did not take the ADC settings (journalctl -u redpitaya_streaming on the board)\n", getTS(": ").c_str(),
+                host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);

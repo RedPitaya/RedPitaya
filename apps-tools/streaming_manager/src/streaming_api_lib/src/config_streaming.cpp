@@ -66,6 +66,13 @@ ConfigStreamClient::ConfigStreamClient() {
             cl->adcServerStoppedNoActiveChannels(this, host);
     });
 
+    m_pimpl->m_configClient->serverStoppedConfigErrorNofiy.connect([&](std::string host) {
+        if (m_pimpl->m_verbose)
+            aprintf(stderr, "%s Streaming stopped: %s. The board did not take the ADC settings [FAIL].\n", getTS(": ").c_str(), host.c_str());
+        for (auto cl : m_pimpl->m_callback)
+            cl->adcServerStoppedConfigError(this, host);
+    });
+
     m_pimpl->m_configClient->serverStoppedMemErrorNofiy.connect([&](std::string host) {
         if (m_pimpl->m_verbose)
             aprintf(stderr, "%s Streaming stopped: %s. Not enough DMA memory [OK].\n", getTS(": ").c_str(), host.c_str());

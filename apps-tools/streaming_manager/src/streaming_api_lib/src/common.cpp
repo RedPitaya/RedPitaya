@@ -180,6 +180,13 @@ auto requestStartStreamingCommon(std::shared_ptr<ConfigStreamClient> cl, std::li
             m_slaveHosts->remove(host);
         }
 
+        void adcServerStoppedConfigError([[maybe_unused]] ConfigStreamClient* cl, [[maybe_unused]] std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
+
         void adcServerStoppedMemModify([[maybe_unused]] ConfigStreamClient* cl, [[maybe_unused]] std::string host) override {
             const std::lock_guard<std::mutex> lock(g_rmutex);
             (*m_rstart_counter)--;
@@ -353,6 +360,13 @@ auto requestStartADCCommon(std::shared_ptr<ConfigStreamClient> cl, std::list<std
         }
 
         void adcServerStoppedMemError([[maybe_unused]] ConfigStreamClient* cl, [[maybe_unused]] std::string host) override {
+            const std::lock_guard<std::mutex> lock(g_rmutex);
+            (*m_rstart_counter)--;
+            m_masterHosts->remove(host);
+            m_slaveHosts->remove(host);
+        }
+
+        void adcServerStoppedConfigError([[maybe_unused]] ConfigStreamClient* cl, [[maybe_unused]] std::string host) override {
             const std::lock_guard<std::mutex> lock(g_rmutex);
             (*m_rstart_counter)--;
             m_masterHosts->remove(host);

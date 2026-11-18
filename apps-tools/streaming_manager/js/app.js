@@ -44,11 +44,13 @@
 
     // ---------------------------------------------------------------------------------------
     // the streams and their states (web_server MAIN: status codes of the stop reasons)
-    const ADC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'Not enough memory', 5: 'Stopped: memory changed', 6: 'No active channels' };
-    const DAC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'Done', 3: 'File is empty', 4: 'File is broken', 5: 'File is missing', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'No active channels' };
-    const GPIO_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'File cannot be written', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'Configuration error' };
-    const GPIO_OUT_STATE = { 0: 'Stopped', 1: 'Running', 3: 'Done', 4: 'File is broken', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'File is missing or empty' };
-    const BAD = { adc: [2, 4, 6], dac: [3, 4, 5, 6, 8], gin: [2, 4, 6, 8], gout: [4, 6, 8] };
+    const ADC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'Not enough memory', 5: 'Stopped: memory changed', 6: 'No active channels', 7: 'Configuration error', 8: 'Client disconnected' };
+    const DAC_STATE = { 0: 'Stopped', 1: 'Running', 2: 'Done', 3: 'File is empty', 4: 'File is broken', 5: 'File is missing', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'No active channels', 9: 'Configuration error', 10: 'Client disconnected' };
+    const GPIO_STATE = { 0: 'Stopped', 1: 'Running', 2: 'SD card full', 3: 'Recording done', 4: 'File cannot be written', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'Configuration error', 9: 'Client disconnected' };
+    const GPIO_OUT_STATE = { 0: 'Stopped', 1: 'Running', 3: 'Done', 4: 'File is broken', 6: 'Not enough memory', 7: 'Stopped: memory changed', 8: 'File is missing or empty', 9: 'Configuration error', 10: 'Client disconnected' };
+    const BAD = { adc: [2, 4, 6, 7], dac: [3, 4, 5, 6, 8, 9], gin: [2, 4, 6, 8], gout: [4, 6, 8, 9] };
+    // the codes of a configuration error: the board did not take the settings, the reason is in its log
+    const CONFIG_ERROR = { adc: 7, dac: 9, gin: 8, gout: 9 };
 
     function stream(key) {
         const def = {
@@ -65,8 +67,10 @@
         if (run && key === 'dac') state = v('SS_DAC_MODE', 0) ? 'Playing a file' : 'Playing from the client';
         if (run && key === 'gin') state = v('SS_GPIO_IN_MODE', 0) ? 'Writing to SD' : 'Streaming to the client';
         if (run && key === 'gout') state = v('SS_GPIO_OUT_MODE', 0) ? 'Playing a file' : 'Playing from the client';
+        // the reason is in the log of the server only
+        const hint = code === CONFIG_ERROR[key] ? 'The board did not take the settings. The reason: journalctl -u redpitaya_streaming' : '';
         return Object.assign(def, {
-            key, code, run, state,
+            key, code, run, state, hint,
             badge: run ? 'background: rgba(59, 168, 69, 0.18); color: #8fdc97' : bad ? 'background: rgba(224, 103, 93, 0.18); color: #ff8f86' : 'background: #444444; color: #cdcccc',
             dot: run ? 'background: #3ba845' : bad ? 'background: #e0675d' : 'background: #d9534f',
             led: run ? 'img/green_led.png' : 'img/red_led.png',
@@ -139,7 +143,9 @@
         `<button type="button" style="${on ? ON : OFF}" data-act="${act}" data-arg="${esc(arg)}" aria-pressed="${on}">${esc(text)}</button>`).join('')}</div>`;
     const flip = (attrs, checked, label, small) => `<input type="checkbox" class="flipswitch${small ? ' sm' : ''}" data-on="ON" data-off="OFF" ${attrs}${checked ? ' checked' : ''}${label ? ` aria-label="${esc(label)}"` : ''}>`;
     const secHead = (title, sub, right) => `<div class="card-h"><div class="sec-h"><h1>${esc(title)}</h1><p class="sub">${sub}</p></div>${right ? `<div class="row">${right}</div>` : ''}</div>`;
-    const badge = (s) => `<span class="badge" style="${s.badge}"><span class="dot" style="${s.dot}"></span>${esc(s.state)}</span>`;
+    const badge = (s) => `<span class="badge" style="${s.badge}"${s.hint ? ` title="${esc(s.hint)}"` : ''}><span class="dot" style="${s.dot}"></span>${esc(s.state)}</span>`;
+    // under the head of a section: why a stream did not start
+    const errNote = (...ss) => ss.filter((x) => x.hint).map((x) => `<p class="hint bad" role="alert" style="margin: 0 0 12px">${esc(x.name)}: ${esc(x.hint)}</p>`).join('');
     const softBtn = (target) => `<button class="btn" type="button" style="${NEUTRAL}" data-act="soft" data-arg="${target}">Software trigger</button>`;
     // a switch row of a trigger source: label, what it is, available on this board
     const srcRow = (param, bit, label, desc, avail, why) => `<label class="srci${avail ? '' : ' srci-dis'}" title="${avail ? '' : esc(why)}">${flip(`data-act="${avail ? 'bit' : 'none'}" data-arg="${param}:${bit}"`, avail && (Number(v(param, 0)) & bit), label, true)}<div><b>${esc(label)}</b><span>${esc(avail ? desc : why)}</span></div></label>`;
@@ -270,7 +276,7 @@
         const gf = gpioFiles();
         const rep = String(v('SS_GPIO_OUT_REPEAT', -1));
         const lineBtn = (param, mask) => (row, i, k) => `<button type="button" class="ln${mask & (1 << k) ? ' ln-on' : ''}" aria-pressed="${!!(mask & (1 << k))}" title="DIO${i}_${row}" data-act="gline" data-arg="${param}:${k}">${i}</button>`;
-        return secHead('GPIO', 'DIO0..7_P and DIO0..7_N. The input and the output run on their own; an output line reads back its own level.') +
+        return secHead('GPIO', 'DIO0..7_P and DIO0..7_N. The input and the output run on their own; an output line reads back its own level.') + errNote(gi, go) +
             `<section class="card"><div class="card-h"><h2 class="card-t">Lines</h2><span class="hint">click a line to switch it</span></div>
               <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))">
                 <div class="field"><div class="lnh"><label>Driven by the output</label><button type="button" class="lnb" data-act="gall" data-arg="out:1">all</button><button type="button" class="lnb" data-act="gall" data-arg="out:0">none</button><span class="lnm">${hex4(outMask)}</span></div>
@@ -452,7 +458,7 @@
         }
         const pass = Number(v('SS_PASS_SAMPLES', 0)), written = Number(v('SS_WRITED_SIZE', 0));
         const tdms = sd && Number(v('SS_FORMAT', 0)) === 1;
-        return secHead('ADC', `The inputs ${ins} to a network client or to a file on the SD card.`, badge(s) + (v('SS_TRIG_MODE', 0) ? softBtn(1) : '') + runBtn(s)) +
+        return secHead('ADC', `The inputs ${ins} to a network client or to a file on the SD card.`, badge(s) + (v('SS_TRIG_MODE', 0) ? softBtn(1) : '') + runBtn(s)) + errNote(s) +
             `<section class="card">
               <div class="card-h"><h2 class="card-t">Destination</h2>${seg('ADC destination', [['adcSd', 0, 'Network client', !sd], ['adcSd', 1, 'File on SD card', sd]])}</div>
               ${sd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))">
@@ -575,7 +581,7 @@
         for (let i = 0; i < adcCount(); i++) srcs += srcRow('SS_DAC_TRIG_SOURCES', inBit(i), 'IN' + (i + 1) + ' level', 'the level window of the ADC trigger', true, '');
         if (hasGpio()) srcs += srcRow('SS_DAC_TRIG_SOURCES', SRC.gpio, 'GPIO pattern', 'the pattern of the GPIO input', true, '');
         srcs += srcRow('SS_DAC_TRIG_SOURCES', SRC.ext, 'External', 'EXT TRIG input, set in Triggers', true, '');
-        return secHead('DAC', (dacCount() === 1 ? 'OUT1' : 'OUT1, OUT2') + ' from a network client or from a file on the SD card.', badge(s) + (waits ? softBtn(2) : '') + runBtn(s)) +
+        return secHead('DAC', (dacCount() === 1 ? 'OUT1' : 'OUT1, OUT2') + ' from a network client or from a file on the SD card.', badge(s) + (waits ? softBtn(2) : '') + runBtn(s)) + errNote(s) +
             `<section class="card">
               <div class="card-h"><h2 class="card-t">Source</h2>${seg('DAC source', [['dacSd', 0, 'Network client', !sd], ['dacSd', 1, 'File on SD card', sd]])}</div>
               ${sd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr))">

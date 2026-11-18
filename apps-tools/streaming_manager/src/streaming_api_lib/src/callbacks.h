@@ -120,6 +120,11 @@ class ConfigCallback {
     virtual void gpioOutServerStoppedSDMissing(ConfigStreamClient*, std::string) {}
 
     virtual void sigInt() {};
+
+    // The board did not take the ADC settings (the FPGA refused the configuration or the trigger;
+    // the reason is in the log of the board: journalctl -u redpitaya_streaming). Last in the class:
+    // the earlier methods keep their places for programs built before it.
+    virtual void adcServerStoppedConfigError(ConfigStreamClient*, std::string) {}
 };
 
 class ADCCallback {

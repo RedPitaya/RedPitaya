@@ -29,6 +29,10 @@ class ADCCb : public ConfigCallback {
         if (m_terminate)
             m_terminate->at(host) = true;
     }
+    void adcServerStoppedConfigError(ConfigStreamClient*, [[maybe_unused]] std::string host) override {
+        if (m_terminate)
+            m_terminate->at(host) = true;
+    }
     void adcServerStoppedMemError(ConfigStreamClient*, [[maybe_unused]] std::string host) override {
         if (m_terminate)
             m_terminate->at(host) = true;
