@@ -105,8 +105,15 @@ void rp_WC_UpdateParameters(){
     if (diff.count() >= g_interval){
         g_wc_ping++;
         if (g_websocket_server){
+            // once per loss: a server without a page (the streaming service) pings no one
+            static bool failing = false;
             if (!g_websocket_server->send("ping",g_wc_ping)){
-                ERROR_LOG("Fail send ping")
+                if (!failing) {
+                    ERROR_LOG("Fail send ping")
+                }
+                failing = true;
+            } else {
+                failing = false;
             }
         }
         g_lastUpdateTime = curTime;
