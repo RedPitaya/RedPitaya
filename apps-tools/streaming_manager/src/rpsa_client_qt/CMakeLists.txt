@@ -56,6 +56,8 @@ set(HEADER_FILES
         src/models/consolemodel.h
         src/models/recordings.h
         src/models/recording_view.h
+        src/models/profile_logic.h
+        src/models/profiles.h
         src/logic/chartdataholder.h
         src/logic/device_logic.h
         src/dsp/kiss_fft.h
@@ -73,6 +75,8 @@ set(PROJECT_SOURCES
         src/models/consolemodel.cpp
         src/models/recordings.cpp
         src/models/recording_view.cpp
+        src/models/profile_logic.cpp
+        src/models/profiles.cpp
         src/logic/chartdataholder.cpp
         src/logic/device_logic.cpp
         src/dsp/kiss_fft.cpp

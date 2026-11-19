@@ -9,6 +9,8 @@ Item {
     signal openBoard(var board, string tab)
     signal openApp()
     signal addBoard()
+    // the profiles of the settings (streaming_improvements 4.9)
+    signal openProfiles()
     // Start of a board (null: Start all): main checks the space on the disk first
     signal askStart(var board)
 
@@ -57,6 +59,7 @@ Item {
                               + (root.sum.manual ? ", " + root.sum.manual + " added by IP" : "")
                     }
                 }
+                Btn { kind: "outline"; text: "Profiles"; onClicked: root.openProfiles() }
                 Btn { kind: "outline"; text: "Add board by IP"; iconSource: "qrc:/img/icons/plus.svg"; onClicked: root.addBoard() }
                 Btn { kind: "outline"; text: "Application settings"; iconSource: "qrc:/img/icons/gear.svg"; onClicked: root.openApp() }
             }

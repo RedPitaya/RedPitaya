@@ -44,6 +44,7 @@ ApplicationWindow {
         onOpenBoard: (board, tab) => boardDialog.openFor(board, tab)
         onOpenApp: appDialog.open()
         onAddBoard: addDialog.open()
+        onOpenProfiles: profilesDialog.open()
         onAskStart: (board) => diskDialog.start(board)
     }
     DiskDialog { id: diskDialog }
@@ -51,6 +52,18 @@ ApplicationWindow {
     BoardDialog { id: boardDialog }
     AppDialog { id: appDialog; onAddBoard: addDialog.open() }
     AddBoardDialog { id: addDialog }
+    ProfilesDialog {
+        id: profilesDialog
+        onApplyProfile: (id) => applyDialog.ask(id, null)
+        onSaveAgain: (name, groups) => saveDialog.ask(null, name, groups)
+    }
+    ProfileSaveDialog { id: saveDialog }
+    ProfileApplyDialog { id: applyDialog }
+    // the Board tab of a board asks for them
+    Connections {
+        target: profiles
+        function onAsked(what, board) { if (what === "save") saveDialog.ask(board, ""); else applyDialog.ask("", board) }
+    }
 
     // RPSA_QT_UI: steps run at the start, for tests and screenshots, separated by ";":
     // list | cards | app | add | board:<index>:<tab> | set:<index>:<key>=<value> | start:<index> |
@@ -60,6 +73,9 @@ ApplicationWindow {
     // measure:<index>[:off] (its measurements) | spectrum:<index>[:off] | recordings (the page) |
     // rec:menu|convert|delete|folders|tick|convertgo|deletego|next|view (on the recording shown) |
     // view:<step> (in the viewer opened last, see ViewerWindow.qml) |
+    // profiles (the dialog) | psave:<index>:<name> (the save dialog of that board, the name typed) | psavego |
+    // papply:<name>[:<index>] (the apply dialog of the profile, that board or all) | papplygo |
+    // pimport:<path> | pexport:<name>:<path> (Import / Export JSON of the profiles, the result in the log) |
     // type:<key>=<text> (types into the field of that setting in the open board dialog, as the user)
     // <index> may be the IP of the board instead (the order of the boards follows the broadcast)
     function findField(item, key) {
@@ -90,6 +106,13 @@ ApplicationWindow {
                 else if (p[0] === "recordings") dash.page = "recordings"
                 else if (p[0] === "rec") dash.recordingsScript(p[1])
                 else if (p[0] === "view") dash.viewerScript(p.slice(1))
+                else if (p[0] === "profiles") profilesDialog.open()
+                else if (p[0] === "psave" && win.scriptBoard(p[1])) saveDialog.ask(win.scriptBoard(p[1]), p.slice(2).join(":"))
+                else if (p[0] === "psavego") saveDialog.go()
+                else if (p[0] === "papply") applyDialog.ask(profiles.idOf(p[1]), p[2] !== undefined ? win.scriptBoard(p[2]) : null)
+                else if (p[0] === "papplygo") applyDialog.go()
+                else if (p[0] === "pimport") console.log("pimport: " + (profiles.importJson(p.slice(1).join(":")) || "ok"))
+                else if (p[0] === "pexport") console.log("pexport: " + (profiles.exportJson(profiles.idOf(p[1]), p.slice(2).join(":")) || "ok"))
                 else if (p[0] === "startall") diskDialog.start(null)
                 else if (p[0] === "stopall") boards.stopAll()
                 else if (p[0] === "console" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).chartEnable = false

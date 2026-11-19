@@ -9,6 +9,7 @@
 #include "app_settings.h"
 #include "logic/chartdataholder.h"
 #include "logic/device_logic.h"
+#include "models/profiles.h"
 #include "models/recording_view.h"
 #include "models/recordings.h"
 #include "models/boardsmodel.h"
@@ -83,6 +84,7 @@ int main(int argc, char* argv[]) {
     engine.rootContext()->setContextProperty("app", settings);
     engine.rootContext()->setContextProperty("boards", BoardsModel::instance());
     engine.rootContext()->setContextProperty("recordings", RecordingsManager::instance());
+    engine.rootContext()->setContextProperty("profiles", ProfilesManager::instance());
     engine.rootContext()->setContextProperty("uiScript", qEnvironmentVariable("RPSA_QT_UI"));
 
     const QUrl url(QStringLiteral("qrc:/qml/main.qml"));

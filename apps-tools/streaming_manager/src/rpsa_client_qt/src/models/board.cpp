@@ -758,7 +758,7 @@ QString CBoard::settingsJson() {
     return s ? QString::fromStdString(s->toJson()) : QString();
 }
 
-bool CBoard::loadSettingsJson(const QString& json) {
+bool CBoard::loadSettingsJson(const QString& json, const QString& from) {
     CStreamSettings parsed;
     if (!parsed.parseJson(json.toStdString()))
         return false;
@@ -767,7 +767,7 @@ bool CBoard::loadSettingsJson(const QString& json) {
     static_cast<CStreamSettings&>(*m_configManager).copy(parsed);
     if (!m_configManager->sendConfig(m_ip.toStdString()))
         return false;
-    addLog("Settings sent from a file");
+    addLog("Settings sent from " + (from.isEmpty() ? QString("a file") : from));
     m_configManager->requestConfig(m_ip.toStdString());
     return true;
 }

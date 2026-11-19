@@ -140,7 +140,8 @@ class CBoard : public QObject {
     Q_INVOKABLE void saveDefaults();
     Q_INVOKABLE QString settingsJson();
     // false when the document is not one of settings
-    Q_INVOKABLE bool loadSettingsJson(const QString& json);
+    // from: what the settings come from, for the log ("a file" when empty)
+    Q_INVOKABLE bool loadSettingsJson(const QString& json, const QString& from = QString());
 
     // The settings of this board kept on this computer: recordDir ("" - the one of the
     // application), nameTemplate, openFolderOnStop, saveConsole, consoleLevel

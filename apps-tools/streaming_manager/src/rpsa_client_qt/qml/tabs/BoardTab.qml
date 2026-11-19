@@ -39,6 +39,8 @@ ColumnLayout {
                     enabled: b && b.isConfigConnected
                     onClicked: { b.saveDefaults(); root.msg = "The default settings are sent: the streams stop."; root.msgBad = false }
                 }
+                Btn { kind: "outline"; text: "Save as profile…"; enabled: b && b.settingsLoaded; onClicked: profiles.ask("save", b) }
+                Btn { kind: "outline"; text: "Apply a profile…"; enabled: b && b.isConfigConnected && profiles.list.length > 0; onClicked: profiles.ask("apply", b) }
                 Btn { kind: "outline"; text: "Export JSON…"; enabled: b && b.settingsLoaded; onClicked: saveDlg.open() }
                 Btn { kind: "outline"; text: "Import JSON…"; enabled: b && b.isConfigConnected; onClicked: openDlg.open() }
             }
