@@ -27,6 +27,11 @@ Canvas {
     // the inputs on: the labels of the Y axis
     property var fullScales: [1, 1, 1, 1]
     property var inputsOn: [true, true, false, false]
+    // the spectrum instead of the time (streaming_improvements 4.5): the FFT of the whole block,
+    // made by the holder (cdh.getSpectrum), in dBV of the range of each input
+    property bool spectrum: false
+    property var spec: ({})
+    onSpectrumChanged: { spec = ({}); hasData = false; requestPaint() }
     readonly property double windowSec: sampleRate <= 0 ? 0
         : (decimation > 0 ? shownPoints * decimation : blockSamples) / sampleRate
     function timeText(t) {
@@ -95,6 +100,13 @@ Canvas {
     function refresh() {
         if (!board || !active) return
         if (!cdh.getChartNeedUpdate(board.ip)) return
+        if (spectrum) {
+            spec = cdh.getSpectrum(board.ip)
+            cdh.clearChartBuffer(board.ip)
+            hasData = !!(spec.points && spec.points.some(a => a.length > 0))
+            requestPaint()
+            return
+        }
         const p = []
         for (let i = 0; i < 4; i++) p.push(i < channels ? cdh.getChartSignal(board.ip, i) : [])
         cdh.clearChartBuffer(board.ip)
@@ -118,9 +130,104 @@ Canvas {
     readonly property bool axes: grid && height >= 80
     readonly property int fontPx: Theme.fsXs
 
+    // the spectrum: dBV (1 V RMS) on the left in 20 dB steps over 140 dB, 0 to half the sample
+    // rate at the bottom, the highest peak of each input on a plate
+    function paintSpectrum(ctx) {
+        ctx.font = fontPx + "px " + Theme.mono.split(",")[0]
+        const on = []
+        for (let c = 0; c < channels; c++)
+            if (inputsOn[c] && spec.points && spec.points[c] && spec.points[c].length > 1) on.push(c)
+        const offs = [0, 1, 2, 3].map(c => 20 * Math.log10(fullScales[c] || 1))
+        let topDb = 0
+        for (const c of (on.length ? on : [0])) topDb = Math.max(topDb, Math.ceil(offs[c] / 20 - 1e-9) * 20)
+        const botDb = topDb - 140
+        const labelH = fontPx + 6
+        const top = Math.ceil(fontPx / 2) + 1
+        const ph = height - top - labelH - 2
+        const labels = []
+        let wmax = 0
+        for (let db = topDb; db >= botDb; db -= 20) {
+            const t = (db === 0 ? "0" : String(db).replace("-", "−")) + (db === topDb || db === botDb ? " dBV" : "")
+            labels.push({ db: db, t: t })
+            wmax = Math.max(wmax, ctx.measureText(t).width)
+        }
+        const left = Math.ceil(wmax) + 10
+        const w = width - left - 4
+        const yOf = (db) => top + (topDb - db) / 140 * ph
+        const half = sampleRate / 2
+        // the grid and the frame
+        ctx.strokeStyle = Qt.rgba(153 / 255, 153 / 255, 153 / 255, 0.18)
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        for (let db = topDb - 20; db > botDb; db -= 20) { const y = Math.round(yOf(db)) + 0.5; ctx.moveTo(left, y); ctx.lineTo(left + w, y) }
+        let fStep = 0
+        if (half > 0) {
+            fStep = niceStep(half * 80 / Math.max(1, w))
+            const fGrid = fStep / 2 * w / half >= 30 ? fStep / 2 : fStep
+            for (let f = fGrid; f < half - 1e-9; f += fGrid) { const x = Math.round(left + f / half * w) + 0.5; ctx.moveTo(x, top); ctx.lineTo(x, top + ph) }
+        }
+        ctx.stroke()
+        ctx.strokeStyle = Qt.rgba(153 / 255, 153 / 255, 153 / 255, 0.45)
+        ctx.beginPath(); ctx.moveTo(left + 0.5, top); ctx.lineTo(left + 0.5, top + ph); ctx.lineTo(left + w, top + ph); ctx.stroke()
+        // the labels
+        ctx.fillStyle = Theme.muted
+        ctx.textAlign = "right"; ctx.textBaseline = "middle"
+        for (const l of labels) ctx.fillText(l.t, left - 6, yOf(l.db))
+        const unit = half >= 1e6 ? 1e6 : half >= 1e3 ? 1e3 : 1
+        const unitText = unit === 1e6 ? " MHz" : unit === 1e3 ? " kHz" : " Hz"
+        if (half > 0) {
+            ctx.textBaseline = "top"
+            const n = Math.floor(half / fStep + 1e-9)
+            for (let i = 0; i <= n; i++) {
+                const tx = left + i * fStep / half * w
+                const s = String(+(i * fStep / unit).toPrecision(3)) + (i === n ? unitText : "")
+                ctx.textAlign = i === 0 ? "left" : (tx + ctx.measureText(s).width / 2 > left + w ? "right" : "center")
+                ctx.fillText(s, i === 0 ? tx + 2 : Math.min(tx, left + w), top + ph + 3)
+            }
+        }
+        // the traces
+        ctx.save()
+        ctx.beginPath(); ctx.rect(left, top, w, ph); ctx.clip()
+        ctx.lineWidth = 1.2
+        for (const c of on) {
+            const pts = spec.points[c]
+            ctx.strokeStyle = Theme.channelColors[c]
+            ctx.beginPath()
+            const n = pts.length
+            for (let i = 0; i < n; i++) {
+                const x = left + i * w / (n - 1)
+                const y = yOf(Math.max(botDb - 10, pts[i] + offs[c]))
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y)
+            }
+            ctx.stroke()
+        }
+        ctx.restore()
+        // the peaks
+        if (on.length && spec.n > 0 && sampleRate > 0) {
+            const lines = on.map(c => {
+                const f = spec.peakBin[c] * sampleRate / spec.n
+                const fu = f >= 1e6 ? (f / 1e6).toFixed(3) + " MHz" : f >= 1e3 ? (f / 1e3).toFixed(2) + " kHz" : f.toFixed(1) + " Hz"
+                return { c: c, t: "IN" + (c + 1) + " peak " + fu + "  " + (spec.peakDb[c] + offs[c]).toFixed(1).replace("-", "−") + " dBV" }
+            })
+            let pw = 0
+            for (const l of lines) pw = Math.max(pw, ctx.measureText(l.t).width)
+            const bx = left + w - pw - 18, by = top + 4, lh = fontPx + 4
+            ctx.fillStyle = Theme.plot
+            ctx.strokeStyle = Theme.borderSoft
+            ctx.fillRect(bx, by, pw + 14, lines.length * lh + 6)
+            ctx.strokeRect(bx + 0.5, by + 0.5, pw + 13, lines.length * lh + 5)
+            ctx.textAlign = "left"; ctx.textBaseline = "top"
+            lines.forEach((l, i) => { ctx.fillStyle = labelColors[l.c]; ctx.fillText(l.t, bx + 7, by + 4 + i * lh) })
+        }
+    }
+
     onPaint: {
         const ctx = getContext("2d")
         ctx.reset()
+        if (spectrum) {
+            paintSpectrum(ctx)
+            return
+        }
         const k = fit ? 1 / range : 1
         ctx.font = fontPx + "px " + Theme.mono.split(",")[0]
         // the plot: the left of the label columns, above the time labels

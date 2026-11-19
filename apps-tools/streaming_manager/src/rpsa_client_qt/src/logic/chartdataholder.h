@@ -30,6 +30,13 @@ class ChartDataHolder : public QObject {
     Q_INVOKABLE QVariantList getMeasure(QString ip);
     // measured only for the boards that show them
     auto setMeasure(const QString& ip, bool on) -> void;
+    // The spectrum of the last block of a board (streaming_improvements 4.5): n (FFT samples),
+    // bins (n / 2), avg (the blocks averaged), points: a list a channel 1..4 of dB values of the
+    // full range (dBV of 1 V RMS at 1 V full scale; max of the bins of each point), peakBin and
+    // peakDb a channel. An empty map before the first spectrum.
+    Q_INVOKABLE QVariantMap getSpectrum(QString ip);
+    // window: dsp::Spectrum::Window (0 rectangular, 1 Hann, 4 flat top); average: blocks
+    auto setSpectrum(const QString& ip, bool on, int window, int average) -> void;
 
     // blocks a second and points across of the preview
     auto setRate(int perSecond) -> void;
@@ -58,6 +65,26 @@ class ChartDataHolder : public QObject {
     };
     QMap<QString, QVector<Measure>> m_measures;  // under m_chartGetPointMutex
     static auto measure(const void* data, int bits, int count) -> Measure;
+    struct SpectrumSet {
+        bool on = false;
+        int window = 1;
+        int average = 1;
+    };
+    QMap<QString, SpectrumSet> m_spectrumSet;  // under m_add_mutex
+    struct Spectrum {
+        uint32_t n = 0;
+        int avg = 0;
+        QVector<qreal> points[4];
+        int peakBin[4] = {0, 0, 0, 0};
+        double peakDb[4] = {0, 0, 0, 0};
+        bool has[4] = {false, false, false, false};
+    };
+    QMap<QString, Spectrum> m_spectra;  // under m_chartGetPointMutex
+    // the power of the last blocks of each board and channel (the mean of them: Average)
+    QMap<QString, std::vector<std::vector<float>>> m_history[4];
+    struct Dsp;
+    Dsp* m_dsp = nullptr;  // the chart thread only
+    auto spectrumOf(const QString& ip, DataLib::CDataBuffersPackDMA::Ptr pack, const SpectrumSet& set, int width) -> void;
     // when the first block of the current frame came: a board that sends none (it waits for a
     // trigger) holds the others for one interval at most
     int64_t m_frameSince = 0;

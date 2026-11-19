@@ -72,6 +72,11 @@ class CBoard : public QObject {
     Q_PROPERTY(int previewDecimation READ previewDecimation WRITE setPreviewDecimation NOTIFY pcSettingsChanged)
     // the measurements of the preview (streaming_improvements 4.4)
     Q_PROPERTY(bool measure READ measure WRITE setMeasure NOTIFY pcSettingsChanged)
+    // the preview shows the spectrum (streaming_improvements 4.5): its window (0 rectangular,
+    // 1 Hann, 4 flat top) and the blocks averaged (1, 4, 16)
+    Q_PROPERTY(bool spectrum READ spectrum WRITE setSpectrum NOTIFY pcSettingsChanged)
+    Q_PROPERTY(int spectrumWindow READ spectrumWindow WRITE setSpectrumWindow NOTIFY pcSettingsChanged)
+    Q_PROPERTY(int spectrumAverage READ spectrumAverage WRITE setSpectrumAverage NOTIFY pcSettingsChanged)
 
    public:
     using Ptr = std::shared_ptr<CBoard>;
@@ -117,6 +122,13 @@ class CBoard : public QObject {
     auto setPreviewDecimation(int samplesPerPoint) -> void;
     auto measure() -> bool;
     auto setMeasure(bool on) -> void;
+    auto spectrum() -> bool;
+    auto setSpectrum(bool on) -> void;
+    auto spectrumWindow() -> int;
+    auto setSpectrumWindow(int window) -> void;
+    auto spectrumAverage() -> int;
+    auto setSpectrumAverage(int blocks) -> void;
+    auto applySpectrum() -> void;
 
     Q_INVOKABLE QObject* getConsoleModel();
 

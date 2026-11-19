@@ -57,7 +57,7 @@ ApplicationWindow {
     // stop:<index> | wait:<ms> | size:<w>x<h> | console:<index> | reconnect:<index> | startall | stopall |
     // scroll (the open board dialog to its end) | trigger:<index> (software trigger) |
     // signal:<index> | fit:<index> | fullY:<index> | pdec:<index>:<n> (the preview of a board) |
-    // measure:<index>[:off] (its measurements)
+    // measure:<index>[:off] (its measurements) | spectrum:<index>[:off]
     // type:<key>=<text> (types into the field of that setting in the open board dialog, as the user)
     // <index> may be the IP of the board instead (the order of the boards follows the broadcast)
     function findField(item, key) {
@@ -93,6 +93,7 @@ ApplicationWindow {
                 else if (p[0] === "pdec" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).previewDecimation = Number(p[2])
                 else if (p[0] === "fullY" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).previewFit = false
                 else if (p[0] === "measure" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).measure = p[2] !== "off"
+                else if (p[0] === "spectrum" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).spectrum = p[2] !== "off"
                 else if (p[0] === "reconnect" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).reconnect()
                 else if (p[0] === "set") {
                     const kv = p.slice(2).join(":").split("=")

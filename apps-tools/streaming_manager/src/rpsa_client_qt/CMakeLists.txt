@@ -56,6 +56,8 @@ set(HEADER_FILES
         src/models/consolemodel.h
         src/logic/chartdataholder.h
         src/logic/device_logic.h
+        src/dsp/kiss_fft.h
+        src/dsp/spectrum.h
         )
 
 
@@ -69,6 +71,8 @@ set(PROJECT_SOURCES
         src/models/consolemodel.cpp
         src/logic/chartdataholder.cpp
         src/logic/device_logic.cpp
+        src/dsp/kiss_fft.cpp
+        src/dsp/spectrum.cpp
         qml.qrc
 )
 
@@ -119,6 +123,7 @@ target_link_libraries(rpsa_client_qt
   PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::QuickControls2 Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Svg Qt${QT_VERSION_MAJOR}::Qml  Qt${QT_VERSION_MAJOR}::Widgets)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE config_net_lib dac_streaming_lib converter_lib streaming_lib data_lib settings_lib uio_lib logger_lib)
+
 
 if(NOT WIN32)
     target_link_libraries(${PROJECT_NAME} PRIVATE pthread stdc++ gcc)

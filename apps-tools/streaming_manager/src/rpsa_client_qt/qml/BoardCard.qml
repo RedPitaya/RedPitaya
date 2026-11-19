@@ -140,12 +140,39 @@ Rectangle {
                 Seg {
                     visible: b && b.chartEnable
                     small: true
+                    options: ["Time", "Spectrum"]
+                    currentIndex: b && b.spectrum ? 1 : 0
+                    onPicked: (i) => b.spectrum = i === 1
+                }
+                Seg {
+                    visible: b && b.chartEnable && !b.spectrum
+                    small: true
                     options: ["Full Y", "Fit Y"]
                     currentIndex: b && b.previewFit ? 1 : 0
                     onPicked: (i) => b.previewFit = i === 1
                 }
                 Select {
-                    visible: b && b.chartEnable
+                    visible: b && b.chartEnable && b.spectrum
+                    implicitHeight: 24 + Theme.fsAdd
+                    implicitWidth: 110 + 4 * Theme.fsAdd
+                    font.pixelSize: Theme.fsSm
+                    options: [[1, "Hann"], [4, "Flat top"], [0, "Rectangular"]]
+                    value: b ? b.spectrumWindow : 1
+                    onPicked: (x) => b.spectrumWindow = Number(x)
+                    Accessible.name: "Window of the FFT"
+                }
+                Select {
+                    visible: b && b.chartEnable && b.spectrum
+                    implicitHeight: 24 + Theme.fsAdd
+                    implicitWidth: 130 + 5 * Theme.fsAdd
+                    font.pixelSize: Theme.fsSm
+                    options: [[1, "No average"], [4, "Average 4"], [16, "Average 16"]]
+                    value: b ? b.spectrumAverage : 4
+                    onPicked: (x) => b.spectrumAverage = Number(x)
+                    Accessible.name: "Blocks averaged"
+                }
+                Select {
+                    visible: b && b.chartEnable && !b.spectrum
                     implicitHeight: 24 + Theme.fsAdd
                     implicitWidth: 150 + 6 * Theme.fsAdd
                     font.pixelSize: Theme.fsSm
@@ -191,6 +218,7 @@ Rectangle {
                     blockSamples: s.blockSamples
                     fullScales: s.fullScales
                     inputsOn: s.inputsMask
+                    spectrum: !!(b && b.spectrum)
                 }
                 Rectangle {
                     anchors.centerIn: parent

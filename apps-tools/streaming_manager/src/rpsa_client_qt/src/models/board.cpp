@@ -35,6 +35,7 @@ CBoard::CBoard(QString ip, bool manual) : QObject{nullptr}, m_ip(ip), m_manual(m
     updatePreviewWanted();
     ChartDataHolder::instance()->setDecimation(m_ip, previewDecimation());
     ChartDataHolder::instance()->setMeasure(m_ip, measure());
+    applySpectrum();
     connect(AppSettings::instance(), &AppSettings::changed, this, &CBoard::updatePreviewWanted);
 
     m_offlineTimer = new QTimer(this);
@@ -785,7 +786,11 @@ QVariant CBoard::pcValue(const QString& key) {
         return s.value(pcKey(key), true);
     if (key == "previewDecimation")
         return s.value(pcKey(key), 1);
-    if (key == "openFolderOnStop" || key == "saveConsole" || key == "previewFit" || key == "measure")
+    if (key == "spectrumWindow")
+        return s.value(pcKey(key), 1);
+    if (key == "spectrumAverage")
+        return s.value(pcKey(key), 4);
+    if (key == "openFolderOnStop" || key == "saveConsole" || key == "previewFit" || key == "measure" || key == "spectrum")
         return s.value(pcKey(key), false);
     return s.value(pcKey(key), "");
 }
@@ -828,6 +833,39 @@ auto CBoard::measure() -> bool {
 auto CBoard::setMeasure(bool on) -> void {
     ChartDataHolder::instance()->setMeasure(m_ip, on);
     setPcValue("measure", on);
+}
+
+auto CBoard::spectrum() -> bool {
+    return pcValue("spectrum").toBool();
+}
+
+auto CBoard::setSpectrum(bool on) -> void {
+    setPcValue("spectrum", on);
+    applySpectrum();
+}
+
+auto CBoard::spectrumWindow() -> int {
+    const int w = pcValue("spectrumWindow").toInt();
+    return w == 0 || w == 1 || w == 4 ? w : 1;
+}
+
+auto CBoard::setSpectrumWindow(int window) -> void {
+    setPcValue("spectrumWindow", window == 0 || window == 4 ? window : 1);
+    applySpectrum();
+}
+
+auto CBoard::spectrumAverage() -> int {
+    const int a = pcValue("spectrumAverage").toInt();
+    return a == 1 || a == 16 ? a : 4;
+}
+
+auto CBoard::setSpectrumAverage(int blocks) -> void {
+    setPcValue("spectrumAverage", blocks == 1 || blocks == 16 ? blocks : 4);
+    applySpectrum();
+}
+
+auto CBoard::applySpectrum() -> void {
+    ChartDataHolder::instance()->setSpectrum(m_ip, spectrum(), spectrumWindow(), spectrumAverage());
 }
 
 auto CBoard::previewDecimation() -> int {
