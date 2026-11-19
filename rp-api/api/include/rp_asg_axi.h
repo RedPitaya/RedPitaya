@@ -21,10 +21,12 @@
 ///@{
 
 /**
- * Get reserved memory for DMA mode
- * @param channel Channel index
- * @param enable Enable state
+ * Get the memory region reserved for DMA mode.
+ * Buffers set with rp_AcqAxiSetBufferSamples() or rp_GenAxiReserveMemory() must lie inside this region.
+ * @param _start Returns the start address of the reserved memory region.
+ * @param _size Returns the size of the reserved memory region in bytes.
  * @return If the function is successful, the return value is RP_OK.
+ * If DMA mode is not supported on this board, the return value is RP_NOTS.
  * If the function is unsuccessful, the return value is any of RP_E* values that indicate an error.
  */
 int rp_GenAxiGetMemoryRegion(uint32_t* _start, uint32_t* _size);
