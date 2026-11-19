@@ -100,6 +100,8 @@ Item {
                     decimation: b ? b.previewDecimation : 1
                     sampleRate: s.perChannel
                     blockSamples: s.blockSamples
+                    fullScales: s.fullScales
+                    inputsOn: s.inputsMask
                 }
                 // a click switches the Y range: full or fitted to the signal
                 MouseArea {
@@ -111,7 +113,7 @@ Item {
                     ToolTip.visible: containsMouse
                     ToolTip.delay: 600
                     ToolTip.text: (rowPreview.windowSec > 0 ? rowPreview.timeText(rowPreview.windowSec) + " across · " : "")
-                        + "Y " + (b && b.previewFit ? rowPreview.scaleText : "Full")
+                        + "Y " + rowPreview.rangeText
                         + "\nClick: " + (b && b.previewFit ? "the full range of the inputs" : "fit Y to the signal")
                 }
             }

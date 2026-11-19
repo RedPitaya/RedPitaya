@@ -179,6 +179,8 @@ Rectangle {
                     decimation: b ? b.previewDecimation : 1
                     sampleRate: s.perChannel
                     blockSamples: s.blockSamples
+                    fullScales: s.fullScales
+                    inputsOn: s.inputsMask
                 }
                 Rectangle {
                     anchors.centerIn: parent

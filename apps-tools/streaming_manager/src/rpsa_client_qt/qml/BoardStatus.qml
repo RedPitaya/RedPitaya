@@ -53,6 +53,16 @@ QtObject {
             if (v("channel_state_" + i) === "ON") r.push("IN" + i)
         return r
     }
+    // the preview axes (streaming_improvements 4.1): volts of the full range of IN1..IN4 and the
+    // inputs on. 1:1 1 V, 1:20 20 V; a board of one range its own (122-16: 0.25 V)
+    readonly property var fullScales: {
+        const r = []
+        const fixed = parseFloat(String(caps.fixedRange || "").replace("±", "")) || 1
+        for (let i = 1; i <= 4; i++)
+            r.push(caps.adcRanges ? (v("channel_attenuator_" + i) === "A_1_20" ? 20 : 1) : fixed)
+        return r
+    }
+    readonly property var inputsMask: [1, 2, 3, 4].map(i => v("channel_state_" + i) === "ON")
     readonly property int decimation: Math.max(1, Number(v("adc_decimation")) || 1)
     readonly property double perChannel: (caps.adcRate || 125000000) / decimation
     readonly property int sampleBytes: v("resolution") === "BIT_8" ? 1 : 2
