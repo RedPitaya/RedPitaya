@@ -57,7 +57,9 @@ ApplicationWindow {
     // stop:<index> | wait:<ms> | size:<w>x<h> | console:<index> | reconnect:<index> | startall | stopall |
     // scroll (the open board dialog to its end) | trigger:<index> (software trigger) |
     // signal:<index> | fit:<index> | fullY:<index> | pdec:<index>:<n> (the preview of a board) |
-    // measure:<index>[:off] (its measurements) | spectrum:<index>[:off]
+    // measure:<index>[:off] (its measurements) | spectrum:<index>[:off] | recordings (the page) |
+    // rec:menu|convert|delete|folders|tick|convertgo|deletego|next (on the recording shown) | recordings (the page) |
+    // rec:menu|convert|delete|folders|tick|convertgo|deletego|next (on the recording shown)
     // type:<key>=<text> (types into the field of that setting in the open board dialog, as the user)
     // <index> may be the IP of the board instead (the order of the boards follows the broadcast)
     function findField(item, key) {
@@ -85,6 +87,9 @@ ApplicationWindow {
                 if (p[0] === "wait") { interval = Number(p[1]); return }
                 if (p[0] === "size") { const wh = p[1].split("x"); win.width = Number(wh[0]); win.height = Number(wh[1]) }
                 else if (p[0] === "list") app.view = "list"
+                else if (p[0] === "recordings") dash.page = "recordings"
+                else if (p[0] === "rec") dash.recordingsScript(p[1])
+                else if (p[0] === "recordings") dash.page = "recordings"
                 else if (p[0] === "startall") diskDialog.start(null)
                 else if (p[0] === "stopall") boards.stopAll()
                 else if (p[0] === "console" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).chartEnable = false

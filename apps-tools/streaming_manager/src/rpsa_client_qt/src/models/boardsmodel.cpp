@@ -93,6 +93,13 @@ QObject* BoardsModel::boardByIp(const QString& ip) {
     return find(ip).get();
 }
 
+QObject* BoardsModel::boardByName(const QString& name) {
+    for (auto& b : m_boards)
+        if (b->getName() == name || b->getIP() == name)
+            return b.get();
+    return nullptr;
+}
+
 auto BoardsModel::summary() -> QVariantMap {
     int online = 0, running = 0, manual = 0, errors = 0;
     double speed = 0, received = 0, lost = 0;

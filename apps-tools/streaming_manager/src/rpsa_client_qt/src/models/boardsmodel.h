@@ -37,6 +37,8 @@ class BoardsModel : public QAbstractListModel {
 
     Q_INVOKABLE QObject* board(int index);
     Q_INVOKABLE QObject* boardByIp(const QString& ip);
+    // the board of a name (rp-xxxxxx, or its address), null when none
+    Q_INVOKABLE QObject* boardByName(const QString& name);
     Q_INVOKABLE void removeBoard(const QString& ip);
     // the slaves first, each started before the next, then the masters: the clock and the
     // trigger of a master drive its slaves

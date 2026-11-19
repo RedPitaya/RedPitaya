@@ -15,6 +15,9 @@ Item {
     readonly property var sum: boards.summary
     readonly property bool single: boards.count === 1
     readonly property bool isList: app.view === "list"
+    // the boards or the recordings on this computer (streaming_improvements 4.7)
+    property string page: "boards"
+    function recordingsScript(what) { recPage.scriptOpen(what) }
 
     ColumnLayout {
         anchors.fill: parent
@@ -34,6 +37,11 @@ Item {
                 spacing: 22
                 Image { source: "qrc:/img/logo.png"; sourceSize.width: 220; Layout.preferredWidth: 110; Layout.preferredHeight: 34; fillMode: Image.PreserveAspectFit }
                 Text { text: "Streaming client"; color: Theme.title; font.pixelSize: Theme.fsXl; visible: root.width > 900 }
+                Seg {
+                    options: ["Boards", "Recordings"]
+                    currentIndex: root.page === "recordings" ? 1 : 0
+                    onPicked: (i) => root.page = i === 1 ? "recordings" : "boards"
+                }
                 RowLayout {
                     spacing: 8
                     Layout.fillWidth: true
@@ -52,8 +60,16 @@ Item {
             }
         }
 
+        Recordings {
+            id: recPage
+            visible: root.page === "recordings"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+
         ScrollView {
             id: scroll
+            visible: root.page === "boards"
             Layout.fillWidth: true
             Layout.fillHeight: true
             contentWidth: availableWidth

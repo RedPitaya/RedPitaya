@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -44,6 +45,8 @@ class CConverter {
     void setChannels(uint32_t mask);
     void setOverwrite(bool overwrite);
     void setCSVHeader(bool header);
+    // how far a conversion is, 0..1, from its thread (the desktop client shows it)
+    void setProgress(std::function<void(double)> progress);
     // the last conversion: its output file, the channels and the samples per channel written,
     // why it failed ("" when it did not)
     auto lastOutput() const -> std::string;
@@ -71,6 +74,7 @@ class CConverter {
     uint32_t m_channels = 0;
     bool m_overwrite = true;
     bool m_csvHeader = false;
+    std::function<void(double)> m_progress;
     std::string m_lastOutput;
     uint32_t m_lastChannels = 0;
     uint64_t m_lastSamples = 0;

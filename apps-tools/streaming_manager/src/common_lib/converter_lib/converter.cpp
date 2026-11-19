@@ -69,6 +69,10 @@ void CConverter::setCSVHeader(bool header) {
     m_csvHeader = header;
 }
 
+void CConverter::setProgress(std::function<void(double)> progress) {
+    m_progress = std::move(progress);
+}
+
 auto CConverter::lastOutput() const -> std::string {
     return m_lastOutput;
 }
@@ -318,8 +322,11 @@ bool CConverter::convertToCSV(std::string _file_name, int32_t start_seg, int32_t
             most = std::max(most, b.samples);
         }
         m_lastSamples += most;
-        if (length)
+        if (length) {
             aprintf(stdout, "\r%s PROGRESS: %d %%", _prefix.c_str(), static_cast<int>(std::min<uint64_t>(100, done * 100 / length)));
+            if (m_progress)
+                m_progress(std::min(1.0, static_cast<double>(done) / static_cast<double>(length)));
+        }
         if (!out) {
             aprintf(stdout, "\n");
             ret = fail(_prefix, "Can't write " + csv_file);
@@ -451,8 +458,11 @@ auto CConverter::toStreamFile(const std::string& file, int32_t start_seg, int32_
         m_lastSamples += most;
         p->setOSCRate(info.clock / decimation);
         writer->passBuffers(p);
-        if (length)
+        if (length) {
             aprintf(stdout, "\r%s PROGRESS: %d %%", prefix.c_str(), static_cast<int>(std::min<uint64_t>(100, done * 100 / length)));
+            if (m_progress)
+                m_progress(std::min(1.0, static_cast<double>(done) / static_cast<double>(length)));
+        }
     }
     writer->stopAndFlush();
     aprintf(stdout, "\n%s Ended converting\n", prefix.c_str());

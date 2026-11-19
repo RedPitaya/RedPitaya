@@ -9,6 +9,7 @@
         <file>qml/AppDialog.qml</file>
         <file>qml/AddBoardDialog.qml</file>
         <file>qml/DiskDialog.qml</file>
+        <file>qml/Recordings.qml</file>
         <file>qml/tabs/AdcTab.qml</file>
         <file>qml/tabs/AdcTrigger.qml</file>
         <file>qml/tabs/MemoryTab.qml</file>
