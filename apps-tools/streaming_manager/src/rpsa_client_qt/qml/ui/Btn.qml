@@ -7,6 +7,8 @@ Button {
     property string kind: "default"
     property string iconSource: ""
     property bool compact: false
+    // an outline button that is on (a toggle): filled and bold
+    property bool active: false
 
     implicitHeight: compact ? 24 + Theme.fsAdd : Theme.ctrlH
     implicitWidth: Math.max(implicitHeight, contentItem.implicitWidth + leftPadding + rightPadding)
@@ -38,7 +40,7 @@ Button {
                 text: root.text
                 color: root.enabled ? root.fg : Theme.dim
                 font.pixelSize: root.compact ? Theme.fsSm : Theme.fsBase
-                font.bold: root.kind !== "outline"
+                font.bold: root.kind !== "outline" || root.active
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
@@ -55,6 +57,7 @@ Button {
         color: root.kind === "primary" ? (root.hovered ? Theme.accentHover : Theme.accent)
              : root.kind === "default" ? (root.hovered ? Theme.title : Theme.text)
              : root.kind === "danger" ? (root.hovered ? Theme.redBg : "transparent")
+             : root.active ? Theme.hover
              : (root.hovered ? Theme.hover : "transparent")
     }
 }

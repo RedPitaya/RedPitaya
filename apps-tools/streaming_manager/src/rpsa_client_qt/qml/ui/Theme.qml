@@ -69,6 +69,18 @@ QtObject {
         if (r >= 1e3) return (+(r / 1e3).toFixed(2)) + " kS/s"
         return (+r.toFixed(1)) + " S/s"
     }
+    // a measured value (streaming_improvements 4.4): 4 digits, mV below 0.2 V
+    function volts(v) {
+        const mv = Math.abs(v) < 0.2
+        const x = mv ? v * 1000 : v
+        return (Math.abs(x) < 1e-9 ? "0" : x.toFixed(Math.abs(x) >= 100 ? 1 : Math.abs(x) >= 10 ? 2 : 3)).replace("-", "−") + (mv ? " mV" : " V")
+    }
+    function freq(f) {
+        if (!(f > 0)) return "−"
+        if (f >= 1e6) return (f / 1e6).toFixed(3) + " MHz"
+        if (f >= 1e3) return (f / 1e3).toFixed(3) + " kHz"
+        return f.toFixed(f >= 100 ? 1 : 2) + " Hz"
+    }
     function count(n) {
         if (n >= 1e9) return (n / 1e9).toFixed(2) + " G"
         if (n >= 1e6) return (n / 1e6).toFixed(2) + " M"

@@ -1,5 +1,6 @@
 #include "chartdataholder.h"
 #include <algorithm>
+#include <cmath>
 #include <chrono>
 #include <QQmlEngine>
 #include <QThread>
@@ -86,6 +87,7 @@ auto ChartDataHolder::chartPackThread() -> void {
     while (m_IsWorkThread) {
         QMap<QString, DataLib::CDataBuffersPackDMA::Ptr> packForWork;
         QMap<QString, int> decimation;
+        QMap<QString, bool> measureOn;
         m_add_mutex.lock();
         const int chartWidth = m_chartWidth;
         // one frame of all boards at the same moment; the boards that sent nothing within an
@@ -100,6 +102,7 @@ auto ChartDataHolder::chartPackThread() -> void {
         if (canGet) {
             packForWork = m_pack;
             decimation = m_decimation;
+            measureOn = m_measureOn;
             for (auto i : m_packId.keys()) {
                 if (!m_packId[i])
                     packForWork.remove(i);  // an old block of a board left out
@@ -175,6 +178,16 @@ auto ChartDataHolder::chartPackThread() -> void {
                         pack(i, 1, packForWork[i]->getBuffer(DataLib::CH2));
                         pack(i, 2, packForWork[i]->getBuffer(DataLib::CH3));
                         pack(i, 3, packForWork[i]->getBuffer(DataLib::CH4));
+                        if (measureOn.value(i, false)) {
+                            QVector<Measure> ms(4);
+                            const DataLib::EDataBuffersPackChannel chs[4] = {DataLib::CH1, DataLib::CH2, DataLib::CH3, DataLib::CH4};
+                            for (int c = 0; c < 4; c++) {
+                                auto b = packForWork[i]->getBuffer(chs[c]);
+                                if (b)
+                                    ms[c] = measure(b->getMappedDataMemory(), b->getBitBySample(), static_cast<int>(b->getSamplesCount()));
+                            }
+                            m_measures[i] = ms;
+                        }
                         m_chartNeedDraw.append(i);
                     }
                 }
@@ -184,6 +197,85 @@ auto ChartDataHolder::chartPackThread() -> void {
         // in short steps, so the end of the application does not wait for a long one
         for (int waited = 0; waited < m_intervalMs && m_IsWorkThread; waited += 20)
             QThread::usleep(1000 * 20);
+    }
+}
+
+// min, max, mean and RMS of a whole block, and its period: the rising crossings of the middle of
+// min..max with a hysteresis of 10 % of peak-peak, the mean of the whole periods between the first
+// and the last (none below two periods)
+auto ChartDataHolder::measure(const void* data, int bits, int count) -> Measure {
+    Measure m;
+    if (!data || count <= 0)
+        return m;
+    auto sample = [&](int i) -> double {
+        return bits == 8 ? reinterpret_cast<const int8_t*>(data)[i] / 128.0 : reinterpret_cast<const int16_t*>(data)[i] / 32768.0;
+    };
+    double mn = 2, mx = -2, sum = 0, sq = 0;
+    for (int i = 0; i < count; i++) {
+        const double v = sample(i);
+        mn = std::min(mn, v);
+        mx = std::max(mx, v);
+        sum += v;
+        sq += v * v;
+    }
+    m.valid = true;
+    m.samples = static_cast<uint64_t>(count);
+    m.min = mn;
+    m.max = mx;
+    m.mean = sum / count;
+    m.rms = std::sqrt(sq / count);
+    // the codes at an end of the range (99 %: the last codes of a 14 bit ADC in 16 bit)
+    m.clipped = mn <= -0.99 || mx >= 0.99;
+    const double pp = mx - mn;
+    if (pp > 0.002) {  // above a few codes of noise
+        const double mid = (mx + mn) / 2, hi = mid + 0.05 * pp, lo = mid - 0.05 * pp;
+        bool below = sample(0) < lo;
+        int first = -1, last = -1, crossings = 0;
+        for (int i = 1; i < count; i++) {
+            const double v = sample(i);
+            if (below && v > hi) {
+                below = false;
+                if (first < 0)
+                    first = i;
+                last = i;
+                crossings++;
+            } else if (!below && v < lo) {
+                below = true;
+            }
+        }
+        if (crossings >= 3)
+            m.period = static_cast<double>(last - first) / (crossings - 1);
+    }
+    return m;
+}
+
+QVariantList ChartDataHolder::getMeasure(QString ip) {
+    std::lock_guard<std::mutex> lock(m_chartGetPointMutex);
+    QVariantList r;
+    const auto list = m_measures.value(ip);
+    for (const auto& m : list) {
+        QVariantMap x;
+        x["valid"] = m.valid;
+        x["samples"] = static_cast<double>(m.samples);
+        x["min"] = m.min;
+        x["max"] = m.max;
+        x["mean"] = m.mean;
+        x["rms"] = m.rms;
+        x["period"] = m.period;
+        x["clipped"] = m.clipped;
+        r.append(x);
+    }
+    return r;
+}
+
+auto ChartDataHolder::setMeasure(const QString& ip, bool on) -> void {
+    {
+        std::lock_guard<std::mutex> lock(m_add_mutex);
+        m_measureOn[ip] = on;
+    }
+    if (!on) {
+        std::lock_guard<std::mutex> lock(m_chartGetPointMutex);
+        m_measures.remove(ip);
     }
 }
 

@@ -34,6 +34,7 @@ CBoard::CBoard(QString ip, bool manual) : QObject{nullptr}, m_ip(ip), m_manual(m
     m_chartEnable = pcValue("preview").toBool();
     updatePreviewWanted();
     ChartDataHolder::instance()->setDecimation(m_ip, previewDecimation());
+    ChartDataHolder::instance()->setMeasure(m_ip, measure());
     connect(AppSettings::instance(), &AppSettings::changed, this, &CBoard::updatePreviewWanted);
 
     m_offlineTimer = new QTimer(this);
@@ -784,7 +785,7 @@ QVariant CBoard::pcValue(const QString& key) {
         return s.value(pcKey(key), true);
     if (key == "previewDecimation")
         return s.value(pcKey(key), 1);
-    if (key == "openFolderOnStop" || key == "saveConsole" || key == "previewFit")
+    if (key == "openFolderOnStop" || key == "saveConsole" || key == "previewFit" || key == "measure")
         return s.value(pcKey(key), false);
     return s.value(pcKey(key), "");
 }
@@ -818,6 +819,15 @@ auto CBoard::previewFit() -> bool {
 
 auto CBoard::setPreviewFit(bool fit) -> void {
     setPcValue("previewFit", fit);
+}
+
+auto CBoard::measure() -> bool {
+    return pcValue("measure").toBool();
+}
+
+auto CBoard::setMeasure(bool on) -> void {
+    ChartDataHolder::instance()->setMeasure(m_ip, on);
+    setPcValue("measure", on);
 }
 
 auto CBoard::previewDecimation() -> int {

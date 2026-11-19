@@ -70,6 +70,8 @@ class CBoard : public QObject {
     Q_PROPERTY(bool previewFit READ previewFit WRITE setPreviewFit NOTIFY pcSettingsChanged)
     // samples of the stream per point of the preview (0: the whole block on the width)
     Q_PROPERTY(int previewDecimation READ previewDecimation WRITE setPreviewDecimation NOTIFY pcSettingsChanged)
+    // the measurements of the preview (streaming_improvements 4.4)
+    Q_PROPERTY(bool measure READ measure WRITE setMeasure NOTIFY pcSettingsChanged)
 
    public:
     using Ptr = std::shared_ptr<CBoard>;
@@ -113,6 +115,8 @@ class CBoard : public QObject {
     auto setPreviewFit(bool fit) -> void;
     auto previewDecimation() -> int;
     auto setPreviewDecimation(int samplesPerPoint) -> void;
+    auto measure() -> bool;
+    auto setMeasure(bool on) -> void;
 
     Q_INVOKABLE QObject* getConsoleModel();
 

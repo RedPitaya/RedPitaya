@@ -3,6 +3,7 @@
 
 #include <QMap>
 #include <QObject>
+#include <QVariantList>
 #include <atomic>
 #include <mutex>
 #include <thread>
@@ -23,6 +24,12 @@ class ChartDataHolder : public QObject {
     Q_INVOKABLE QVector<qreal> getChartSignal(QString ip, int index);
     Q_INVOKABLE bool getChartNeedUpdate(QString ip);
     Q_INVOKABLE void clearChartBuffer(QString ip);
+    // The measurements of the last block of a board (streaming_improvements 4.4), a map per
+    // channel 1..4: valid, samples (of the block), min, max, mean, rms (of the full range, -1..1),
+    // period (samples, 0: fewer than two periods), clipped (at an end of the range)
+    Q_INVOKABLE QVariantList getMeasure(QString ip);
+    // measured only for the boards that show them
+    auto setMeasure(const QString& ip, bool on) -> void;
 
     // blocks a second and points across of the preview
     auto setRate(int perSecond) -> void;
@@ -42,6 +49,15 @@ class ChartDataHolder : public QObject {
     QMap<QString, DataLib::CDataBuffersPackDMA::Ptr> m_pack;
     QMap<QString, uint64_t> m_packId;
     QMap<QString, int> m_decimation;
+    QMap<QString, bool> m_measureOn;
+    struct Measure {
+        bool valid = false;
+        uint64_t samples = 0;
+        double min = 0, max = 0, mean = 0, rms = 0, period = 0;
+        bool clipped = false;
+    };
+    QMap<QString, QVector<Measure>> m_measures;  // under m_chartGetPointMutex
+    static auto measure(const void* data, int bits, int count) -> Measure;
     // when the first block of the current frame came: a board that sends none (it waits for a
     // trigger) holds the others for one interval at most
     int64_t m_frameSince = 0;

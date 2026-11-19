@@ -14,6 +14,7 @@ Rectangle {
     readonly property real restHeight: hdr.implicitHeight + chips.implicitHeight + pvHead.height + 1 + counters.implicitHeight
         + fileRow.implicitHeight + (btnRow.visible ? btnRow.implicitHeight : offRow.implicitHeight) + 6 * col.spacing + 28
         + (errBox.visible ? errBox.implicitHeight + col.spacing : 0)
+        + (measBox.visible ? measBox.implicitHeight : 0)
     signal openSettings(string tab)
     // Start pressed: the dashboard checks the space on the disk first
     signal startAsked()
@@ -119,7 +120,7 @@ Rectangle {
         // preview
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: pvHead.height + (root.big ? root.bigChartHeight : 180) + 1
+            implicitHeight: pvHead.height + (root.big ? root.bigChartHeight : 180) + 1 + (measBox.visible ? measBox.implicitHeight : 0)
             color: Theme.plot
             border.color: Theme.border
             radius: Theme.radius
@@ -152,6 +153,15 @@ Rectangle {
                     value: b ? b.previewDecimation : 1
                     onPicked: (x) => b.previewDecimation = Number(x)
                 }
+                Btn {
+                    visible: b && b.chartEnable
+                    kind: "outline"; compact: true
+                    text: "Measure"; iconSource: "qrc:/img/icons/measure.svg"
+                    active: !!(b && b.measure)
+                    Accessible.checkable: true
+                    Accessible.checked: active
+                    onClicked: b.measure = !b.measure
+                }
                 Item { Layout.fillWidth: true }
                 Repeater {
                     model: b && b.chartEnable ? s.adcCount : 0
@@ -168,7 +178,7 @@ Rectangle {
             Item {
                 x: 1; y: pvHead.height + 1
                 width: parent.width - 2
-                height: parent.height - pvHead.height - 2
+                height: parent.height - pvHead.height - 2 - (measBox.visible ? measBox.implicitHeight : 0)
                 Preview {
                     id: preview
                     anchors.fill: parent
@@ -222,6 +232,76 @@ Rectangle {
                     }
                     onCountChanged: positionViewAtEnd()
                     ScrollBar.vertical: ScrollBar {}
+                }
+            }
+            // the measurements of the last block (streaming_improvements 4.4)
+            Column {
+                id: measBox
+                visible: !!(b && b.measure && b.chartEnable)
+                anchors.bottom: parent.bottom
+                x: 12
+                width: parent.width - 24
+                bottomPadding: 6
+                property var meas: []
+                Timer {
+                    interval: 500
+                    running: measBox.visible
+                    repeat: true
+                    triggeredOnStart: true
+                    onTriggered: measBox.meas = cdh.getMeasure(b.ip)
+                }
+                readonly property var rows: {
+                    const r = []
+                    for (let c = 0; c < s.adcCount; c++) {
+                        const m = meas[c]
+                        if (!s.inputsMask[c] || !m || !m.valid) continue
+                        const fs = s.fullScales[c] || 1
+                        r.push({ c: c, f: m.period > 0 ? s.perChannel / m.period : 0, pp: (m.max - m.min) * fs, min: m.min * fs, max: m.max * fs,
+                                 mean: m.mean * fs, rms: m.rms * fs, clipped: m.clipped, samples: m.samples })
+                    }
+                    return r
+                }
+                Rectangle { width: parent.width + 24; x: -12; height: 1; color: Theme.borderSoft }
+                Item { width: 1; height: 6 }
+                GridLayout {
+                    width: parent.width
+                    columns: 7
+                    columnSpacing: 12
+                    rowSpacing: 3
+                    Repeater {
+                        model: ["input", "frequency", "peak-peak", "min", "max", "mean", "RMS"]
+                        delegate: Text { required property string modelData; text: modelData; color: Theme.muted; font.pixelSize: Theme.fsXs; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+                    }
+                    Repeater {
+                        model: measBox.rows.length * 7
+                        delegate: Text {
+                            required property int index
+                            readonly property var row: measBox.rows[Math.floor(index / 7)]
+                            readonly property int col: index % 7
+                            text: !row ? "" : col === 0 ? "IN" + (row.c + 1) : col === 1 ? Theme.freq(row.f) : col === 2 ? Theme.volts(row.pp)
+                                : col === 3 ? Theme.volts(row.min) : col === 4 ? Theme.volts(row.max) : col === 5 ? Theme.volts(row.mean) : Theme.volts(row.rms)
+                            color: !row ? Theme.value : col === 0 ? ["#f3ec1a", "#5fcf72", "#e0a060", "#e07ddc"][row.c]
+                                : row.clipped && col >= 2 && col <= 4 ? Theme.dangerText : col === 1 && !(row.f > 0) ? Theme.muted : Theme.value
+                            font.pixelSize: Theme.fsSm
+                            font.family: col === 0 ? Qt.application.font.family : Theme.mono
+                            font.bold: col === 0
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                            Layout.preferredWidth: 10
+                            ToolTip.visible: tipArea.containsMouse && row && row.clipped && col >= 2 && col <= 4
+                            ToolTip.text: "The input reached the end of its range: these are of the range, not of the signal"
+                            MouseArea { id: tipArea; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                        }
+                    }
+                }
+                Text {
+                    topPadding: 4
+                    width: parent.width
+                    elide: Text.ElideRight
+                    color: Theme.muted
+                    font.pixelSize: Theme.fsXs
+                    text: measBox.rows.length ? "of the whole last block: " + measBox.rows[0].samples + " samples, " + preview.timeText(measBox.rows[0].samples / s.perChannel) + " · every 0.5 s"
+                        : s.running ? "waiting for a block" : "measured while the board streams"
                 }
             }
         }
