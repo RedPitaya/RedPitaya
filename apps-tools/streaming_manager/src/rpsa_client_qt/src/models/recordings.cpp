@@ -23,7 +23,7 @@
 namespace {
 
 const QStringList kFormats = {"bin", "wav", "tdms", "csv", "vcd"};
-const QStringList kCompanions = {".log.txt", ".log.lost.txt", ".console.txt"};
+const QStringList kCompanions = {".log.txt", ".log.lost.txt", ".console.txt", ".marks.csv"};
 const char* const kAddedKey = "recordingFolders";
 
 auto settings() -> QSettings {
@@ -112,7 +112,8 @@ auto readLost(const QString& path, QVariantMap& d) -> void {
 // what the BIN header says (bin_lib)
 auto readBin(const QString& path, QVariantMap& d) -> void {
     bin_lib::FileReader reader;
-    if (!reader.open(path.toStdString()))
+    // the header only: the list scans on the GUI thread, a big file read from the disk took seconds
+    if (!reader.openHeader(path.toStdString()))
         return;
     const auto& info = reader.info();
     const double dec = info.decimation ? info.decimation : 1;
@@ -257,6 +258,9 @@ void RecordingsManager::rescan() {
         for (const auto& fi : dir.entryInfoList(QDir::Files)) {
             const QString suffix = fi.suffix().toLower();
             if (!kFormats.contains(suffix))
+                continue;
+            // the marks of the viewer beside a recording are not one
+            if (fi.fileName().endsWith(".marks.csv", Qt::CaseInsensitive))
                 continue;
             const QString path = native(fi.absoluteFilePath());
             if (files.contains(path))

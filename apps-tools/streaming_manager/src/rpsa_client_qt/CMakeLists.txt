@@ -56,6 +56,7 @@ set(HEADER_FILES
         src/models/consolemodel.h
         src/models/recordings.h
         src/models/recording_view.h
+        src/models/view_source.h
         src/models/profile_logic.h
         src/models/profiles.h
         src/logic/chartdataholder.h
@@ -75,6 +76,7 @@ set(PROJECT_SOURCES
         src/models/consolemodel.cpp
         src/models/recordings.cpp
         src/models/recording_view.cpp
+        src/models/view_source.cpp
         src/models/profile_logic.cpp
         src/models/profiles.cpp
         src/logic/chartdataholder.cpp

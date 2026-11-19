@@ -115,9 +115,25 @@ auto FileReader::open(const std::string& path) -> bool {
         m_info.channels.push_back(ci);
     }
     m_firstBlock = h.headerSize;
-    index();
+    if (m_headerOnly) {
+        m_pieces.assign(m_info.channels.size(), {});
+        rewind();
+        return true;
+    }
+    if (!index()) {
+        m_error = "stopped";
+        close();
+        return false;
+    }
     rewind();
     return true;
+}
+
+auto FileReader::openHeader(const std::string& path) -> bool {
+    m_headerOnly = true;
+    const bool ok = open(path);
+    m_headerOnly = false;
+    return ok;
 }
 
 auto FileReader::close() -> void {
@@ -167,12 +183,13 @@ auto FileReader::nextBlock(BlockInfo& block, std::vector<uint8_t>& data) -> bool
 }
 
 // The pieces of the fixed size channels from the block headers, the data is not read
-auto FileReader::index() -> void {
+auto FileReader::index() -> bool {
     m_pieces.assign(m_info.channels.size(), {});
     std::vector<uint64_t> line[2];
     line[0].assign(m_info.channels.size(), 0);
     line[1].assign(m_info.channels.size(), 0);
     uint64_t at = m_firstBlock;
+    uint64_t blocks = 0;
     BlockHeader h;
     while (at + sizeof(h) <= m_end) {
         m_file.clear();
@@ -186,6 +203,7 @@ auto FileReader::index() -> void {
         if (bytes && !(ch.flags & CHANNEL_FLAG_RLE)) {
             Piece p;
             p.gap = h.lost + h.wait;
+            p.lost = h.lost;
             p.samples = h.dataSize / bytes;
             p.offset = at + sizeof(h);
             p.start[0] = line[0][h.channel];
@@ -195,7 +213,21 @@ auto FileReader::index() -> void {
             m_pieces[h.channel].push_back(p);
         }
         at += blockSize(h.dataSize);
+        // now and then: a block header is read a few thousand times a second from a disk
+        if (m_progress && (blocks++ & 255) == 0 && !m_progress(static_cast<double>(at) / static_cast<double>(m_end)))
+            return false;
     }
+    return true;
+}
+
+auto FileReader::gaps(uint8_t channel) const -> std::vector<Gap> {
+    std::vector<Gap> r;
+    if (channel >= m_pieces.size())
+        return r;
+    for (const auto& p : m_pieces[channel])
+        if (p.gap)
+            r.push_back(Gap{p.start[1], p.lost, p.gap - p.lost});
+    return r;
 }
 
 auto FileReader::samples(uint8_t channel, bool gaps) const -> uint64_t {

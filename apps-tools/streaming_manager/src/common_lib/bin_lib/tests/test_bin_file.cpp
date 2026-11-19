@@ -145,6 +145,49 @@ TEST_F(BinFile, WithGapsTheRecordingKeepsItsTime) {
     EXPECT_EQ(part, (std::vector<int16_t>{0, 0, 100, 101}));
 }
 
+TEST_F(BinFile, TheGapsAreListedWithTheirLostAndWaitedSamples) {
+    write(twoChannels());
+    FileReader r;
+    ASSERT_TRUE(r.open(m_path));
+    const auto g = r.gaps(0);
+    ASSERT_EQ(g.size(), 2u);
+    EXPECT_EQ(g[0].at, 10u);
+    EXPECT_EQ(g[0].lost, 5u);
+    EXPECT_EQ(g[0].wait, 0u);
+    EXPECT_EQ(g[1].at, 25u);
+    EXPECT_EQ(g[1].lost, 0u);
+    EXPECT_EQ(g[1].wait, 3u);
+    EXPECT_TRUE(r.gaps(7).empty()) << "not a channel";
+}
+
+TEST_F(BinFile, TheHeaderAloneIsReadWithoutTheBlocks) {
+    write(twoChannels());
+    FileReader r;
+    ASSERT_TRUE(r.openHeader(m_path));
+    EXPECT_EQ(r.info().channels.size(), 2u);
+    EXPECT_EQ(r.info().decimation, 8u);
+    EXPECT_EQ(r.samples(0, true), 0u) << "the blocks are not indexed";
+    // a full open after it indexes again
+    ASSERT_TRUE(r.open(m_path));
+    EXPECT_EQ(r.samples(0, true), 38u);
+}
+
+TEST_F(BinFile, TheProgressOfTheOpenStopsIt) {
+    write(twoChannels());
+    FileReader r;
+    double seen = -1;
+    r.setProgress([&seen](double p) {
+        seen = p;
+        return false;
+    });
+    EXPECT_FALSE(r.open(m_path));
+    EXPECT_EQ(r.error(), "stopped");
+    EXPECT_GT(seen, 0.0);
+    EXPECT_LE(seen, 1.0);
+    r.setProgress({});
+    EXPECT_TRUE(r.open(m_path)) << "without the callback it opens";
+}
+
 TEST_F(BinFile, ReadingPastTheEndGivesWhatThereIs) {
     write(twoChannels());
     FileReader r;

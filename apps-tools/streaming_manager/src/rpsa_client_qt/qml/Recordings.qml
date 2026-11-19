@@ -111,7 +111,8 @@ Item {
     // the windows close at once (the file closed, an export stopped): the application ends, the
     // recordings are deleted
     function closeViewers(paths) { for (const p in viewers) if (!paths || paths.indexOf(p) >= 0) viewers[p].closeNow() }
-    function viewable(r) { return !!r && r.format === "BIN" && !r.recording && !!r.inputs && r.inputs.length > 0 }
+    // BIN of the inputs (not GPIO), WAV, TDMS, CSV; not while a board writes it
+    function viewable(r) { return !!r && !r.recording && (["WAV", "TDMS", "CSV"].indexOf(r.format) >= 0 || (r.format === "BIN" && !!r.inputs && r.inputs.length > 0)) }
     // the viewer opened last, for the UI script
     property var lastViewer: null
     function toggle(path) { const s = Object.assign({}, sel); if (s[path]) delete s[path]; else s[path] = true; sel = s }
@@ -329,7 +330,7 @@ Item {
                             kind: "primary"; text: "View"
                             enabled: root.viewable(root.cur)
                             ToolTip.visible: hovered && !enabled
-                            ToolTip.text: root.cur && root.cur.recording ? "Not while it is recorded" : "A BIN recording of the inputs opens here; convert the others"
+                            ToolTip.text: root.cur && root.cur.recording ? "Not while it is recorded" : "BIN, WAV, TDMS and CSV of the inputs open here; a GPIO recording does not (convert it to VCD)"
                             onClicked: root.view(root.current)
                         }
                         Btn { id: fileBtn; kind: "outline"; text: "File ▾"; active: fileMenu.opened; onClicked: fileMenu.popupFor([root.current], fileBtn) }

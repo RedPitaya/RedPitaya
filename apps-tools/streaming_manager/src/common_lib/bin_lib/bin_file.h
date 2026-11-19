@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <fstream>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -61,8 +62,16 @@ class Timeline {
 
 class FileReader {
    public:
+    // the part of the file indexed (0..1) while open() reads the blocks; false stops the open
+    // (error() "stopped"). A big file read from the disk takes seconds.
+    using Progress = std::function<bool(double)>;
+    auto setProgress(Progress progress) -> void { m_progress = std::move(progress); }
+
     // false with error() when the file is not a BIN stream file of a known version
     auto open(const std::string& path) -> bool;
+    // the header only (info()): the blocks are not indexed, so samples() and read() have nothing;
+    // at once for a file of any size (open() reads every block header)
+    auto openHeader(const std::string& path) -> bool;
     auto close() -> void;
     auto error() const -> const std::string&;
     auto info() const -> const FileInfo&;
@@ -79,15 +88,25 @@ class FileReader {
     // Up to n samples from position into dst; how many (fewer only at the end)
     auto read(uint8_t channel, uint64_t position, uint64_t n, void* dst, bool gaps) -> uint64_t;
 
+    // The gaps of a channel on the time line: the first missing sample, the lost ones, then the
+    // waited ones (a gap comes before the data of its block)
+    struct Gap {
+        uint64_t at;
+        uint64_t lost;
+        uint64_t wait;
+    };
+    auto gaps(uint8_t channel) const -> std::vector<Gap>;
+
    private:
     struct Piece {
         uint64_t gap;       // samples before the data (lost + wait)
+        uint64_t lost;      // of them lost
         uint64_t samples;   // of the data
         uint64_t offset;    // of the data in the file
         uint64_t start[2];  // the first sample of the gap on the line without and with gaps
     };
 
-    auto index() -> void;
+    auto index() -> bool;
 
     std::ifstream m_file;
     std::string m_error;
@@ -96,6 +115,8 @@ class FileReader {
     uint64_t m_next = 0;  // nextBlock(): the file offset of the next block
     uint64_t m_end = 0;   // the size of the file
     std::vector<std::vector<Piece>> m_pieces;  // per channel, of fixed size channels
+    Progress m_progress;
+    bool m_headerOnly = false;
 };
 
 }  // namespace bin_lib
