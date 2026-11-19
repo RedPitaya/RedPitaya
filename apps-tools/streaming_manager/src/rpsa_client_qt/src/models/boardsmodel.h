@@ -40,6 +40,12 @@ class BoardsModel : public QAbstractListModel {
     Q_INVOKABLE void removeBoard(const QString& ip);
     // the slaves first, each started before the next, then the masters: the clock and the
     // trigger of a master drive its slaves
+    // The recordings to this computer that do not fit their disk (streaming_improvements 2.4):
+    // the boards a Start of that board ("" - the ones Start all starts) records with a limit,
+    // grouped by the disk of their folders. The first disk short of space: need, free, disk,
+    // boards [{name, samples, inputs, need, running}] (running: already recording there, the rest
+    // of its limit); an empty map when they fit or have no limit.
+    Q_INVOKABLE QVariantMap diskShortage(const QString& ip);
     Q_INVOKABLE void runAll();
     Q_INVOKABLE void stopAll();
     Q_INVOKABLE void triggerAll();

@@ -10,7 +10,26 @@ ColumnLayout {
 
     readonly property int rev: b ? b.settingsRev : 0
     function v(key) { return rev >= 0 && b ? b.value(key) : "" }
-    function set(key, value) { b.setValue(key, String(value)) }
+    // a value sent clears what its field said
+    function set(key, value) { say(key, ""); b.setValue(key, String(value)) }
+
+    // what a field says under it (streaming_improvements 2.5): {key: {text, kind: bad|warn}},
+    // until the next edit of the field
+    property var msgs: ({})
+    onBChanged: msgs = ({})  // the dialog opened for another board
+    function say(key, text, kind) {
+        const m = Object.assign({}, msgs)
+        if (text) m[key] = { text: text, kind: kind || "bad" }
+        else delete m[key]
+        msgs = m
+    }
+    function msg(key) { return msgs[key] ? msgs[key].text : "" }
+    function msgBad(key) { return !!msgs[key] && msgs[key].kind === "bad" }
+    function msgWarn(key) { return !!msgs[key] && msgs[key].kind === "warn" }
+    Connections {
+        target: root.b
+        function onSettingRefused(key, value) { root.say(key, "The board did not take " + value + ": it keeps " + root.v(key)) }
+    }
 
     readonly property var caps: b ? b.caps : ({})
     readonly property int header: caps.headerSize || 128
@@ -34,6 +53,30 @@ ColumnLayout {
     property bool custom: presets.indexOf(block) < 0
 
     function mb(x) { return (x / 1048576).toFixed(2) + " MB" }
+    // a multiple of 128 up to 256 MB and the largest DMA block of the board, 12 blocks a stream
+    readonly property double blockMax: Math.min(268435456, maxBlock - header)
+    function setBlock(t) {
+        const x = Number(t)
+        if (t === "" || !Number.isInteger(x) || x < 128) {
+            say("block_size", "From 128 bytes up: not sent")
+            return
+        }
+        if (x % 128) {
+            const lo = Math.floor(x / 128) * 128
+            say("block_size", "Not a multiple of 128: " + (lo >= 128 ? lo + " or " : "") + (lo + 128) + "? Not sent")
+            return
+        }
+        if (x > blockMax) {
+            say("block_size", "Up to " + Theme.bytes(blockMax) + " (the largest DMA block of the board): not sent")
+            return
+        }
+        if (!fits(x)) {
+            say("block_size", "12 blocks per stream do not fit the " + mb(total) + " of the board: not sent")
+            return
+        }
+        say("block_size", "")
+        set("block_size", x)
+    }
     function fits(x) { return total === 0 || 12 * (x + header) * live <= total }
 
     ColumnLayout {
@@ -60,14 +103,17 @@ ColumnLayout {
             Field {
                 visible: root.custom
                 label: "Custom, bytes"
-                hint: "a multiple of 128"
-                Layout.preferredWidth: 150
+                hint: root.msg("block_size") || "a multiple of 128, up to " + Theme.bytes(root.blockMax) + " · " + Theme.bytes(root.block)
+                hintBad: root.msgBad("block_size")
+                Layout.preferredWidth: 260
                 TextIn {
                     Layout.fillWidth: true
                     mono: true
+                    objectName: "field:block_size"
+                    bad: root.msgBad("block_size")
                     value: String(root.block)
-                    validator: IntValidator { bottom: 128; top: 2147483647 }
-                    onCommitted: (t) => root.set("block_size", t)
+                    validator: RegularExpressionValidator { regularExpression: /[0-9]{0,10}/ }
+                    onCommitted: (t) => root.setBlock(t)
                 }
             }
             Item { Layout.fillWidth: true }

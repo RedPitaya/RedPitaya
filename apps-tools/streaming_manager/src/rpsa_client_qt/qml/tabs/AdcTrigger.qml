@@ -9,7 +9,26 @@ Card {
 
     readonly property int rev: b ? b.settingsRev : 0
     function v(key) { return rev >= 0 && b ? b.value(key) : "" }
-    function set(key, value) { b.setValue(key, String(value)) }
+    // a value sent clears what its field said
+    function set(key, value) { say(key, ""); b.setValue(key, String(value)) }
+
+    // what a field says under it (streaming_improvements 2.5): {key: {text, kind: bad|warn}},
+    // until the next edit of the field
+    property var msgs: ({})
+    onBChanged: msgs = ({})  // the dialog opened for another board
+    function say(key, text, kind) {
+        const m = Object.assign({}, msgs)
+        if (text) m[key] = { text: text, kind: kind || "bad" }
+        else delete m[key]
+        msgs = m
+    }
+    function msg(key) { return msgs[key] ? msgs[key].text : "" }
+    function msgBad(key) { return !!msgs[key] && msgs[key].kind === "bad" }
+    function msgWarn(key) { return !!msgs[key] && msgs[key].kind === "warn" }
+    Connections {
+        target: root.b
+        function onSettingRefused(key, value) { root.say(key, "The board did not take " + value + ": it keeps " + root.v(key)) }
+    }
 
     readonly property var caps: b ? b.caps : ({})
     readonly property int n: Math.max(1, Math.min(4, caps.adcChannels || 2))
@@ -28,6 +47,44 @@ Card {
         return m
     }
     readonly property bool levelUsed: (mask & inMask) !== 0
+    // the first input chosen as a source and its range (±1 V at 1:1, ±20 V at 1:20, or the one
+    // range of the board)
+    readonly property int refIn: {
+        for (let i = 0; i < n; i++) if (mask & inBits[i]) return i + 1
+        return 1
+    }
+    readonly property double fs: caps.adcRanges ? (v("channel_attenuator_" + refIn) === "A_1_20" ? 20 : 1)
+        : (parseFloat(String(caps.fixedRange || "").replace("±", "")) || 1)
+    readonly property string rangeText: "IN" + refIn + (caps.adcRanges ? " at " + (fs === 20 ? "1:20" : "1:1") : "") + ": from −" + fs + " to +" + fs + " V"
+    readonly property bool rising: v("adc_trigger_edge") !== "FALLING"
+    // another input or range: what the level fields said is of the old one
+    onRefInChanged: { say("adc_trigger_level_v", ""); say("adc_trigger_hysteresis_v", "") }
+    onFsChanged: { say("adc_trigger_level_v", ""); say("adc_trigger_hysteresis_v", "") }
+    // the window the level and the hysteresis make must stay in the range
+    function setLevel(levelText, hystText) {
+        const L = Number(String(levelText).replace(",", "."))
+        const H = Number(String(hystText).replace(",", "."))
+        const key = levelText !== null && hystText === null ? "adc_trigger_level_v" : "adc_trigger_hysteresis_v"
+        const level = levelText === null ? Number(v("adc_trigger_level_v")) || 0 : L
+        const hyst = hystText === null ? Number(v("adc_trigger_hysteresis_v")) || 0 : H
+        if (!Number.isFinite(level) || !Number.isFinite(hyst) || hyst < 0) {
+            say(key, "Not a number" + (hyst < 0 ? " of 0 or more" : "") + ": not sent")
+            return
+        }
+        const lo = rising ? level - hyst : level, hi = rising ? level : level + hyst
+        if (Math.abs(level) > fs) {
+            say(key, "Outside " + rangeText + ": not sent" + (caps.adcRanges && fs === 1 ? ". 1:20 takes ±20 V (ADC tab, Inputs)" : ""))
+            return
+        }
+        if (Math.abs(lo) > fs || Math.abs(hi) > fs) {
+            say(key, (rising ? "Level − hysteresis" : "Level + hysteresis") + " goes past " + (rising ? "−" : "+") + fs + " V of IN" + refIn + ": not sent")
+            return
+        }
+        say("adc_trigger_level_v", "")
+        say("adc_trigger_hysteresis_v", "")
+        set("adc_trigger_level_unit", "VOLT")
+        set(key, levelText === null ? hyst : level)
+    }
     function toggle(bit, checked) { set("adc_trigger_sources", checked ? (mask | bit) : (mask & ~bit)) }
 
     // the block mode: a number of blocks after each trigger
@@ -155,30 +212,32 @@ Card {
         rowSpacing: 12
         Field {
             label: "Level, V"
+            hint: root.msg("adc_trigger_level_v") || root.rangeText
+            hintBad: root.msgBad("adc_trigger_level_v")
             Layout.fillWidth: true
             TextIn {
                 Layout.fillWidth: true
                 mono: true
+                objectName: "field:adc_trigger_level_v"
+                bad: root.msgBad("adc_trigger_level_v")
                 value: String(+(Number(root.v("adc_trigger_level_v")) || 0).toFixed(4))
-                validator: DoubleValidator { bottom: -20; top: 20; notation: DoubleValidator.StandardNotation }
-                onCommitted: (t) => {
-                    root.set("adc_trigger_level_unit", "VOLT")
-                    root.set("adc_trigger_level_v", t === "" ? "0" : t.replace(",", "."))
-                }
+                validator: RegularExpressionValidator { regularExpression: /-?[0-9]{0,3}([.,][0-9]{0,6})?/ }
+                onCommitted: (t) => root.setLevel(t === "" ? "0" : t, null)
             }
         }
         Field {
             label: "Hysteresis, V"
+            hint: root.msg("adc_trigger_hysteresis_v")
+            hintBad: root.msgBad("adc_trigger_hysteresis_v")
             Layout.fillWidth: true
             TextIn {
                 Layout.fillWidth: true
                 mono: true
+                objectName: "field:adc_trigger_hysteresis_v"
+                bad: root.msgBad("adc_trigger_hysteresis_v")
                 value: String(+(Number(root.v("adc_trigger_hysteresis_v")) || 0).toFixed(4))
-                validator: DoubleValidator { bottom: 0; top: 20; notation: DoubleValidator.StandardNotation }
-                onCommitted: (t) => {
-                    root.set("adc_trigger_level_unit", "VOLT")
-                    root.set("adc_trigger_hysteresis_v", t === "" ? "0" : t.replace(",", "."))
-                }
+                validator: RegularExpressionValidator { regularExpression: /-?[0-9]{0,3}([.,][0-9]{0,6})?/ }
+                onCommitted: (t) => root.setLevel(null, t === "" ? "0" : t)
             }
         }
         Field {
@@ -187,7 +246,14 @@ Card {
             Seg {
                 options: ["Rising", "Falling"]
                 currentIndex: root.v("adc_trigger_edge") === "FALLING" ? 1 : 0
-                onPicked: (i) => root.set("adc_trigger_edge", i === 1 ? "FALLING" : "RISING")
+                onPicked: (i) => {
+                    root.set("adc_trigger_edge", i === 1 ? "FALLING" : "RISING")
+                    // the window turns over the level: it may go past the range now
+                    const L = Number(root.v("adc_trigger_level_v")) || 0, H = Number(root.v("adc_trigger_hysteresis_v")) || 0
+                    const edge = i === 1 ? L + H : L - H
+                    root.say("adc_trigger_hysteresis_v", Math.abs(edge) > root.fs ? (i === 1 ? "Level + hysteresis" : "Level − hysteresis") + " goes past "
+                             + (i === 1 ? "+" : "−") + root.fs + " V of IN" + root.refIn + ": lower the hysteresis" : "")
+                }
             }
         }
     }

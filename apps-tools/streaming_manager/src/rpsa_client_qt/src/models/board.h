@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QFile>
 #include <QObject>
+#include <QStorageInfo>
 #include <QTimer>
 #include <QVariantMap>
 #include <atomic>
@@ -54,6 +55,10 @@ class CBoard : public QObject {
     // (bytes a second the disk takes), queue (0..1), lostBoard, lostQueue, free, total (bytes of
     // the disk of the file), file
     Q_PROPERTY(QVariantMap record READ getRecord NOTIFY recordChanged)
+    // The last error of the streams of the board (streaming_improvements 2.2): text, time
+    // (hh:mm:ss), count (errors since it was cleared); empty while there is none. Cleared by a
+    // start that goes or by dismissError().
+    Q_PROPERTY(QVariantMap error READ getError NOTIFY errorChanged)
     // bumped when the settings of the board change: bindings that read value() depend on it
     Q_PROPERTY(int settingsRev READ settingsRev NOTIFY settingsChanged)
     Q_PROPERTY(bool settingsLoaded READ settingsLoaded NOTIFY settingsChanged)
@@ -92,6 +97,13 @@ class CBoard : public QObject {
     auto getStats() -> QVariantMap;
     auto getTrigger() -> QVariantMap;
     auto getRecord() -> QVariantMap;
+    auto getError() -> QVariantMap;
+    // the bytes a recording to this computer takes with the limit of the settings (0: no limit
+    // or the board writes its own card) and the bytes a second of its data
+    auto expectedBytes() -> double;
+    // the disk of a folder that may not exist yet (its nearest existing parent): nothing is made
+    static auto storageOf(const QString& dir) -> QStorageInfo;
+    auto dataRate() -> double;
     auto settingsRev() -> int;
     auto settingsLoaded() -> bool;
     auto pcRev() -> int;
@@ -127,9 +139,11 @@ class CBoard : public QObject {
     Q_INVOKABLE void stopStreaming();
     Q_INVOKABLE void softwareTrigger();
     Q_INVOKABLE void reconnect();
+    Q_INVOKABLE void dismissError();
 
     auto startStreaming(QDateTime time) -> void;
-    // a line from Start all / Stop all in the console of the board
+    // a line from Start all / Stop all in the console of the board; error: also on the card,
+    // unless the board already shows an error of its own (that one says more)
     auto note(const QString& msg, bool error) -> void;
 
    signals:
@@ -142,12 +156,13 @@ class CBoard : public QObject {
     void statsChanged();
     void triggerChanged();
     void recordChanged();
+    void errorChanged();
     void settingsChanged();
     void pcSettingsChanged();
     // a stream lost data (for Stop all on loss)
     void dataLost();
     // a setting the board refused
-    void settingRefused(QString key);
+    void settingRefused(QString key, QString value);
 
    private:
     struct SStat {
@@ -164,13 +179,15 @@ class CBoard : public QObject {
 
     auto post(std::function<void()> f) -> void;
     auto addLog(const QString& msg, Log level = Log::Normal) -> void;
+    // an error of a stream: in the console and on the card until cleared
+    auto setError(const QString& msg) -> void;
     auto setState(const QString& state) -> void;
     auto connectHandlers() -> void;
     auto connectConfig() -> void;
     auto updateOffline() -> void;
     auto applyBoardInfo(const BoardInfoMessage& info) -> void;
     auto settings() -> CStreamSettings*;
-    auto adcStopped(const QString& why, bool error) -> void;
+    auto adcStopped(const QString& why, bool error, bool broken = false) -> void;
     auto createStreaming() -> void;
     auto startADCFPGAStreaming() -> void;
     auto closeStreaming() -> void;
@@ -213,6 +230,9 @@ class CBoard : public QObject {
     auto updatePreviewWanted() -> void;
     ConsoleModel m_consoleModel;
     QString m_state = "stopped";
+    QString m_errorText;
+    QString m_errorTime;
+    int m_errorCount = 0;
     bool m_adcArmed = false;
     bool m_trigKnown = false;
     uint32_t m_adcTriggerCount = 0;

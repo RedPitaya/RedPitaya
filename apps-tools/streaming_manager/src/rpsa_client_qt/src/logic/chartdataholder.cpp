@@ -1,7 +1,14 @@
 #include "chartdataholder.h"
 #include <algorithm>
+#include <chrono>
 #include <QQmlEngine>
 #include <QThread>
+
+namespace {
+auto nowMs() -> int64_t {
+    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+}  // namespace
 
 ChartDataHolder* ChartDataHolder::instance() {
     static ChartDataHolder* _instance = 0;
@@ -71,6 +78,8 @@ auto ChartDataHolder::addBuffer(DataLib::CDataBuffersPackDMA::Ptr pack, uint64_t
     //    qDebug() << "Set " << ip << id;
     m_pack[ip] = pack;
     m_packId[ip] = id;
+    if (!m_frameSince)
+        m_frameSince = nowMs();
 }
 
 auto ChartDataHolder::chartPackThread() -> void {
@@ -79,16 +88,24 @@ auto ChartDataHolder::chartPackThread() -> void {
         QMap<QString, int> decimation;
         m_add_mutex.lock();
         const int chartWidth = m_chartWidth;
-        bool canGet = m_rp.size();
+        // one frame of all boards at the same moment; the boards that sent nothing within an
+        // interval (waiting for a trigger, slower) are left out of it
+        bool all = m_rp.size();
+        bool any = false;
         for (auto& i : m_rp) {
-            canGet &= m_packId[i] != 0;
+            all &= m_packId[i] != 0;
+            any |= m_packId[i] != 0;
         }
+        const bool canGet = all || (any && m_frameSince && nowMs() - m_frameSince >= m_intervalMs);
         if (canGet) {
             packForWork = m_pack;
             decimation = m_decimation;
             for (auto i : m_packId.keys()) {
+                if (!m_packId[i])
+                    packForWork.remove(i);  // an old block of a board left out
                 m_packId[i] = 0;
             }
+            m_frameSince = 0;
         }
         m_add_mutex.unlock();
 

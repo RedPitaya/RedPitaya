@@ -10,6 +10,7 @@ Item {
     property bool header: false
     property bool last: false
     signal openSettings(string tab)
+    signal startAsked()
 
     BoardStatus { id: s; b: root.b }
     TextMetrics { id: longestState; font.pixelSize: Theme.fsSm; font.bold: true; text: "Taken by another client" }
@@ -18,15 +19,20 @@ Item {
     readonly property var rec: b ? b.record : ({})
     readonly property bool onSd: rec.dest === "sd" && rec.mode === 2
     readonly property double recRate: rec.rate > 0 ? rec.rate : s.perChannel
-    readonly property double dataRate: s.perChannel * Math.max(1, s.inputsOn.length) * (s.v("data_type_sd") === "VOLT" ? 4 : s.sampleBytes)
-    readonly property double thru: rec.write > 0 ? Math.min(rec.write, dataRate) : dataRate
+    // bytes a second of the data as the file gets them (volts are floats, BIN keeps the codes)
+    readonly property double dataRate: rec.dataRate || 0
+    readonly property double thru: rec.write > 0 && dataRate > 0 ? Math.min(rec.write, dataRate) : dataRate > 0 ? dataRate : (rec.write || 0)
     readonly property real recFrac: rec.limit ? Math.min(1, (rec.samples || 0) / rec.limit) : (rec.total ? 1 - rec.free / rec.total : 0)
-    function dur(sec) { if (!(sec >= 0)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h" }
+    function dur(sec) { if (!(sec >= 0) || !isFinite(sec)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h" }
 
-    implicitHeight: header ? 28 + Theme.fsAdd : 56 + Theme.fsAdd
+    readonly property real rowHeight: header ? 28 + Theme.fsAdd : 56 + Theme.fsAdd
+    implicitHeight: rowHeight + (errLine.visible ? errLine.implicitHeight + 8 : 0)
 
     RowLayout {
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: root.rowHeight
         anchors.leftMargin: 10
         anchors.rightMargin: 10
         spacing: 12
@@ -135,10 +141,31 @@ Item {
                 text: s.running ? "Stop" : "Start"
                 implicitWidth: 72
                 enabled: s.connected && s.st !== "stopping"
-                onClicked: s.running ? b.stopStreaming() : b.startStreaming()
+                onClicked: s.running ? b.stopStreaming() : root.startAsked()
             }
             Btn { visible: !s.online || !s.connected; kind: s.link === "taken" ? "primary" : "outline"; text: "Reconnect"; onClicked: b.reconnect() }
         }
+    }
+    // the last error of the board (streaming_improvements 2.2); the list has no console: the link
+    // opens the cards on it
+    RowLayout {
+        id: errLine
+        visible: !root.header && s.hasError
+        x: 10 + 32
+        y: root.rowHeight - 4
+        width: parent.width - 52
+        spacing: 10
+        Text { text: (s.err.text || "") + " · " + (s.err.time || ""); color: Theme.dangerText; font.pixelSize: Theme.fsSm; elide: Text.ElideRight; Layout.maximumWidth: errLine.width - errLink.implicitWidth - 20 }
+        Text {
+            id: errLink
+            text: "<a href=\"console\">Open the console</a>"
+            textFormat: Text.StyledText
+            linkColor: Theme.accent
+            font.pixelSize: Theme.fsSm
+            onLinkActivated: { b.chartEnable = false; app.view = "cards" }
+            HoverHandler { cursorShape: Qt.PointingHandCursor }
+        }
+        Item { Layout.fillWidth: true }
     }
     Rectangle {
         visible: !root.last

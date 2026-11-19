@@ -8,6 +8,7 @@
         <file>qml/BoardDialog.qml</file>
         <file>qml/AppDialog.qml</file>
         <file>qml/AddBoardDialog.qml</file>
+        <file>qml/DiskDialog.qml</file>
         <file>qml/tabs/AdcTab.qml</file>
         <file>qml/tabs/AdcTrigger.qml</file>
         <file>qml/tabs/MemoryTab.qml</file>
@@ -38,6 +39,7 @@
         <file>img/delete.png</file>
         <file>img/icons/plus.svg</file>
         <file>img/icons/close.svg</file>
+        <file>img/icons/warning.svg</file>
         <file>img/icons/bolt.svg</file>
         <file>img/icons/sliders.svg</file>
         <file>img/icons/gear.svg</file>

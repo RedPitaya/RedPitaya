@@ -7,6 +7,8 @@ ColumnLayout {
     property string label: ""
     property string hint: ""
     property bool hintBad: false
+    // amber: the value was changed to one that is taken
+    property bool hintWarn: false
     default property alias content: holder.data
     spacing: 6
     // in a row of fields the labels and the inputs line up whatever hints are under them
@@ -26,7 +28,9 @@ ColumnLayout {
     Label2 {
         visible: root.hint !== ""
         text: root.hint
-        kind: root.hintBad ? "bad" : "hint"
+        kind: root.hintBad ? "bad" : root.hintWarn ? "warn" : "hint"
         Layout.fillWidth: true
+        // a long hint wraps under the field, it does not widen it
+        Layout.preferredWidth: 10
     }
 }

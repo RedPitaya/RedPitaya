@@ -155,3 +155,28 @@ QString AppSettings::urlToPath(const QString& url) const {
 QString AppSettings::pathToUrl(const QString& path) const {
     return QUrl::fromLocalFile(expandHome(path)).toString();
 }
+
+auto AppSettings::windowGeometry() const -> QVariantMap {
+    auto s = settings();
+    QVariantMap m;
+    if (!s.contains("window/width"))
+        return m;
+    m["x"] = s.value("window/x").toInt();
+    m["y"] = s.value("window/y").toInt();
+    m["width"] = s.value("window/width").toInt();
+    m["height"] = s.value("window/height").toInt();
+    m["maximized"] = s.value("window/maximized", false).toBool();
+    return m;
+}
+
+auto AppSettings::saveWindowGeometry(int x, int y, int width, int height, bool maximized) -> void {
+    auto s = settings();
+    // maximized: the size before it stays, the window comes back to it when restored
+    if (!maximized || !s.contains("window/width")) {
+        s.setValue("window/x", x);
+        s.setValue("window/y", y);
+        s.setValue("window/width", width);
+        s.setValue("window/height", height);
+    }
+    s.setValue("window/maximized", maximized);
+}

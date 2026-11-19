@@ -13,7 +13,10 @@ Rectangle {
     // the card without its plot: the dashboard gives the plot of a lone board what the window has left
     readonly property real restHeight: hdr.implicitHeight + chips.implicitHeight + pvHead.height + 1 + counters.implicitHeight
         + fileRow.implicitHeight + (btnRow.visible ? btnRow.implicitHeight : offRow.implicitHeight) + 6 * col.spacing + 28
+        + (errBox.visible ? errBox.implicitHeight + col.spacing : 0)
     signal openSettings(string tab)
+    // Start pressed: the dashboard checks the space on the disk first
+    signal startAsked()
 
     BoardStatus { id: s; b: root.b }
     readonly property var stats: b ? b.stats : ({})
@@ -24,11 +27,19 @@ Rectangle {
     readonly property bool sdDest: rec.dest === "sd"
     // samples a second (the board's, else the sample rate) and bytes a second of the data
     readonly property double recRate: rec.rate > 0 ? rec.rate : s.perChannel
-    readonly property double dataRate: s.perChannel * Math.max(1, s.inputsOn.length) * (s.v("data_type_sd") === "VOLT" ? 4 : s.sampleBytes)
+    // bytes a second of the data as the file gets them (volts are floats, BIN keeps the codes)
+    readonly property double dataRate: rec.dataRate || 0
     // what goes to the disk a second: the data, or the disk when it is slower (the measured speed
     // alone overstates a disk the data do not keep busy)
-    readonly property double thru: rec.write > 0 ? Math.min(rec.write, dataRate) : dataRate
-    function dur(sec) { if (!(sec >= 0)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h " + String(Math.round(sec % 3600 / 60)).padStart(2, "0") + " min" }
+    readonly property double thru: rec.write > 0 && dataRate > 0 ? Math.min(rec.write, dataRate) : dataRate > 0 ? dataRate : (rec.write || 0)
+    // before a start to this computer (streaming_improvements 2.4): what the limit takes of the disk
+    readonly property bool pcBefore: rec.dest === "pc" && !rec.running && rec.total > 0
+    readonly property double need: rec.need || 0
+    readonly property bool needShort: pcBefore && need > rec.free
+    readonly property string needText: !pcBefore ? ""
+        : need > 0 ? "The limit takes about " + Theme.bytes(need) + (needShort ? ", more than is free: the recording stops when the disk is full, at about " + Math.floor(rec.free / need * 100) + "% of the limit" : "")
+        : rec.dataRate > 0 ? "Full in about " + dur(rec.free / rec.dataRate) + " at " + Theme.bytes(rec.dataRate) + "/s (the rate of these settings)" : ""
+    function dur(sec) { if (!(sec >= 0) || !isFinite(sec)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h " + String(Math.round(sec % 3600 / 60)).padStart(2, "0") + " min" }
     readonly property real recFrac: rec.limit ? Math.min(1, (rec.samples || 0) / rec.limit) : (rec.total ? 1 - rec.free / rec.total : 0)
     readonly property string recText: !rec.dest ? "" : sdDest && !rec.known ? "The board does not report its recording (a streaming server older than 2026-11-18)" : rec.running
         ? (rec.limit ? Math.round(recFrac * 100) + "% of the limit · " + Theme.count(rec.samples) + " of " + Theme.count(rec.limit) + " · about " + dur((rec.limit - rec.samples) / recRate) + " left"
@@ -37,7 +48,7 @@ Rectangle {
         : (sdDest ? "SD card: " : "PC disk: ") + Theme.bytes(rec.free) + " free of " + Theme.bytes(rec.total)
 
     color: Theme.card
-    border.color: Theme.border
+    border.color: s.hasError && !s.running ? Theme.danger : Theme.border
     radius: Theme.radius
     implicitHeight: col.implicitHeight + 28
     opacity: s.online ? 1 : 0.75
@@ -68,6 +79,33 @@ Rectangle {
             }
             Badge { visible: boards.count > 1 && s.connected; text: b && b.isMaster ? "Master" : "Slave"; kind: "grey"; Layout.alignment: Qt.AlignTop }
             Badge { text: s.stateText; kind: s.stateKind; Layout.alignment: Qt.AlignTop }
+        }
+
+        // the last error (streaming_improvements 2.2): until a start that goes or the cross
+        Rectangle {
+            id: errBox
+            visible: s.hasError
+            Layout.fillWidth: true
+            implicitHeight: errRow.implicitHeight + 16
+            color: Theme.redBg
+            radius: Theme.radius
+            Accessible.role: Accessible.AlertMessage
+            Accessible.name: s.err.text || ""
+            RowLayout {
+                id: errRow
+                x: 10; y: 8
+                width: parent.width - 20
+                spacing: 10
+                Image { source: "qrc:/img/icons/warning.svg"; sourceSize: Qt.size(16, 16); Layout.alignment: Qt.AlignTop; Layout.topMargin: 1 }
+                ColumnLayout {
+                    spacing: 2
+                    Layout.fillWidth: true
+                    Text { text: s.err.text || ""; color: Theme.dangerText; font.pixelSize: Theme.fsMd; wrapMode: Text.WordWrap; Layout.fillWidth: true }
+                    Text { text: (s.err.time || "") + (s.err.count > 1 ? " · the last of " + s.err.count + " errors" : ""); color: Theme.muted; font.pixelSize: Theme.fsXs; Layout.fillWidth: true }
+                }
+                Btn { kind: "outline"; compact: true; text: "Console"; visible: b && b.chartEnable; onClicked: b.chartEnable = false; Layout.alignment: Qt.AlignTop }
+                Btn { kind: "outline"; compact: true; iconSource: "qrc:/img/icons/close.svg"; implicitWidth: implicitHeight; Accessible.name: "Dismiss the error"; onClicked: b.dismissError(); Layout.alignment: Qt.AlignTop }
+            }
         }
 
         // the streams
@@ -213,9 +251,18 @@ Rectangle {
                 height: 6
                 radius: 3
                 color: Theme.border
-                Rectangle { width: parent.width * root.recFrac; height: parent.height; radius: 3; color: rec.limit ? Theme.accent : Theme.muted }
+                // before a start to this computer: the disk used, then what the limit takes of it
+                Rectangle { width: parent.width * (root.pcBefore ? 1 - rec.free / rec.total : root.recFrac); height: parent.height; radius: 3; color: rec.limit && !root.pcBefore ? Theme.accent : Theme.muted }
+                Rectangle {
+                    visible: root.pcBefore && root.need > 0
+                    x: parent.width * (1 - rec.free / rec.total)
+                    width: Math.max(2, parent.width * Math.min(root.need, rec.free) / rec.total)
+                    height: parent.height
+                    color: root.needShort ? Theme.amber : Theme.accent
+                }
             }
             Text { text: root.recText; color: rec.running && rec.write > 0 && rec.write < root.dataRate ? Theme.dangerText : Theme.muted; font.pixelSize: Theme.fsSm; Layout.fillWidth: true; elide: Text.ElideRight }
+            Text { visible: root.needText !== ""; text: root.needText; color: root.needShort ? Theme.amberText : Theme.muted; font.pixelSize: Theme.fsSm; Layout.fillWidth: true; wrapMode: Text.WordWrap }
         }
         RowLayout {
             id: fileRow
@@ -243,7 +290,7 @@ Rectangle {
                 kind: s.running ? "danger" : "primary"
                 text: s.running ? "Stop" : "Start"
                 enabled: s.connected && s.st !== "stopping"
-                onClicked: s.running ? b.stopStreaming() : b.startStreaming()
+                onClicked: s.running ? b.stopStreaming() : root.startAsked()
             }
             Btn {
                 visible: !s.connected && !s.running

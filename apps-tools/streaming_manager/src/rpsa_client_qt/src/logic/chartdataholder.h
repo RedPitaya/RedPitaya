@@ -42,6 +42,9 @@ class ChartDataHolder : public QObject {
     QMap<QString, DataLib::CDataBuffersPackDMA::Ptr> m_pack;
     QMap<QString, uint64_t> m_packId;
     QMap<QString, int> m_decimation;
+    // when the first block of the current frame came: a board that sends none (it waits for a
+    // trigger) holds the others for one interval at most
+    int64_t m_frameSince = 0;
 
     std::thread* m_chartThread;
     std::atomic<bool> m_IsWorkThread{false};

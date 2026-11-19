@@ -14,6 +14,9 @@ QtObject {
     readonly property string link: b ? b.link : "connecting"
     readonly property string st: b ? b.state : "stopped"
     readonly property bool running: st !== "stopped"
+    // the last error of the streams (streaming_improvements 2.2): text, time, count
+    readonly property var err: b ? b.error : ({})
+    readonly property bool hasError: !!err.text
 
     readonly property string stateText: !online && link !== "refused" ? "Offline"
         : link === "taken" ? "Taken by another client"
@@ -25,12 +28,14 @@ QtObject {
         : st === "sd" ? "Writing to SD"
         : st === "armed" ? "Waiting for trigger"
         : st === "stopping" ? "Stopping"
+        : hasError ? "Error"
         : "Stopped"
     readonly property string stateKind: !online || link === "refused" || link === "unreachable" ? "red"
         : link === "taken" ? "amber"
         : !connected ? "grey"
         : st === "streaming" || st === "sd" ? "ok"
         : st === "starting" || st === "armed" ? "amber"
+        : hasError && !running ? "red"
         : "grey"
 
     // what the preview says when there is nothing to show

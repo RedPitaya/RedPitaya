@@ -9,6 +9,8 @@ Item {
     signal openBoard(var board, string tab)
     signal openApp()
     signal addBoard()
+    // Start of a board (null: Start all): main checks the space on the disk first
+    signal askStart(var board)
 
     readonly property var sum: boards.summary
     readonly property bool single: boards.count === 1
@@ -82,6 +84,8 @@ Item {
                                 : root.single ? "1 board · " + (root.sum.running ? "running" : "stopped")
                                 : boards.count + " boards · " + root.sum.online + " online · " + root.sum.running + " running"
                                   + (root.sum.master ? " · " + root.sum.master + " is the clock master" : "")
+                                  + (root.sum.errors ? " · <font color=\"" + Theme.dangerText + "\">" + root.sum.errors + (root.sum.errors === 1 ? " error" : " errors") + "</font>" : "")
+                            textFormat: Text.StyledText
                         }
                     }
                     RowLayout {
@@ -96,7 +100,7 @@ Item {
                     Btn {
                         kind: "primary"; text: boards.starting ? "Starting…" : "Start all"; iconSource: "qrc:/img/icons/play.svg"
                         enabled: !boards.starting && root.sum.online > root.sum.running
-                        onClicked: boards.runAll()
+                        onClicked: root.askStart(null)
                     }
                     Btn { kind: "danger"; text: "Stop all"; iconSource: "qrc:/img/icons/stop.svg"; enabled: root.sum.running > 0 || boards.starting; onClicked: boards.stopAll() }
                     Btn { kind: "outline"; text: "Trigger all"; iconSource: "qrc:/img/icons/bolt.svg"; enabled: root.sum.running > 0; onClicked: boards.triggerAll() }
@@ -154,6 +158,7 @@ Item {
                             Layout.preferredWidth: 420
                             Layout.alignment: Qt.AlignTop
                             onOpenSettings: (tab) => root.openBoard(board, tab)
+                            onStartAsked: root.askStart(board)
                         }
                     }
                 }
@@ -176,6 +181,7 @@ Item {
                             last: index === boards.count - 1
                             Layout.fillWidth: true
                             onOpenSettings: (tab) => root.openBoard(board, tab)
+                            onStartAsked: root.askStart(board)
                         }
                     }
                 }

@@ -10,7 +10,26 @@ ColumnLayout {
 
     readonly property int rev: b ? b.settingsRev : 0
     function v(key) { return rev >= 0 && b ? b.value(key) : "" }
-    function set(key, value) { b.setValue(key, String(value)) }
+    // a value sent clears what its field said
+    function set(key, value) { say(key, ""); b.setValue(key, String(value)) }
+
+    // what a field says under it (streaming_improvements 2.5): {key: {text, kind: bad|warn}},
+    // until the next edit of the field
+    property var msgs: ({})
+    onBChanged: msgs = ({})  // the dialog opened for another board
+    function say(key, text, kind) {
+        const m = Object.assign({}, msgs)
+        if (text) m[key] = { text: text, kind: kind || "bad" }
+        else delete m[key]
+        msgs = m
+    }
+    function msg(key) { return msgs[key] ? msgs[key].text : "" }
+    function msgBad(key) { return !!msgs[key] && msgs[key].kind === "bad" }
+    function msgWarn(key) { return !!msgs[key] && msgs[key].kind === "warn" }
+    Connections {
+        target: root.b
+        function onSettingRefused(key, value) { root.say(key, "The board did not take " + value + ": it keeps " + root.v(key)) }
+    }
 
     readonly property var caps: b ? b.caps : ({})
     readonly property int n: caps.adcChannels || 2
@@ -24,6 +43,19 @@ ColumnLayout {
         return c
     }
     readonly property string format: v("format_sd")
+
+    // the decimations the FPGA takes: 1, 2, 4, 8, 16, then every value up to 65536 (as the page)
+    function setDecimation(t) {
+        const d = Number(t)
+        if (t === "" || !Number.isInteger(d) || d < 1 || d > 65536) {
+            say("adc_decimation", "From 1 to 65536: not sent, the board keeps " + dec)
+            return
+        }
+        const snap = d === 3 ? 4 : d >= 5 && d <= 7 ? 8 : d >= 9 && d <= 15 ? 16 : d
+        set("adc_decimation", snap)
+        if (snap !== d)
+            say("adc_decimation", d + " is not one the FPGA takes: set to " + snap + ". It takes 1, 2, 4, 8, 16 and every value from 17 to 65536", "warn")
+    }
 
     ColumnLayout {
         spacing: 4
@@ -173,14 +205,18 @@ ColumnLayout {
                 rowSpacing: 12
                 Field {
                     label: "Decimation"
-                    hint: Theme.rate(root.per) + " per channel"
+                    hint: root.msg("adc_decimation") || Theme.rate(root.per) + " per channel"
+                    hintBad: root.msgBad("adc_decimation")
+                    hintWarn: root.msgWarn("adc_decimation")
                     Layout.fillWidth: true
                     TextIn {
                         Layout.fillWidth: true
                         mono: true
+                        objectName: "field:adc_decimation"
+                        bad: root.msgBad("adc_decimation")
                         value: String(root.dec)
-                        validator: IntValidator { bottom: 1; top: 65536 }
-                        onCommitted: (t) => root.set("adc_decimation", t)
+                        validator: RegularExpressionValidator { regularExpression: /-?[0-9]{0,9}/ }
+                        onCommitted: (t) => root.setDecimation(t)
                     }
                 }
                 Field {

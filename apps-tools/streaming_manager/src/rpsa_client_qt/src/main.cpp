@@ -33,9 +33,13 @@ auto snapshotHook(QQmlApplicationEngine& engine) -> void {
     }
     QTimer::singleShot(delay, &engine, [&engine, file]() {
         auto* window = qobject_cast<QQuickWindow*>(engine.rootObjects().value(0));
-        if (window)
-            window->grabWindow().save(file);
-        QCoreApplication::exit(window ? 0 : 1);
+        if (!window) {
+            QCoreApplication::exit(1);
+            return;
+        }
+        window->grabWindow().save(file);
+        window->close();  // as the user closes it: the window keeps its geometry
+        QCoreApplication::exit(0);
     });
 }
 

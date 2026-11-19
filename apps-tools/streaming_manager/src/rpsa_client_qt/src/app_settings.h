@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QStringList>
+#include <QVariantMap>
 
 // The settings of the application as a whole, kept on this computer (QSettings).
 class AppSettings : public QObject {
@@ -46,6 +47,11 @@ class AppSettings : public QObject {
     auto setStartAllAdc(bool on) -> void;
     auto stopAllOnLoss() const -> bool;
     auto setStopAllOnLoss(bool on) -> void;
+
+    // The geometry of the main window at its last close: x, y, width, height, maximized; an
+    // empty map before the first close
+    Q_INVOKABLE QVariantMap windowGeometry() const;
+    Q_INVOKABLE void saveWindowGeometry(int x, int y, int width, int height, bool maximized);
 
     // The recording folder for a board name, "~" expanded.
     Q_INVOKABLE QString recordDirFor(const QString& board) const;

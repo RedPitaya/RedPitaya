@@ -1,4 +1,7 @@
 #include "boardsmodel.h"
+#include <algorithm>
+#include <QDir>
+#include <QStorageInfo>
 #include <QQmlEngine>
 #include "src/app_settings.h"
 
@@ -91,7 +94,7 @@ QObject* BoardsModel::boardByIp(const QString& ip) {
 }
 
 auto BoardsModel::summary() -> QVariantMap {
-    int online = 0, running = 0, manual = 0;
+    int online = 0, running = 0, manual = 0, errors = 0;
     double speed = 0, received = 0, lost = 0;
     QString master;
     int masters = 0;
@@ -102,6 +105,8 @@ auto BoardsModel::summary() -> QVariantMap {
             running++;
         if (b->isManual())
             manual++;
+        if (!b->getError().isEmpty())
+            errors++;
         if (b->isOnline() && b->getIsMaster()) {
             masters++;
             master = b->getName();
@@ -116,6 +121,7 @@ auto BoardsModel::summary() -> QVariantMap {
     m["online"] = online;
     m["running"] = running;
     m["manual"] = manual;
+    m["errors"] = errors;
     m["broadcast"] = int(m_boards.size()) - manual;
     m["speed"] = speed;
     m["received"] = received;
@@ -190,6 +196,8 @@ auto BoardsModel::startNext() -> void {
 }
 
 auto BoardsModel::abortStart(const QString& why) -> void {
+    // the board that failed shows the error; the others only log why they were stopped
+    const QString failed = m_startCurrent;
     m_startTimer.stop();
     const auto queued = m_startQueue;
     m_startQueue.clear();
@@ -200,7 +208,7 @@ auto BoardsModel::abortStart(const QString& why) -> void {
         auto b = find(ip);
         if (!b)
             continue;
-        b->note("Start all stopped: " + why, true);
+        b->note("Start all stopped: " + why, ip == failed);
         if (m_startedRun.contains(ip) || b->getState() == "starting")
             b->stopStreaming();
     }
@@ -236,4 +244,48 @@ auto BoardsModel::onDataLost() -> void {
         any |= b->getIsADCStarted();
     if (any)
         stopAll();
+}
+
+QVariantMap BoardsModel::diskShortage(const QString& ip) {
+    struct Disk {
+        double need = 0;
+        double free = 0;
+        QVariantList boards;
+    };
+    QMap<QString, Disk> disks;
+    for (auto& b : m_boards) {
+        // the boards of this start, and the ones already recording with a limit: the rest of
+        // theirs goes to the same disks
+        const bool starts = ip.isEmpty() ? b->getConfigManagerConnected() && !b->getIsADCStarted() : b->getIP() == ip;
+        const bool records = b->getIsADCStarted() && !starts;
+        if (!starts && !records)
+            continue;
+        double need = b->expectedBytes();
+        if (need <= 0)
+            continue;
+        if (records) {
+            const auto r = b->getRecord();
+            if (r["dest"].toString() != "pc" || !r["running"].toBool() || r["limit"].toDouble() <= 0)
+                continue;
+            need *= std::max(0.0, 1.0 - r["samples"].toDouble() / r["limit"].toDouble());
+            if (need <= 0)
+                continue;
+        }
+        const QStorageInfo info = CBoard::storageOf(b->recordDir());
+        if (!info.isValid())
+            continue;
+        auto& d = disks[info.rootPath()];
+        d.free = double(info.bytesAvailable());
+        d.need += need;
+        int on = 0;
+        for (int i = 1; i <= 4; i++)
+            if (b->value("channel_state_" + QString::number(i)) == "ON")
+                on++;
+        d.boards.append(QVariantMap{{"name", b->getName()}, {"samples", b->value("samples_limit_sd").toDouble()}, {"inputs", on}, {"need", need}, {"running", records}});
+    }
+    for (auto it = disks.begin(); it != disks.end(); ++it) {
+        if (it->need > it->free)
+            return QVariantMap{{"need", it->need}, {"free", it->free}, {"disk", it.key()}, {"boards", it->boards}};
+    }
+    return {};
 }

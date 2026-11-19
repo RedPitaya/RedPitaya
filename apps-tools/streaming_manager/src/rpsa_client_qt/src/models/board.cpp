@@ -1,4 +1,5 @@
 #include "board.h"
+#include <QTime>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
@@ -132,9 +133,10 @@ auto CBoard::connectHandlers() -> void {
     cm->errorNofiy.connect([this](ClientNetConfigManager::Errors error, std::string, std::error_code err) {
         if (error == ClientNetConfigManager::Errors::CANNT_SET_DATA_TO_CONFIG) {
             // the connection is fine: a value of the board did not fit the settings of this program
-            addLog("The settings of the board could not be taken: one of its values is not accepted by this program "
-                   "(an older or newer version?). The settings shown are not the ones of the board.",
-                   Log::Error);
+            post([this]() {
+                setError("The settings of the board could not be taken: one of its values is not accepted by this program "
+                         "(an older or newer version?). The settings shown are not the ones of the board.");
+            });
             return;
         }
         const QString msg = QString::fromStdString(err.message());
@@ -146,7 +148,7 @@ auto CBoard::connectHandlers() -> void {
             const bool was = m_connected;
             m_connected = m_configManager->isConnected(m_ip.toStdString());
             if (was && !m_connected && m_state != "stopped")
-                adcStopped("the connection to the board is lost", true);
+                adcStopped("the connection to the board is lost", true, true);
             if (was && !m_connected && closed) {
                 // the board serves one client: a new one closes the connection of the old one
                 m_autoReconnect = false;
@@ -241,6 +243,7 @@ auto CBoard::connectHandlers() -> void {
             if (m_state == "starting")
                 setState("streaming");
             addLog("ADC started: " + adcSummary());
+            dismissError();  // a start that goes
         });
     });
 
@@ -367,7 +370,7 @@ auto CBoard::statSummary() -> QString {
            QString::number(s.lostBoard) + " on the board and " + QString::number(s.lostFile) + " on this PC";
 }
 
-auto CBoard::adcStopped(const QString& why, bool error) -> void {
+auto CBoard::adcStopped(const QString& why, bool error, bool broken) -> void {
     const bool wasStreaming = m_state != "stopped";
     const bool recorded = m_file_manager != nullptr;
     const QString file = m_fileName;
@@ -380,11 +383,14 @@ auto CBoard::adcStopped(const QString& why, bool error) -> void {
     }
     m_stopRequested = false;
     setState("stopped");
-    if (wasStreaming || !why.isEmpty())
-        addLog(why.isEmpty() ? "ADC stopped" : "ADC stopped: " + why, error ? Log::Error : Log::Normal);
+    if (error)
+        setError(why.isEmpty() ? "ADC stopped" : "ADC stopped: " + why);
+    else if (wasStreaming || !why.isEmpty())
+        addLog(why.isEmpty() ? "ADC stopped" : "ADC stopped: " + why);
     if (recorded)
         addLog("Recording done: " + statSummary() + ". File " + file);
-    if (error)
+    // Stop all on loss: a stream that broke off, not a refusal of the start (no input on, ...)
+    if (broken)
         Q_EMIT dataLost();
 }
 
@@ -612,7 +618,7 @@ auto CBoard::pollRecord() -> void {
             m_configManager->requestRecordStatus(m_ip.toStdString());
         return;
     }
-    const QStorageInfo disk(recordDir());
+    const QStorageInfo disk = storageOf(recordDir());
     const uint64_t free = disk.isValid() ? static_cast<uint64_t>(disk.bytesAvailable()) : 0;
     const uint64_t total = disk.isValid() ? static_cast<uint64_t>(disk.bytesTotal()) : 0;
     if (free != m_pcFree || total != m_pcTotal || m_state != "stopped") {
@@ -640,6 +646,7 @@ auto CBoard::getRecord() -> QVariantMap {
         r["total"] = double(m_sdTotal);
         r["file"] = QString::fromStdString(m_sdRecord.file);
         r["mode"] = int(m_sdRecord.mode);
+        r["dataRate"] = dataRate();
         return r;
     }
     SStat s;
@@ -652,6 +659,8 @@ auto CBoard::getRecord() -> QVariantMap {
         samples = std::max(samples, v);
     r["dest"] = "pc";
     r["known"] = true;
+    r["need"] = expectedBytes();
+    r["dataRate"] = dataRate();
     r["running"] = m_state != "stopped" && m_state != "stopping";
     const QString limit = value("samples_limit_sd");
     r["limit"] = limit.toDouble();
@@ -705,7 +714,7 @@ bool CBoard::setValue(const QString& key, const QString& value) {
     CStreamSettings probe = *s;
     if (!probe.setValue(key.toStdString(), value.toStdString())) {
         addLog("Not a valid value of " + key + ": " + value, Log::Error);
-        Q_EMIT settingRefused(key);
+        Q_EMIT settingRefused(key, value);
         m_settingsRev++;
         Q_EMIT settingsChanged();
         return false;
@@ -853,7 +862,17 @@ void CBoard::openRecordFolder() {
 }
 
 auto CBoard::note(const QString& msg, bool error) -> void {
-    addLog(msg, error ? Log::Error : Log::Normal);
+    if (error && m_errorText.isEmpty())
+        setError(msg);
+    else
+        addLog(msg, error ? Log::Error : Log::Normal);
+}
+
+auto CBoard::storageOf(const QString& dir) -> QStorageInfo {
+    QDir d(dir);
+    while (!d.exists() && !d.isRoot() && d.cdUp()) {
+    }
+    return QStorageInfo(d.exists() ? d.absolutePath() : dir);
 }
 
 void CBoard::startStreaming() {
@@ -872,7 +891,7 @@ auto CBoard::startStreaming(QDateTime time) -> void {
     setState("starting");
     addLog("Starting the ADC: " + adcSummary());
     if (!m_configManager->sendADCServerStart(m_ip.toStdString())) {
-        addLog("The start is not sent", Log::Error);
+        setError("The start is not sent: no connection to the board");
         setState("stopped");
     }
 }
@@ -952,7 +971,7 @@ auto CBoard::createStreaming() -> void {
             if (reason == streaming_lib::CStreamingFile::REACH_LIMIT)
                 addLog("The sample limit is written");
             else if (reason == streaming_lib::CStreamingFile::OUT_SPACE)
-                addLog("The disk of this computer is full", Log::Error);
+                setError("The disk of this computer is full: the recording stopped, its file is closed");
             stopStreaming();
         });
     });
@@ -1021,8 +1040,9 @@ auto CBoard::createStreaming() -> void {
         post([this, msg]() {
             if (m_state == "stopped" || m_state == "stopping")
                 return;
-            addLog("Data connection: " + msg, Log::Error);
+            setError("The data connection broke: " + msg);
             stopStreaming();
+            Q_EMIT dataLost();  // the stream broke off
         });
     });
 
@@ -1040,4 +1060,60 @@ auto CBoard::startADCFPGAStreaming() -> void {
     m_memory->reserveMemory(uio_lib::MM_ADC, blocks, m_activeChannels.count());
     m_buffer->generateBuffersEmptyADC(m_activeChannels, m_memory->getRegions(uio_lib::MM_ADC), DataLib::sizeHeader());
     m_configManager->sendADCFPGAStart(m_ip.toStdString());
+}
+
+auto CBoard::setError(const QString& msg) -> void {
+    addLog(msg, Log::Error);
+    m_errorText = msg;
+    m_errorTime = QTime::currentTime().toString("hh:mm:ss");
+    m_errorCount++;
+    Q_EMIT errorChanged();
+}
+
+void CBoard::dismissError() {
+    if (m_errorText.isEmpty() && !m_errorCount)
+        return;
+    m_errorText.clear();
+    m_errorTime.clear();
+    m_errorCount = 0;
+    Q_EMIT errorChanged();
+}
+
+auto CBoard::getError() -> QVariantMap {
+    QVariantMap m;
+    if (m_errorText.isEmpty())
+        return m;
+    m["text"] = m_errorText;
+    m["time"] = m_errorTime;
+    m["count"] = m_errorCount;
+    return m;
+}
+
+auto CBoard::dataRate() -> double {
+    auto s = settings();
+    if (!s)
+        return 0;
+    int on = 0;
+    const int n = getCaps()["adcChannels"].toInt();
+    for (int i = 1; i <= n; i++)
+        if (s->getADCChannels(i).value == CStreamSettings::State::ON)
+            on++;
+    const uint32_t dec = std::max<uint32_t>(1, s->getADCDecimation());
+    // volts are floats in WAV and TDMS; BIN keeps the codes
+    const bool floats = s->getADCType().value == CStreamSettings::DataType::VOLT && value("format_sd") != "BIN";
+    const int bytes = floats ? 4 : s->getADCResolution().value == CStreamSettings::Resolution::BIT_8 ? 1 : 2;
+    return getCaps()["adcRate"].toDouble() / dec * on * bytes;
+}
+
+auto CBoard::expectedBytes() -> double {
+    auto s = settings();
+    if (!s || value("adc_pass_mode") == "FILE")
+        return 0;
+    const uint64_t limit = s->getADCSamples();
+    if (!limit)
+        return 0;
+    const uint32_t dec = std::max<uint32_t>(1, s->getADCDecimation());
+    const double perChannel = getCaps()["adcRate"].toDouble() / dec;
+    // the samples of the limit, a few per cent for the headers of the blocks and the format
+    return perChannel > 0 ? double(limit) * dataRate() / perChannel * 1.02 : 0;
 }
