@@ -9,13 +9,15 @@
 #include "app_settings.h"
 #include "logic/chartdataholder.h"
 #include "logic/device_logic.h"
+#include "models/recording_view.h"
 #include "models/recordings.h"
 #include "models/boardsmodel.h"
 #include "ui_controller.h"
 
 namespace {
 
-// RPSA_QT_SNAPSHOT=<file.png>[:<ms>]: saves the window after ms (default 4000) and quits.
+// RPSA_QT_SNAPSHOT=<file.png>[:<ms>]: saves the window after ms (default 4000) and quits; a viewer
+// open is saved beside it.
 // RPSA_QT_UI=<script>: what the window opens with (see main.qml). For tests and screenshots.
 auto snapshotHook(QQmlApplicationEngine& engine) -> void {
     const QString spec = qEnvironmentVariable("RPSA_QT_SNAPSHOT");
@@ -39,6 +41,10 @@ auto snapshotHook(QQmlApplicationEngine& engine) -> void {
             return;
         }
         window->grabWindow().save(file);
+        // a viewer open (streaming_improvements 4.7): beside it, <file>.viewer.png
+        for (auto* w : QGuiApplication::topLevelWindows())
+            if (auto* q = qobject_cast<QQuickWindow*>(w); q && q != window && q->isVisible() && q->objectName() == "viewer")
+                q->grabWindow().save(file.left(file.lastIndexOf('.')) + ".viewer.png");
         window->close();  // as the user closes it: the window keeps its geometry
         QCoreApplication::exit(0);
     });
@@ -70,6 +76,7 @@ int main(int argc, char* argv[]) {
     });
     DeviceLogic::instance();
 
+    qmlRegisterType<RecordingView>("RpsaClient", 1, 0, "RecordingView");
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("ui_controller", ui_controller::instance());
     engine.rootContext()->setContextProperty("cdh", chart);

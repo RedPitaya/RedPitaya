@@ -36,7 +36,7 @@ ApplicationWindow {
         if (g.maximized)
             showMaximized()
     }
-    onClosing: app.saveWindowGeometry(x, y, width, height, visibility === Window.Maximized)
+    onClosing: { app.saveWindowGeometry(x, y, width, height, visibility === Window.Maximized); dash.closeViewers() }
 
     Dashboard {
         id: dash
@@ -58,8 +58,8 @@ ApplicationWindow {
     // scroll (the open board dialog to its end) | trigger:<index> (software trigger) |
     // signal:<index> | fit:<index> | fullY:<index> | pdec:<index>:<n> (the preview of a board) |
     // measure:<index>[:off] (its measurements) | spectrum:<index>[:off] | recordings (the page) |
-    // rec:menu|convert|delete|folders|tick|convertgo|deletego|next (on the recording shown) | recordings (the page) |
-    // rec:menu|convert|delete|folders|tick|convertgo|deletego|next (on the recording shown)
+    // rec:menu|convert|delete|folders|tick|convertgo|deletego|next|view (on the recording shown) |
+    // view:<step> (in the viewer opened last, see ViewerWindow.qml) |
     // type:<key>=<text> (types into the field of that setting in the open board dialog, as the user)
     // <index> may be the IP of the board instead (the order of the boards follows the broadcast)
     function findField(item, key) {
@@ -89,7 +89,7 @@ ApplicationWindow {
                 else if (p[0] === "list") app.view = "list"
                 else if (p[0] === "recordings") dash.page = "recordings"
                 else if (p[0] === "rec") dash.recordingsScript(p[1])
-                else if (p[0] === "recordings") dash.page = "recordings"
+                else if (p[0] === "view") dash.viewerScript(p.slice(1))
                 else if (p[0] === "startall") diskDialog.start(null)
                 else if (p[0] === "stopall") boards.stopAll()
                 else if (p[0] === "console" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).chartEnable = false

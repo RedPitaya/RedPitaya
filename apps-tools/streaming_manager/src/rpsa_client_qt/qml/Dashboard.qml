@@ -18,6 +18,8 @@ Item {
     // the boards or the recordings on this computer (streaming_improvements 4.7)
     property string page: "boards"
     function recordingsScript(what) { recPage.scriptOpen(what) }
+    function viewerScript(p) { if (recPage.lastViewer) recPage.lastViewer.script(p) }
+    function closeViewers() { recPage.closeViewers() }
 
     ColumnLayout {
         anchors.fill: parent

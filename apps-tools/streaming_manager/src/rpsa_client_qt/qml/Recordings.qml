@@ -84,9 +84,36 @@ Item {
         else if (what === "folders") foldersDialog.open()
         else if (what === "tick") toggle(current)
         else if (what === "convertgo") { const e = recordings.convert([current], { format: "CSV", inputs: [1], index: true }); say(e, e !== "") }
-        else if (what === "deletego") { const e = recordings.remove([current]); say(e, e !== "") }
+        else if (what === "deletego") { closeViewers([current]); const e = recordings.remove([current]); say(e, e !== "") }
+        else if (what === "view") lastViewer = view(current)
         else if (what === "next") { const f = rows.filter(x => !x.head); const i = f.findIndex(x => x.r.path === current); if (i + 1 < f.length) current = f[i + 1].r.path }
     }
+    // the viewers open: path -> window; a recording opens once, again it is raised
+    property var viewers: ({})
+    function view(path) {
+        const w = viewers[path]
+        if (w) { w.show(); w.raise(); w.requestActivate(); return w }
+        const c = Qt.createComponent("ViewerWindow.qml")
+        if (c.status !== Component.Ready) { say(c.errorString(), true); return null }
+        const r = all.find(x => x.path === path)
+        const nw = c.createObject(null, { path: path, board: r ? r.board : "" })
+        const v = Object.assign({}, viewers)
+        v[path] = nw
+        viewers = v
+        nw.gone.connect(() => {
+            const v2 = Object.assign({}, root.viewers)
+            delete v2[path]
+            root.viewers = v2
+            Qt.callLater(() => nw.destroy())
+        })
+        return nw
+    }
+    // the windows close at once (the file closed, an export stopped): the application ends, the
+    // recordings are deleted
+    function closeViewers(paths) { for (const p in viewers) if (!paths || paths.indexOf(p) >= 0) viewers[p].closeNow() }
+    function viewable(r) { return !!r && r.format === "BIN" && !r.recording && !!r.inputs && r.inputs.length > 0 }
+    // the viewer opened last, for the UI script
+    property var lastViewer: null
     function toggle(path) { const s = Object.assign({}, sel); if (s[path]) delete s[path]; else s[path] = true; sel = s }
     // what an action is for: the ticked recordings, else the one shown
     function targets() { const t = selected.map(r => r.path); return t.length ? t : current !== "" ? [current] : [] }
@@ -298,7 +325,13 @@ Item {
                     Item { Layout.fillHeight: true }
                     RowLayout {
                         spacing: 8
-                        Btn { kind: "primary"; text: "View"; enabled: false; ToolTip.visible: hovered; ToolTip.text: "The next step (4.7): the recording with its losses marked" }
+                        Btn {
+                            kind: "primary"; text: "View"
+                            enabled: root.viewable(root.cur)
+                            ToolTip.visible: hovered && !enabled
+                            ToolTip.text: root.cur && root.cur.recording ? "Not while it is recorded" : "A BIN recording of the inputs opens here; convert the others"
+                            onClicked: root.view(root.current)
+                        }
                         Btn { id: fileBtn; kind: "outline"; text: "File ▾"; active: fileMenu.opened; onClicked: fileMenu.popupFor([root.current], fileBtn) }
                     }
                 }
@@ -327,6 +360,7 @@ Item {
             enabled: !row.head
             hoverEnabled: true
             acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onDoubleClicked: if (root.viewable(row.r)) root.view(row.r.path)
             onClicked: (e) => {
                 root.current = row.r.path
                 if (e.button === Qt.RightButton) {
@@ -571,7 +605,7 @@ Item {
                     Layout.fillWidth: true
                 }
             }
-            Label2 { kind: "hint"; text: "CSV, WAV and TDMS made from them stay."; Layout.fillWidth: true }
+            Label2 { kind: "hint"; text: "CSV, WAV and TDMS made from them stay." + (deleteDialog.paths.some(p => !!root.viewers[p]) ? " Their open views close." : ""); Layout.fillWidth: true }
         }
         footer: [
             Item { Layout.fillWidth: true },
@@ -579,6 +613,7 @@ Item {
             Btn {
                 kind: "danger"; text: "Delete"
                 onClicked: {
+                    closeViewers(deleteDialog.paths)
                     const e = recordings.remove(deleteDialog.paths)
                     root.say(e, e !== "")
                     deleteDialog.close()
