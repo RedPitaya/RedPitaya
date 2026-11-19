@@ -64,7 +64,7 @@ TEST(ConvertToCSV, ARowPerSampleWithTheIndexAndTheLostSamples) {
     WriteRecording(bin);
     converter_lib::CConverter c;
     ASSERT_TRUE(c.convertToCSV(bin, "", FH_CSV_ADD_INDEX));
-    EXPECT_EQ(ReadText(Path("rec.csv")), "1,1,-1\n2,2,-2\n3,11,-11\n4,12,-12\n5,-,-\n");
+    EXPECT_EQ(ReadText(Path("rec.csv")), "1,1,-1\n2,2,-2\n3,-,-\n4,11,-11\n5,12,-12\n") << "the lost sample where it was lost, before its pack";
 }
 
 TEST(ConvertToCSV, TheTimeComesFromTheStartAndThePosition) {
@@ -72,8 +72,8 @@ TEST(ConvertToCSV, TheTimeComesFromTheStartAndThePosition) {
     WriteRecording(bin, 1000000000);
     converter_lib::CConverter c;
     ASSERT_TRUE(c.convertToCSV(bin, "", static_cast<FH_CSVMode>(FH_CSV_ADD_TIME_COL_NS)));
-    EXPECT_EQ(ReadText(Path("time.csv")), "1000000000,1,-1\n1000001000,2,-2\n1000003000,11,-11\n1000004000,12,-12\n1000005000,-,-\n")
-        << "the second pack starts at position 3, after the lost sample";
+    EXPECT_EQ(ReadText(Path("time.csv")), "1000000000,1,-1\n1000001000,2,-2\n1000002000,-,-\n1000003000,11,-11\n1000004000,12,-12\n")
+        << "the second pack starts at position 3, after the lost sample at 2";
 }
 
 TEST(ConvertToCSV, TheSegmentsArePacks) {
@@ -81,7 +81,7 @@ TEST(ConvertToCSV, TheSegmentsArePacks) {
     WriteRecording(bin);
     converter_lib::CConverter c;
     ASSERT_TRUE(c.convertToCSV(bin, 2, 2, "", FH_CSV_ADD_INDEX));
-    EXPECT_EQ(ReadText(Path("seg.csv")), "3,11,-11\n4,12,-12\n5,-,-\n") << "the index counts the skipped pack";
+    EXPECT_EQ(ReadText(Path("seg.csv")), "3,-,-\n4,11,-11\n5,12,-12\n") << "the index counts the skipped pack";
 }
 
 TEST(ConvertToCSV, NotABinStreamFile) {
@@ -98,9 +98,9 @@ TEST(ConvertToTDMS, TheSamplesAndTheRateOfTheRecording) {
     ASSERT_TRUE(c.convertToTDMS(bin, ""));
     TDMS::FileReader f;
     ASSERT_TRUE(f.open(Path("tdms.tdms"))) << f.error();
-    // as the board writes TDMS: the lost sample of a buffer is a 0 after its samples
-    EXPECT_EQ(f.readAll<int16_t>("Group", "ch1"), (std::vector<int16_t>{1, 2, 11, 12, 0}));
-    EXPECT_EQ(f.readAll<int16_t>("Group", "ch2"), (std::vector<int16_t>{-1, -2, -11, -12, 0}));
+    // the lost sample of a buffer is a 0 before its samples, where it was lost (as in BIN and CSV)
+    EXPECT_EQ(f.readAll<int16_t>("Group", "ch1"), (std::vector<int16_t>{1, 2, 0, 11, 12}));
+    EXPECT_EQ(f.readAll<int16_t>("Group", "ch2"), (std::vector<int16_t>{-1, -2, 0, -11, -12}));
     EXPECT_EQ(TDMS::getProperty<double>(f.groupProperties("Group"), "sample_rate"), 1e6);
     EXPECT_EQ(f.readAll<uint64_t>("Buffers", "lost"), (std::vector<uint64_t>{0, 1}));
 }
@@ -112,10 +112,10 @@ TEST(ConvertToWAV, TheSamplesInterleaved) {
     ASSERT_TRUE(c.convertToWAV(bin, ""));
     std::ifstream in(Path("wav.wav"), std::ios::binary);
     std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-    ASSERT_EQ(bytes.size(), 44u + 10u * 2u) << "as the board writes WAV: the lost sample is a 0 frame";
+    ASSERT_EQ(bytes.size(), 44u + 10u * 2u) << "the lost sample is a 0 frame";
     std::vector<int16_t> s(10);
     std::memcpy(s.data(), bytes.data() + 44, 20);
-    EXPECT_EQ(s, (std::vector<int16_t>{1, -1, 2, -2, 11, -11, 12, -12, 0, 0}));
+    EXPECT_EQ(s, (std::vector<int16_t>{1, -1, 2, -2, 0, 0, 11, -11, 12, -12})) << "before the buffer it was lost before";
 }
 
 namespace {
@@ -153,4 +153,46 @@ TEST(ConvertGpio, VcdIsForGpioRecordings) {
     WriteRecording(bin);
     converter_lib::CConverter c;
     EXPECT_FALSE(c.convertToVCD(bin, ""));
+}
+
+// streaming_improvements 3.8: the output file, the channels, no overwrite without asking, the head
+TEST(ConvertToCSV, TheOutputFileTheChannelsAndTheHead) {
+    const auto bin = Path("opts.bin");
+    WriteRecording(bin);
+    const auto out = Path("opts_out.csv");
+    std::filesystem::remove(out);
+    converter_lib::CConverter c;
+    c.setOutput(out);
+    c.setChannels(0x2);
+    c.setCSVHeader(true);
+    c.setOverwrite(false);
+    ASSERT_TRUE(c.convertToCSV(bin, "", FH_CSV_ADD_INDEX)) << c.lastError();
+    EXPECT_EQ(ReadText(out), "index,ch2\n1,-1\n2,-2\n3,-\n4,-11\n5,-12\n");
+    EXPECT_EQ(c.lastOutput(), out);
+    EXPECT_EQ(c.lastChannels(), 1u);
+    EXPECT_EQ(c.lastSamples(), 4u);
+    EXPECT_FALSE(c.convertToCSV(bin, "", FH_CSV_ADD_INDEX)) << "the file is there now";
+    EXPECT_NE(c.lastError().find("--force"), std::string::npos) << c.lastError();
+    c.setOverwrite(true);
+    EXPECT_TRUE(c.convertToCSV(bin, "", FH_CSV_ADD_INDEX));
+}
+
+TEST(ConvertToWAV, OnlyTheChannelsAskedFor) {
+    const auto bin = Path("wav1.bin");
+    WriteRecording(bin);
+    converter_lib::CConverter c;
+    c.setChannels(0x1);
+    ASSERT_TRUE(c.convertToWAV(bin, "")) << c.lastError();
+    std::ifstream in(Path("wav1.wav"), std::ios::binary);
+    std::string bytes((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    ASSERT_EQ(bytes.size(), 44u + 5u * 2u) << "one channel";
+    std::vector<int16_t> s(5);
+    std::memcpy(s.data(), bytes.data() + 44, 10);
+    EXPECT_EQ(s, (std::vector<int16_t>{1, 2, 0, 11, 12}));
+}
+
+TEST(ConvertToCSV, AFileThatIsNotThereSaysSo) {
+    converter_lib::CConverter c;
+    EXPECT_FALSE(c.convertToCSV(Path("missing.bin"), "", FH_CSV_ADD_INDEX));
+    EXPECT_NE(c.lastError().find("Can't open"), std::string::npos) << c.lastError();
 }

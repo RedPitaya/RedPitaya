@@ -53,6 +53,15 @@ struct Options {
     SaveType save_type{SaveType::NONE};
     uint64_t samples{0};  // per channel; 0 - no limit
     bool tdms_time{false};  // a TDMS column with the time of every sample
+    // -i, as many as given, in their order: a read (NAME) or a write (NAME=VALUE, cut at the
+    // first "=", the value may hold more of them)
+    struct ConfigItem {
+        std::string name;
+        std::string value;
+        bool write{false};
+    };
+    std::vector<ConfigItem> config_items;
+    // the -i being done now
     std::string config_item_name{""};
     std::string config_item_value{""};
     bool config_item_write{false};

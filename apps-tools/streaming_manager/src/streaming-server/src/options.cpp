@@ -14,6 +14,7 @@
 #endif
 
 #include "options.h"
+#include "asio.hpp"
 
 static struct option long_options[] = {
     /* These options set a flag. */
@@ -23,9 +24,18 @@ static struct option long_options[] = {
     {"verbose", no_argument, 0, 'v'},
     {"web", required_argument, 0, 'w'},
     {"help", no_argument, 0, 'h'},
+    {"version", no_argument, 0, 'V'},
     {0, 0, 0, 0}};
 
-static constexpr char optstring[] = "bf:hl:vw:";
+static constexpr char optstring[] = "bf:hl:vVw:";
+
+#define SERVER_XSTR(s) SERVER_STR(s)
+#define SERVER_STR(s) #s
+#ifdef VERSION
+#define SERVER_VERSION SERVER_XSTR(VERSION) "-" SERVER_XSTR(REVISION)
+#else
+#define SERVER_VERSION "unknown"
+#endif
 
 std::vector<std::string> ClientOpt::split(const std::string& s, char seperator) {
     std::vector<std::string> output;
@@ -58,8 +68,8 @@ auto ClientOpt::usage(char const* progName) -> void {
         name = arr[arr.size() - 1];
     const char* format =
         "Usage: \n"
-        "\t%s [-b] [-f PATH] [-l ADDRESS] [-w PORT] [-v]\n"
-        "\t%s [--background] [--file=PATH] [--listen=ADDRESS] [--web=PORT] [--verbose]\n"
+        "\t%s [-b] [-f PATH] [-l ADDRESS] [-w PORT] [-v] [-V]\n"
+        "\t%s [--background] [--file=PATH] [--listen=ADDRESS] [--web=PORT] [--verbose] [--version]\n"
         "\n"
         "\t--background          -b        Run service in background.\n"
         "\t--file=PATH           -f FILE   Path to configuration file.\n"
@@ -70,6 +80,7 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\t--web=PORT            -w PORT   The port of the web page on 127.0.0.1 (nginx proxies the page to it);\n"
         "\t                                0 - no web page. By default 18906 on the board.\n"
         "\t--verbose             -v        Displays information.\n"
+        "\t--version             -V        The version of the server.\n"
         "\n"
         "\t Example:\n"
         "\t\t%s -b -f /root/.streaming_config_new.json\n";
@@ -112,9 +123,21 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 break;
             }
 
-            case 'l':
+            case 'l': {
+                // an address of this board: a wrong one would leave the ports closed
+                asio::error_code ec;
+                asio::ip::make_address(optarg, ec);
+                if (ec) {
+                    printWithLog(LOG_ERR, stderr, "[ERROR] Wrong value of --listen: %s (an IP address of the board, e.g. 127.0.0.1)\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 opt.listen = optarg;
                 break;
+            }
+
+            case 'V':
+                aprintf(stdout, "streaming-server %s\n", SERVER_VERSION);
+                exit(EXIT_SUCCESS);
 
             case 'w': {
                 char* end = nullptr;

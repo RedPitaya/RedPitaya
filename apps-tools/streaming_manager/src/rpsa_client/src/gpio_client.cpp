@@ -446,7 +446,27 @@ auto startGPIO(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
             const bool playingOut = outStarted && g_out.fileEnded && !g_outStopped && !g_gpioStop && nowMs() - g_out.endedAt < replyTimeout();
             return (inStarted && !g_in.done) || (outStarted && !g_out.done) || playingOut;
         };
+        // without a terminal: a line every few seconds (streaming_improvements 3.4)
+        const bool plain = !panel.enabled() && plainProgressWanted(option);
+        auto lastPlain = nowMs();
         while (running()) {
+            if (plain && nowMs() - lastPlain >= PLAIN_PROGRESS_MS) {
+                lastPlain = nowMs();
+                const double secs = (nowMs() - begin) / 1000.0;
+                if (inStarted) {
+                    const std::lock_guard a(g_in.m);
+                    aprintf(stdout, "%s %s in: %s, %llu samples, %llu words, %s, lost %llu, waited %llu\n", clockText().c_str(), host.c_str(),
+                            g_in.lost || g_in.fileError ? "stopped" : g_in.done ? "done" : g_in.packs ? "recording" : "waiting", (unsigned long long)g_in.samples,
+                            (unsigned long long)g_in.words, sizeText(g_in.bytes).c_str(), (unsigned long long)g_in.lostSamples, (unsigned long long)g_in.waitSamples);
+                }
+                if (outStarted) {
+                    const std::lock_guard b(g_out.m);
+                    aprintf(stdout, "%s %s out: %s, %llu words, %s, %s/s\n", clockText().c_str(), host.c_str(),
+                            g_out.lost ? "stopped" : g_out.fileEnded ? "playing out" : g_out.connected ? "playing" : "connecting", (unsigned long long)g_out.words,
+                            sizeText(g_out.bytes).c_str(), sizeText(secs > 0 ? (uint64_t)(g_out.bytes / secs) : 0).c_str());
+                }
+                fflush(stdout);
+            }
             if (panel.enabled()) {
                 const double secs = (nowMs() - begin) / 1000.0;
                 char buf[256];

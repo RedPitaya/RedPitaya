@@ -478,3 +478,20 @@ TEST(StreamSettingsJson, ABadBlockSizeOrDACFileInADocumentIsSkipped) {
     EXPECT_EQ(s.getMemoryBlockSize(), 4096u);
     EXPECT_EQ(s.getDACFile(), "a.wav");
 }
+
+// streaming_improvements 3.10: the file is written beside and put in place, nothing is left
+// over, and a file that is there stays whole until the new one is complete
+TEST(StreamSettingsJson, WriteToFileReplacesTheFileAndLeavesNoTemporaryFile) {
+    const ScratchDir dir;
+    const std::string path = dir.file("settings.json");
+    CStreamSettings first;
+    first.setADCDecimation(4);
+    ASSERT_TRUE(first.writeToFile(path));
+    CStreamSettings second;
+    second.setADCDecimation(64);
+    ASSERT_TRUE(second.writeToFile(path));
+    EXPECT_FALSE(std::filesystem::exists(path + ".tmp"));
+    CStreamSettings read;
+    ASSERT_TRUE(read.readFromFile(path));
+    EXPECT_EQ(read.getADCDecimation(), 64u);
+}

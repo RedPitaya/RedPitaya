@@ -196,6 +196,9 @@ auto getConfigItem(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Option
             aprintf(stdout, "Host:\t\t\t%s\n", host.c_str());
             aprintf(stdout, "%s=%s", option.config_item_name.c_str(), str.c_str());
             aprintf(stdout, "\n========================================================\n");
+        } else if (option.config_items.size() > 1) {
+            // several -i: which value is which
+            aprintf(stdout, "%s%s=%s\n", cl->getHosts().size() > 1 ? (host + " ").c_str() : "", option.config_item_name.c_str(), str.c_str());
         } else {
             aprintf(stdout, "%s\n", str.c_str());
         }
@@ -410,15 +413,17 @@ auto startConfig(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options&
         return setConfig(cl, option);
     }
 
-    if (option.config_item_name != "" && option.config_item_value == "") {
-        return getConfigItem(cl, option);
+    // the -i in their order over one connection; a refused one does not stop the others, the
+    // run fails at the end
+    bool ok = !option.config_items.empty();
+    for (const auto& item : option.config_items) {
+        if (g_exit_flag)
+            return false;
+        option.config_item_name = item.name;
+        option.config_item_value = item.value;
+        ok = (item.write ? setConfigItem(cl, option) : getConfigItem(cl, option)) && ok;
     }
-
-    if (option.config_item_name != "" && option.config_item_value != "") {
-        return setConfigItem(cl, option);
-    }
-
-    return false;
+    return ok;
 }
 
 auto configSIGHandler() -> void {

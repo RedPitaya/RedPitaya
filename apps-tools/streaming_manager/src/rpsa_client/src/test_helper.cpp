@@ -350,6 +350,23 @@ auto progressWanted(const ClientOpt::Options& option) -> bool {
     return !option.quiet && !option.verbous && isatty(fileno(stdout));
 }
 
+auto plainProgressWanted(const ClientOpt::Options& option) -> bool {
+    return !option.quiet && !option.verbous && !isatty(fileno(stdout));
+}
+
+auto clockText() -> std::string {
+    const time_t now = time(nullptr);
+    struct tm t;
+#ifdef _WIN32
+    localtime_s(&t, &now);
+#else
+    localtime_r(&now, &t);
+#endif
+    char buf[16];
+    strftime(buf, sizeof(buf), "%H:%M:%S", &t);
+    return buf;
+}
+
 auto showProgress(const std::string& line, bool done) -> void {
     static size_t last = 0;
     std::string text = done ? std::string() : line;

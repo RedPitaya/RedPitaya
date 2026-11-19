@@ -32,6 +32,11 @@ auto sizeText(uint64_t bytes) -> std::string;
 // done: clears it
 auto showProgress(const std::string& line, bool done = false) -> void;
 auto progressWanted(const ClientOpt::Options& option) -> bool;
+// no terminal (a log, a pipe): a line now and then instead of the panel (streaming_improvements 3.4)
+auto plainProgressWanted(const ClientOpt::Options& option) -> bool;
+constexpr int PLAIN_PROGRESS_MS = 5000;
+// "10:15:05", the local time, at the head of those lines
+auto clockText() -> std::string;
 auto testBuffer(uint8_t* buff_c1, uint8_t* buff_c2, uint8_t* buff_c3, uint8_t* buff_c4, size_t size_ch1, size_t size_ch2, size_t size_ch3, size_t size_ch4) -> bool;
 
 template <typename T>

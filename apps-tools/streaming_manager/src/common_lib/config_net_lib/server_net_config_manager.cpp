@@ -1,4 +1,5 @@
 #include "server_net_config_manager.h"
+#include <filesystem>
 #include "config_apply.h"
 #include "logger_lib/file_logger.h"
 
@@ -14,6 +15,16 @@ ServerNetConfigManager::ServerNetConfigManager(std::string defualt_file_settings
 
     // The settings are in place before a client can ask for them.
     if (!m_settings.readFromFile(defualt_file_settings_path)) {
+        // a file that is there and does not read is kept for a look (a power cut, an edit by
+        // hand), the defaults go in its place
+        std::error_code ec;
+        if (std::filesystem::exists(defualt_file_settings_path, ec)) {
+            const std::string bad = defualt_file_settings_path + ".bad";
+            std::filesystem::rename(defualt_file_settings_path, bad, ec);
+            const std::string kept = ec ? "it could not be kept (" + ec.message() + ")" : "it is kept as " + bad;
+            ERROR_LOG("The config file %s does not read: the default settings are used, %s", defualt_file_settings_path.c_str(), kept.c_str())
+            aprintf(stderr, "[ERROR] The config file %s does not read: the default settings are used, %s\n", defualt_file_settings_path.c_str(), kept.c_str());
+        }
         m_settings.resetDefault();
         m_settings.writeToFile(defualt_file_settings_path);
     }

@@ -171,6 +171,10 @@ auto Panel::green(const std::string& s) -> std::string {
     return "\033[32m" + s + "\033[0m";
 }
 
+auto Panel::yellow(const std::string& s) -> std::string {
+    return "\033[33m" + s + "\033[0m";
+}
+
 auto Panel::red(const std::string& s) -> std::string {
     return "\033[1;31m" + s + "\033[0m";
 }

@@ -4,6 +4,7 @@
 #include "converter.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstring>
 #include <ctime>
 #include <filesystem>
@@ -50,6 +51,69 @@ void CConverter::stopWriteToTDMS() {
 
 bool CConverter::convertToCSV(std::string _file_name, std::string _prefix, FH_CSVMode mode) {
     return convertToCSV(_file_name, -2, -2, _prefix, mode);
+}
+
+void CConverter::setOutput(const std::string& path) {
+    m_output = path;
+}
+
+void CConverter::setChannels(uint32_t mask) {
+    m_channels = mask;
+}
+
+void CConverter::setOverwrite(bool overwrite) {
+    m_overwrite = overwrite;
+}
+
+void CConverter::setCSVHeader(bool header) {
+    m_csvHeader = header;
+}
+
+auto CConverter::lastOutput() const -> std::string {
+    return m_lastOutput;
+}
+
+auto CConverter::lastChannels() const -> uint32_t {
+    return m_lastChannels;
+}
+
+auto CConverter::lastSamples() const -> uint64_t {
+    return m_lastSamples;
+}
+
+auto CConverter::lastWasGpio() const -> bool {
+    return m_lastGpio;
+}
+
+auto CConverter::lastError() const -> std::string {
+    return m_lastError;
+}
+
+auto CConverter::fail(const std::string& prefix, const std::string& why) -> bool {
+    m_lastError = why;
+    aprintf(stderr, "%s[ERROR] %s\n", prefix.c_str(), why.c_str());
+    return false;
+}
+
+auto CConverter::wanted(uint8_t channelId) const -> bool {
+    return m_channels == 0 || (channelId >= 1 && channelId <= 32 && (m_channels & (1u << (channelId - 1))));
+}
+
+auto CConverter::outputFor(const std::string& input, const char* extension) -> std::string {
+    std::string out = m_output;
+    if (out.empty())
+        out = std::filesystem::path(input).replace_extension(extension).string();
+    std::error_code ec;
+    if (std::filesystem::equivalent(out, input, ec)) {
+        fail("", "The output " + out + " is the input file");
+        return "";
+    }
+    if (!m_overwrite && std::filesystem::exists(out, ec)) {
+        fail("", out + " exists: --force overwrites it, -o FILE writes another");
+        return "";
+    }
+    m_lastOutput = out;
+    return out;
 }
 
 namespace {
@@ -108,20 +172,24 @@ auto printSample(std::ostream& out, const uint8_t* data, uint64_t i, bin_lib::Sa
 }
 
 // The rows of a pack: per sample a row with a column per channel of the file; the samples lost
-// and waited before a block of a channel are "-" after its samples
-auto packToCSV(std::ostream& out, const bin_lib::FileInfo& info, const Pack& pack, uint64_t& samplePos, FH_CSVMode mode) -> void {
+// and waited before a block of a channel are "-" before its samples, where they were missed
+// (as in BIN, WAV and TDMS). keep: the channels of the file written
+auto packToCSV(std::ostream& out, const bin_lib::FileInfo& info, const Pack& pack, uint64_t& samplePos, FH_CSVMode mode, const std::vector<bool>& keep) -> void {
     const size_t channels = info.channels.size();
     std::vector<const bin_lib::BlockInfo*> block(channels, nullptr);
     std::vector<const uint8_t*> data(channels, nullptr);
-    uint64_t rows = 0;
+    uint64_t rows = 0, gap = 0;
     for (size_t k = 0; k < pack.blocks.size(); k++) {
         const auto& b = pack.blocks[k];
         block[b.channel] = &b;
         data[b.channel] = pack.data[k].data();
         rows = std::max(rows, b.samples + b.lost + b.wait);
+        gap = std::max(gap, b.lost + b.wait);
     }
     const double period = info.clock ? 1e9 * info.decimation / static_cast<double>(info.clock) : 0;
-    const uint64_t position = pack.blocks.front().position;
+    // the first row is the first sample missed before the pack
+    const uint64_t first = pack.blocks.front().position;
+    const uint64_t position = first >= gap ? first - gap : 0;
     for (uint64_t i = 0; i < rows; i++) {
         samplePos++;
         if (mode & FH_CSV_ADD_INDEX)
@@ -143,18 +211,39 @@ auto packToCSV(std::ostream& out, const bin_lib::FileInfo& info, const Pack& pac
         }
         bool comma = false;
         for (size_t c = 0; c < channels; c++) {
-            if (!block[c])
+            if (!block[c] || !keep[c])
                 continue;
             if (comma)
                 out << ",";
             comma = true;
-            if (i < block[c]->samples)
-                printSample(out, data[c], i, info.channels[c].type);
+            const uint64_t skip = block[c]->lost + block[c]->wait;
+            if (i >= skip && i - skip < block[c]->samples)
+                printSample(out, data[c], i - skip, info.channels[c].type);
             else
                 out << "-";
         }
         out << "\n";
     }
+}
+
+// the names of the columns, as the rows have them
+auto csvHead(const bin_lib::FileInfo& info, FH_CSVMode mode, const std::vector<bool>& keep) -> std::string {
+    std::string h;
+    auto add = [&](const std::string& name) { h += (h.empty() ? "" : ",") + name; };
+    if (mode & FH_CSV_ADD_INDEX)
+        add("index");
+    if (info.startTime != 0) {
+        if (mode & FH_CSV_ADD_TIME_COL_NS)
+            add("time_ns");
+        else if (mode & FH_CSV_ADD_TIME_COL)
+            add("time");
+        else if (mode & FH_CSV_ADD_TIME_COL_FOR_BLOCK)
+            add("block_time");
+    }
+    for (size_t c = 0; c < info.channels.size(); c++)
+        if (keep[c])
+            add("ch" + std::to_string(info.channels[c].id));
+    return h + "\n";
 }
 
 }  // namespace
@@ -164,23 +253,34 @@ bool CConverter::convertToCSV(std::string _file_name, int32_t start_seg, int32_t
     m_stopWriteCSV = false;
     if (_prefix != "")
         _prefix = "[" + _prefix + "] ";
-    aprintf(stdout, "%s Started converting to CSV\n", _prefix.c_str());
-    const std::string csv_file = _file_name.substr(0, _file_name.size() - 3) + "csv";
-    aprintf(stdout, "%s %s\n", _prefix.c_str(), csv_file.c_str());
-
+    m_lastOutput.clear();
+    m_lastError.clear();
+    m_lastChannels = 0;
+    m_lastSamples = 0;
+    m_lastGpio = false;
     bin_lib::FileReader reader;
-    if (!reader.open(_file_name)) {
-        aprintf(stderr, "%s Error open file %s: %s\n", _prefix.c_str(), _file_name.c_str(), reader.error().c_str());
-        return false;
-    }
+    if (!reader.open(_file_name))
+        return fail(_prefix, "Can't open " + _file_name + ": " + reader.error());
     const auto& info = reader.info();
     if (isGpio(info))
         return gpioToText(reader, _file_name, CStreamSettings::GPIOFormat::CSV, _prefix);
-    std::ofstream out(csv_file, std::ios::trunc);
-    if (!out) {
-        aprintf(stderr, "%s Error open file %s\n", _prefix.c_str(), csv_file.c_str());
-        return false;
+    std::vector<bool> keep(info.channels.size());
+    for (size_t c = 0; c < info.channels.size(); c++) {
+        keep[c] = wanted(info.channels[c].id);
+        m_lastChannels += keep[c] ? 1 : 0;
     }
+    if (!m_lastChannels)
+        return fail(_prefix, "None of the channels asked for is in " + _file_name);
+    const std::string csv_file = outputFor(_file_name, ".csv");
+    if (csv_file.empty())
+        return false;
+    aprintf(stdout, "%s Started converting to CSV\n", _prefix.c_str());
+    aprintf(stdout, "%s %s\n", _prefix.c_str(), csv_file.c_str());
+    std::ofstream out(csv_file, std::ios::trunc);
+    if (!out)
+        return fail(_prefix, "Can't write " + csv_file + ": " + std::strerror(errno));
+    if (m_csvHeader)
+        out << csvHead(info, mode, keep);
     const uint64_t length = std::filesystem::file_size(_file_name);
     start_seg = std::max(start_seg, 1);
     Pack pack;
@@ -197,8 +297,8 @@ bool CConverter::convertToCSV(std::string _file_name, int32_t start_seg, int32_t
             break;
         }
         if (getFreeSpaceDisk(csv_file) <= USING_FREE_SPACE) {
-            aprintf(stdout, "%s Disk is full\n", _prefix.c_str());
-            ret = false;
+            aprintf(stdout, "\n");
+            ret = fail(_prefix, "The disk of " + csv_file + " is full");
             break;
         }
         if (end_seg != -2 && segment > end_seg)
@@ -211,14 +311,18 @@ bool CConverter::convertToCSV(std::string _file_name, int32_t start_seg, int32_t
             samplePos += rows;
             continue;
         }
-        packToCSV(out, info, pack, samplePos, mode);
-        for (const auto& b : pack.blocks)
+        packToCSV(out, info, pack, samplePos, mode, keep);
+        uint64_t most = 0;
+        for (const auto& b : pack.blocks) {
             done += bin_lib::blockSize(b.dataSize);
+            most = std::max(most, b.samples);
+        }
+        m_lastSamples += most;
         if (length)
             aprintf(stdout, "\r%s PROGRESS: %d %%", _prefix.c_str(), static_cast<int>(std::min<uint64_t>(100, done * 100 / length)));
         if (!out) {
-            aprintf(stdout, "\n%s Error write to CSV file\n", _prefix.c_str());
-            ret = false;
+            aprintf(stdout, "\n");
+            ret = fail(_prefix, "Can't write " + csv_file);
             break;
         }
     }
@@ -250,15 +354,16 @@ bool CConverter::convertToVCD(std::string _file_name, std::string _prefix) {
     std::lock_guard lock(m_mtx);
     if (_prefix != "")
         _prefix = "[" + _prefix + "] ";
+    m_lastOutput.clear();
+    m_lastError.clear();
+    m_lastChannels = 0;
+    m_lastSamples = 0;
+    m_lastGpio = false;
     bin_lib::FileReader reader;
-    if (!reader.open(_file_name)) {
-        aprintf(stderr, "%s Error open file %s: %s\n", _prefix.c_str(), _file_name.c_str(), reader.error().c_str());
-        return false;
-    }
-    if (!isGpio(reader.info())) {
-        aprintf(stderr, "%s VCD is made of GPIO recordings only\n", _prefix.c_str());
-        return false;
-    }
+    if (!reader.open(_file_name))
+        return fail(_prefix, "Can't open " + _file_name + ": " + reader.error());
+    if (!isGpio(reader.info()))
+        return fail(_prefix, "VCD is made of GPIO recordings only");
     return gpioToText(reader, _file_name, CStreamSettings::GPIOFormat::VCD, _prefix);
 }
 
@@ -268,23 +373,31 @@ auto CConverter::toStreamFile(const std::string& file, int32_t start_seg, int32_
     if (prefix != "")
         prefix = "[" + prefix + "] ";
     const char* name = format.value == CStreamSettings::DataFormat::WAV ? "WAV" : "TDMS";
-    aprintf(stdout, "%s Started converting to %s\n", prefix.c_str(), name);
+    m_lastOutput.clear();
+    m_lastError.clear();
+    m_lastChannels = 0;
+    m_lastSamples = 0;
+    m_lastGpio = false;
     bin_lib::FileReader reader;
-    if (!reader.open(file)) {
-        aprintf(stderr, "%s Error open file %s: %s\n", prefix.c_str(), file.c_str(), reader.error().c_str());
-        return false;
-    }
+    if (!reader.open(file))
+        return fail(prefix, "Can't open " + file + ": " + reader.error());
     const auto& info = reader.info();
-    if (isGpio(info)) {
-        aprintf(stderr, "%s A GPIO recording goes to CSV or VCD, not to %s\n", prefix.c_str(), name);
+    if (isGpio(info))
+        return fail(prefix, std::string("A GPIO recording goes to CSV or VCD, not to ") + name);
+    for (const auto& ch : info.channels)
+        m_lastChannels += ch.id >= 1 && ch.id <= 4 && wanted(ch.id) ? 1 : 0;
+    if (!m_lastChannels)
+        return fail(prefix, "None of the channels asked for is in " + file);
+    const std::string out = outputFor(file, format.value == CStreamSettings::DataFormat::WAV ? ".wav" : ".tdms");
+    if (out.empty())
         return false;
-    }
-    const std::string out = file.substr(0, file.size() - 4) + (format.value == CStreamSettings::DataFormat::WAV ? ".wav" : ".tdms");
+    aprintf(stdout, "%s Started converting to %s\n", prefix.c_str(), name);
     std::string dir = ".";
     auto writer = CStreamingFile::create(format, dir, 0, false, false);
+    bool full = false;
     writer->stopNotify.connect([&](CStreamingFile::EStopReason r) {
         if (r == CStreamingFile::OUT_SPACE) {
-            aprintf(stdout, "%s Disk is full\n", prefix.c_str());
+            full = true;
             stop = true;
         }
     });
@@ -310,11 +423,13 @@ auto CConverter::toStreamFile(const std::string& file, int32_t start_seg, int32_
         if (segment < start_seg)
             continue;
         auto p = DataLib::CDataBuffersPackDMA::Create();
+        uint64_t most = 0;
         for (size_t k = 0; k < pack.blocks.size(); k++) {
             const auto& b = pack.blocks[k];
             const auto& ch = info.channels[b.channel];
-            if (ch.id < 1 || ch.id > 4)
+            if (ch.id < 1 || ch.id > 4 || !wanted(ch.id))
                 continue;
+            most = std::max(most, b.samples);
             const uint8_t bits = static_cast<uint8_t>(bin_lib::sampleBytes(ch.type) * 8);
             auto* bytes = new uint8_t[pack.data[k].size()];  // the buffer takes it over
             std::memcpy(bytes, pack.data[k].data(), pack.data[k].size());
@@ -333,6 +448,7 @@ auto CConverter::toStreamFile(const std::string& file, int32_t start_seg, int32_
             p->addBuffer(static_cast<DataLib::EDataBuffersPackChannel>(ch.id - 1), buff);
             done += bin_lib::blockSize(b.dataSize);
         }
+        m_lastSamples += most;
         p->setOSCRate(info.clock / decimation);
         writer->passBuffers(p);
         if (length)
@@ -340,6 +456,10 @@ auto CConverter::toStreamFile(const std::string& file, int32_t start_seg, int32_
     }
     writer->stopAndFlush();
     aprintf(stdout, "\n%s Ended converting\n", prefix.c_str());
+    if (full)
+        return fail(prefix, "The disk of " + out + " is full");
+    if (!ret && m_lastError.empty())
+        m_lastError = "stopped";
     return ret;
 }
 
@@ -356,13 +476,15 @@ auto CConverter::gpioToText(bin_lib::FileReader& reader, const std::string& file
     rec.triggerMode = info.flags & bin_lib::FILE_FLAG_TRIGGER_MODE;
     rec.waitCounter = info.flags & bin_lib::FILE_FLAG_WAIT_COUNTER;
     rec.startTime = info.startTime;
-    const std::string out = file.substr(0, file.size() - 3) + (format.value == CStreamSettings::GPIOFormat::VCD ? "vcd" : "csv");
+    const std::string out = outputFor(file, format.value == CStreamSettings::GPIOFormat::VCD ? ".vcd" : ".csv");
+    if (out.empty())
+        return false;
+    m_lastChannels = 1;
+    m_lastGpio = true;
     aprintf(stdout, "%s %s\n", prefix.c_str(), out.c_str());
     CGpioFileWriter writer;
-    if (!writer.open(out, rec)) {
-        aprintf(stderr, "%s Error open file %s\n", prefix.c_str(), out.c_str());
-        return false;
-    }
+    if (!writer.open(out, rec))
+        return fail(prefix, "Can't write " + out);
     bin_lib::BlockInfo b;
     std::vector<uint8_t> data;
     std::vector<uint32_t> words;
@@ -377,8 +499,11 @@ auto CConverter::gpioToText(bin_lib::FileReader& reader, const std::string& file
             w = words.data();
         }
         const auto r = writer.write(w, count, b.lost, b.wait, b.triggerCount);
+        m_lastSamples += count;
         if (r != CGpioFileWriter::Result::OK) {
             ret = r == CGpioFileWriter::Result::LIMIT;
+            if (!ret)
+                fail(prefix, "Can't write " + out);
             break;
         }
     }

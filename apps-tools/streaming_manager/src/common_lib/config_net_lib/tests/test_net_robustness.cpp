@@ -539,3 +539,38 @@ TEST(NetConfigListen, AWrongAddressIsAnError) {
     std::error_code ec;
     std::filesystem::remove(TempFile(port), ec);
 }
+
+// streaming_improvements 3.10: a config file that does not read is kept as .bad, the defaults go
+// in its place (before: overwritten, the settings lost without a trace)
+TEST(NetConfigTransport, AConfigFileThatDoesNotReadIsKeptAsBad) {
+    const uint16_t port = NextPort();
+    const std::string file = TempFile(port);
+    std::error_code ec;
+    std::filesystem::remove(file + ".bad", ec);
+    { std::ofstream(file) << "{ \"adc_config\": { \"adc_decimation\": "; }  // cut by a power loss
+    {
+        ServerNetConfigManager server(file, broadcast_lib::AB_SERVER_MASTER, "127.0.0.1", port, 2);
+        ASSERT_TRUE(std::filesystem::exists(file + ".bad"));
+        std::ifstream bad(file + ".bad");
+        const std::string kept((std::istreambuf_iterator<char>(bad)), std::istreambuf_iterator<char>());
+        EXPECT_EQ(kept, "{ \"adc_config\": { \"adc_decimation\": ");
+        CStreamSettings now;
+        EXPECT_TRUE(now.readFromFile(file)) << "the defaults are in the file";
+    }
+    std::filesystem::remove(file, ec);
+    std::filesystem::remove(file + ".bad", ec);
+}
+
+TEST(NetConfigTransport, AMissingConfigFileIsMadeWithTheDefaults) {
+    const uint16_t port = NextPort();
+    const std::string file = TempFile(port);
+    std::error_code ec;
+    std::filesystem::remove(file, ec);
+    std::filesystem::remove(file + ".bad", ec);
+    {
+        ServerNetConfigManager server(file, broadcast_lib::AB_SERVER_MASTER, "127.0.0.1", port, 2);
+        EXPECT_TRUE(std::filesystem::exists(file));
+        EXPECT_FALSE(std::filesystem::exists(file + ".bad")) << "nothing to keep";
+    }
+    std::filesystem::remove(file, ec);
+}

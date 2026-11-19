@@ -184,8 +184,9 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPackDMA::Ptr pack, Data
         uint64_t destSize = src_buff->getDataLenght() + lostSamplesInBytes;
         auto dest = net_lib::createBuffer(destSize);
         if (dest.get()) {
-            memcpy_neon(dest.get(), src_buff->getMappedDataMemory(), src_buff->getDataLenght());
-            memset(dest.get() + src_buff->getDataLenght(), 0, sizeof(uint8_t) * lostSamplesInBytes);
+            // the samples lost are the ones right before the block (as in BIN): zeros first
+            memset(dest.get(), 0, sizeof(uint8_t) * lostSamplesInBytes);
+            memcpy_neon(dest.get() + lostSamplesInBytes, src_buff->getMappedDataMemory(), src_buff->getDataLenght());
         } else {
             aprintf(stderr, "There is not enough memory to allocate a buffer Requred size: %lld bytes.\n", destSize);
         }
@@ -214,7 +215,9 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPackDMA::Ptr pack, Data
         uint64_t destSize = (samples + lostSamples) * sizeof(float);
         auto dest = net_lib::createBuffer(destSize);
         if (dest.get()) {
-            auto dest_f = (float*)dest.get();
+            // the samples lost are the ones right before the block (as in BIN): zeros first
+            memset(dest.get(), 0, sizeof(float) * lostSamples);
+            auto dest_f = (float*)dest.get() + lostSamples;
             for (uint32_t i = 0; i < samples; i++) {
                 if (bitBySamp == 8) {
                     int8_t* src_buff_bytes = reinterpret_cast<int8_t*>(src_buff->getMappedDataMemory());
@@ -228,7 +231,6 @@ auto CStreamingFile::convertBuffers(DataLib::CDataBuffersPackDMA::Ptr pack, Data
                     dest_f[i] = cnt / (1 << (bitBySamp - 1)) * (float)adcMode;
                 }
             }
-            memset(dest.get() + (samples * sizeof(float)), 0, sizeof(float) * lostSamples);
         } else {
             aprintf(stderr, "There is not enough memory to allocate a buffer Requred size: %lld bytes.\n", destSize);
         }

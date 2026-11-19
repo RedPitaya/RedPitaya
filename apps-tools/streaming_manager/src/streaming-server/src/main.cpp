@@ -20,6 +20,9 @@
 #endif
 
 #include <signal.h>
+#ifndef _WIN32
+#include <fcntl.h>
+#endif
 #include <unistd.h>
 #include <atomic>
 
@@ -34,8 +37,8 @@
 static session_lib::StreamSession::Ptr g_session = nullptr;
 static std::atomic_bool g_run(true);
 
+// a signal handler may only set a flag: printing or logging from it can deadlock
 static void termSignalHandler(int) {
-    printWithLog(LOG_INFO, stdout, "\nReceived terminate signal. Exiting...\n");
     g_run = false;
 }
 
@@ -106,9 +109,16 @@ int main(int argc, char* argv[]) {
             exit(1);
         }
 
-        close(STDIN_FILENO);
-        close(STDOUT_FILENO);
-        close(STDERR_FILENO);
+        // not closed: the next sockets or files would take the numbers 0-2 and get every
+        // printf of the server
+        const int null = open("/dev/null", O_RDWR);
+        if (null >= 0) {
+            dup2(null, STDIN_FILENO);
+            dup2(null, STDOUT_FILENO);
+            dup2(null, STDERR_FILENO);
+            if (null > STDERR_FILENO)
+                close(null);
+        }
     }
 #endif
 
@@ -148,6 +158,7 @@ int main(int argc, char* argv[]) {
     while (g_run) {
         sleep(1);
     }
+    printWithLog(LOG_INFO, stdout, "\nReceived terminate signal. Exiting...\n");
 
     try {
 #ifdef STREAMING_WEB

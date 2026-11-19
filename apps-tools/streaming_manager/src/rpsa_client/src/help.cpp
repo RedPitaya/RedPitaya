@@ -68,8 +68,7 @@ const char* kConfig =
     "\n"
     "Usage: %P -c [-h IPs] -g V|V1|VV|F [-v]\n"
     "       %P -c [-h IPs] -s M|F [-f FILE] [-v]\n"
-    "       %P -c [-h IPs] -i NAME [-w] [-v]\n"
-    "       %P -c [-h IPs] -i NAME=VALUE [-w] [-v]\n"
+    "       %P -c [-h IPs] -i NAME|NAME=VALUE [-i ...] [-w] [-v]\n"
     "\n"
     "  -c, --config          the mode\n"
     "  -h, --hosts=IP[,IP]   the boards (default: the first board found)\n"
@@ -82,8 +81,12 @@ const char* kConfig =
     "                          M   for now (the board forgets them on a restart)\n"
     "                          F   and save them in the config file of the board\n"
     "  -f, --config_file=FILE the settings to write (default config.json)\n"
-    "  -i NAME               read one setting\n"
-    "  -i NAME=VALUE         write one setting; the board refuses a wrong value\n"
+    "  -i NAME               read a setting\n"
+    "  -i NAME=VALUE         write a setting (the value is all after the first =);\n"
+    "                        the board refuses a wrong value\n"
+    "                        several -i run in their order over one connection; a refused\n"
+    "                        one does not stop the others (exit code 3 at the end); several\n"
+    "                        reads print NAME=VALUE lines\n"
     "  -w, --write           with -i NAME: also into configs/config_<IP>.json here;\n"
     "                        with -i NAME=VALUE: also into the config file of the board\n"
     "  -v, --verbose         report every step\n"
@@ -128,14 +131,16 @@ const char* kStream =
     "  -d, --dir=DIR         where the files go (default: here)\n"
     "  -l, --limit=SAMPLES   stop after this many samples per channel, 1-18446744073709551615 (default: no limit)\n"
     "  -m, --mode=MODE       raw   the ADC codes, 8 or 16 bit (default)\n"
-    "                        volt  volts as floating point (wav: limited to -1..1)\n"
+    "                        volt  volts as floating point (wav: limited to -1..1); the volts are\n"
+    "                              right with the calibration of the board on (use_calib=ON, the default)\n"
     "  -t, --timeout=MSEC    stop after this time, milliseconds or 10s, 2m (default: until Ctrl+C)\n"
     "      --tdms_time       tdms: a column with the time of every sample (8 bytes each);\n"
     "                        without it the time is in the channel properties and the group Buffers\n"
     "  -v, --verbose         report every step and the statistics at the end\n"
     "\n"
-    "On a terminal a progress line shows the samples, the data, the rate and the losses; at the end\n"
-    "a line per board: \"Done: IP: N samples per channel, ... file\". -v prints the statistics table.\n"
+    "On a terminal a panel shows the samples, the data, the rate, the losses and, with the trigger on,\n"
+    "whether the board waits for it (armed); without a terminal (a log, a pipe) a line a board every\n"
+    "5 s. At the end a line per board: \"Done: IP: N samples per channel, ... file\". -v prints the statistics table.\n"
     "\n"
     "The board must stream to the network (adc_pass_mode=NET): a board writing to its own SD card\n"
     "(adc_pass_mode=FILE) is stopped again and reported. A board that does not answer or connect\n"
@@ -211,9 +216,7 @@ const char* kExamples =
     "  Find the boards:\n"
     "    %P -d\n"
     "  Two channels at decimation 64, 10 s into WAV files in ./data:\n"
-    "    %P -c -h 192.168.1.10 -i channel_state_1=ON\n"
-    "    %P -c -h 192.168.1.10 -i channel_state_2=ON\n"
-    "    %P -c -h 192.168.1.10 -i adc_decimation=64\n"
+    "    %P -c -h 192.168.1.10 -i channel_state_1=ON -i channel_state_2=ON -i adc_decimation=64\n"
     "    %P -s -h 192.168.1.10 -f wav -d data -t 10s\n"
     "  One million samples per channel of two boards as TDMS with the time column:\n"
     "    %P -s -h 192.168.1.10,192.168.1.11 -f tdms -l 1000000 --tdms_time\n"
@@ -241,7 +244,7 @@ struct Section {
 const std::map<std::string, Section>& sections() {
     static const std::map<std::string, Section> s = {
         {"detect", {kDetect, "Usage: %P -d [-t SEC]\n"}},
-        {"config", {kConfig, "Usage: %P -c [-h IPs] -g V|V1|VV|F | -s M|F [-f FILE] | -i NAME[=VALUE] [-w] [-v]\n"}},
+        {"config", {kConfig, "Usage: %P -c [-h IPs] -g V|V1|VV|F | -s M|F [-f FILE] | -i NAME[=VALUE] [-i ...] [-w] [-v]\n"}},
         {"remote", {kRemote, "Usage: %P -r [-h IPs] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac|watch|status [-t MSEC] [-v]\n"}},
         {"stream", {kStream, "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC] [--tdms_time] [-v]\n"}},
         {"dac", {kDac, "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [-v]\n"}},

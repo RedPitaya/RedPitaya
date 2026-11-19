@@ -38,6 +38,99 @@ std::map<std::string, double> g_queue;  // the fill of the file queue of each bo
 std::map<std::string, double> g_diskRate;  // the measured write speed of its file, bytes per second
 std::mutex g_levelsMutex;
 
+// The ADC trigger of each board (streaming_improvements 3.5): from its settings before the start,
+// its state polled every second while it streams
+struct TrigInfo {
+    bool on = false;
+    std::string text;  // the sources and the level
+    bool known = false;
+    bool armed = false;
+    uint32_t count = 0;
+};
+std::map<std::string, TrigInfo> g_trig;
+std::mutex g_trigMutex;
+
+// "IN1 level 0.300 V rising, EXT": the sources of the mask as the stream_app takes them;
+// adcChannels 0: unknown (a server without BOARD_INFO)
+static auto triggerText(const CStreamSettings& s, int adcChannels) -> std::string {
+    const uint32_t m = s.getADCTriggerSources();
+    std::string t;
+    auto add = [&](const std::string& x) { t += (t.empty() ? "" : ", ") + x; };
+    std::string ins;
+    if (m & 4)
+        ins += "IN1 ";
+    if (m & 8)
+        ins += "IN2 ";
+    if (adcChannels == 4 && (m & 1))
+        ins += "IN3 ";
+    if (adcChannels == 4 && (m & 2))
+        ins += "IN4 ";
+    if (!ins.empty()) {
+        char buf[96];
+        const bool rising = s.getADCTriggerEdge().value == CStreamSettings::TriggerEdge::RISING;
+        if (s.getADCTriggerLevelUnit().value == CStreamSettings::LevelUnit::VOLT)
+            snprintf(buf, sizeof(buf), "level %.3f V %s", s.getADCTriggerLevelVolt(), rising ? "rising" : "falling");
+        else
+            snprintf(buf, sizeof(buf), "level codes %d..%d %s", s.getADCTriggerLevelLow(), s.getADCTriggerLevelHigh(), rising ? "rising" : "falling");
+        add(ins + buf);
+    }
+    if (adcChannels != 4 && (m & 1))
+        add(adcChannels ? "DAC A" : "DAC A (IN3 on a 4-input board)");
+    if (adcChannels != 4 && (m & 2))
+        add(adcChannels ? "DAC B" : "DAC B (IN4 on a 4-input board)");
+    if (m & 16)
+        add("GPIO pattern");
+    if (m & 32)
+        add("EXT");
+    return t.empty() ? "no source" : t;
+}
+
+// The trigger settings of the boards; the number of inputs from BOARD_INFO (an older server does
+// not answer it: 2 s at most, the sources are then named for both kinds of board)
+static auto readTriggers(std::shared_ptr<ClientNetConfigManager> cl, const std::list<std::string>& hosts) -> void {
+    std::atomic<int> settings(static_cast<int>(hosts.size()));
+    std::atomic<int> infos(static_cast<int>(hosts.size()));
+    std::map<std::string, int> channels;
+    std::mutex m;
+    cl->getNewSettingsNofiy.connect([&](std::string&) { settings--; });
+    cl->getBoardInfoNofiy.connect([&](std::string& h, BoardInfoMessage i) {
+        const std::lock_guard lock(m);
+        channels[h] = i.adcChannels;
+        infos--;
+    });
+    cl->failBoardInfoNofiy.connect([&](std::string&) { infos--; });
+    for (auto& h : hosts) {
+        if (!cl->requestConfig(h))
+            settings--;
+        if (!cl->requestBoardInfo(h))
+            infos--;
+    }
+    for (int waited = 0; (settings > 0 || infos > 0) && waited < 2000 && !sig_exit_flag; waited += 20)
+        sleepMs(20);
+    cl->removeHadlers();
+    const std::lock_guard lock(g_trigMutex);
+    g_trig.clear();
+    for (auto& h : hosts) {
+        auto* s = cl->getLocalSettingsOfHost(h);
+        if (!s || s->getADCTriggerMode().value != CStreamSettings::State::ON)
+            continue;
+        int n = 0;
+        {
+            const std::lock_guard l(m);
+            n = channels.count(h) ? channels[h] : 0;
+        }
+        TrigInfo t;
+        t.on = true;
+        t.text = triggerText(*s, n);
+        g_trig[h] = t;
+        if (s->getADCTriggerSources() == 0)
+            aprintf(stderr,
+                    "%s [WARN] %s waits for a trigger with no source chosen (adc_trigger_sources=0):\n"
+                    "       only a software trigger starts it (the web page or the desktop client)\n",
+                    getTS(": ").c_str(), h.c_str());
+    }
+}
+
 // min and max of a buffer of raw ADC codes, in % of the full scale
 static auto levelOf(DataLib::CDataBufferDMA::Ptr b, int& lo, int& hi) -> bool {
     if (!b || b->getSamplesCount() == 0)
@@ -303,8 +396,15 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
         auto it = stats.find(host);
         if (it != stats.end())
             st = it->second;
+        TrigInfo trig;
+        {
+            const std::lock_guard lock(g_trigMutex);
+            if (g_trig.count(host))
+                trig = g_trig[host];
+        }
         std::string state = g_endedByBoard.count(host) && g_endedByBoard.at(host) ? Panel::red("stopped")
                             : g_terminate.count(host) && g_terminate[host]          ? "done"
+                            : trig.known && trig.armed                              ? Panel::yellow("armed")
                             : st.bytes == 0                                         ? "connecting"
                                                                                     : Panel::green("streaming");
         const double rate = secs > 0 ? st.samples / secs : 0;
@@ -349,6 +449,12 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
             }
         }
         lines.push_back(any ? l : Panel::left("", 16) + Panel::dim("levels  -"));
+        if (trig.on) {
+            std::string t = Panel::left("", 16) + Panel::dim("trigger") + "  ";
+            if (trig.known)
+                t += std::string(trig.armed ? "armed" : "fired") + " · " + std::to_string(trig.count) + (trig.count == 1 ? " trigger · " : " triggers · ");
+            lines.push_back(t + trig.text);
+        }
     }
     lines.push_back("");
     const auto free = getFreeSpaceDisk(g_soption.save_dir);
@@ -369,6 +475,49 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
         full = left >= 0 ? fullIn < left : fullIn < 600;
     }
     lines.push_back((full ? Panel::red(space) : Panel::dim(space)) + Panel::dim(std::string("   ") + (keys ? "[q] " : "") + "[Ctrl+C] stop"));
+    return lines;
+}
+
+// a line a board for a log or a pipe: the state, the samples, the data, the rate, the losses
+static auto plainLines() -> std::vector<std::string> {
+    const auto stats = statSnapshot();
+    const double secs = statSeconds();
+    std::map<std::string, std::string> files;
+    {
+        const std::lock_guard lock(g_smutex);
+        files = g_files;
+    }
+    std::vector<std::string> lines;
+    for (auto& [host, file] : files) {
+        HostStat st;
+        if (stats.count(host))
+            st = stats.at(host);
+        TrigInfo trig;
+        {
+            const std::lock_guard lock(g_trigMutex);
+            if (g_trig.count(host))
+                trig = g_trig[host];
+        }
+        double q = 0;
+        {
+            const std::lock_guard lock(g_levelsMutex);
+            if (g_queue.count(host))
+                q = g_queue[host];
+        }
+        const char* state = g_endedByBoard.count(host) && g_endedByBoard.at(host) ? "stopped"
+                            : g_terminate.count(host) && g_terminate[host]          ? "done"
+                            : trig.known && trig.armed                              ? "armed"
+                            : st.bytes == 0                                         ? "connecting"
+                                                                                    : "streaming";
+        char buf[320];
+        snprintf(buf, sizeof(buf), "%s %s: %s, %llu samples/ch, %s, %s/s, lost %llu/%llu, queue %.0f %%", clockText().c_str(), host.c_str(), state,
+                 (unsigned long long)st.samples, sizeText(st.bytes).c_str(), sizeText(secs > 0 ? (uint64_t)(st.bytes / secs) : 0).c_str(), (unsigned long long)st.lost,
+                 (unsigned long long)st.fileLost, q * 100);
+        std::string l = buf;
+        if (trig.on && trig.known)
+            l += ", trigger " + std::string(trig.armed ? "armed" : "fired") + " (" + std::to_string(trig.count) + ")";
+        lines.push_back(l);
+    }
     return lines;
 }
 
@@ -417,6 +566,8 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         aprintf(stdout, "%s Can't get active channels\n", getTS(": ").c_str());
         return false;
     }
+
+    readTriggers(cl, hosts);
 
     runned_hosts.clear();
     remote_opt.remote_mode = ClientOpt::RemoteMode::START;
@@ -530,23 +681,51 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
             stopStreaming(host);
         });
 
-        // the panel on a terminal while the boards stream
+        // the trigger of the boards that wait for one, asked every second
+        cl->getTriggerStatusNofiy.connect([](std::string& host, TriggerStatus st) {
+            const std::lock_guard lock(g_trigMutex);
+            if (!g_trig.count(host))
+                return;
+            g_trig[host].known = true;
+            g_trig[host].armed = st.adcArmed;
+            g_trig[host].count = st.adcTriggerCount;
+        });
+        std::list<std::string> trigHosts;
+        {
+            const std::lock_guard lock(g_trigMutex);
+            for (auto& [h, t] : g_trig)
+                trigHosts.push_back(h);
+        }
+
+        // the panel on a terminal while the boards stream; without one a line a board now and then
         {
             Panel panel(g_soption);
+            const bool plain = !panel.enabled() && plainProgressWanted(g_soption);
             std::map<std::string, Levels> last;
             int tick = 0;
-            while (panel.enabled() && g_clientsRunning > 0) {
-                if (tick++ % 4 == 0) {  // the levels of the last second
-                    const std::lock_guard lock(g_levelsMutex);
-                    last = g_levels;
-                    g_levels.clear();
+            while (g_clientsRunning > 0) {
+                if (tick % 4 == 0) {
+                    for (auto& h : trigHosts)
+                        cl->requestTriggerStatus(h);
                 }
-                panel.draw(streamingPanel(last, panel.keys()));
-                const int k = panel.key();
-                if (k == 'q' || k == 'Q') {
-                    sig_exit_flag = true;
-                    stopStreaming();
+                if (panel.enabled()) {
+                    if (tick % 4 == 0) {  // the levels of the last second
+                        const std::lock_guard lock(g_levelsMutex);
+                        last = g_levels;
+                        g_levels.clear();
+                    }
+                    panel.draw(streamingPanel(last, panel.keys()));
+                    const int k = panel.key();
+                    if (k == 'q' || k == 'Q') {
+                        sig_exit_flag = true;
+                        stopStreaming();
+                    }
+                } else if (plain && tick > 0 && tick % (PLAIN_PROGRESS_MS / 250) == 0) {
+                    for (auto& l : plainLines())
+                        aprintf(stdout, "%s\n", l.c_str());
+                    fflush(stdout);
                 }
+                tick++;
                 sleepMs(250);
             }
         }

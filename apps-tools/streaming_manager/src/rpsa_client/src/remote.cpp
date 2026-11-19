@@ -184,8 +184,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
 
     cl->configFileMissedNotify.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s config file is missed [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: its config file is missing\n", getTS(": ").c_str(), host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -193,8 +192,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
 
     cl->serverStoppedMemErrorNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: not enough DMA memory (adc_size)\n", getTS(": ").c_str(), host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -202,8 +200,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
 
     cl->serverStoppedMemModifyNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: the memory of the streams was split again (a new block size)\n", getTS(": ").c_str(), host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -211,8 +208,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::s
 
     cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: no input is on (channel_state_N=ON)\n", getTS(": ").c_str(), host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -364,8 +360,7 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
 
     cl->serverStoppedMemErrorNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s memory error [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: not enough DMA memory (adc_size)\n", getTS(": ").c_str(), host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -373,8 +368,7 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
 
     cl->serverStoppedMemModifyNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stdout, "%s Streaming started: %s memory modify [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: the memory of the streams was split again (a new block size)\n", getTS(": ").c_str(), host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);
@@ -382,8 +376,7 @@ auto startADC(std::shared_ptr<ClientNetConfigManager> cl, std::list<std::string>
 
     cl->serverStoppedNoActiveChannelsNofiy.connect([&](std::string host) {
         const std::lock_guard lock(g_rmutex);
-        if (g_roption.verbous)
-            aprintf(stderr, "%s Streaming started: %s. No active channels. [FAIL]\n", getTS(": ").c_str(), host.c_str());
+        aprintf(stderr, "%s [ERROR] %s did not start the ADC: no input is on (channel_state_N=ON)\n", getTS(": ").c_str(), host.c_str());
         rstart_counter--;
         masterHosts.remove(host);
         slaveHosts.remove(host);

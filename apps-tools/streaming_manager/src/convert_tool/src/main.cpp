@@ -1,7 +1,9 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <algorithm>
+#include <cctype>
 #include <ctime>
+#include <filesystem>
 #include <format>
 #include <iomanip>
 #include <iostream>
@@ -12,6 +14,11 @@
 #include "writer_lib/file_helper.h"
 
 #define MAX(X, Y) ((X > Y) ? X : Y)
+
+// the exit codes of rpsa_client: done, a wrong command line, the conversion failed
+constexpr int EXIT_DONE = 0;
+constexpr int EXIT_USAGE = 1;
+constexpr int EXIT_FAILED = 3;
 
 bool g_stopWrite = false;
 converter_lib::CConverter::Ptr g_converter = nullptr;
@@ -32,28 +39,38 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option) {
 
 bool CheckMissing(const char* val, const char* Message) {
     if (val == NULL) {
-        std::cout << "Missing parameters: " << Message << std::endl;
+        std::cerr << "[ERROR] Missing parameters: " << Message << std::endl;
         return true;
     }
     return false;
 }
 
 void UsingArgs(char const* progName) {
-    std::cout << "Usage: " << progName << " file_name [-i][-s start][-e end][-f format][-t][-ci][-cb|-cs|-cn]\n";
+    std::cout << "Usage: " << progName << " file_name [-i][-s start][-e end][-f format][-o file][--force][--channels 1,2,3,4][-t][-ci][-cb|-cs|-cn]\n";
     std::cout << "\t-i get info about BIN file\n";
     std::cout << "\t-ia get info about BIN file. Including information on all segments.\n";
     std::cout << "\t-s Segment from which the conversion starts\n";
     std::cout << "\t-e Segment where the conversion will end\n";
-    std::cout << "\t-f File format. [CSV|WAV|TDMS|VCD]. By default used CSV format; a GPIO recording goes to CSV or VCD\n";
+    std::cout << "\t-f File format. [CSV|WAV|TDMS|VCD], any case. By default used CSV format; a GPIO recording goes to CSV or VCD\n";
+    std::cout << "\t-o The output file. By default the input file with the extension of the format\n";
+    std::cout << "\t--force Overwrites an output file that is there (without it the conversion stops)\n";
+    std::cout << "\t--channels Only these inputs, e.g. 1,3 (CSV, WAV, TDMS). By default all of the file\n";
     std::cout << "\t-t Creates test data files for DAC streaming\n";
     std::cout << "\t-ci Adds an index column to the CSV file.\n";
     std::cout << "\t-cb Adds a block time column to the CSV file.\n";
     std::cout << "\t-cs Adds a sample time column to the CSV file.\n";
     std::cout << "\t-cn Adds a sample time column in nanoseconds to the CSV file.\n";
+    std::cout << "\tThe CSV file starts with a row of the column names. The samples lost or waited for\n";
+    std::cout << "\ta trigger before a block are \"-\" (CSV) or 0 (WAV, TDMS) where they were missed.\n";
+    std::cout << "\tExit codes: 0 done, 1 a wrong command line, 3 the conversion failed.\n";
 }
 
 void sigHandlerStopCSV(int) {
-    g_converter->stopWriteToCSV();
+    if (g_converter) {
+        g_converter->stopWriteToCSV();
+        g_converter->stopWriteToWAV();
+        g_converter->stopWriteToTDMS();
+    }
     g_stopWrite = true;
 }
 
@@ -61,13 +78,29 @@ int ParseInt(std::string value) noexcept {
     try {
         int x = std::stoi(value);
         if (x <= 0) {
-            std::cout << "Error read parameter\n";
+            std::cerr << "[ERROR] Error read parameter: " << value << "\n";
             return -1;
         }
         return x;
     } catch (std::exception& e) {
-        std::cout << "Error read parameter\n";
+        std::cerr << "[ERROR] Error read parameter: " << value << "\n";
         return -1;
+    }
+}
+
+// "1,3" -> the bits of IN1 and IN3; 0 when it is not a list of 1..4
+uint32_t ParseChannels(const std::string& list) {
+    uint32_t mask = 0;
+    size_t pos = 0;
+    while (true) {
+        const size_t comma = list.find(',', pos);
+        const std::string item = list.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+        if (item.size() != 1 || item[0] < '1' || item[0] > '4')
+            return 0;
+        mask |= 1u << (item[0] - '1');
+        if (comma == std::string::npos)
+            return mask;
+        pos = comma + 1;
     }
 }
 
@@ -75,7 +108,11 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, sigHandlerStopCSV);
     if (argc < 2) {
         UsingArgs(argv[0]);
-        return -1;
+        return EXIT_USAGE;
+    }
+    if (std::string(argv[1]) == "-h" || std::string(argv[1]) == "--help") {
+        UsingArgs(argv[0]);
+        return EXIT_DONE;
     }
     std::string format = "CSV";
     std::string file_name = argv[1];
@@ -85,15 +122,15 @@ int main(int argc, char* argv[]) {
 
     if (gen_test) {
         createTestFiels();
-        return 0;
+        return EXIT_DONE;
     }
 
     if (check_info || check_info_all) {
         // The BIN stream file (bin_lib): the channels, their samples and losses, block by block with -ia
         bin_lib::FileReader reader;
         if (!reader.open(file_name)) {
-            std::cout << " Error open file: " << file_name << ": " << reader.error() << "\n";
-            return 0;
+            std::cerr << "[ERROR] Can't open " << file_name << ": " << reader.error() << "\n";
+            return EXIT_FAILED;
         }
         const auto& info = reader.info();
         uint64_t samples[4] = {0, 0, 0, 0};
@@ -143,7 +180,7 @@ int main(int argc, char* argv[]) {
             std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", std::gmtime(&t));
             aprintf(stdout, "\nCapture start: %s\n", buffer);
         }
-        return 0;
+        return EXIT_DONE;
     }
     int32_t s = -2;
     int32_t e = -2;
@@ -151,12 +188,12 @@ int main(int argc, char* argv[]) {
         char* start_char = getCmdOption(argv, argv + argc, "-s");
         if (CheckMissing(start_char, "start segment")) {
             UsingArgs(argv[0]);
-            return -1;
+            return EXIT_USAGE;
         }
         s = ParseInt(start_char);
         if (s == -1) {
             UsingArgs(argv[0]);
-            return -1;
+            return EXIT_USAGE;
         }
     }
 
@@ -164,24 +201,78 @@ int main(int argc, char* argv[]) {
         char* end_char = getCmdOption(argv, argv + argc, "-e");
         if (CheckMissing(end_char, "end segment")) {
             UsingArgs(argv[0]);
-            return -1;
+            return EXIT_USAGE;
         }
         e = ParseInt(end_char);
         if (e == -1) {
             UsingArgs(argv[0]);
-            return -1;
+            return EXIT_USAGE;
         }
     }
 
     if (cmdOptionExists(argv, argv + argc, "-f")) {
-        format = getCmdOption(argv, argv + argc, "-f");
+        const char* f = getCmdOption(argv, argv + argc, "-f");
+        if (!f || f[0] == '-') {
+            std::cerr << "[ERROR] -f needs a format: CSV, WAV, TDMS or VCD\n";
+            return EXIT_USAGE;
+        }
+        format = f;
+        std::transform(format.begin(), format.end(), format.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+        if (format != "CSV" && format != "WAV" && format != "TDMS" && format != "VCD") {
+            std::cerr << "[ERROR] Unknown format " << f << ": CSV, WAV, TDMS or VCD\n";
+            return EXIT_USAGE;
+        }
+    }
+
+    std::string output;
+    if (cmdOptionExists(argv, argv + argc, "-o")) {
+        const char* o = getCmdOption(argv, argv + argc, "-o");
+        if (!o || o[0] == '\0' || (o[0] == '-' && o[1] != '\0')) {
+            std::cerr << "[ERROR] -o needs the name of the output file\n";
+            return EXIT_USAGE;
+        }
+        output = o;
+    }
+
+    uint32_t channels = 0;
+    if (cmdOptionExists(argv, argv + argc, "--channels")) {
+        const char* c = getCmdOption(argv, argv + argc, "--channels");
+        channels = c ? ParseChannels(c) : 0;
+        if (!channels) {
+            std::cerr << "[ERROR] --channels needs the inputs, 1 to 4, e.g. 1,3\n";
+            return EXIT_USAGE;
+        }
     }
 
     if (s > 0 && e > 0 && s > e) {
-        std::cout << "The start segment must be less than or equal to the end.\n";
-        return -1;
+        std::cerr << "[ERROR] The start segment must be less than or equal to the end.\n";
+        return EXIT_USAGE;
     }
 
+    // an output file that is there: a matter of the command line, said before anything is read
+    // (a GPIO recording to CSV or VCD gets the same names)
+    const bool force = cmdOptionExists(argv, argv + argc, "--force");
+    if (!force) {
+        std::string out = output;
+        if (out.empty()) {
+            std::string ext = "." + format;
+            std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            out = std::filesystem::path(file_name).replace_extension(ext).string();
+        }
+        std::error_code ec;
+        if (std::filesystem::exists(out, ec)) {
+            std::cerr << "[ERROR] " << out << " exists: --force overwrites it, -o FILE writes another\n";
+            return EXIT_USAGE;
+        }
+    }
+
+    g_converter = converter_lib::CConverter::create();
+    g_converter->setOutput(output);
+    g_converter->setChannels(channels);
+    g_converter->setOverwrite(force);
+    g_converter->setCSVHeader(true);
+
+    bool ok = false;
     if (format == "CSV") {
         FH_CSVMode csv_mode = FH_CSV_NONE;
         if (cmdOptionExists(argv, argv + argc, "-ci")) {
@@ -196,23 +287,24 @@ int main(int argc, char* argv[]) {
         if (cmdOptionExists(argv, argv + argc, "-cn")) {
             csv_mode = (FH_CSVMode)(csv_mode | FH_CSV_ADD_TIME_COL_NS);
         }
-        g_converter = converter_lib::CConverter::create();
-        g_converter->convertToCSV(file_name, s, e, "", csv_mode);
+        ok = g_converter->convertToCSV(file_name, s, e, "", csv_mode);
+    } else if (format == "WAV") {
+        ok = g_converter->convertToWAV(file_name, s, e, "");
+    } else if (format == "TDMS") {
+        ok = g_converter->convertToTDMS(file_name, s, e, "");
+    } else if (format == "VCD") {
+        ok = g_converter->convertToVCD(file_name, "");
     }
-
-    if (format == "WAV") {
-        g_converter = converter_lib::CConverter::create();
-        g_converter->convertToWAV(file_name, s, e, "");
+    if (!ok) {
+        // the converter said why; a stop by Ctrl+C leaves a part of the file
+        if (g_stopWrite)
+            std::cerr << "[ERROR] Stopped: " << (g_converter->lastOutput().empty() ? std::string("nothing written") : g_converter->lastOutput() + " holds a part") << "\n";
+        return EXIT_FAILED;
     }
-
-    if (format == "TDMS") {
-        g_converter = converter_lib::CConverter::create();
-        g_converter->convertToTDMS(file_name, s, e, "");
-    }
-
-    if (format == "VCD") {
-        g_converter = converter_lib::CConverter::create();
-        g_converter->convertToVCD(file_name, "");
-    }
-    return 0;
+    const uint32_t ch = g_converter->lastChannels();
+    if (g_converter->lastWasGpio())
+        aprintf(stdout, "Done: %s, %llu GPIO words\n", g_converter->lastOutput().c_str(), (unsigned long long)g_converter->lastSamples());
+    else
+        aprintf(stdout, "Done: %s, %u channel%s, %llu samples\n", g_converter->lastOutput().c_str(), ch, ch == 1 ? "" : "s", (unsigned long long)g_converter->lastSamples());
+    return EXIT_DONE;
 }

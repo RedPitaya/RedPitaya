@@ -26,6 +26,7 @@ class Panel {
 
     // colours for the cells
     static auto green(const std::string& s) -> std::string;
+    static auto yellow(const std::string& s) -> std::string;
     static auto red(const std::string& s) -> std::string;
     static auto bold(const std::string& s) -> std::string;
     static auto dim(const std::string& s) -> std::string;

@@ -125,14 +125,31 @@ bool CStreamSettings::writeToFile(std::string _filename) {
         ERROR_LOG("Error create dir %s", ex.what())
     }
 
-    std::ofstream file(_filename, std::ios::out | std::ios::trunc);
-    if (!file.is_open()) {
-        ERROR_LOG("File write failed %s", std::strerror(errno))
+    // into a file beside it, then in its place: a power cut leaves the old file or the new one,
+    // never half of one
+    const std::string tmp = _filename + ".tmp";
+    {
+        std::ofstream file(tmp, std::ios::out | std::ios::trunc);
+        if (!file.is_open()) {
+            ERROR_LOG("File write failed %s: %s", tmp.c_str(), std::strerror(errno))
+            return false;
+        }
+        file << json_file;
+        file.flush();
+        if (!file.good()) {
+            ERROR_LOG("File write failed %s", tmp.c_str())
+            file.close();
+            std::remove(tmp.c_str());
+            return false;
+        }
+    }
+    std::error_code ec;
+    std::filesystem::rename(tmp, _filename, ec);
+    if (ec) {
+        ERROR_LOG("File write failed %s: %s", _filename.c_str(), ec.message().c_str())
+        std::remove(tmp.c_str());
         return false;
     }
-
-    file << json_file;
-    file.close();
     return true;
 }
 

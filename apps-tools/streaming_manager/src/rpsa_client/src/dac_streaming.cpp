@@ -357,8 +357,27 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
             const bool inf = g_dac_soption.dac_repeat == (int)ClientOpt::RepeatDAC::INF;
             const std::string repeats = inf ? "inf" : std::to_string(g_dac_soption.dac_repeat);
             Panel panel(g_dac_soption);
-            while (panel.enabled() && g_dacRunning > 0) {
+            // without a terminal: a line a board every few seconds (streaming_improvements 3.4)
+            const bool plain = !panel.enabled() && plainProgressWanted(g_dac_soption);
+            auto lastPlain = nowMs();
+            while (g_dacRunning > 0) {
                 const double secs = (nowMs() - g_dac_start) / 1000.0;
+                if (!panel.enabled()) {
+                    if (plain && nowMs() - lastPlain >= PLAIN_PROGRESS_MS) {
+                        lastPlain = nowMs();
+                        const std::lock_guard lock(g_dac_smutex);
+                        for (auto& [host, bytes] : g_dac_bytesTotal) {
+                            const uint64_t pass = fileBytes ? bytes / fileBytes : 0;
+                            const double pos = fileBytes ? (double)(bytes % fileBytes) / fileBytes : 0;
+                            aprintf(stdout, "%s %s: %s, pass %llu/%s at %.0f %%, sent %s, %s/s\n", clockText().c_str(), host.c_str(),
+                                    g_dac_lost[host] ? "stopped" : g_dac_connected[host] ? "playing" : "connecting", (unsigned long long)(pass + 1), repeats.c_str(),
+                                    pos * 100, sizeText(bytes).c_str(), sizeText(secs > 0 ? (uint64_t)(bytes / secs) : 0).c_str());
+                        }
+                        fflush(stdout);
+                    }
+                    sleepMs(250);
+                    continue;
+                }
                 char buf[256];
                 std::vector<std::string> lines;
                 snprintf(buf, sizeof(buf), "  %s (%s, %s)   repeat %s   %.1f s", g_dac_soption.dac_file.c_str(), formats[(int)g_dac_soption.streamign_type],

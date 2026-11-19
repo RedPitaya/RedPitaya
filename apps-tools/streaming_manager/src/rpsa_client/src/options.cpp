@@ -341,7 +341,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
     }
     opt.help_topic = ClientHelp::topicOfKey(argv[1]);
     if (opt.help_topic.empty()) {
-        fprintf(stderr, "[ERROR] Unknown mode %s: the first option is the mode (-d, -c, -r, -s or -o)\n", argv[1]);
+        fprintf(stderr, "[ERROR] Unknown mode %s: the first option is the mode (-d, -c, -r, -s, -o or -G; --help lists them)\n", argv[1]);
         opt.mode = Mode::ERROR_PARAM;
         return opt;
     }
@@ -416,17 +416,22 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 }
 
                 case 'i': {
-                    auto vars = split(optarg, '=');
-                    if (vars.size() > 0) {
-                        opt.config_item_name = vars[0];
-                        if (vars.size() > 1) {
-                            opt.config_item_value = vars[1];
-                        }
-                    } else {
+                    // NAME or NAME=VALUE, cut at the first "=": a value may hold more of them
+                    const std::string arg = optarg;
+                    const auto eq = arg.find('=');
+                    ClientOpt::Options::ConfigItem item;
+                    item.name = arg.substr(0, eq);
+                    if (eq != std::string::npos) {
+                        item.value = arg.substr(eq + 1);
+                        item.write = true;
+                    }
+                    if (item.name.empty()) {
                         fprintf(stderr, "[ERROR] Wrong value of -i: %s (NAME or NAME=VALUE)\n", optarg);
                         opt.mode = Mode::ERROR_PARAM;
                         return opt;
                     }
+                    opt.config_items.push_back(item);
+                    opt.config_item_name = item.name;
                     break;
                 }
 
@@ -484,7 +489,7 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
         }
 
         if (opt.mode != Mode::ERROR_MODE) {
-            if (opt.mode == Mode::CONFIG && ((opt.conf_get == ConfGet::NONE && opt.conf_set == ConfSet::NONE) && opt.config_item_name == "")) {
+            if (opt.mode == Mode::CONFIG && ((opt.conf_get == ConfGet::NONE && opt.conf_set == ConfSet::NONE) && opt.config_items.empty())) {
                 fprintf(stderr, "[ERROR] The config mode needs -g, -s or -i\n");
                 opt.mode = Mode::ERROR_PARAM;
             }
