@@ -89,7 +89,7 @@ CStreamingFile::CStreamingFile(CStreamSettings::DataFormat _fileType, std::strin
 }
 
 CStreamingFile::~CStreamingFile() {
-    stopImmediately();
+    stopImmediately();  // joins the watch thread
     if (m_file_manager) {
         delete m_file_manager;
         m_file_manager = nullptr;
@@ -120,6 +120,139 @@ auto CStreamingFile::isOutOfSpace() -> bool {
     return false;
 }
 
+auto CStreamingFile::setLimits(double seconds, uint64_t bytes, double bufferSeconds) -> void {
+    m_limitTime = seconds > 0 ? seconds : 0;
+    m_limitSize = bytes;
+    m_bufferHint = bufferSeconds > 0 ? bufferSeconds : 0;
+}
+
+auto CStreamingFile::startWatch() -> void {
+    stopWatch();
+    if (m_limitTime <= 0)
+        return;
+    m_clock.start(m_limitTime, m_bufferHint);
+    {
+        std::lock_guard lock(m_watchMtx);
+        m_watchStop = false;
+    }
+    std::lock_guard threadLock(m_threadMtx);
+    m_watch = std::thread([this]() {
+        std::unique_lock lock(m_watchMtx);
+        while (!m_watchStop) {
+            if (m_clock.due()) {
+                lock.unlock();
+                aprintf(stdout, "The time limit of %.3f s passed on the clock with no buffer to end it (a trigger not come)\n", m_limitTime);
+                stop(CStreamingFile::REACH_LIMIT, true);
+                return;  // nothing of the object after the stop: it may go now
+            }
+            m_watchCv.wait_for(lock, std::chrono::milliseconds(100));
+        }
+    });
+}
+
+// Not under m_stopMtx: the thread may be in stop() itself
+auto CStreamingFile::stopWatch() -> void {
+    m_clock.off();
+    {
+        std::lock_guard lock(m_watchMtx);
+        m_watchStop = true;
+    }
+    m_watchCv.notify_all();
+    // joined out of the lock (it may be in stop() itself); from it, it stays for a later join
+    std::thread done;
+    {
+        std::lock_guard lock(m_threadMtx);
+        if (m_watch.joinable() && m_watch.get_id() != std::this_thread::get_id())
+            done = std::move(m_watch);
+    }
+    if (done.joinable())
+        done.join();
+}
+
+auto CStreamingFile::setSplit(uint64_t bytes, double seconds) -> void {
+    m_splitSize = bytes;
+    m_splitTime = seconds > 0 ? seconds : 0;
+}
+
+auto CStreamingFile::getFileNames() -> std::vector<std::string> {
+    std::lock_guard lock(m_logMtx);
+    return m_files;
+}
+
+auto CStreamingFile::getPartSize() -> uint64_t {
+    return m_file_manager ? m_file_manager->fileSize() : 0;
+}
+
+auto CStreamingFile::logger() -> CFileLogger::Ptr {
+    std::lock_guard lock(m_logMtx);
+    return m_fileLogger;
+}
+
+// <name>_0003.<ext>: the number before the extension
+auto CStreamingFile::partName(int part) -> std::string {
+    return partFileName(m_base, part);
+}
+
+// The header of each format comes again with the next chunk
+auto CStreamingFile::resetHeaders() -> void {
+    m_tdmsStarted = false;
+    m_bin = BinFileState();
+    m_waveWriter->resetHeaderInit();
+    m_partFresh = true;
+}
+
+// The file thread ends the part after the buffers queued before and goes on in the next one; the
+// report of the part is written now. Not after a stop (another thread may stop: the disk full)
+auto CStreamingFile::nextPart() -> bool {
+    std::lock_guard stopLock(m_stopMtx);
+    if (m_stopped)
+        return false;
+    const int part = ++m_part;
+    const std::string name = partName(part);
+    CFileLogger::Ptr old;
+    {
+        std::lock_guard lock(m_logMtx);
+        old = m_fileLogger;
+        if (old)
+            m_fileLostDone += old->getFileLost();
+        m_fileLogger = CFileLogger::create(name + ".log", m_testMode);
+        m_file_out = name;
+        m_files.push_back(name);
+    }
+    if (old) {
+        old->setFileWrite(m_file_manager->writeRate(), m_file_manager->queueLimit());
+        if (!m_testMode)
+            old->dumpToFile();
+    }
+    resetHeaders();
+    m_file_manager->addFileSwitch(name);
+    m_partBytes = 0;
+    m_partLine = 0;
+    aprintf(stdout, "Run write to: %s\n", name.c_str());
+    return true;
+}
+
+auto CStreamingFile::put(FileChunk::Ptr chunk, DataLib::CDataBuffersPackDMA::Ptr pack, const CFileLogger::Ptr& log) -> bool {
+    const uint64_t size = chunk ? chunk->size() : 0;
+    // the size limit: the chunk that would go over it is not written
+    if (m_limitSize && m_allBytes + size > m_limitSize) {
+        stop(CStreamingFile::REACH_LIMIT, true);
+        return false;
+    }
+    if (m_file_manager->addChunkToWrite(std::move(chunk))) {
+        m_partBytes += size;
+        m_allBytes += size;
+        m_partFresh = false;
+    } else {
+        log->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
+        dropped(pack);
+        // the header was in it: the next chunk carries it
+        if (m_partFresh)
+            resetHeaders();
+    }
+    return true;
+}
+
 auto CStreamingFile::run(std::string _prefix, std::string _fileName) -> void {
     m_passSizeSamples.clear();
     m_passSizeSamples[DataLib::CH1] = 0;
@@ -127,29 +260,44 @@ auto CStreamingFile::run(std::string _prefix, std::string _fileName) -> void {
     m_passSizeSamples[DataLib::CH3] = 0;
     m_passSizeSamples[DataLib::CH4] = 0;
 
-    m_tdmsStarted = false;
-    m_bin = BinFileState();
-    m_file_out = _fileName == "" ? getNewFileName(m_fileType, m_filePath, _prefix) : _fileName;
-    m_fileLogger = CFileLogger::create(m_file_out + ".log", m_testMode);
+    resetHeaders();
+    m_stopped = false;
+    m_partBytes = m_allBytes = m_partLine = m_line = 0;
+    m_base = _fileName == "" ? getNewFileName(m_fileType, m_filePath, _prefix) : _fileName;
+    m_part = 1;
+    // parts asked for: numbered from the first one (not in the test mode: one file there)
+    const bool parts = !m_testMode && (m_splitSize || m_splitTime > 0);
+    {
+        std::lock_guard lock(m_logMtx);
+        m_file_out = parts ? partName(1) : m_base;
+        m_fileLogger = CFileLogger::create(m_file_out + ".log", m_testMode);
+        m_files = {m_file_out};
+        m_fileLostDone = 0;
+    }
     aprintf(stdout, "Run write to: %s\n", m_file_out.c_str());
     m_file_manager->openFile(m_file_out, false);
     m_file_manager->startWrite(m_fileType);
+    startWatch();
 }
 
 auto CStreamingFile::stop(CStreamingFile::EStopReason reason, bool _flush) -> void {
+    stopWatch();
     std::lock_guard<std::mutex> lock(m_stopMtx);
+    m_stopped = true;
+    // a part may have swapped it: the one of now, under its lock
+    auto log = logger();
     if (m_file_manager) {
         m_file_manager->stopWrite(_flush);
         // the writer thread is done: the tail goes to the card, the file closes
         m_file_manager->closeFile();
-        if (m_fileLogger)
-            m_fileLogger->setFileWrite(m_file_manager->writeRate(), m_file_manager->queueLimit());
+        if (log)
+            log->setFileWrite(m_file_manager->writeRate(), m_file_manager->queueLimit());
         if (m_testMode) {
             m_file_manager->deleteFile();
         }
     }
-    if (m_fileLogger && !m_testMode)
-        m_fileLogger->dumpToFile();
+    if (log && !m_testMode)
+        log->dumpToFile();
     // once: the teardown may disable it from another thread at the same time
     if (!m_disableNotify.exchange(true))
         stopNotify(reason);
@@ -338,10 +486,8 @@ auto CStreamingFile::dropped(DataLib::CDataBuffersPackDMA::Ptr pack) -> void {
 }
 
 auto CStreamingFile::getFileLost() -> uint64_t {
-    if (m_fileLogger) {
-        return m_fileLogger->getFileLost();
-    }
-    return 0;
+    std::lock_guard lock(m_logMtx);
+    return m_fileLostDone + (m_fileLogger ? m_fileLogger->getFileLost() : 0);
 }
 
 // Without m_stopMtx: a stop holds it while the queue goes into the file (seconds), and the page
@@ -351,7 +497,18 @@ auto CStreamingFile::getQueueFill() -> double {
 }
 
 auto CStreamingFile::getCSVFileName() -> std::string {
+    if (m_file_manager) {
+        auto now = m_file_manager->fileName();
+        if (!now.empty())
+            return now;
+    }
+    std::lock_guard lock(m_logMtx);
     return m_file_out;
+}
+
+auto CStreamingFile::getPart() -> int {
+    const int files = m_file_manager ? m_file_manager->filesWritten() : 0;
+    return files > 0 ? files : m_part.load();
 }
 
 auto CStreamingFile::getPassSamples() -> uint64_t {
@@ -377,6 +534,52 @@ auto CStreamingFile::getWritedSize() -> uint64_t {
 auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int {
     if (!pack)
         return 0;
+    // stopped (a limit, the disk): nothing more goes to the file
+    if (m_stopped)
+        return 1;
+    // what the pack adds: samples of the time line, of the data, about how many bytes
+    uint64_t packLine = 0, packData = 0, packBytes = 0;
+    for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
+        auto buff = pack->getBuffer((DataLib::EDataBuffersPackChannel)i);
+        if (!buff)
+            continue;
+        packLine = std::max<uint64_t>(packLine, buff->getSamplesWithGaps());
+        packData = std::max<uint64_t>(packData, buff->getSamplesCount());
+        uint64_t lost = m_fileType.value == CStreamSettings::DataFormat::BIN ? 0 : buff->getLostSamplesAll();
+        // on the board the zeros of the losses are cut at the size of the buffer (convertBuffers)
+        if (m_rp_mode)
+            lost = std::min<uint64_t>(lost, buff->getSamplesCount());
+        const uint64_t bytes = m_volt_mode && m_fileType.value != CStreamSettings::DataFormat::BIN ? 4 : std::max<uint64_t>(1, buff->getBitBySample() / 8);
+        packBytes += (buff->getSamplesCount() + lost) * bytes + 64;
+    }
+    const double packRate = sampleRate(pack);
+    // how long a buffer of data lasts (not its wait for a trigger)
+    if (packRate > 0)
+        m_clock.buffer(static_cast<double>(packData) / packRate);
+    // the time limit: a pack whose data starts past it (after a wait for the trigger) stays out
+    if (m_limitTime > 0 && packRate > 0 && static_cast<double>(m_line + (packLine - std::min(packLine, packData))) >= m_limitTime * packRate) {
+        stop(CStreamingFile::REACH_LIMIT, true);
+        return 1;
+    }
+    // the next part: the size, the time, or a WAV before 4 GB
+    if (!m_testMode && m_partBytes > 0) {
+        const bool bySize = m_splitSize && m_partBytes + packBytes > m_splitSize;
+        const bool byTime = m_splitTime > 0 && packRate > 0 && static_cast<double>(m_partLine) >= m_splitTime * packRate;
+        const bool wav = m_fileType.value == CStreamSettings::DataFormat::WAV && m_partBytes + packBytes > m_wavPartMax;
+        if (bySize || byTime || wav) {
+            // no part begun for a pack the size limit keeps out
+            if (m_limitSize && m_allBytes + packBytes > m_limitSize) {
+                stop(CStreamingFile::REACH_LIMIT, true);
+                return 1;
+            }
+            if (!nextPart())
+                return 1;
+        }
+    }
+    m_partLine += packLine;
+    m_line += packLine;
+    // the logger of the part (nextPart swaps it)
+    auto log = logger();
     if (m_fileType.value == CStreamSettings::DataFormat::TDMS) {
         // _adc_mode = 0 for 1:1 and 1 for 1:20 mode
 
@@ -438,14 +641,10 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
             addTDMSProperties(*segment, pack, map);
             addTDMSSamples(*segment, map, time);
             addTDMSBufferRow(*segment, pack, map);
-            if (m_file_manager->isWork()) {
-                if (!m_file_manager->addChunkToWrite(buildTDMSChunk(segment))) {
-                    m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
-                    dropped(pack);
-                }
-            }
+            if (m_file_manager->isWork() && !put(buildTDMSChunk(segment), pack, log))
+                return 1;
         } else {
-            m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
+            log->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
             dropped(pack);
         }
     }
@@ -491,14 +690,10 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
                 }
             }
             auto chunk = m_waveWriter->BuildWAVChunk(map);
-            if (m_file_manager->isWork()) {
-                if (!m_file_manager->addChunkToWrite(std::move(chunk))) {
-                    m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
-                    dropped(pack);
-                }
-            }
+            if (m_file_manager->isWork() && !put(std::move(chunk), pack, log))
+                return 1;
         } else {
-            m_fileLogger->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
+            log->addMetric(CFileLogger::EMetric::OUT_OF_MEMORY, 1);
             dropped(pack);
         }
     }
@@ -534,25 +729,21 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
             }
         }
 
-        if (m_file_manager->isWork()) {
-            if (!m_file_manager->addChunkToWrite(buildBINChunk(pack, map, m_bin))) {
-                m_fileLogger->addMetric(CFileLogger::EMetric::FILESYSTEM_RATE, 1);
-                dropped(pack);
-            }
-        }
+        if (m_file_manager->isWork() && !put(buildBINChunk(pack, map, m_bin), pack, log))
+            return 1;
     }
     uint64_t rate = 0;
     for (auto i = (int)DataLib::CH1; i <= (int)DataLib::CH4; i++) {
         DataLib::EDataBuffersPackChannel ch = (DataLib::EDataBuffersPackChannel)i;
         auto buff = pack->getBuffer(ch);
         if (buff) {
-            m_fileLogger->addMetric(CFileLogger::EMetric::RECIVE_DATE, buff->getDataLenght());
-            m_fileLogger->addMetric(ch, buff->getDataLenght(), buff->getLostSamples(DataLib::FPGA), buff->getWaitSamples(), buff->getSamplesCount());
+            log->addMetric(CFileLogger::EMetric::RECIVE_DATE, buff->getDataLenght());
+            log->addMetric(ch, buff->getDataLenght(), buff->getLostSamples(DataLib::FPGA), buff->getWaitSamples(), buff->getSamplesCount());
             rate = std::max(rate, buff->getADCBaseRate());
         }
     }
-    m_fileLogger->addMetric(CFileLogger::EMetric::OSC_RATE, rate);
-    m_fileLogger->addMetric(pack);
+    log->addMetric(CFileLogger::EMetric::OSC_RATE, rate);
+    log->addMetric(pack);
 
     if (m_samples) {
         bool reachLimits = true;
@@ -567,7 +758,11 @@ auto CStreamingFile::passBuffers(DataLib::CDataBuffersPackDMA::Ptr pack) -> int 
         }
         if (reachLimits) {
             stop(CStreamingFile::REACH_LIMIT, true);
+            return 1;
         }
     }
+    // the time limit: the time line of the stream (the waits count)
+    if (m_limitTime > 0 && packRate > 0 && static_cast<double>(m_line) >= m_limitTime * packRate)
+        stop(CStreamingFile::REACH_LIMIT, true);
     return 1;
 }

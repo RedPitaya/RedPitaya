@@ -22,7 +22,8 @@ Item {
     // bytes a second of the data as the file gets them (volts are floats, BIN keeps the codes)
     readonly property double dataRate: rec.dataRate || 0
     readonly property double thru: rec.write > 0 && dataRate > 0 ? Math.min(rec.write, dataRate) : dataRate > 0 ? dataRate : (rec.write || 0)
-    readonly property real recFrac: rec.limit ? Math.min(1, (rec.samples || 0) / rec.limit) : (rec.total ? 1 - rec.free / rec.total : 0)
+    readonly property bool hasLimit: !!rec.limitKind && rec.limitKind !== "none"
+    readonly property real recFrac: hasLimit ? (rec.frac || 0) : (rec.total ? 1 - rec.free / rec.total : 0)
     function dur(sec) { if (!(sec >= 0) || !isFinite(sec)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h" }
 
     readonly property real rowHeight: header ? 28 + Theme.fsAdd : 56 + Theme.fsAdd
@@ -83,8 +84,8 @@ Item {
                     anchors.fill: parent
                     anchors.margins: 8
                     Rectangle { anchors.top: parent.top; width: parent.width; height: 6; radius: 3; color: Theme.border
-                        Rectangle { width: parent.width * root.recFrac; height: parent.height; radius: 3; color: rec.limit ? Theme.accent : Theme.muted } }
-                    Text { anchors.bottom: parent.bottom; text: rec.running ? (rec.limit ? Math.round(root.recFrac * 100) + "% · " + root.dur((rec.limit - rec.samples) / root.recRate) + " left" : "SD full in " + root.dur(rec.free / root.thru)) : Theme.bytes(rec.free) + " free on the SD card"; color: Theme.muted; font.pixelSize: Theme.fsXs }
+                        Rectangle { width: parent.width * root.recFrac; height: parent.height; radius: 3; color: root.hasLimit ? Theme.accent : Theme.muted } }
+                    Text { anchors.bottom: parent.bottom; text: rec.running ? (root.hasLimit ? Math.round(root.recFrac * 100) + "% · " + root.dur(rec.left) + " left" + (rec.part > 1 ? " · part " + rec.part : "") : "SD full in " + root.dur(rec.free / root.thru)) : Theme.bytes(rec.free) + " free on the SD card"; color: Theme.muted; font.pixelSize: Theme.fsXs }
                 }
                 Preview {
                     visible: !root.onSd

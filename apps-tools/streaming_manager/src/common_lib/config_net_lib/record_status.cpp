@@ -16,6 +16,12 @@ auto toValue(const StreamRecordStatus& s) -> Json::Value {
     v["lost_board"] = Json::UInt64(s.lostBoard);
     v["lost_queue"] = Json::UInt64(s.lostQueue);
     v["file"] = s.file;
+    v["limit_time"] = s.limitTime;
+    v["limit_size"] = Json::UInt64(s.limitSize);
+    v["split_size"] = Json::UInt64(s.splitSize);
+    v["split_time"] = s.splitTime;
+    v["part"] = s.part;
+    v["part_written"] = Json::UInt64(s.partWritten);
     return v;
 }
 
@@ -46,6 +52,18 @@ auto fromValue(const Json::Value& v, StreamRecordStatus& s) -> bool {
         s.lostQueue = v["lost_queue"].asUInt64();
     if (v.isMember("file"))
         s.file = v["file"].asString();
+    if (v.isMember("limit_time"))
+        s.limitTime = v["limit_time"].asDouble();
+    if (v.isMember("limit_size"))
+        s.limitSize = v["limit_size"].asUInt64();
+    if (v.isMember("split_size"))
+        s.splitSize = v["split_size"].asUInt64();
+    if (v.isMember("split_time"))
+        s.splitTime = v["split_time"].asDouble();
+    if (v.isMember("part"))
+        s.part = v["part"].asUInt();
+    if (v.isMember("part_written"))
+        s.partWritten = v["part_written"].asUInt64();
     return true;
 }
 

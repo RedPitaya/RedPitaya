@@ -206,6 +206,24 @@ class CStreamSettings {
     auto getGPIOInFormat() const -> GPIOFormat;
     auto setGPIOInSamples(uint64_t _samples) -> void;  // GPIO clock samples, 0 - no limit
     auto getGPIOInSamples() const -> uint64_t;
+
+    // A recording to a file (the SD card of a board, or a client): besides the sample limit, a
+    // limit of the time line (seconds, the trigger waits count) or of the data (bytes), and the
+    // parts it is split into (bytes or seconds); 0 - none. One limit and one split at a time: a
+    // value set clears the other one of its kind.
+    struct FileLimits {
+        double time = 0;
+        uint64_t size = 0;
+        uint64_t splitSize = 0;
+        double splitTime = 0;
+    };
+    auto setADCLimits(const FileLimits& limits) -> bool;  // false: a negative or too big time
+    auto getADCLimits() const -> FileLimits;
+    // about how long an ADC buffer (a memory block) lasts at most, at `adcRate` Hz before the
+    // decimation: the time limit on the clock waits that long for the buffer that ends it
+    auto adcBufferSeconds(double adcRate) const -> double;
+    auto setGPIOInLimits(const FileLimits& limits) -> bool;
+    auto getGPIOInLimits() const -> FileLimits;
     auto setGPIOOutPassMode(PassMode _value) -> void;
     auto getGPIOOutPassMode() const -> PassMode;
     auto setGPIOOutFile(std::string _name) -> bool;  // a name only, as file_sd
@@ -249,6 +267,7 @@ class CStreamSettings {
         PassMode m_passMode = PassMode::NET;
         State m_channels[4] = {State::OFF, State::OFF, State::OFF, State::OFF};
         uint64_t m_samples = 0;
+        FileLimits m_limits;
         DataFormat m_format = DataFormat::BIN;
         DataType m_dataType = DataType::RAW;
         Resolution m_resolution = Resolution::BIT_16;
@@ -319,6 +338,7 @@ class CStreamSettings {
         PassMode m_inPassMode = PassMode::NET;
         GPIOFormat m_inFormat = GPIOFormat::BIN;
         uint64_t m_inSamples = 0;
+        FileLimits m_inLimits;
         PassMode m_outPassMode = PassMode::NET;
         std::string m_outFile;
         GPIORepeat m_outRepeat = GPIORepeat::GPIO_REP_OFF;

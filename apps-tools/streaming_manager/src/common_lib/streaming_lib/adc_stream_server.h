@@ -72,7 +72,10 @@ class ADCStreamServer {
         uint64_t written = 0;  // bytes
         double writeRate = 0;
         double queue = 0;
-        std::string file;
+        std::string file;  // the part written now
+        CStreamSettings::FileLimits limits;
+        int part = 0;
+        uint64_t partWritten = 0;
     };
     auto getRecord() -> Record;
     auto getRunMode() -> int;

@@ -8,6 +8,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
 
 #include <filesystem>
 #include <fstream>
@@ -31,6 +32,7 @@
 #include "uio_lib/gpio.h"
 #include "uio_lib/gpio_dummy.h"
 #include "uio_lib/memory_manager.h"
+#include "writer_lib/time_limit_clock.h"
 
 using namespace gpio_streaming_lib;
 using namespace std::chrono_literals;
@@ -618,6 +620,79 @@ TEST_F(GPIOServer, TheInputWritesABinFileUpToItsLimit) {
         blocks++;
     }
     EXPECT_EQ(blocks, 3) << "the third buffer reaches the limit";
+}
+
+// A trigger that never comes (no buffer at all): the time limit ends the recording on the clock,
+// a done run with an empty file (streaming_improvements 4.11)
+TEST_F(GPIOServer, TheTimeLimitEndsTheInputWhenNoBufferComes) {
+    uio_lib::dummy::gpioState().inFill = [](uint8_t, uint32_t) {
+        std::this_thread::sleep_for(1ms);
+        return false;
+    };
+    const auto dir = FileDir();
+    for (auto& e : std::filesystem::directory_iterator(dir))
+        std::filesystem::remove(e.path());
+    settings.setGPIOInPassMode(CStreamSettings::PassMode::FILE);
+    settings.setGPIOInFormat(CStreamSettings::GPIOFormat::BIN);
+    CStreamSettings::FileLimits l;
+    l.time = 0.1;
+    ASSERT_TRUE(settings.setGPIOInLimits(l));
+    GPIOStreamOptions o;
+    o.dirPath = dir;
+    const auto t0 = std::chrono::steady_clock::now();
+    ASSERT_TRUE(in->start(settings, o));
+    ASSERT_TRUE(recorder->waitStopped());
+    const double took = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::DONE});
+    EXPECT_GE(took, 0.1 + TimeLimitClock::kMargin - 0.05) << "the limit and the margin";
+    EXPECT_LT(took, 8.0);
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(in->filePath())) << r.error();
+    EXPECT_EQ(r.samples(0, false), 0u);
+}
+
+// The input in parts of a size (streaming_improvements 4.11): every word once, in order, across
+// the numbered parts; the record names the last part, its number and the limits
+TEST_F(GPIOServer, TheInputInPartsKeepsEveryWordAcrossThem) {
+    countingInput();
+    const auto dir = FileDir();
+    for (auto& e : std::filesystem::directory_iterator(dir))
+        std::filesystem::remove(e.path());
+    settings.setGPIOInPassMode(CStreamSettings::PassMode::FILE);
+    settings.setGPIOInFormat(CStreamSettings::GPIOFormat::BIN);
+    settings.setGPIOInSamples(6 * kWords);
+    CStreamSettings::FileLimits l;
+    l.splitSize = 2 * kWords * 4;  // about two buffers a part
+    ASSERT_TRUE(settings.setGPIOInLimits(l));
+    GPIOStreamOptions o;
+    o.dirPath = dir;
+    ASSERT_TRUE(in->start(settings, o));
+    EXPECT_NE(in->filePath().find("_0001.bin"), std::string::npos) << in->filePath();
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->stops(), std::vector<GPIOStopReason>{GPIOStopReason::DONE});
+    std::vector<std::string> parts;
+    for (auto& e : std::filesystem::directory_iterator(dir))
+        if (e.path().extension() == ".bin")
+            parts.push_back(e.path().string());
+    std::sort(parts.begin(), parts.end());
+    ASSERT_GE(parts.size(), 3u);
+    const auto r = in->getRecord();
+    EXPECT_EQ(r.part, static_cast<int>(parts.size()));
+    EXPECT_EQ(r.file, parts.back());
+    EXPECT_EQ(r.limits.splitSize, l.splitSize);
+    uint32_t expect = 0;
+    for (const auto& p : parts) {
+        bin_lib::FileReader fr;
+        ASSERT_TRUE(fr.open(p)) << p << ": " << fr.error();
+        bin_lib::BlockInfo b;
+        std::vector<uint8_t> data;
+        while (fr.nextBlock(b, data)) {
+            const auto* w = reinterpret_cast<const uint32_t*>(data.data());
+            for (size_t i = 0; i < data.size() / 4; i++)
+                ASSERT_EQ(w[i], expect++) << p;
+        }
+    }
+    EXPECT_EQ(expect, 6u * kWords) << "every word of the six buffers";
 }
 
 // The losses the page shows (item 1.4 of the streaming improvements): what the block reports lost

@@ -103,19 +103,40 @@ auto FileQueueManager::queueFill() -> double {
 auto FileQueueManager::addChunkToWrite(FileChunk::Ptr chunk) -> bool {
     if (!chunk || !m_threadWork)
         return false;
+    if (m_refuse > 0) {
+        m_refuse--;
+        return false;
+    }
     return pushQueue(std::move(chunk), m_queueLimit);
 }
 
-auto FileQueueManager::openFile(std::string FileName, bool Append) -> void {
+auto FileQueueManager::addFileSwitch(const std::string& name) -> bool {
+    if (!m_threadWork)
+        return false;
+    // a marker of no size: never refused for the memory of the queue
+    return pushQueue(FileChunk::nextFile(name), std::numeric_limits<uint64_t>::max());
+}
+
+auto FileQueueManager::fileName() -> std::string {
+    std::lock_guard lock(m_nameMtx);
+    return m_fileName;
+}
+
+auto FileQueueManager::openStream(const std::string& FileName, bool Append) -> bool {
+    fs.clear();
     fs.open(FileName, std::ios::binary | std::ofstream::out | std::ofstream::in | (Append ? std::ofstream::binary : std::ofstream::trunc));
     if (fs.fail()) {
+        fs.clear();
         fs.open(FileName, std::ios::binary | std::ofstream::out | std::ofstream::in | std::ofstream::trunc);
         if (fs.fail()) {
             aprintf(stderr, "File: %s  not exist\n", FileName.c_str());
-            return;
+            return false;
         }
     }
-    m_fileName = FileName;
+    {
+        std::lock_guard lock(m_nameMtx);
+        m_fileName = FileName;
+    }
     closeSyncFd();
 #ifdef __linux__
     m_syncFd = ::open(FileName.c_str(), O_WRONLY | O_CLOEXEC);
@@ -126,18 +147,48 @@ auto FileQueueManager::openFile(std::string FileName, bool Append) -> void {
     if (dirName == "") {
         dirName = ".";
     }
-
     m_freeSize = getFreeSpaceDisk(dirName);
     if (m_testMode) {
         m_freeSize = std::numeric_limits<unsigned long long>::max();
     }
+    m_hasWriteSize = 0;
+    m_files++;
+    return true;
+}
+
+auto FileQueueManager::switchFile(const std::string& name) -> void {
+    if (fs.is_open()) {
+        fs.flush();
+        limitDirtyPages(true);
+        fs.close();
+    }
+    closeSyncFd();
+    // the speed measured and the queue limit go on: the same card
+    if (!openStream(name, false)) {
+        // as a full disk: the recording stops
+        m_hasErrorWrite = true;
+        m_IsOutOfSpace = true;
+        outSpaceNotifyThread();
+        return;
+    }
+    m_firstSectionWrite = false;
+}
+
+auto FileQueueManager::openFile(std::string FileName, bool Append) -> void {
+    m_files = 0;
+    m_allWritten = 0;
+    {
+        std::lock_guard lock(m_nameMtx);
+        m_fileName.clear();
+    }
+    if (!openStream(FileName, Append))
+        return;
     m_memoryLimit = std::max<uint64_t>(kMinQueueLimit, getTotalSystemMemory() / 4);
     m_queueLimit = std::min(kStartQueueLimit, m_memoryLimit);
     m_rate = 0;
     m_rateBytes = 0;
     m_rateTime = {};
     TRACE_SHORT("File queue: up to %d MB of the RAM", (int)(m_memoryLimit / (1024 * 1024)))
-    m_hasWriteSize = 0;
 }
 
 auto FileQueueManager::closeFile() -> void {
@@ -182,7 +233,7 @@ auto FileQueueManager::stopWrite(bool waitAllWrite) -> void {
 }
 
 auto FileQueueManager::getWritedSize() -> uint64_t {
-    return m_hasWriteSize;
+    return m_allWritten;
 }
 
 auto FileQueueManager::task() -> void {
@@ -209,6 +260,11 @@ auto FileQueueManager::writeToFile(std::chrono::milliseconds wait) -> int {
     if (m_hasErrorWrite)
         return 1;
 
+    if (!chunk->nextFileName().empty()) {
+        switchFile(chunk->nextFileName());
+        return m_hasErrorWrite ? 1 : 0;
+    }
+
     const uint64_t Length = chunk->size();
 
     if (fs.good() && ((m_hasWriteSize + Length) < m_freeSize)) {
@@ -219,6 +275,7 @@ auto FileQueueManager::writeToFile(std::chrono::milliseconds wait) -> int {
         chunk->writeTo(fs);
         fs.flush();
         m_hasWriteSize += Length;
+        m_allWritten += Length;
         limitDirtyPages(false);
         measureWrite(Length, std::chrono::steady_clock::now() - t0);
 
@@ -274,27 +331,22 @@ auto FileQueueManager::outSpaceNotifyThread() -> void {
     } catch (std::exception& e) {}
 }
 
-auto FileQueueManager::updateWavFile(uint32_t _size) -> void
-{
-	int offset1 = 4;
-    int offset2 = 40;
-
+// The two sizes of the WAV header (RIFF and data) grow by what was written. They are 32 bit: past
+// 4 GB they stay at 0xFFFFFFFF, which readers take as "to the end of the file" (a recording is
+// split before that, CStreamingFile)
+auto FileQueueManager::updateWavFile(uint32_t _size) -> void {
+    const int offsets[2] = {4, 40};
     auto cur_p = fs.tellp();
     auto cur_g = fs.tellg();
-
-	uint32_t size1 = 0;
-	uint32_t size2 = 0;
-	fs.seekg(offset1, fs.beg);
-	fs.read((char*)&size1, sizeof(size1));
-    size1 += _size;
-    fs.seekp(offset1, fs.beg);
-    fs.write((char*)&size1, sizeof(size1));
-    fs.seekg(offset2, fs.beg);
-    fs.read((char*)&size2, sizeof(size2));
-    size2 += _size;
-    fs.seekp(offset2, fs.beg);
-    fs.write((char*)&size2, sizeof(size2));
-
+    for (int offset : offsets) {
+        uint32_t size = 0;
+        fs.seekg(offset, fs.beg);
+        fs.read(reinterpret_cast<char*>(&size), sizeof(size));
+        const uint64_t grown = static_cast<uint64_t>(size) + _size;
+        size = size == 0xFFFFFFFFu || grown > 0xFFFFFFFFull ? 0xFFFFFFFFu : static_cast<uint32_t>(grown);
+        fs.seekp(offset, fs.beg);
+        fs.write(reinterpret_cast<const char*>(&size), sizeof(size));
+    }
     fs.seekp(cur_p);
     fs.seekg(cur_g);
 }

@@ -14,6 +14,17 @@ Dialog2 {
     // the board of the Start, null for Start all
     property var board: null
     property var shortage: ({})
+    // what the limit of a board is: samples or a time of its inputs, or a size of the data
+    function limitText(row) {
+        const ins = " × " + row.inputs + (row.inputs === 1 ? " input" : " inputs")
+        if (row.limitSize > 0)
+            return Theme.bytes(row.limitSize) + " of data"
+        if (row.limitTime > 0) {
+            const t = row.limitTime
+            return (t >= 3600 ? +(t / 3600).toFixed(2) + " h" : t >= 60 ? +(t / 60).toFixed(2) + " min" : +t.toFixed(3) + " s") + ins
+        }
+        return Theme.count(row.samples) + " samples" + ins
+    }
 
     function go() {
         if (board)
@@ -58,7 +69,7 @@ Dialog2 {
                     required property int index
                     readonly property var row: root.shortage.boards[Math.floor(index / 2)]
                     text: index % 2 ? Theme.bytes(row.need)
-                        : row.name + " · " + (row.running ? "already recording, the rest of " : "") + Theme.count(row.samples) + " samples × " + row.inputs + (row.inputs === 1 ? " input" : " inputs")
+                        : row.name + " · " + (row.running ? "already recording, the rest of " : "") + root.limitText(row)
                     color: index % 2 ? Theme.value : Theme.muted
                     font.pixelSize: Theme.fsSm
                     Layout.fillWidth: index % 2 === 0

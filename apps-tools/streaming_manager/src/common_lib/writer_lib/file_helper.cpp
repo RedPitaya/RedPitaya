@@ -1,4 +1,5 @@
 #ifndef _WIN32
+#include <cstdio>
 #include <sys/statvfs.h>
 #include <unistd.h>
 #else
@@ -173,4 +174,14 @@ auto buildBINChunk(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib
     auto chunk = std::make_unique<FileChunk>();
     chunk->add(std::move(bytes));
     return chunk;
+}
+
+auto partFileName(const std::string& base, int part) -> std::string {
+    char n[16];
+    snprintf(n, sizeof(n), "_%04d", part);
+    const size_t slash = base.find_last_of("/\\");
+    const size_t dot = base.find_last_of('.');
+    if (dot == std::string::npos || (slash != std::string::npos && dot < slash))
+        return base + n;
+    return base.substr(0, dot) + n + base.substr(dot);
 }

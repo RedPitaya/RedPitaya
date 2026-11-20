@@ -52,13 +52,27 @@ Item {
     readonly property var shown: all.filter(r => (boardFilter === "" || r.board === boardFilter) && (formatFilter === "" || r.format === formatFilter)
         && (search === "" || (r.name + " " + r.board).toLowerCase().indexOf(search.toLowerCase()) >= 0))
         .sort((a, b) => (b.recording - a.recording) || b.started - a.started || a.name.localeCompare(b.name))
-    // the rows: a head for a run of Start all (one time on several boards), then its recordings
+    // the rows: a head for a run of Start all (one time on several boards), then its recordings;
+    // a head for a recording in parts (streaming_improvements 4.11), then its parts
     readonly property var rows: {
         const runs = {}
-        for (const r of shown) if (r.run) (runs[r.run] = runs[r.run] || []).push(r)
+        // the parts stand under their own head, not again under the one of the run
+        for (const r of shown) if (r.run && !r.partOf) (runs[r.run] = runs[r.run] || []).push(r)
+        const partsOf = {}
+        for (const r of shown) if (r.partOf) (partsOf[r.partOf] = partsOf[r.partOf] || []).push(r)
         const out = []
         const done = {}
         for (const r of shown) {
+            if (r.partOf) {
+                if (done["parts:" + r.partOf]) continue
+                done["parts:" + r.partOf] = true
+                const parts = partsOf[r.partOf].slice().sort((a, b) => a.part - b.part)
+                const live = parts.some(x => x.recording)
+                out.push({ head: true, paths: parts.map(x => x.path), text: r.partOf.split(/[\\/]/).pop() + " · " + parts.length + (parts.length === 1 ? " part" : " parts") + (live ? " so far" : "") + " · "
+                    + Theme.bytes(parts.reduce((a, x) => a + x.size, 0)) })
+                for (const x of parts) out.push({ head: false, r: x, inPart: true })
+                continue
+            }
             const group = r.run ? runs[r.run] : null
             const many = group && new Set(group.map(x => x.board)).size > 1
             if (many) {
@@ -100,6 +114,7 @@ Item {
         const v = Object.assign({}, viewers)
         v[path] = nw
         viewers = v
+        nw.openPart.connect((p) => root.view(p))
         nw.gone.connect(() => {
             const v2 = Object.assign({}, root.viewers)
             delete v2[path]
@@ -195,12 +210,30 @@ Item {
                                 visible: modelData.head
                                 anchors.fill: parent
                                 color: Qt.rgba(71 / 255, 178 / 255, 209 / 255, 0.08)
-                                Text { x: 12; anchors.verticalCenter: parent.verticalCenter; text: modelData.head ? "▾ " + modelData.text : ""; color: Theme.muted; font.pixelSize: Theme.fsSm }
+                                // the head of a recording in parts: ticking it ticks all of them
+                                Check {
+                                    visible: !!modelData.paths
+                                    x: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    padding: 0
+                                    checked: !!modelData.paths && modelData.paths.every(p => !!root.sel[p])
+                                    // from the parts ticked, not the box (a click breaks its binding: set again)
+                                    onClicked: {
+                                        const on = !modelData.paths.every(p => !!root.sel[p])
+                                        const s = Object.assign({}, root.sel)
+                                        for (const p of modelData.paths) { if (on) s[p] = true; else delete s[p] }
+                                        root.sel = s
+                                        checked = Qt.binding(() => !!modelData.paths && modelData.paths.every(p => !!root.sel[p]))
+                                    }
+                                    Accessible.name: "Select all the parts"
+                                }
+                                Text { x: modelData.paths ? 44 : 12; anchors.verticalCenter: parent.verticalCenter; text: modelData.head ? "▾ " + modelData.text : ""; color: modelData.paths ? Theme.value : Theme.muted; font.pixelSize: Theme.fsSm; font.family: modelData.paths ? Theme.mono : Qt.application.font.family }
                             }
                             Row6 {
                                 visible: !modelData.head
                                 anchors.fill: parent
                                 r: modelData.head ? null : modelData.r
+                                inPart: !!modelData.inPart
                             }
                         }
                         Label2 {
@@ -345,6 +378,8 @@ Item {
         id: row
         property bool head: false
         property var r: null
+        // a part under the head of its recording: its number only
+        property bool inPart: false
         readonly property bool isCur: !!r && r.path === root.current
         readonly property bool converting: !!r && root.job.path === r.path
         implicitHeight: 30
@@ -383,11 +418,11 @@ Item {
                     anchors.centerIn: parent
                     padding: 0
                     checked: !!row.r && !!root.sel[row.r.path]
-                    onClicked: root.toggle(row.r.path)
+                    onClicked: { root.toggle(row.r.path); checked = Qt.binding(() => !!row.r && !!root.sel[row.r.path]) }
                     Accessible.name: row.r ? "Select " + row.r.name : ""
                 }
             }
-            Cell { t: row.head ? "NAME" : row.r ? row.r.name : ""; w: 3.6; mono: true; strong: true }
+            Cell { t: row.head ? "NAME" : row.r ? (row.inPart ? "    " + (/_\d{4,}\.[^.]+$/.test(row.r.name) ? "…" + row.r.name.slice(row.r.name.lastIndexOf("_")) : row.r.name) : row.r.name) : ""; w: 3.6; mono: true; strong: true }
             Cell { t: row.head ? "BOARD" : row.r ? row.r.board : ""; w: 1.2 }
             Cell { t: row.head ? "STARTED" : row.r ? root.when(row.r.started) : ""; w: 1.5; mono: true; elide: Text.ElideRight }
             Cell { t: row.head ? "LENGTH" : row.r ? root.dur(row.r.seconds) : ""; w: 1; mono: true }

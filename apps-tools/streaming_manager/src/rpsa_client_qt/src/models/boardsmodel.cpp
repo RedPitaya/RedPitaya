@@ -272,9 +272,9 @@ QVariantMap BoardsModel::diskShortage(const QString& ip) {
             continue;
         if (records) {
             const auto r = b->getRecord();
-            if (r["dest"].toString() != "pc" || !r["running"].toBool() || r["limit"].toDouble() <= 0)
+            if (r["dest"].toString() != "pc" || !r["running"].toBool() || r["limitKind"].toString() == "none")
                 continue;
-            need *= std::max(0.0, 1.0 - r["samples"].toDouble() / r["limit"].toDouble());
+            need *= std::max(0.0, 1.0 - r["frac"].toDouble());
             if (need <= 0)
                 continue;
         }
@@ -288,7 +288,7 @@ QVariantMap BoardsModel::diskShortage(const QString& ip) {
         for (int i = 1; i <= 4; i++)
             if (b->value("channel_state_" + QString::number(i)) == "ON")
                 on++;
-        d.boards.append(QVariantMap{{"name", b->getName()}, {"samples", b->value("samples_limit_sd").toDouble()}, {"inputs", on}, {"need", need}, {"running", records}});
+        d.boards.append(QVariantMap{{"name", b->getName()}, {"samples", b->value("samples_limit_sd").toDouble()}, {"limitTime", b->value("limit_time_sd").toDouble()}, {"limitSize", b->value("limit_size_sd").toDouble()}, {"inputs", on}, {"need", need}, {"running", records}});
     }
     for (auto it = disks.begin(); it != disks.end(); ++it) {
         if (it->need > it->free)

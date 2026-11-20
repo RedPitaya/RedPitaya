@@ -123,7 +123,7 @@ const char* kStream =
     "The channels, decimation and resolution are the board's settings (%P -c -i ...).\n"
     "\n"
     "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC]\n"
-    "          [--tdms_time] [-v]\n"
+    "          [--limit-time=T] [--limit-size=SIZE] [--split=SIZE|T] [--tdms_time] [-v]\n"
     "\n"
     "  -s, --streaming       the mode\n"
     "  -h, --hosts=IP[,IP]   the boards (default: the first board found)\n"
@@ -134,6 +134,15 @@ const char* kStream =
     "                        volt  volts as floating point (wav: limited to -1..1); the volts are\n"
     "                              right with the calibration of the board on (use_calib=ON, the default)\n"
     "  -t, --timeout=MSEC    stop after this time, milliseconds or 10s, 2m (default: until Ctrl+C)\n"
+    "      --limit-time=T    stop the file after T of the time line of the stream (trigger waits\n"
+    "                        count): seconds, or 90s, 10m, 2h; taken at a buffer. A trigger that\n"
+    "                        never comes: the file ends on the clock about 2 s after T\n"
+    "      --limit-size=SIZE stop before the data of the file would go over SIZE: bytes, or 500M, 2G\n"
+    "      --split=SIZE|T    the file in parts of SIZE (1M or more: 500M, 1G) or of T (30s, 5m, 1h; a\n"
+    "                        number alone is seconds):\n"
+    "                        <name>_0001.<ext>, _0002 ..., each with its report; the stream goes on.\n"
+    "                        A WAV goes on in a new part before 4 GB anyway (32 bit sizes); csv: each part\n"
+    "                        is converted. Sizes in capitals (M, G), times in small letters (s, m, h)\n"
     "      --tdms_time       tdms: a column with the time of every sample (8 bytes each);\n"
     "                        without it the time is in the channel properties and the group Buffers\n"
     "  -v, --verbose         report every step and the statistics at the end\n"
@@ -246,7 +255,7 @@ const std::map<std::string, Section>& sections() {
         {"detect", {kDetect, "Usage: %P -d [-t SEC]\n"}},
         {"config", {kConfig, "Usage: %P -c [-h IPs] -g V|V1|VV|F | -s M|F [-f FILE] | -i NAME[=VALUE] [-i ...] [-w] [-v]\n"}},
         {"remote", {kRemote, "Usage: %P -r [-h IPs] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac|watch|status [-t MSEC] [-v]\n"}},
-        {"stream", {kStream, "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC] [--tdms_time] [-v]\n"}},
+        {"stream", {kStream, "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC] [--limit-time=T] [--limit-size=SIZE] [--split=SIZE|T] [--tdms_time] [-v]\n"}},
         {"dac", {kDac, "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [-v]\n"}},
         {"gpio", {kGpio, "Usage: %P -G [-h IP] [--in FILE [-f bin|csv|vcd] [-l SAMPLES]] [--out FILE.bin [-r inf|COUNT] [--gaps]] [-t MSEC] [-v]\n"}},
         {"formats", {kFormats, ""}},

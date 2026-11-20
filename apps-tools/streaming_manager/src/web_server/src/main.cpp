@@ -182,6 +182,41 @@ CIntParameter ss_settings_result("SS_SETTINGS_RESULT", CBaseParameter::RW, 0, 0,
 // the sample limit of the GPIO input file (gpio_in_samples_limit_sd, 64 bit), 0 - until the stop
 CDoubleParameter ss_gpio_in_samples("SS_GPIO_IN_SAMPLES", CBaseParameter::RW, 0, 0, 0, kMaxSamples);
 
+// streaming_improvements 4.11: the limits of a file besides its samples, and its parts; the keys
+// of the settings (a value set clears the other limit or split of its stream: all are sent back)
+struct LimitSetting {
+    CDoubleParameter param;
+    std::string key;
+    bool bytes;  // a whole number of bytes, else seconds
+};
+std::vector<std::unique_ptr<LimitSetting>> g_limits = [] {
+    std::vector<std::unique_ptr<LimitSetting>> t;
+    auto add = [&t](const char* name, const char* key, bool bytes) {
+        t.push_back(std::unique_ptr<LimitSetting>(new LimitSetting{CDoubleParameter(name, CBaseParameter::RW, 0, 0, 0, 1.8e19), key, bytes}));
+    };
+    add("SS_LIMIT_TIME", "limit_time_sd", false);
+    add("SS_LIMIT_SIZE", "limit_size_sd", true);
+    add("SS_SPLIT_SIZE", "split_size_sd", true);
+    add("SS_SPLIT_TIME", "split_time_sd", false);
+    add("SS_GPIO_LIMIT_TIME", "gpio_in_limit_time_sd", false);
+    add("SS_GPIO_LIMIT_SIZE", "gpio_in_limit_size_sd", true);
+    add("SS_GPIO_SPLIT_SIZE", "gpio_in_split_size_sd", true);
+    add("SS_GPIO_SPLIT_TIME", "gpio_in_split_time_sd", false);
+    return t;
+}();
+// the part written now of the run (0 none), its bytes, its file
+CIntParameter ss_adc_part("SS_ADC_PART", CBaseParameter::RO, 0, 0, 0, 1000000000);
+CDoubleParameter ss_adc_part_written("SS_ADC_PART_WRITTEN", CBaseParameter::RO, 0, 0, 0, 1e20);
+CStringParameter ss_adc_file_now("SS_ADC_FILE_NOW", CBaseParameter::RO, "", 0);
+CIntParameter ss_gpio_part("SS_GPIO_PART", CBaseParameter::RO, 0, 0, 0, 1000000000);
+CDoubleParameter ss_gpio_part_written("SS_GPIO_PART_WRITTEN", CBaseParameter::RO, 0, 0, 0, 1e20);
+CStringParameter ss_gpio_file_now("SS_GPIO_FILE_NOW", CBaseParameter::RO, "", 0);
+
+auto sendLimits(CStreamSettings s) -> void {
+    for (auto& l : g_limits)
+        l->param.SendValue(std::atof(s.getValue(l->key).c_str()));
+}
+
 // the board for the strip of the page: the profile's model name and the MAC of eth0
 CStringParameter ss_board_model("SS_BOARD_MODEL", CBaseParameter::RO, "", 0);
 CStringParameter ss_board_mac("SS_BOARD_MAC", CBaseParameter::RO, "", 0);
@@ -456,6 +491,7 @@ void updateUI() {
     ss_trig_level_v.SendValue(s.getADCTriggerLevelVolt());
     ss_trig_hyst_v.SendValue(s.getADCTriggerHysteresisVolt());
     ss_gpio_in_samples.SendValue((double)s.getGPIOInSamples());
+    sendLimits(s);
 }
 
 // A change of the page goes to the settings like a client's: checked, applied to the memory
@@ -726,6 +762,26 @@ void setConfig(bool _force) {
     if (needUpdate)
         sendTriggerWindow();
 
+    {
+        bool limits = false;
+        for (auto& l : g_limits) {
+            if (!l->param.IsNewValue() && !_force)
+                continue;
+            l->param.Update();
+            const double v = l->param.Value();
+            if (v >= 0 && std::isfinite(v)) {
+                char text[40];
+                std::snprintf(text, sizeof(text), l->bytes ? "%.0f" : "%.6f", v);
+                change([&](CStreamSettings& s) { return s.setValue(l->key, text); });
+            }
+            limits = true;
+        }
+        if (limits) {
+            sendLimits(g_session->settings());
+            needUpdate = true;
+        }
+    }
+
     if (ss_gpio_in_samples.IsNewValue() || _force) {
         ss_gpio_in_samples.Update();
         const double v = ss_gpio_in_samples.Value();
@@ -779,6 +835,12 @@ void UpdateParams(void) {
             ss_gpio_written.SendValue(rs.gpioIn.written);
             ss_gpio_write_rate.SendValue(rs.gpioIn.writeRate);
             ss_gpio_file_queue.SendValue(rs.gpioIn.queue);
+            ss_adc_part.SendValue(static_cast<int>(rs.adc.part));
+            ss_adc_part_written.SendValue(static_cast<double>(rs.adc.partWritten));
+            ss_adc_file_now.SendValue(rs.adc.file);
+            ss_gpio_part.SendValue(static_cast<int>(rs.gpioIn.part));
+            ss_gpio_part_written.SendValue(static_cast<double>(rs.gpioIn.partWritten));
+            ss_gpio_file_now.SendValue(rs.gpioIn.file);
             ss_sd_free.SendValue(rs.sdFree);
             ss_sd_total.SendValue(rs.sdTotal);
         }

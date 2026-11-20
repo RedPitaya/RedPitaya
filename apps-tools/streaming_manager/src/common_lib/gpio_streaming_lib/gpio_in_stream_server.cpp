@@ -82,6 +82,12 @@ struct GPIOInStreamServer::Impl {
     std::atomic<uint64_t> fileWritten{0};
     std::atomic<double> fileRate{0};
     std::atomic<double> fileQueue{0};
+    // the part written now: fileWork publishes it, the status reads it (the writer is not locked)
+    std::atomic<int> filePart{0};
+    std::atomic<uint64_t> partWritten{0};
+    CStreamSettings::FileLimits fileLimits;
+    std::mutex pathMtx;
+    std::string pathNow;
 
     auto teardown() -> void;
     // of: the session the stop was asked in, none for a stop of whatever runs
@@ -240,8 +246,15 @@ auto GPIOInStreamServer::Impl::fileWork() -> void {
     try {
         while (run) {
             auto pack = ring->readBuffer();
-            if (!pack)
+            if (!pack) {
+                // no buffer (a trigger waited for): the time limit on the clock
+                if (file->timeUp()) {
+                    aprintf(stdout, "[Streaming] GPIO input: the time limit passed with no buffer to end it (a trigger not come), %s\n", file->path().c_str());
+                    stopNonBlocking(GPIOStopReason::DONE, true);
+                    break;
+                }
                 continue;
+            }
             auto buffer = bufferOf(pack);
             DataLib::GPIOHeader h;
             DataLib::getHeaderGPIO(buffer, h);
@@ -252,6 +265,12 @@ auto GPIOInStreamServer::Impl::fileWork() -> void {
             fileWritten = file->writtenBytes();
             fileRate = file->writeRate();
             fileQueue = file->queueFill();
+            partWritten = file->partBytes();
+            if (file->part() != filePart) {
+                std::lock_guard lock(pathMtx);
+                pathNow = file->path();
+                filePart = file->part();
+            }
             if (result == CGpioFileWriter::Result::OK)
                 continue;
             if (result == CGpioFileWriter::Result::LIMIT) {
@@ -300,6 +319,13 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
         p.fileSamples = p.fileWritten = 0;
         p.fileRate = p.fileQueue = 0;
         p.fileLimit = p.runMode == 2 ? settings.getGPIOInSamples() : 0;
+        p.fileLimits = p.runMode == 2 ? settings.getGPIOInLimits() : CStreamSettings::FileLimits();
+        p.filePart = 0;
+        p.partWritten = 0;
+        {
+            std::lock_guard lock(p.pathMtx);
+            p.pathNow.clear();
+        }
         if (!p.hw)
             return false;
         if (!p.hw->features().gpio) {
@@ -376,6 +402,10 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
             rec.waitCounter = p.hw->features().gpioWaitCounter;
             rec.startTime = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             rec.samplesLimit = settings.getGPIOInSamples();
+            rec.limits = settings.getGPIOInLimits();
+            // a buffer lasts at most its words of runs of 256 samples (RLE), else a sample each
+            if (rec.clock)
+                rec.bufferSeconds = cfg.bufferBytes / 4.0 * (rec.rle ? 256 : 1) * cfg.decimation / static_cast<double>(rec.clock);
             const std::string ext = rec.format.value == CStreamSettings::GPIOFormat::CSV ? "csv" : rec.format.value == CStreamSettings::GPIOFormat::VCD ? "vcd" : "bin";
             const auto dir = options.dirPath.empty() ? CStreamSettings::getGPIODirPath() : options.dirPath;
             // gpio_<UTC date>_<time>_<ms>.<ext>; two recordings in one millisecond get _2, _3...:
@@ -391,7 +421,13 @@ auto GPIOInStreamServer::start(const CStreamSettings& settings, const GPIOStream
             for (int n = 2; std::filesystem::exists(path) && n < 1000; n++)
                 path = dir + "/" + base + "_" + std::to_string(n) + "." + ext;
             p.file = std::make_shared<CGpioFileWriter>();
-            if (!p.file->open(path, rec)) {
+            const bool opened = p.file->open(path, rec);
+            {
+                std::lock_guard lock(p.pathMtx);
+                p.pathNow = opened ? p.file->path() : std::string();
+                p.filePart = opened ? 1 : 0;
+            }
+            if (!opened) {
                 ERROR_LOG("Can't make the GPIO file in %s", dir.c_str())
                 p.file = nullptr;
                 p.stopNonBlocking(GPIOStopReason::BROKEN, true);
@@ -439,8 +475,8 @@ auto GPIOInStreamServer::stopNonBlocking(GPIOStopReason reason) -> void {
 }
 
 auto GPIOInStreamServer::filePath() -> std::string {
-    std::lock_guard lock(m_pimpl->mtx);
-    return m_pimpl->file ? m_pimpl->file->path() : std::string();
+    std::lock_guard lock(m_pimpl->pathMtx);
+    return m_pimpl->pathNow;
 }
 
 auto GPIOInStreamServer::getRecord() -> Record {
@@ -453,10 +489,12 @@ auto GPIOInStreamServer::getRecord() -> Record {
     r.written = p.fileWritten;
     r.writeRate = p.fileRate;
     r.queue = p.fileQueue;
-    // the path is set at the start under mtx and kept after the stop
-    std::unique_lock lock(p.mtx, std::try_to_lock);
-    if (lock && p.file)
-        r.file = p.file->path();
+    r.limits = p.fileLimits;
+    r.part = p.filePart;
+    r.partWritten = p.partWritten;
+    // the part written now, kept after the stop
+    std::lock_guard lock(p.pathMtx);
+    r.file = p.pathNow;
     return r;
 }
 

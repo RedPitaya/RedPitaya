@@ -5,6 +5,8 @@
  */
 
 #include <gtest/gtest.h>
+#include <algorithm>
+#include <cstdio>
 
 #include <chrono>
 #include <condition_variable>
@@ -18,6 +20,7 @@
 #include "uio_lib/memory_manager.h"
 #include "uio_lib/oscilloscope_dummy.h"
 #include "uio_lib/trigger.h"
+#include "bin_lib/bin_file.h"
 
 #include "asio.hpp"
 #include "net_lib/asio_common.h"
@@ -119,6 +122,45 @@ TEST_F(ADCServer, AFileWithASampleLimitEndsDone) {
         written = written || (f.path().extension() == ".bin" && std::filesystem::file_size(f.path()) > 0);
     EXPECT_TRUE(written) << "a BIN file in " << dir;
     EXPECT_FALSE(uio_lib::dummy::oscState().running) << "the scope stopped";
+}
+
+// A recording in parts (streaming_improvements 4.11): the parts are in the folder, numbered, and
+// the record names the part written last with its number; the time limit ends it as done
+TEST_F(ADCServer, AFileInPartsEndsAtItsTimeLimitWithItsPartsNumbered) {
+    CStreamSettings s;
+    fileSettings(s, 0);
+    CStreamSettings::FileLimits l;
+    l.time = 0.01;
+    l.splitTime = 0.002;
+    ASSERT_TRUE(s.setADCLimits(l));
+    ASSERT_TRUE(server->start(s, options));
+    server->startADC();
+    ASSERT_TRUE(recorder->waitStopped());
+    EXPECT_EQ(recorder->reasons[0], ADCStopReason::DONE);
+    std::vector<std::string> parts;
+    for (auto& f : std::filesystem::directory_iterator(dir))
+        if (f.path().extension() == ".bin")
+            parts.push_back(f.path().filename().string());
+    std::sort(parts.begin(), parts.end());
+    ASSERT_GE(parts.size(), 2u) << "10 ms in parts of 2 ms";
+    for (size_t k = 0; k < parts.size(); k++) {
+        char n[16];
+        snprintf(n, sizeof(n), "_%04d.bin", static_cast<int>(k + 1));
+        EXPECT_NE(parts[k].find(n), std::string::npos) << parts[k];
+    }
+    const auto r = server->getRecord();
+    EXPECT_EQ(r.part, static_cast<int>(parts.size()));
+    EXPECT_EQ(std::filesystem::path(r.file).filename().string(), parts.back());
+    EXPECT_EQ(r.limits.time, 0.01);
+    EXPECT_EQ(r.limits.splitTime, 0.002);
+    bin_lib::FileReader fr;
+    uint64_t samples = 0;
+    for (auto& p : parts) {
+        ASSERT_TRUE(fr.open((dir / p).string())) << p;
+        samples += fr.samples(0, true);
+    }
+    // 10 ms at 125 MHz / 64, taken at a buffer
+    EXPECT_GE(samples, 19531u);
 }
 
 // The losses the page shows (item 1.4 of the streaming improvements): what the FPGA reports lost

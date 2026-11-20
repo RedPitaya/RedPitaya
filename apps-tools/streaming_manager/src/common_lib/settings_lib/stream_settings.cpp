@@ -107,6 +107,122 @@ CStreamSettings& CStreamSettings::operator=(const CStreamSettings& src) {
     return *this;
 }
 
+namespace {
+
+// a time of seconds: finite, not negative, up to a year
+auto validTime(double t) -> bool {
+    return std::isfinite(t) && t >= 0 && t <= 366.0 * 24 * 3600;
+}
+
+auto validLimits(const CStreamSettings::FileLimits& l) -> bool {
+    return validTime(l.time) && validTime(l.splitTime);
+}
+
+// the keys of the limits: <prefix>limit_time_sd, limit_size_sd, split_size_sd, split_time_sd;
+// a value set clears the other limit (or split)
+auto setLimitKey(CStreamSettings::FileLimits& l, const std::string& what, const std::string& value) -> bool {
+    if (what == "limit_time_sd") {
+        const double t = to_double(value.c_str());
+        if (!validTime(t))
+            return false;
+        l.time = t;
+        if (t > 0)
+            l.size = 0;
+    } else if (what == "limit_size_sd") {
+        l.size = to_uint64(value.c_str());
+        if (l.size)
+            l.time = 0;
+    } else if (what == "split_size_sd") {
+        l.splitSize = to_uint64(value.c_str());
+        if (l.splitSize)
+            l.splitTime = 0;
+    } else if (what == "split_time_sd") {
+        const double t = to_double(value.c_str());
+        if (!validTime(t))
+            return false;
+        l.splitTime = t;
+        if (t > 0)
+            l.splitSize = 0;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+auto getLimitKey(const CStreamSettings::FileLimits& l, const std::string& what, std::string& out) -> bool {
+    if (what == "limit_time_sd")
+        out = to_string_v(l.time);
+    else if (what == "limit_size_sd")
+        out = std::to_string(l.size);
+    else if (what == "split_size_sd")
+        out = std::to_string(l.splitSize);
+    else if (what == "split_time_sd")
+        out = to_string_v(l.splitTime);
+    else
+        return false;
+    return true;
+}
+
+auto limitsToJson(Json::Value& j, const std::string& prefix, const CStreamSettings::FileLimits& l) -> void {
+    j[prefix + "limit_time_sd"] = l.time;
+    j[prefix + "limit_size_sd"] = static_cast<Json::UInt64>(l.size);
+    j[prefix + "split_size_sd"] = static_cast<Json::UInt64>(l.splitSize);
+    j[prefix + "split_time_sd"] = l.splitTime;
+}
+
+// One limit and one split at a time, as the keys keep them: the time before the size, the size of a
+// part before its time
+auto oneOfEach(CStreamSettings::FileLimits l) -> CStreamSettings::FileLimits {
+    if (l.time > 0)
+        l.size = 0;
+    if (l.splitSize)
+        l.splitTime = 0;
+    return l;
+}
+
+auto limitsFromJson(const Json::Value& j, const std::string& prefix, CStreamSettings::FileLimits& l) -> void {
+    if (j.isMember(prefix + "limit_time_sd"))
+        l.time = j[prefix + "limit_time_sd"].asDouble();
+    if (j.isMember(prefix + "limit_size_sd"))
+        l.size = j[prefix + "limit_size_sd"].asUInt64();
+    if (j.isMember(prefix + "split_size_sd"))
+        l.splitSize = j[prefix + "split_size_sd"].asUInt64();
+    if (j.isMember(prefix + "split_time_sd"))
+        l.splitTime = j[prefix + "split_time_sd"].asDouble();
+    l = validLimits(l) ? oneOfEach(l) : CStreamSettings::FileLimits();
+}
+
+}  // namespace
+
+auto CStreamSettings::setADCLimits(const FileLimits& limits) -> bool {
+    if (!validLimits(limits))
+        return false;
+    m_adcsettings.m_limits = oneOfEach(limits);
+    return true;
+}
+
+auto CStreamSettings::getADCLimits() const -> FileLimits {
+    return m_adcsettings.m_limits;
+}
+
+auto CStreamSettings::adcBufferSeconds(double adcRate) const -> double {
+    if (adcRate <= 0)
+        return 0;
+    const double bytes = getADCResolution().value == Resolution::BIT_8 ? 1 : 2;
+    return getMemoryBlockSize() / bytes * std::max<uint32_t>(1, getADCDecimation()) / adcRate;
+}
+
+auto CStreamSettings::setGPIOInLimits(const FileLimits& limits) -> bool {
+    if (!validLimits(limits))
+        return false;
+    m_gpiosettings.m_inLimits = oneOfEach(limits);
+    return true;
+}
+
+auto CStreamSettings::getGPIOInLimits() const -> FileLimits {
+    return m_gpiosettings.m_inLimits;
+}
+
 auto CStreamSettings::copy(const CStreamSettings& src) -> void {
     m_adcsettings = src.m_adcsettings;
     m_dacsettings = src.m_dacsettings;
@@ -164,6 +280,7 @@ auto CStreamSettings::toJson() const -> std::string {
     adc_config["format_sd"] = getADCFormat().name();
     adc_config["data_type_sd"] = getADCType().name();
     adc_config["samples_limit_sd"] = getADCSamples();
+    limitsToJson(adc_config, "", getADCLimits());
     adc_config["tdms_time_column"] = getTDMSTimeColumn().name();
 
     adc_config["adc_pass_mode"] = getADCPassMode().name();
@@ -235,6 +352,7 @@ auto CStreamSettings::toJson() const -> std::string {
     gpio_config["gpio_in_pass_mode"] = getGPIOInPassMode().name();
     gpio_config["gpio_in_format_sd"] = getGPIOInFormat().name();
     gpio_config["gpio_in_samples_limit_sd"] = getGPIOInSamples();
+    limitsToJson(gpio_config, "gpio_in_", getGPIOInLimits());
     gpio_config["gpio_out_pass_mode"] = getGPIOOutPassMode().name();
     gpio_config["gpio_out_file_sd"] = getGPIOOutFile();
     gpio_config["gpio_out_repeat"] = getGPIOOutRepeat().name();
@@ -308,6 +426,7 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setADCType(DataType::from_string(adc_config["data_type_sd"].asString()));
         if (adc_config.isMember("samples_limit_sd"))
             setADCSamples(adc_config["samples_limit_sd"].asUInt64());
+        limitsFromJson(adc_config, "", m_adcsettings.m_limits);
         if (adc_config.isMember("tdms_time_column"))
             setTDMSTimeColumn(State::from_string(adc_config["tdms_time_column"].asString()));
         if (adc_config.isMember("adc_pass_mode"))
@@ -430,6 +549,7 @@ auto CStreamSettings::parseJson(const std::string& json) -> bool {
             setGPIOInFormat(GPIOFormat::from_string(gpio_config["gpio_in_format_sd"].asString()));
         if (gpio_config.isMember("gpio_in_samples_limit_sd"))
             setGPIOInSamples(gpio_config["gpio_in_samples_limit_sd"].asUInt64());
+        limitsFromJson(gpio_config, "gpio_in_", m_gpiosettings.m_inLimits);
         if (gpio_config.isMember("gpio_out_pass_mode"))
             setGPIOOutPassMode(PassMode::from_string(gpio_config["gpio_out_pass_mode"].asString()));
         if (gpio_config.isMember("gpio_out_file_sd"))
@@ -1176,6 +1296,9 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return true;
         }
 
+        if (key == "limit_time_sd" || key == "limit_size_sd" || key == "split_size_sd" || key == "split_time_sd")
+            return setLimitKey(m_adcsettings.m_limits, key, value);
+
         if (key == "tdms_time_column") {
             setTDMSTimeColumn(State::from_string(value));
             return true;
@@ -1434,6 +1557,9 @@ auto CStreamSettings::setValue(std::string key, std::string value) -> bool {
             return true;
         }
 
+        if (key == "gpio_in_limit_time_sd" || key == "gpio_in_limit_size_sd" || key == "gpio_in_split_size_sd" || key == "gpio_in_split_time_sd")
+            return setLimitKey(m_gpiosettings.m_inLimits, key.substr(8), value);
+
         if (key == "gpio_out_pass_mode") {
             setGPIOOutPassMode(PassMode::from_string(value));
             return true;
@@ -1481,6 +1607,9 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
         if (key == "samples_limit_sd") {
             return std::to_string(getADCSamples());
         }
+
+        if (std::string v; getLimitKey(m_adcsettings.m_limits, key, v))
+            return v;
 
         if (key == "tdms_time_column") {
             return getTDMSTimeColumn().name();
@@ -1712,6 +1841,9 @@ auto CStreamSettings::getValue(std::string key) -> std::string {
             return std::to_string(getGPIOInSamples());
         }
 
+        if (std::string v; key.rfind("gpio_in_", 0) == 0 && getLimitKey(m_gpiosettings.m_inLimits, key.substr(8), v))
+            return v;
+
         if (key == "gpio_out_pass_mode") {
             return getGPIOOutPassMode().name();
         }
@@ -1760,6 +1892,10 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "format_sd\t\t: " + concat(CStreamSettings::DataFormat::names(), CStreamSettings::DataFormat::count) + "\n";
     s += "data_type_sd\t\t: " + concat(CStreamSettings::DataType::names(), CStreamSettings::DataType::count) + "\n";
     s += "samples_limit_sd\t: An unsigned integer value. 0 - Disables write limit.\n";
+    s += "limit_time_sd\t\t: Seconds of the time line (trigger waits count) the file takes, at a buffer. 0 - none. Clears limit_size_sd.\n";
+    s += "limit_size_sd\t\t: Bytes of data the file takes at most, at a buffer. 0 - none. Clears limit_time_sd.\n";
+    s += "split_size_sd\t\t: Parts of about this many bytes (<name>_0001 ...), 0 - one file. Clears split_time_sd. A WAV is split before 4 GB anyway.\n";
+    s += "split_time_sd\t\t: Parts of this many seconds of the time line, 0 - one file. Clears split_size_sd.\n";
     s += "tdms_time_column\t: " + states + " A TDMS column with the time of every sample, 8 bytes each. Off: the time is in the channel properties.\n";
     s += "adc_pass_mode\t\t: " + concat(CStreamSettings::PassMode::names(), CStreamSettings::PassMode::count) + "\n";
     s += "resolution\t\t: " + concat(CStreamSettings::Resolution::names(), CStreamSettings::Resolution::count) + "\n";
@@ -1830,6 +1966,10 @@ auto CStreamSettings::getHelp() -> std::string {
     s += "gpio_in_pass_mode\t: " + concat(CStreamSettings::PassMode::names(), CStreamSettings::PassMode::count) + ". FILE - the input goes to a file in " GPIO_FILE_PATH ".\n";
     s += "gpio_in_format_sd\t: " + concat(CStreamSettings::GPIOFormat::names(), CStreamSettings::GPIOFormat::count) + "\n";
     s += "gpio_in_samples_limit_sd: An unsigned integer value. GPIO samples written to the file, 0 - until the stop.\n";
+    s += "gpio_in_limit_time_sd\t: As limit_time_sd, for the GPIO input file.\n";
+    s += "gpio_in_limit_size_sd\t: As limit_size_sd, for the GPIO input file.\n";
+    s += "gpio_in_split_size_sd\t: As split_size_sd, for the GPIO input file.\n";
+    s += "gpio_in_split_time_sd\t: As split_time_sd, for the GPIO input file.\n";
     s += "gpio_out_pass_mode\t: " + concat(CStreamSettings::PassMode::names(), CStreamSettings::PassMode::count) + ". FILE - the output plays gpio_out_file_sd.\n";
     s += "gpio_out_file_sd\t: The name of a file in " GPIO_FILE_PATH " to play on the output; a name only, without a directory.\n";
     s += "gpio_out_repeat\t\t: " + concat(CStreamSettings::GPIORepeat::names(), CStreamSettings::GPIORepeat::count) + "\n";

@@ -18,6 +18,12 @@ auto FileChunk::add(std::vector<std::uint8_t>&& bytes) -> void {
     add(std::shared_ptr<const void>(std::move(owner)), data, size);
 }
 
+auto FileChunk::nextFile(std::string name) -> Ptr {
+    auto c = std::make_unique<FileChunk>();
+    c->m_nextFile = std::move(name);
+    return c;
+}
+
 auto FileChunk::writeTo(std::ostream& out) const -> bool {
     for (const auto& b : m_blocks) {
         out.write(reinterpret_cast<const char*>(b.data), static_cast<std::streamsize>(b.size));

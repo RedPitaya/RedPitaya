@@ -10,8 +10,12 @@
 #include <gtest/gtest.h>
 
 #include <cstddef>
+#include <cstdlib>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <atomic>
+#include <thread>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -365,3 +369,460 @@ TEST(StreamingFile, TheTdmsRateIsExactFromTheAdcClockAndTheDecimation) {
 
 INSTANTIATE_TEST_SUITE_P(Formats, StreamingFileTest,
                          ::testing::Values(CStreamSettings::DataFormat::BIN, CStreamSettings::DataFormat::TDMS, CStreamSettings::DataFormat::WAV));
+
+// ---- limits and parts (streaming_improvements 4.11)
+
+namespace {
+
+// the files of a recording in parts: <base>_0001.<ext> ...
+auto Parts(const std::string& base, const std::string& ext) -> std::vector<std::string> {
+    std::vector<std::string> r;
+    for (int i = 1;; i++) {
+        char n[16];
+        snprintf(n, sizeof(n), "_%04d", i);
+        const std::string p = base + n + "." + ext;
+        if (!std::filesystem::exists(p))
+            return r;
+        r.push_back(p);
+    }
+}
+
+auto Channel1(int packs) -> std::vector<int16_t> {
+    std::vector<int16_t> ch1;
+    for (int n = 0; n < packs; n++)
+        for (int i = 0; i < 32; i++)
+            ch1.push_back(static_cast<int16_t>(n * 100 + i));
+    return ch1;
+}
+
+// the recording of 20 packs of 32 samples of two channels into `file`; the stops it reported
+// refuseAt: the chunk of that pack refused as by a full queue
+auto Record(streaming_lib::CStreamingFile::Ptr file, const std::string& path, int packs, std::vector<int>* stops = nullptr, int refuseAt = -1) -> void {
+    Arena arena(8, kBlock);
+    if (stops)
+        file->stopNotify.connect([stops](streaming_lib::CStreamingFile::EStopReason r) { stops->push_back(static_cast<int>(r)); });
+    file->run("", path);
+    for (int n = 0; n < packs; n++) {
+        if (n == refuseAt)
+            file->refuseChunks(1);
+        ASSERT_EQ(file->passBuffers(MakePack(arena, n)), 1);
+    }
+    file->stopAndFlush();
+}
+
+// Channel1 without pack `gone`
+auto Channel1Without(int packs, int gone) -> std::vector<int16_t> {
+    auto v = Channel1(packs);
+    v.erase(v.begin() + gone * 32, v.begin() + (gone + 1) * 32);
+    return v;
+}
+
+}  // namespace
+
+// BIN in parts of about 5 packs: every part is a BIN of its own with its time line from 0 and the
+// time of its first buffer; together they hold every sample; each has its report
+TEST(StreamingFileParts, ABinInPartsOfASizeHoldsEverySampleOnce) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/split_bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    // a pack is 2 blocks of 64 bytes and a block header each: 5 of them and a file header
+    file->setSplit(5 * 2 * (64 + 48) + 200, 0);
+    Record(file, base + ".bin", 20);
+    const auto parts = Parts(base, "bin");
+    ASSERT_EQ(parts.size(), 4u);
+    EXPECT_FALSE(std::filesystem::exists(base + ".bin")) << "numbered from the first part";
+    EXPECT_EQ(file->getPart(), 4);
+    EXPECT_EQ(file->getCSVFileName(), parts.back());
+    std::vector<int16_t> all;
+    for (size_t k = 0; k < parts.size(); k++) {
+        bin_lib::FileReader r;
+        ASSERT_TRUE(r.open(parts[k])) << parts[k] << ": " << r.error();
+        EXPECT_EQ(r.info().startTime, 1000000 + static_cast<int64_t>(k) * 5) << "the time of its first buffer";
+        bin_lib::BlockInfo b;
+        std::vector<uint8_t> d;
+        ASSERT_TRUE(r.nextBlock(b, d));
+        EXPECT_EQ(b.position, 0u) << "the time line of a part from 0";
+        const uint64_t n = r.samples(0, false);
+        EXPECT_EQ(n, 160u) << parts[k];
+        std::vector<int16_t> got(n);
+        r.read(0, 0, n, got.data(), false);
+        all.insert(all.end(), got.begin(), got.end());
+        EXPECT_TRUE(std::filesystem::exists(parts[k] + ".log.txt")) << "the report of " << parts[k];
+        EXPECT_TRUE(std::filesystem::exists(parts[k] + ".log.lost.txt"));
+    }
+    EXPECT_EQ(all, Channel1(20));
+    EXPECT_EQ(file->getPassSamples(), 640u) << "the whole recording";
+    EXPECT_EQ(file->getWritedSize(), [&] { uint64_t s = 0; for (auto& p : parts) s += std::filesystem::file_size(p); return s; }());
+}
+
+// WAV in parts of a time: every part has its own header with its own sizes
+TEST(StreamingFileParts, AWavInPartsOfATimeHasAHeaderInEveryPart) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/split_wav";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
+    file->setSplit(0, 32.0 * 6 / 125e6);  // 6 packs of the time line
+    Record(file, base + ".wav", 20);
+    const auto parts = Parts(base, "wav");
+    ASSERT_EQ(parts.size(), 4u);  // 6 + 6 + 6 + 2
+    std::vector<int16_t> all;
+    const int packs[4] = {6, 6, 6, 2};
+    for (size_t k = 0; k < parts.size(); k++) {
+        const std::string bytes = ReadFile(parts[k]);
+        ASSERT_EQ(bytes.size(), 44u + packs[k] * 32u * 2u * 2u) << parts[k];
+        EXPECT_EQ(bytes.substr(0, 4), "RIFF");
+        uint32_t data = 0, riff = 0;
+        std::memcpy(&riff, bytes.data() + 4, 4);
+        std::memcpy(&data, bytes.data() + 40, 4);
+        EXPECT_EQ(data, bytes.size() - 44) << parts[k];
+        EXPECT_EQ(riff, bytes.size() - 8) << parts[k];
+        for (size_t i = 44; i + 4 <= bytes.size(); i += 4) {
+            int16_t v;
+            std::memcpy(&v, bytes.data() + i, 2);
+            all.push_back(v);
+        }
+    }
+    EXPECT_EQ(all, Channel1(20));
+}
+
+TEST(StreamingFileParts, ATdmsInPartsReadsBackPartByPart) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/split_tdms";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 0, false, false);
+    file->setSplit(4000, 0);
+    Record(file, base + ".tdms", 20);
+    const auto parts = Parts(base, "tdms");
+    ASSERT_GE(parts.size(), 2u);
+    std::vector<int16_t> all;
+    for (const auto& p : parts) {
+        TDMS::FileReader f;
+        ASSERT_TRUE(f.open(p)) << p << ": " << f.error();
+        EXPECT_EQ(TDMS::getProperty<double>(f.groupProperties("Group"), "sample_rate"), 125e6) << "the properties again in every part";
+        const auto ch1 = f.readAll<int16_t>("Group", "ch1");
+        all.insert(all.end(), ch1.begin(), ch1.end());
+        EXPECT_LE(std::filesystem::file_size(p), 4000u + 2000u) << "about the size asked for";
+    }
+    EXPECT_EQ(all, Channel1(20));
+}
+
+// The first chunk of a part refused (the queue full when the card is slow): the next chunk
+// carries the header of the part, which stays a whole file of its format
+TEST(StreamingFileParts, ABinPartWhoseFirstChunkIsRefusedStillHasItsHeader) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/refused_bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setSplit(5 * 2 * (64 + 48) + 200, 0);
+    Record(file, base + ".bin", 20, nullptr, 5);  // pack 5: the first of part 2
+    const auto parts = Parts(base, "bin");
+    ASSERT_GE(parts.size(), 3u);
+    std::vector<int16_t> all;
+    for (const auto& p : parts) {
+        bin_lib::FileReader r;
+        ASSERT_TRUE(r.open(p)) << p << ": " << r.error();
+        const uint64_t n = r.samples(0, false);
+        std::vector<int16_t> got(n);
+        r.read(0, 0, n, got.data(), false);
+        all.insert(all.end(), got.begin(), got.end());
+    }
+    EXPECT_EQ(all, Channel1Without(20, 5));
+}
+
+TEST(StreamingFileParts, AWavPartWhoseFirstChunkIsRefusedStillHasItsHeader) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/refused_wav";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
+    file->setSplit(0, 32.0 * 6 / 125e6);
+    Record(file, base + ".wav", 20, nullptr, 6);  // pack 6: the first of part 2
+    const auto parts = Parts(base, "wav");
+    ASSERT_EQ(parts.size(), 4u);
+    std::vector<int16_t> all;
+    for (const auto& p : parts) {
+        const std::string bytes = ReadFile(p);
+        ASSERT_GE(bytes.size(), 44u) << p;
+        EXPECT_EQ(bytes.substr(0, 4), "RIFF") << p;
+        uint32_t data = 0, riff = 0;
+        std::memcpy(&riff, bytes.data() + 4, 4);
+        std::memcpy(&data, bytes.data() + 40, 4);
+        EXPECT_EQ(data, bytes.size() - 44) << p;
+        EXPECT_EQ(riff, bytes.size() - 8) << p;
+        for (size_t i = 44; i + 4 <= bytes.size(); i += 4) {
+            int16_t v;
+            std::memcpy(&v, bytes.data() + i, 2);
+            all.push_back(v);
+        }
+    }
+    EXPECT_EQ(all, Channel1Without(20, 6));
+}
+
+TEST(StreamingFileParts, ATdmsPartWhoseFirstChunkIsRefusedStillHasItsProperties) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/refused_tdms";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 0, false, false);
+    file->setSplit(4000, 0);
+    // the first part: as many packs as the split takes
+    {
+        auto probe = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::TDMS, dir, 0, false, false);
+        probe->setSplit(4000, 0);
+        Record(probe, dir + "/probe_tdms.tdms", 20);
+    }
+    TDMS::FileReader first;
+    ASSERT_TRUE(first.open(dir + "/probe_tdms_0001.tdms")) << first.error();
+    const int firstPacks = static_cast<int>(first.readAll<int16_t>("Group", "ch1").size() / 32);
+    ASSERT_GT(firstPacks, 0);
+    Record(file, base + ".tdms", 20, nullptr, firstPacks);
+    const auto parts = Parts(base, "tdms");
+    ASSERT_GE(parts.size(), 2u);
+    std::vector<int16_t> all;
+    for (const auto& p : parts) {
+        TDMS::FileReader f;
+        ASSERT_TRUE(f.open(p)) << p << ": " << f.error();
+        EXPECT_EQ(TDMS::getProperty<double>(f.groupProperties("Group"), "sample_rate"), 125e6) << p;
+        const auto ch1 = f.readAll<int16_t>("Group", "ch1");
+        all.insert(all.end(), ch1.begin(), ch1.end());
+    }
+    EXPECT_EQ(all, Channel1Without(20, firstPacks));
+}
+
+// The size limit at a part boundary: no part is begun for the pack it keeps out
+TEST(StreamingFileParts, NoEmptyPartIsBegunForAPackTheSizeLimitKeepsOut) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/limit_split";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setSplit(5 * 2 * (64 + 48) + 200, 0);  // 5 packs a part
+    // just under 2 parts: the pack that begins part 3 stays out
+    uint64_t two = 0;
+    {
+        auto probe = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+        probe->setSplit(5 * 2 * (64 + 48) + 200, 0);
+        Record(probe, dir + "/probe_limit.bin", 10);
+        two = probe->getWritedSize();
+    }
+    file->setLimits(0, two + 100);
+    std::vector<int> stops;
+    Record(file, base + ".bin", 20, &stops);
+    EXPECT_EQ(Parts(base, "bin").size(), 2u) << "no third part";
+    ASSERT_FALSE(stops.empty());
+    EXPECT_EQ(stops[0], streaming_lib::CStreamingFile::REACH_LIMIT);
+    EXPECT_LE(file->getWritedSize(), two + 100);
+}
+
+// a WAV without parts asked for goes on in a new part before its header would overflow: the
+// first file keeps its name
+TEST(StreamingFileParts, AWavGoesOnInANewPartBeforeItsHeaderOverflows) {
+    std::string dir = TempDir();
+    const std::string base = dir + "/wav_max";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
+    file->setWavPartMax(1000);  // 4 GB in the field
+    Record(file, base + ".wav", 10);
+    ASSERT_TRUE(std::filesystem::exists(base + ".wav"));
+    ASSERT_TRUE(std::filesystem::exists(base + "_0002.wav"));
+    EXPECT_FALSE(std::filesystem::exists(base + "_0001.wav"));
+    EXPECT_LE(std::filesystem::file_size(base + ".wav"), 1000u);
+    uint64_t samples = 0;
+    for (int k = 1;; k++) {
+        char n[16];
+        snprintf(n, sizeof(n), "_%04d", k);
+        const std::string p = k == 1 ? base + ".wav" : base + n + ".wav";
+        if (!std::filesystem::exists(p))
+            break;
+        samples += (std::filesystem::file_size(p) - 44) / 4;
+    }
+    EXPECT_EQ(samples, 320u) << "every sample in one of them";
+}
+
+// The real 4 GB of a WAV header (kWavPartMax): over 4 GB of data in one WAV goes on in _0002,
+// both parts readable with their own sizes, every frame once. Writes about 4.3 GB: only with
+// RP_BIG_TESTS=1
+TEST(StreamingFileParts, AWavOverFourGigabytesGoesOnInASecondPart) {
+    if (!std::getenv("RP_BIG_TESTS"))
+        GTEST_SKIP() << "RP_BIG_TESTS=1 to write 4.3 GB";
+    std::string dir = TempDir();
+    const std::string base = dir + "/wav_4g";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
+    constexpr size_t kBig = 1024 * 1024;  // 512 k samples of 16 bit a channel: 2 MB of WAV a pack
+    Arena arena(8, kBig);
+    file->run("", base + ".wav");
+    const int packs = static_cast<int>((streaming_lib::CStreamingFile::kWavPartMax + 200ull * 1024 * 1024) / (2 * kBig));
+    for (int n = 0; n < packs; n++) {
+        // as fast as the disk: the queue never refuses
+        while (file->getQueueFill() > 0.5)
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        ASSERT_EQ(file->passBuffers(MakePack(arena, n)), 1);
+    }
+    file->stopAndFlush();
+    ASSERT_EQ(file->getDroppedSamples(), 0u) << "the queue refused some";
+    const std::string first = base + ".wav", second = base + "_0002.wav";
+    ASSERT_TRUE(std::filesystem::exists(first));
+    ASSERT_TRUE(std::filesystem::exists(second));
+    EXPECT_FALSE(std::filesystem::exists(base + "_0003.wav"));
+    uint64_t frames = 0;
+    for (const auto& p : {first, second}) {
+        const uint64_t size = std::filesystem::file_size(p);
+        EXPECT_LT(size, 0xFFFFFFFFull) << p;
+        std::ifstream in(p, std::ios::binary);
+        char h[44];
+        in.read(h, 44);
+        uint32_t riff = 0, data = 0;
+        std::memcpy(&riff, h + 4, 4);
+        std::memcpy(&data, h + 40, 4);
+        EXPECT_EQ(std::string(h, 4), "RIFF") << p;
+        EXPECT_EQ(riff, size - 8) << p;
+        EXPECT_EQ(data, size - 44) << p;
+        frames += (size - 44) / 4;
+    }
+    EXPECT_EQ(frames, static_cast<uint64_t>(packs) * (kBig / 2)) << "every frame once";
+    // the boundary: the last frame of the first part, the first of the second follow each other
+    const uint64_t firstFrames = (std::filesystem::file_size(first) - 44) / 4;
+    std::ifstream a(first, std::ios::binary), b(second, std::ios::binary);
+    a.seekg(static_cast<std::streamoff>(44 + (firstFrames - 1) * 4));
+    b.seekg(44);
+    int16_t last = 0, next = 0;
+    a.read(reinterpret_cast<char*>(&last), 2);
+    b.read(reinterpret_cast<char*>(&next), 2);
+    const uint64_t n = firstFrames / (kBig / 2);  // the pack the second part starts with
+    EXPECT_EQ(firstFrames % (kBig / 2), 0u) << "a part ends at a pack";
+    EXPECT_EQ(last, static_cast<int16_t>((n - 1) * 100 + (kBig / 2 - 1)));
+    EXPECT_EQ(next, static_cast<int16_t>(n * 100));
+    std::filesystem::remove(first);
+    std::filesystem::remove(second);
+}
+
+TEST(StreamingFileLimits, TheTimeLimitStopsAtTheBufferThatReachesIt) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/time_limit.bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setLimits(32.0 * 7 / 125e6, 0);  // 7 packs
+    std::vector<int> stops;
+    Record(file, path, 20, &stops);
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(path)) << r.error();
+    EXPECT_EQ(r.samples(0, false), 7u * 32u);
+    ASSERT_FALSE(stops.empty());
+    EXPECT_EQ(stops[0], streaming_lib::CStreamingFile::REACH_LIMIT);
+}
+
+TEST(StreamingFileLimits, TheSizeLimitIsNeverPassed) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/size_limit.wav";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::WAV, dir, 0, false, false);
+    file->setLimits(0, 1000);
+    std::vector<int> stops;
+    Record(file, path, 20, &stops);
+    const auto size = std::filesystem::file_size(path);
+    EXPECT_LE(size, 1000u);
+    EXPECT_GE(size, 1000u - 2 * 32 * 2 * 2 - 64) << "up to the last whole pack";
+    ASSERT_FALSE(stops.empty());
+    EXPECT_EQ(stops[0], streaming_lib::CStreamingFile::REACH_LIMIT);
+}
+
+// a trigger after a wait longer than the limit: its data is past the limit, nothing of it written
+TEST(StreamingFileLimits, APackWhoseDataStartsPastTheTimeLimitIsNotWritten) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/time_past.bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setLimits(32.0 * 10 / 125e6, 0);  // 10 packs of the time line
+    std::vector<int> stops;
+    file->stopNotify.connect([&stops](streaming_lib::CStreamingFile::EStopReason r) { stops.push_back(static_cast<int>(r)); });
+    Arena arena(8, kBlock);
+    file->run("", path);
+    file->passBuffers(MakePack(arena, 0));
+    auto late = MakePack(arena, 1);
+    for (int c = 0; c < 2; c++)
+        late->getBuffer(c ? DataLib::CH2 : DataLib::CH1)->setLostSamples(DataLib::WAIT, 32 * 20);
+    file->passBuffers(late);
+    file->stopAndFlush();
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(path)) << r.error();
+    EXPECT_EQ(r.samples(0, false), 32u) << "the first pack only";
+    ASSERT_FALSE(stops.empty());
+    EXPECT_EQ(stops[0], streaming_lib::CStreamingFile::REACH_LIMIT);
+}
+
+// a trigger that never comes: no buffer ends the time limit, the clock does
+TEST(StreamingFileLimits, TheTimeLimitEndsTheRecordingWhenNoBufferComes) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/time_clock.bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setLimits(0.05, 0, 0.01);
+    file->setTimeMargin(0.05);
+    std::atomic<int> stops{0};
+    std::atomic<int> reason{-1};
+    file->stopNotify.connect([&](streaming_lib::CStreamingFile::EStopReason r) {
+        reason = static_cast<int>(r);
+        stops++;
+    });
+    Arena arena(8, kBlock);
+    file->run("", path);
+    file->passBuffers(MakePack(arena, 0));  // then nothing: the FPGA waits for a trigger
+    for (int i = 0; i < 100 && stops == 0; i++)
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    ASSERT_EQ(stops, 1) << "stopped by the clock";
+    EXPECT_EQ(reason, streaming_lib::CStreamingFile::REACH_LIMIT);
+    EXPECT_EQ(file->passBuffers(MakePack(arena, 1)), 1);
+    file->stopAndFlush();
+    EXPECT_EQ(stops, 1) << "once";
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(path)) << r.error();
+    EXPECT_EQ(r.samples(0, false), 32u) << "what came before: whole; nothing after";
+}
+
+// buffers that keep coming, late on the clock (the ring behind a slow network or card): the clock
+// does not cut them, the time line ends the limit
+TEST(StreamingFileLimits, TheClockDoesNotCutBuffersThatStillCome) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/time_clock_late.bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setLimits(0.05, 0, 0.01);  // the packs are far shorter on the time line: never reached
+    file->setTimeMargin(0.05);
+    std::atomic<int> stops{0};
+    file->stopNotify.connect([&](streaming_lib::CStreamingFile::EStopReason) { stops++; });
+    Arena arena(8, kBlock);
+    file->run("", path);
+    for (int n = 0; n < 15; n++) {
+        file->passBuffers(MakePack(arena, n));
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    EXPECT_EQ(stops, 0) << "0.3 s past the start, but a buffer every 20 ms";
+    file->stopAndFlush();
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(path)) << r.error();
+    EXPECT_EQ(r.samples(0, false), 15u * 32u);
+}
+
+// buffers that come in time end the limit by themselves; the clock waits for a long buffer
+TEST(StreamingFileLimits, TheClockWaitsForABufferThatLastsLong) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/time_clock_long.bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setLimits(0.01, 0, 0.5);  // a buffer of 0.5 s (a large decimation)
+    file->setTimeMargin(0.01);
+    std::atomic<int> stops{0};
+    file->stopNotify.connect([&](streaming_lib::CStreamingFile::EStopReason) { stops++; });
+    file->run("", path);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    EXPECT_EQ(stops, 0) << "the first buffer may still come";
+    for (int i = 0; i < 100 && stops == 0; i++)
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    EXPECT_EQ(stops, 1) << "after the limit, the buffer and the margin";
+    file->stopAndFlush();
+}
+
+TEST(StreamingFileLimits, TheTimeLimitCountsTheTriggerWaits) {
+    std::string dir = TempDir();
+    const std::string path = dir + "/time_waits.bin";
+    auto file = streaming_lib::CStreamingFile::create(CStreamSettings::DataFormat::BIN, dir, 0, false, false);
+    file->setLimits(32.0 * 7 / 125e6, 0);  // 7 packs of the time line
+    Arena arena(8, kBlock);
+    file->run("", path);
+    for (int n = 0; n < 20; n++) {
+        auto pack = MakePack(arena, n);
+        // every pack after a wait as long as itself: the time line goes twice as fast
+        for (int c = 0; c < 2; c++)
+            pack->getBuffer(c ? DataLib::CH2 : DataLib::CH1)->setLostSamples(DataLib::WAIT, 32);
+        file->passBuffers(pack);
+    }
+    file->stopAndFlush();
+    bin_lib::FileReader r;
+    ASSERT_TRUE(r.open(path)) << r.error();
+    // the data of pack k starts at 64k + 32: the 4th at 7 x 32, where the limit is, stays out
+    EXPECT_EQ(r.samples(0, false), 3u * 32u) << "3 packs, the 4th starts at the limit";
+}

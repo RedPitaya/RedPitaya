@@ -13,6 +13,7 @@
 
 #include <array>
 #include <cmath>
+#include <set>
 #include "writer_lib/file_helper.h"
 
 std::map<std::string, converter_lib::CConverter::Ptr> g_converter;
@@ -49,6 +50,8 @@ struct TrigInfo {
 };
 std::map<std::string, TrigInfo> g_trig;
 std::mutex g_trigMutex;
+// about how long a buffer of each board lasts (the time limit on the clock), under g_trigMutex
+std::map<std::string, double> g_bufferSeconds;
 
 // "IN1 level 0.300 V rising, EXT": the sources of the mask as the stream_app takes them;
 // adcChannels 0: unknown (a server without BOARD_INFO)
@@ -91,11 +94,20 @@ static auto readTriggers(std::shared_ptr<ClientNetConfigManager> cl, const std::
     std::atomic<int> settings(static_cast<int>(hosts.size()));
     std::atomic<int> infos(static_cast<int>(hosts.size()));
     std::map<std::string, int> channels;
+    std::map<std::string, double> rates;
     std::mutex m;
-    cl->getNewSettingsNofiy.connect([&](std::string&) { settings--; });
+    std::set<std::string> answered;  // the boards whose settings came (else the local ones are defaults)
+    cl->getNewSettingsNofiy.connect([&](std::string& h) {
+        {
+            const std::lock_guard lock(m);
+            answered.insert(h);
+        }
+        settings--;
+    });
     cl->getBoardInfoNofiy.connect([&](std::string& h, BoardInfoMessage i) {
         const std::lock_guard lock(m);
         channels[h] = i.adcChannels;
+        rates[h] = i.adcRate;
         infos--;
     });
     cl->failBoardInfoNofiy.connect([&](std::string&) { infos--; });
@@ -110,8 +122,16 @@ static auto readTriggers(std::shared_ptr<ClientNetConfigManager> cl, const std::
     cl->removeHadlers();
     const std::lock_guard lock(g_trigMutex);
     g_trig.clear();
+    g_bufferSeconds.clear();
     for (auto& h : hosts) {
         auto* s = cl->getLocalSettingsOfHost(h);
+        {
+            const std::lock_guard l(m);
+            // its own settings only (none: learnt from its buffers); an older server without
+            // BOARD_INFO: 125 MHz
+            if (s && answered.count(h))
+                g_bufferSeconds[h] = s->adcBufferSeconds(rates.count(h) ? rates[h] : 125e6);
+        }
         if (!s || s->getADCTriggerMode().value != CStreamSettings::State::ON)
             continue;
         int n = 0;
@@ -214,6 +234,14 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
 
     auto g_file_manager = streaming_lib::CStreamingFile::create(file_type, g_soption.save_dir, g_soption.samples, convert_v, false);
     g_file_manager->setTDMSTimeColumn(g_soption.tdms_time);
+    double bufferSeconds = 0;
+    {
+        const std::lock_guard lock(g_trigMutex);
+        if (g_bufferSeconds.count(host))
+            bufferSeconds = g_bufferSeconds[host];
+    }
+    g_file_manager->setLimits(g_soption.limit_time, g_soption.limit_size, bufferSeconds);
+    g_file_manager->setSplit(g_soption.split_size, g_soption.split_time);
     g_file_manager->run(host + "_" + g_filenameDate);
     {
         const std::lock_guard lock(g_smutex);
@@ -332,13 +360,25 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
         g_endedByBoard[host] = true;
     }
     g_file_manager->stopAndFlush();
+    {
+        // a recording in parts: the first, the last and how many
+        const auto files = g_file_manager->getFileNames();
+        const std::lock_guard lock(g_smutex);
+        if (files.size() > 1)
+            g_files[host] = files.front() + " ... " + files.back() + " (" + std::to_string(files.size()) + " parts)";
+    }
     g_asionet->stop();
     g_asionet = nullptr;
     if (g_soption.streamign_type == ClientOpt::StreamingType::CSV) {
         const std::lock_guard lock(g_s_csv_mutex);
-        auto fileName = g_file_manager->getCSVFileName();
+        // every part of the recording into a CSV of its own
         g_converter[host] = converter_lib::CConverter::create();
-        g_converter[host]->convertToCSV(fileName, host, FH_CSV_ADD_INDEX);
+        // Ctrl+C stops the part converted now and the ones after it
+        for (const auto& fileName : g_file_manager->getFileNames()) {
+            if (sig_exit_flag)
+                break;
+            g_converter[host]->convertToCSV(fileName, host, FH_CSV_ADD_INDEX);
+        }
     }
     delete memoryManager;
     g_clientsRunning--;

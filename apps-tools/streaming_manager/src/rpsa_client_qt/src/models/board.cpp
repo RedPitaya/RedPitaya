@@ -1,5 +1,7 @@
 #include "board.h"
 #include <QTime>
+#include <algorithm>
+#include <cmath>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
@@ -372,10 +374,21 @@ auto CBoard::statSummary() -> QString {
            QString::number(s.lostBoard) + " on the board and " + QString::number(s.lostFile) + " on this PC";
 }
 
+// the file of the recording; in parts the first, the last and how many
+auto CBoard::recordedFiles() -> QString {
+    if (!m_file_manager)
+        return m_fileName;
+    const auto names = m_file_manager->getFileNames();
+    if (names.size() < 2)
+        return m_fileName;
+    return QDir::toNativeSeparators(QString::fromStdString(names.front())) + " ... " + QDir::toNativeSeparators(QString::fromStdString(names.back())) + " (" +
+           QString::number(names.size()) + " parts)";
+}
+
 auto CBoard::adcStopped(const QString& why, bool error, bool broken) -> void {
     const bool wasStreaming = m_state != "stopped";
     const bool recorded = m_file_manager != nullptr;
-    const QString file = m_fileName;
+    const QString file = recordedFiles();
     closeStreaming();
     m_adcArmed = false;
     if (m_trigKnown) {
@@ -571,7 +584,7 @@ auto CBoard::getStats() -> QVariantMap {
     m["samples"] = double(samples);
     m["lostBoard"] = double(s.lostBoard);
     m["lostFile"] = double(s.lostFile);
-    m["file"] = m_fileName;
+    m["file"] = s.fileNow.isEmpty() ? m_fileName : s.fileNow;
     m["fileRate"] = s.fileRate;
     m["fileQueue"] = s.fileQueue;
     return m;
@@ -649,6 +662,9 @@ auto CBoard::getRecord() -> QVariantMap {
         r["file"] = QString::fromStdString(m_sdRecord.file);
         r["mode"] = int(m_sdRecord.mode);
         r["dataRate"] = dataRate();
+        // the limits the run started with (the board says them)
+        fillLimit(r, m_sdRecord.samples, m_sdRecord.written, double(m_sdRecord.limit), m_sdRecord.limitTime, double(m_sdRecord.limitSize),
+                  double(m_sdRecord.splitSize), m_sdRecord.splitTime, int(m_sdRecord.part), m_sdRecord.partWritten);
         return r;
     }
     SStat s;
@@ -675,7 +691,12 @@ auto CBoard::getRecord() -> QVariantMap {
     r["lostQueue"] = double(s.lostFile);
     r["free"] = double(m_pcFree);
     r["total"] = double(m_pcTotal);
-    r["file"] = m_fileName;
+    r["file"] = s.fileNow.isEmpty() ? m_fileName : s.fileNow;
+    fillLimit(r, samples, s.bytes, value("samples_limit_sd").toDouble(), value("limit_time_sd").toDouble(), value("limit_size_sd").toDouble(),
+              value("split_size_sd").toDouble(), value("split_time_sd").toDouble(), s.part, s.partBytes);
+    // before the start: what the limit takes on this disk
+    if (!r["running"].toBool())
+        r["need"] = expectedBytes();
     return r;
 }
 
@@ -949,8 +970,8 @@ void CBoard::stopStreaming() {
         return;
     m_stopRequested = true;
     addLog("Stopping the ADC");
-    const QString file = m_fileName;
     const bool recorded = m_file_manager != nullptr;
+    const QString file = recordedFiles();
     const QString summary = statSummary();
     closeStreaming();
     if (recorded)
@@ -1014,17 +1035,21 @@ auto CBoard::createStreaming() -> void {
     const QString file = QDir(recordDir()).filePath(fileBaseName() + formatExtension(value("format_sd")));
     m_file_manager = streaming_lib::CStreamingFile::create(s->getADCFormat(), dir, limit ? limit : static_cast<uint64_t>(-1), convertVolts, false);
     m_file_manager->setTDMSTimeColumn(s->getTDMSTimeColumn().value == CStreamSettings::State::ON);
+    const auto limits = s->getADCLimits();
+    m_file_manager->setLimits(limits.time, limits.size, s->adcBufferSeconds(getCaps()["adcRate"].toDouble()));
+    m_file_manager->setSplit(limits.splitSize, limits.splitTime);
     m_file_manager->stopNotify.connect([this](streaming_lib::CStreamingFile::EStopReason reason) {
         post([this, reason]() {
             if (reason == streaming_lib::CStreamingFile::REACH_LIMIT)
-                addLog("The sample limit is written");
+                addLog("The limit of the recording is written");
             else if (reason == streaming_lib::CStreamingFile::OUT_SPACE)
                 setError("The disk of this computer is full: the recording stopped, its file is closed");
             stopStreaming();
         });
     });
     m_file_manager->run("", file.toStdString());
-    m_fileName = QDir::toNativeSeparators(file);
+    // the file written: with parts the first of them (<name>_0001.<ext>)
+    m_fileName = QDir::toNativeSeparators(QString::fromStdString(m_file_manager->getCSVFileName()));
     addLog("Recording to " + m_fileName);
     if (pcValue("saveConsole").toBool()) {
         m_consoleFile.setFileName(file + ".console.txt");
@@ -1072,6 +1097,16 @@ auto CBoard::createStreaming() -> void {
             m_stat.fileQueue = fileQueue;
         }
         fileObj->passBuffers(pack);
+        {
+            // the part written now (the file goes on in the next one at its size or time)
+            const int part = fileObj->getPart();
+            const uint64_t partBytes = fileObj->getPartSize();
+            std::lock_guard lock(m_statMtx);
+            if (part != m_stat.part)
+                m_stat.fileNow = QDir::toNativeSeparators(QString::fromStdString(fileObj->getCSVFileName()));
+            m_stat.part = part;
+            m_stat.partBytes = partBytes;
+        }
         ChartDataHolder::instance()->addBuffer(pack, packId, m_ip, !m_previewWanted);
         buffers->unlockBufferRead();
     });
@@ -1157,11 +1192,71 @@ auto CBoard::expectedBytes() -> double {
     auto s = settings();
     if (!s || value("adc_pass_mode") == "FILE")
         return 0;
+    const uint32_t dec = std::max<uint32_t>(1, s->getADCDecimation());
+    const double perChannel = getCaps()["adcRate"].toDouble() / dec;
+    const auto l = s->getADCLimits();
+    // a size is what it says; a time or samples: their data, a few per cent for the headers of
+    // the blocks and the format
+    if (l.size)
+        return double(l.size);
+    if (l.time > 0)
+        return l.time * dataRate() * 1.02;
     const uint64_t limit = s->getADCSamples();
     if (!limit)
         return 0;
-    const uint32_t dec = std::max<uint32_t>(1, s->getADCDecimation());
-    const double perChannel = getCaps()["adcRate"].toDouble() / dec;
-    // the samples of the limit, a few per cent for the headers of the blocks and the format
     return perChannel > 0 ? double(limit) * dataRate() / perChannel * 1.02 : 0;
+}
+
+namespace {
+
+auto durText(double s) -> QString {
+    if (!(s >= 0) || !std::isfinite(s))
+        return "-";
+    if (s < 90)
+        return QString::number(std::lround(s)) + " s";
+    if (s < 5400)
+        return QString::number(std::lround(s / 60)) + " min";
+    return QString::number(std::floor(s / 3600)) + " h " + QString::number(std::lround(std::fmod(s, 3600) / 60)) + " min";
+}
+
+}  // namespace
+
+auto CBoard::fillLimit(QVariantMap& r, uint64_t samples, uint64_t written, double limitSamples, double limitTime, double limitSize, double splitSize, double splitTime,
+                       int part, uint64_t partBytes) -> void {
+    auto s = settings();
+    const uint32_t dec = s ? std::max<uint32_t>(1, s->getADCDecimation()) : 1;
+    const double perCh = r.value("rate").toDouble() > 0 ? r.value("rate").toDouble() : getCaps()["adcRate"].toDouble() / dec;
+    const double data = dataRate();
+    QString kind = "none";
+    double frac = 0, left = 0, need = 0;
+    QString done;
+    if (limitTime > 0) {
+        kind = "time";
+        frac = perCh > 0 ? double(samples) / perCh / limitTime : 0;
+        left = limitTime - (perCh > 0 ? double(samples) / perCh : 0);
+        need = limitTime * data;
+        done = durText(perCh > 0 ? double(samples) / perCh : 0) + " of " + durText(limitTime);
+    } else if (limitSize > 0) {
+        kind = "size";
+        frac = double(written) / limitSize;
+        left = data > 0 ? (limitSize - double(written)) / data : 0;
+        need = limitSize;
+        done = bytesText(double(written)) + " of " + bytesText(limitSize);
+    } else if (limitSamples > 0 && limitSamples < 1.8e19) {
+        kind = "samples";
+        frac = double(samples) / limitSamples;
+        left = perCh > 0 ? (limitSamples - double(samples)) / perCh : 0;
+        need = perCh > 0 ? limitSamples * data / perCh : 0;
+        done = QString::number(samples) + " of " + QString::number(uint64_t(limitSamples)) + " samples";
+    }
+    r["limitKind"] = kind;
+    r["frac"] = std::clamp(frac, 0.0, 1.0);
+    r["left"] = std::max(0.0, left);
+    r["doneText"] = done;
+    r["need"] = need;
+    r["part"] = part;
+    r["partBytes"] = double(partBytes);
+    r["splitSize"] = splitSize;
+    r["splitTime"] = splitTime;
+    r["parts"] = kind == "none" || (splitSize <= 0 && splitTime <= 0) ? 0 : std::max(1.0, std::ceil(splitSize > 0 ? need / splitSize : (data > 0 ? need / data / splitTime : 0)));
 }

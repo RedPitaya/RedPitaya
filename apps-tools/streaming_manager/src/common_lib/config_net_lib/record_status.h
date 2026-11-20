@@ -17,7 +17,14 @@ struct StreamRecordStatus {
     double queue = 0;        // the fill of the write queue in memory, 0..1
     uint64_t lostBoard = 0;  // samples per channel lost on the board (no free buffer)
     uint64_t lostQueue = 0;  // samples per channel the file did not take (its queue was full)
-    std::string file;        // the path on the board
+    std::string file;        // the path on the board: the part written now
+    // streaming_improvements 4.11: the limits of the file besides `limit` and its parts
+    double limitTime = 0;      // seconds of the time line, 0 - none
+    uint64_t limitSize = 0;    // bytes, 0 - none
+    uint64_t splitSize = 0;    // parts of bytes, 0 - none
+    double splitTime = 0;      // parts of seconds, 0 - none
+    uint32_t part = 0;         // the part written now, from 1; 0 - not a recording
+    uint64_t partWritten = 0;  // bytes in it
 
     auto operator==(const StreamRecordStatus&) const -> bool = default;
 };

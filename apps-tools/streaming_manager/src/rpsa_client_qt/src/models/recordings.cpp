@@ -109,6 +109,19 @@ auto readLost(const QString& path, QVariantMap& d) -> void {
         d["firstLostSample"] = firstAt;
 }
 
+// the recording a part belongs to (<name>_0003.<ext> -> <name>.<ext>), "" when not a part
+auto partOf(const QString& path) -> QString {
+    static const QRegularExpression re("^(.+)_(\\d{4,})(\\.[^.\\\\/]+)$");
+    const auto m = re.match(path);
+    return m.hasMatch() ? m.captured(1) + m.captured(3) : QString();
+}
+
+auto partNumber(const QString& path) -> int {
+    static const QRegularExpression re("_(\\d{4,})\\.[^.\\\\/]+$");
+    const auto m = re.match(path);
+    return m.hasMatch() ? m.captured(1).toInt() : 0;
+}
+
 // what the BIN header says (bin_lib)
 auto readBin(const QString& path, QVariantMap& d) -> void {
     bin_lib::FileReader reader;
@@ -307,7 +320,40 @@ void RecordingsManager::rescan() {
                                     {"started", static_cast<double>(started.toMSecsSinceEpoch())},
                                     {"run", m.hasMatch() ? m.captured(0) : QString()},
                                     {"recording", live.contains(path)},
-                                    {"convertible", suffix == "bin"}});
+                                    {"convertible", suffix == "bin"},
+                                    // a part of a recording (streaming_improvements 4.11): <name>_0003.<ext>
+                                    {"partOf", partOf(path)},
+                                    {"part", partNumber(path)}});
+        }
+    }
+    // the parts: a WAV split only at 4 GB keeps its name for the first part (<name>.wav, then
+    // _0002 ...); a lone numbered file not being written is a recording of its own
+    {
+        QHash<QString, int> parts;
+        QSet<QString> paths, live;
+        for (const auto& v : std::as_const(list)) {
+            const auto r = v.toMap();
+            paths.insert(r["path"].toString());
+            const auto of = r["partOf"].toString();
+            if (!of.isEmpty()) {
+                parts[of]++;
+                if (r["recording"].toBool())
+                    live.insert(of);
+            }
+        }
+        for (auto& v : list) {
+            auto r = v.toMap();
+            const auto path = r["path"].toString();
+            const auto of = r["partOf"].toString();
+            if (of.isEmpty() && parts.contains(path)) {
+                r["partOf"] = path;
+                r["part"] = 1;
+                v = r;
+            } else if (!of.isEmpty() && parts[of] + (paths.contains(of) ? 1 : 0) < 2 && !live.contains(of)) {
+                r["partOf"] = QString();
+                r["part"] = 0;
+                v = r;
+            }
         }
     }
     for (auto it = m_quick.begin(); it != m_quick.end();)

@@ -1,7 +1,9 @@
 #include <getopt.h>
 #include <algorithm>
 #include <chrono>
+#include <cctype>
 #include <cerrno>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <strings.h>
@@ -64,6 +66,9 @@ static struct option long_options_streaming[] = {
     {"verbose", no_argument, 0, 'v'},
     {"tdms_time", no_argument, 0, 'T'},  // long only
     {"tdms-time", no_argument, 0, 'T'},
+    {"limit-time", required_argument, 0, 1001},  // long only
+    {"limit-size", required_argument, 0, 1002},
+    {"split", required_argument, 0, 1003},
     {"quiet", no_argument, 0, 'q'},
     {"reply-timeout", required_argument, 0, 'R'},  // long only
     {0, 0, 0, 0}};
@@ -218,6 +223,60 @@ int get_memory(int64_t* value, const char* str, const char* message) {
 
 // "500ms", "5s", "2m" or a number in the unit of the option (unitMs: 1 for milliseconds, 1000 for
 // seconds); false: not a time or above maxMs
+// A size: bytes, or with K, M, G (1024 based), KB, MB, GB alike; capitals only
+static auto parseSize(const char* str, uint64_t* bytes) -> bool {
+    if (!str || !*str || str[0] == '-' || str[0] == '+')
+        return false;
+    char* end = nullptr;
+    errno = 0;
+    const double v = strtod(str, &end);
+    if (end == str || errno || v < 0 || !std::isfinite(v))
+        return false;
+    // capitals: 5m is a time (minutes), 5M a size
+    const std::string unit(end);
+    double scale = 1;
+    if (unit.empty() || unit == "B")
+        scale = 1;
+    else if (unit == "K" || unit == "KB")
+        scale = 1024.0;
+    else if (unit == "M" || unit == "MB")
+        scale = 1024.0 * 1024;
+    else if (unit == "G" || unit == "GB")
+        scale = 1024.0 * 1024 * 1024;
+    else
+        return false;
+    const double b = v * scale;
+    if (b > 1.8e19)
+        return false;
+    *bytes = static_cast<uint64_t>(b);
+    return true;
+}
+
+// A time of seconds: 90, 90s, 10m (or min), 2h; no unit means seconds
+static auto parseDuration(const char* str, double* seconds) -> bool {
+    if (!str || !*str || str[0] == '-' || str[0] == '+')
+        return false;
+    char* end = nullptr;
+    errno = 0;
+    const double v = strtod(str, &end);
+    if (end == str || errno || v < 0 || !std::isfinite(v))
+        return false;
+    const std::string unit(end);
+    double scale = 1;
+    if (unit.empty() || unit == "s")
+        scale = 1;
+    else if (unit == "ms")
+        scale = 0.001;
+    else if (unit == "m" || unit == "min")
+        scale = 60;
+    else if (unit == "h")
+        scale = 3600;
+    else
+        return false;
+    *seconds = v * scale;
+    return *seconds <= 366.0 * 24 * 3600;
+}
+
 static auto parseTime(const char* str, int64_t unitMs, int64_t maxMs, int64_t* ms) -> bool {
     if (!str || !*str)
         return false;
@@ -608,6 +667,44 @@ auto ClientOpt::parse(int argc, char* argv[]) -> ClientOpt::Options {
                 case 'T':
                     opt.tdms_time = true;
                     break;
+
+                case 1001: {
+                    double s = 0;
+                    if (!parseDuration(optarg, &s)) {
+                        fprintf(stderr, "[ERROR] Wrong value of --limit-time: %s (seconds, or 90s, 10m, 2h)\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.limit_time = s;
+                    break;
+                }
+                case 1002: {
+                    uint64_t b = 0;
+                    if (!parseSize(optarg, &b) || b == 0) {
+                        fprintf(stderr, "[ERROR] Wrong value of --limit-size: %s (bytes, or 500M, 2G)\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    opt.limit_size = b;
+                    break;
+                }
+                case 1003: {
+                    // a size with its unit (1G, at least 1M), or a time (5m; a number alone: seconds)
+                    uint64_t b = 0;
+                    double s = 0;
+                    const char last = optarg[0] ? optarg[strlen(optarg) - 1] : 0;
+                    const bool sized = last == 'B' || last == 'K' || last == 'M' || last == 'G';
+                    if (sized && parseSize(optarg, &b) && b >= 1024 * 1024) {
+                        opt.split_size = b;
+                    } else if (!sized && parseDuration(optarg, &s) && s > 0) {
+                        opt.split_time = s;
+                    } else {
+                        fprintf(stderr, "[ERROR] Wrong value of --split: %s (a size of 1M or more: 500M, 1G; or a time: 30s, 5m, 1h, 90)\n", optarg);
+                        opt.mode = Mode::ERROR_PARAM;
+                        return opt;
+                    }
+                    break;
+                }
 
                 case 'h': {
                     opt.hosts = split(optarg, ',');

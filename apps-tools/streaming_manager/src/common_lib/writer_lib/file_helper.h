@@ -50,4 +50,7 @@ auto buildBINChunk(DataLib::CDataBuffersPackDMA::Ptr buff_pack, std::map<DataLib
 
 auto dirNameOf(const std::string& fname) -> std::string;
 
+// The file of a part of a recording: <name>_0003.<ext>, the number before the extension
+auto partFileName(const std::string& base, int part) -> std::string;
+
 #endif

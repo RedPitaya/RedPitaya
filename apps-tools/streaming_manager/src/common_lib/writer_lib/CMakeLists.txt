@@ -34,6 +34,7 @@ list(APPEND headers
             ${PROJECT_SOURCE_DIR}/file_queue_manager.h
             ${PROJECT_SOURCE_DIR}/file_helper.h
             ${PROJECT_SOURCE_DIR}/gpio_file_writer.h
+            ${PROJECT_SOURCE_DIR}/time_limit_clock.h
             ${PROJECT_SOURCE_DIR}/w_queue.h
             ${PROJECT_SOURCE_DIR}/file_chunk.h
         )

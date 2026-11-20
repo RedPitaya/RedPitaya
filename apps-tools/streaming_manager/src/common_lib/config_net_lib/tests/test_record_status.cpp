@@ -19,6 +19,13 @@ TEST(RecordStatus, EveryFieldSurvivesTheRoundTrip) {
     source.adc.lostBoard = 1245184;
     source.adc.lostQueue = 262144;
     source.adc.file = "/home/redpitaya/streaming_files/adc/data_file.bin";
+    source.adc.limitTime = 600.5;
+    source.adc.limitSize = 0x3'0000'0000ull;
+    source.adc.splitSize = 1073741824;
+    source.adc.splitTime = 300;
+    source.adc.part = 7;
+    source.adc.partWritten = 0x1'2345'6789ull;
+    source.gpioIn.part = 2;
     source.gpioIn.mode = StreamRecordStatus::NETWORK;
     source.gpioIn.samples = 7;
     source.gpioIn.lostBoard = 3;

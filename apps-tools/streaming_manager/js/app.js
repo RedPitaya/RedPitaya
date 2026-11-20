@@ -218,65 +218,165 @@
     const dataRateOf = (key) => key === 'adc'
         ? adcRate() / adcDec() * chList().length * (Number(v('SS_SAVE_MODE', 0)) ? 4 : (Number(v('SS_RESOLUTION', 1)) ? 2 : 1))
         : gpioClock() / Math.max(1, Number(v('SS_GPIO_DECIMATION', 1))) * 4;
+    // ---- the limit of a file and its parts (streaming_improvements 4.11): one limit (samples,
+    // a time of the time line, a size of the data) and one split (a size, a time) a stream
+    const LIM = {
+        adc: { samples: 'SS_SAMPLES', time: 'SS_LIMIT_TIME', size: 'SS_LIMIT_SIZE', splitSize: 'SS_SPLIT_SIZE', splitTime: 'SS_SPLIT_TIME',
+            part: 'SS_ADC_PART', partW: 'SS_ADC_PART_WRITTEN', file: 'SS_ADC_FILE_NOW' },
+        gin: { samples: 'SS_GPIO_IN_SAMPLES', time: 'SS_GPIO_LIMIT_TIME', size: 'SS_GPIO_LIMIT_SIZE', splitSize: 'SS_GPIO_SPLIT_SIZE', splitTime: 'SS_GPIO_SPLIT_TIME',
+            part: 'SS_GPIO_PART', partW: 'SS_GPIO_PART_WRITTEN', file: 'SS_GPIO_FILE_NOW' }
+    };
+    const GIB = 1073741824;
+    const perChOf = (key) => key === 'adc' ? adcRate() / adcDec() : gpioClock() / Math.max(1, Number(v('SS_GPIO_DECIMATION', 1)));
+    const limitKind = (key) => { const L = LIM[key]; return Number(v(L.time, 0)) > 0 ? 'time' : Number(v(L.size, 0)) > 0 ? 'size' : Number(v(L.samples, 0)) > 0 ? 'samples' : 'none'; };
+    const splitKind = (key) => { const L = LIM[key]; return Number(v(L.splitSize, 0)) > 0 ? 'size' : Number(v(L.splitTime, 0)) > 0 ? 'time' : 'none'; };
+    // a time as typed: 90, 90 s, 10 min, 10m, 2 h
+    const fmtTimeIn = (t) => (t >= 3600 && t % 3600 === 0 ? t / 3600 + ' h' : t >= 60 && t % 60 === 0 ? t / 60 + ' min' : +t.toFixed(3) + ' s');
+    const parseTimeIn = (text) => {
+        const m = /^\s*([0-9]*\.?[0-9]+)\s*(ms|s|sec|m|min|h)?\s*$/i.exec(String(text));
+        if (!m) return NaN;
+        const u = (m[2] || 's').toLowerCase();
+        return Number(m[1]) * (u === 'ms' ? 0.001 : u === 'm' || u === 'min' ? 60 : u === 'h' ? 3600 : 1);
+    };
+    // a size as typed: bytes, 500 MB, 1 GB, 1.5G
+    const fmtSizeIn = (b) => (b >= GIB && b % GIB === 0 ? b / GIB + ' GB' : b >= 1048576 && b % 1048576 === 0 ? b / 1048576 + ' MB' : fmtBytes(b));
+    const parseSizeIn = (text) => {
+        const m = /^\s*([0-9]*\.?[0-9]+)\s*(b|k|kb|m|mb|g|gb)?\s*$/i.exec(String(text));
+        if (!m) return NaN;
+        const u = (m[2] || 'b').toLowerCase()[0];
+        return Math.round(Number(m[1]) * (u === 'k' ? 1024 : u === 'm' ? 1048576 : u === 'g' ? GIB : 1));
+    };
     function sdProgress(key) {
         const adc = key === 'adc';
+        const L = LIM[key];
         const s = stream(key);
-        const limit = Number(v(adc ? 'SS_SAMPLES' : 'SS_GPIO_IN_SAMPLES', 0));
+        const kind = limitKind(key);
         const done = Number(v(adc ? 'SS_PASS_SAMPLES' : 'SS_GPIO_FILE_SAMPLES', 0));
-        const perCh = adc ? adcRate() / adcDec() : gpioClock() / Math.max(1, Number(v('SS_GPIO_DECIMATION', 1)));
+        const written = Number(v(adc ? 'SS_WRITED_SIZE' : 'SS_GPIO_WRITTEN', 0));
+        const perCh = perChOf(key);
         const card = Number(v(adc ? 'SS_WRITE_RATE' : 'SS_GPIO_WRITE_RATE', 0));
         const sp = sdSpace(), free = sp ? sp[0] : 0, total = sp ? sp[1] : 0;
         const data = dataRateOf(key);
-        const need = limit * data / perCh;  // bytes the limit takes
         // what goes to the card a second: the data, or the card when it is slower. The measured
         // speed alone overstates a card the data do not keep busy (the page cache takes them).
         const thru = card ? Math.min(card, data) : data;
-        return { run: s.run, limit, done, perCh, card, data, thru, free, total, need, frac: limit ? Math.min(1, done / limit) : (total ? 1 - free / total : 0) };
+        const r = { run: s.run, kind, hasLimit: kind !== 'none', done, written, perCh, card, data, thru, free, total, need: 0, frac: total ? 1 - free / total : 0, left: free / thru, doneText: '' };
+        if (kind === 'samples') {
+            const limit = Number(v(L.samples, 0));
+            Object.assign(r, { need: limit * data / perCh, frac: Math.min(1, done / limit), left: (limit - done) / perCh,
+                doneText: done.toLocaleString('en-US') + ' of ' + limit.toLocaleString('en-US') + ' samples' });
+        } else if (kind === 'time') {
+            const t = Number(v(L.time, 0));
+            Object.assign(r, { need: t * data, frac: Math.min(1, done / perCh / t), left: t - done / perCh, doneText: fmtDur(done / perCh) + ' of ' + fmtTimeIn(t) });
+        } else if (kind === 'size') {
+            const b = Number(v(L.size, 0));
+            Object.assign(r, { need: b, frac: Math.min(1, written / b), left: (b - written) / thru, doneText: fmtBytes(written) + ' of ' + fmtBytes(b) });
+        }
+        // the parts: about how many for the limit
+        const sk = splitKind(key);
+        r.split = sk;
+        r.splitSize = Number(v(L.splitSize, 0));
+        r.splitTime = Number(v(L.splitTime, 0));
+        r.parts = !r.hasLimit || sk === 'none' ? 0 : Math.max(1, Math.ceil(sk === 'size' ? r.need / r.splitSize : r.need / data / r.splitTime));
+        return r;
     }
-    const pbar = (frac, color) => `<div class="bar" style="height: 8px; margin: 2px 0"><div style="width: ${(frac * 100).toFixed(1)}%; background: ${color}"></div></div>`;
+    const pbar = (frac, color, ticks) => `<div class="bar" style="height: 8px; margin: 2px 0; position: relative"><div style="width: ${(frac * 100).toFixed(1)}%; background: ${color}"></div>` +
+        (ticks || []).map((t) => `<span style="position: absolute; left: ${(t * 100).toFixed(2)}%; top: -3px; width: 2px; height: 14px; background: var(--bg, #343433)"></span>`).join('') + '</div>';
     // before a recording (or while the stream runs to the network): does the limit fit the card
     function progressHtml(key) {
         const p = sdProgress(key);
         const freeText = p.total ? fmtBytes(p.free) + ' free of ' + fmtBytes(p.total) : 'free space unknown';
-        if (!p.limit) return `<p class="hint" style="margin: 0">SD card: ${freeText} · the data: ${fmtBytes(p.data)}/s</p>`;
+        if (!p.hasLimit) return `<p class="hint" style="margin: 0">SD card: ${freeText} · the data: ${fmtBytes(p.data)}/s</p>`;
         const fits = !p.total || p.need <= p.free;
         return `<p class="hint${fits ? '' : ' bad'}" style="margin: 0">The limit takes about ${fmtBytes(p.need)} · SD card: ${freeText}${fits ? '' : ' - it does not fit'}</p>`;
     }
-    // One block for an SD recording: a bar (the limit, else the card), then Recorded, Time left,
-    // SD card, Lost; a note under it only when something is wrong. Before the first run: a line.
+    // One block for an SD recording: a bar (the limit, else the card; the parts marked), then
+    // Recorded, Part, Time left, SD card, Lost; a note under it only when something is wrong.
+    // Before the first run: a line.
     function recordingHtml(key) {
         const p = sdProgress(key), l = lostOf(key), all = l.board + l.file;
         const adc = key === 'adc';
-        const written = Number(v(adc ? 'SS_WRITED_SIZE' : 'SS_GPIO_WRITTEN', 0));
+        const L = LIM[key];
         if (runMode(key) !== 2 || (!p.run && !p.done)) return progressHtml(key);
         const red = ' style="color: #ff8f86"';
         const slow = p.card && p.data > p.card;
         const low = p.total && p.free < p.total * 0.05;
-        const left = p.limit ? fmtDur((p.limit - p.done) / p.perCh) : 'SD full in ' + fmtDur(p.free / p.thru);
+        const part = Number(v(L.part, 0)), partW = Number(v(L.partW, 0));
+        const fileNow = String(v(L.file, '')).split('/').pop();
         const cell = (k, b, sub, bad) => `<div class="scell"><span>${k}</span><b${bad ? red : ''}>${b}</b><span>${sub}</span></div>`;
         const cells = [
-            cell('Recorded', p.limit ? Math.round(p.frac * 100) + '% of the limit' : p.done.toLocaleString('en-US') + ' samples',
-                (p.limit ? p.done.toLocaleString('en-US') + ' of ' + p.limit.toLocaleString('en-US') : 'no limit') + (written ? ' · ' + fmtBytes(written) : '')),
-            cell('Time left', p.run ? left : (p.limit && p.done >= p.limit ? 'done' : 'stopped'), p.run ? (p.limit ? 'to the limit at ' + fmtRate(p.perCh) : 'at ' + fmtBytes(p.thru) + '/s') : ''),
-            p.run ? cell('SD card', fmtBytes(p.thru) + '/s · queue ' + Math.round(Number(v(adc ? 'SS_FILE_QUEUE' : 'SS_GPIO_FILE_QUEUE', 0)) * 100) + '%',
-                p.total ? fmtBytes(p.free) + ' free of ' + fmtBytes(p.total) : '', slow || low)
-                : cell('SD card', fmtBytes(p.free) + ' free', p.total ? 'of ' + fmtBytes(p.total) : '', low),
-            cell('Lost', all ? lostShort(key) : '0', adc ? 'board ' + l.board.toLocaleString('en-US') + ' · queue ' + l.file.toLocaleString('en-US') : 'on the board', all > 0)];
+            cell('Recorded', p.hasLimit ? Math.round(p.frac * 100) + '% of the limit' : p.done.toLocaleString('en-US') + ' samples',
+                (p.hasLimit ? p.doneText : 'no limit') + (p.written && p.kind !== 'size' ? ' · ' + fmtBytes(p.written) : ''))];
+        if (p.split !== 'none' || part > 1)
+            cells.push(cell('Part', part + (p.parts > 1 ? ' of about ' + p.parts : ''), (fileNow ? '…' + fileNow.slice(-12) + ' · ' : '') + fmtBytes(partW) + (p.split === 'size' ? ' of ' + fmtBytes(p.splitSize) : '')));
+        cells.push(cell('Time left', p.run ? (p.hasLimit ? fmtDur(p.left) : 'SD full in ' + fmtDur(p.left)) : (p.hasLimit && p.frac >= 0.999 ? 'done' : 'stopped'),
+            p.run ? (p.hasLimit ? 'to the limit at ' + fmtRate(p.perCh) : 'at ' + fmtBytes(p.thru) + '/s') : ''));
+        cells.push(p.run ? cell('SD card', fmtBytes(p.thru) + '/s · queue ' + Math.round(Number(v(adc ? 'SS_FILE_QUEUE' : 'SS_GPIO_FILE_QUEUE', 0)) * 100) + '%',
+            p.total ? fmtBytes(p.free) + ' free of ' + fmtBytes(p.total) : '', slow || low)
+            : cell('SD card', fmtBytes(p.free) + ' free', p.total ? 'of ' + fmtBytes(p.total) : '', low));
+        cells.push(cell('Lost', all ? lostShort(key) : '0', adc ? 'board ' + l.board.toLocaleString('en-US') + ' · queue ' + l.file.toLocaleString('en-US') : 'on the board', all > 0));
         const notes = [];
         if (slow && p.run) notes.push(`The card writes ${fmtBytes(p.card)}/s of ${fmtBytes(p.data)}/s of data: the data are lost once the queue is full.`);
         if (low) notes.push('Less than 5% of the card is free.');
         if (all) notes.push('On the board: no free buffer, the card is slower than the data; the file marks the places.' + (adc ? ' The queue: those buffers are missing from the file, its report counts them.' : ''));
-        return pbar(p.frac, low ? '#e0675d' : p.limit ? '#47b2d1' : '#7a7a78') +
-            `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px">${cells.join('')}</div>` +
+        // the ends of the parts on the bar of the limit: a part is splitSize (or splitTime of data) of need
+        const step = p.need > 0 ? (p.split === 'size' ? p.splitSize : p.splitTime * p.data) / p.need : 0;
+        const ticks = p.parts > 1 && p.parts <= 50 && step > 0 ? Array.from({ length: p.parts - 1 }, (_, i) => (i + 1) * step).filter((t) => t < 1) : [];
+        return pbar(p.frac, low ? '#e0675d' : p.hasLimit ? '#47b2d1' : '#7a7a78', ticks) +
+            `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px">${cells.join('')}</div>` +
             notes.map((n) => `<p class="hint bad" style="margin: 0">${esc(n)}</p>`).join('');
     }
     // the overview: a word on the progress under the state
     function progressShort(key) {
         const p = sdProgress(key);
         if (!p.run || runMode(key) !== 2) return '';
-        if (p.limit) return Math.round(p.frac * 100) + '% · ' + fmtDur((p.limit - p.done) / p.perCh) + ' left';
-        return 'SD full in ' + fmtDur(p.free / p.thru);
+        const part = Number(v(LIM[key].part, 0));
+        const parts = part > 1 || p.split !== 'none' ? ' · part ' + part : '';
+        if (p.hasLimit) return Math.round(p.frac * 100) + '% · ' + fmtDur(p.left) + ' left' + parts;
+        return 'SD full in ' + fmtDur(p.left) + parts;
     }
+    // Stop after and Split into parts of a stream
+    function limitFields(key, wav) {
+        const L = LIM[key];
+        const kind = limitKind(key), sk = splitKind(key);
+        const perCh = perChOf(key), data = dataRateOf(key);
+        const id = key + 'lim';
+        let value = '', hint = 'until the stop or a full card';
+        if (kind === 'samples') {
+            const n = Number(v(L.samples, 0));
+            value = String(n);
+            hint = '= ' + fmtDur(n / perCh) + ', about ' + fmtBytes(n * data / perCh);
+        } else if (kind === 'time') {
+            const t = Number(v(L.time, 0));
+            value = fmtTimeIn(t);
+            hint = fmtTimeIn(t) + ' = ' + Math.round(t * perCh).toLocaleString('en-US') + ' samples' + (key === 'adc' ? '/ch' : '') + ', about ' + fmtBytes(t * data);
+        } else if (kind === 'size') {
+            const b = Number(v(L.size, 0));
+            value = fmtSizeIn(b);
+            hint = 'about ' + fmtDur(b / data) + ' at ' + fmtBytes(data) + '/s';
+        }
+        let svalue = '', shint = wav ? 'one file; a WAV goes on in a new part at 4 GB anyway' : 'one file';
+        const p = sdProgress(key);
+        if (sk === 'size') {
+            svalue = fmtSizeIn(Number(v(L.splitSize, 0)));
+            shint = (p.parts ? 'about ' + p.parts + ' parts: ' : '') + '…_0001, …_0002; each a whole file with its report';
+        } else if (sk === 'time') {
+            svalue = fmtTimeIn(Number(v(L.splitTime, 0)));
+            shint = (p.parts ? 'about ' + p.parts + ' parts of ' + fmtBytes(Number(v(L.splitTime, 0)) * data) + ': ' : '') + '…_0001, …_0002; each a whole file with its report';
+        }
+        const input = (act, val, label) => `<input class="mono" style="width: 110px; flex: none" value="${esc(val)}" data-act="${act}" data-arg="${key}" aria-label="${label}">`;
+        // two columns of the grid each: a choice and its value side by side
+        return `<div class="field" style="grid-column: span 2"><label for="${id}">Stop after</label><div class="row" style="gap: 8px; flex-wrap: nowrap">
+                <select id="${id}" style="flex: 1; min-width: 0" data-act="limKind" data-arg="${key}">${sel([['none', 'the stop'], ['samples', key === 'adc' ? 'samples per channel' : 'samples'], ['time', 'a time'], ['size', 'a size of the data']], kind)}</select>
+                ${kind !== 'none' ? input('limVal', value, 'The limit') : ''}</div><span class="hint">${esc(hint)}</span></div>
+              <div class="field" style="grid-column: span 2"><label for="${id}s">Split into parts</label><div class="row" style="gap: 8px; flex-wrap: nowrap">
+                <select id="${id}s" style="flex: 1; min-width: 0" data-act="splitKind" data-arg="${key}">${sel([['none', 'off (one file)'], ['size', 'every … of data'], ['time', 'every … of time']], sk)}</select>
+                ${sk !== 'none' ? input('splitVal', svalue, 'The size or the time of a part') : ''}</div><span class="hint">${esc(shint)}</span></div>`;
+    }
+    const setMany = (vals) => {
+        for (const [n, x] of Object.entries(vals)) C.parametersCache[n] = { value: x };
+        C.sendParameters();
+    };
 
     // ---- overview
     function overviewHtml() {
@@ -399,7 +499,7 @@
                 ${!inSd && runMode('gin') === 1 ? lostHtml('gin') : ''}
                 ${inSd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr))">
                     <div class="field"><label for="gfmt">Format</label><select id="gfmt" data-param="SS_GPIO_IN_FORMAT">${sel([[0, 'BIN'], [1, 'CSV'], [2, 'VCD']], v('SS_GPIO_IN_FORMAT', 0))}</select></div>
-                    <div class="field"><label for="glim">Samples</label><input id="glim" class="mono" value="${esc(v('SS_GPIO_IN_SAMPLES', 0))}" data-act="int" data-arg="SS_GPIO_IN_SAMPLES"><span class="hint">0 - until the stop</span></div>
+                    ${limitFields('gin', false)}
                   </div>${recordingHtml('gin')}` : ''}
                 <div class="field"><label>Trigger</label><label class="check">${flip('data-act="flag" data-arg="SS_GPIO_IN_TRIG_MODE"', inTrig)}Wait for a trigger, then capture</label></div>
                 ${inTrig ? `<div class="field"><div class="lnh"><label>Pattern trigger (lines that must match)</label><button type="button" class="lnb" data-act="gpatClear">clear</button><span class="lnm">${patSet ? 'mask ' + hex4(PM) + ' value ' + hex4(PV) + ' rise ' + hex4(PP) + ' fall ' + hex4(PN) : 'no line: the pattern never fires'}</span></div>
@@ -567,7 +667,7 @@
               ${sd ? `<div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr))">
                   <div class="field"><label for="fmt">Format</label><select id="fmt" data-param="SS_FORMAT">${sel([[0, 'WAV'], [1, 'TDMS'], [2, 'BIN']], v('SS_FORMAT', 0))}</select></div>
                   <div class="field"><label for="dtype">Values</label><select id="dtype" data-param="SS_SAVE_MODE">${sel([[0, 'Raw ADC codes'], [1, 'Volts']], v('SS_SAVE_MODE', 0))}</select></div>
-                  <div class="field"><label for="lim">Samples per channel</label><input id="lim" class="mono" value="${esc(v('SS_SAMPLES', 0))}" data-act="int" data-arg="SS_SAMPLES"><span class="hint">0 - until the stop</span></div>
+                  ${limitFields('adc', Number(v('SS_FORMAT', 0)) === 0)}
                   ${tdms ? `<div class="field"><label for="tcol">TDMS time column</label><select id="tcol" data-param="SS_TDMS_TIME">${sel([[0, 'Off'], [1, 'On']], v('SS_TDMS_TIME', 0))}</select></div>` : ''}
                 </div>
                 ${recordingHtml('adc')}`
@@ -715,6 +815,48 @@
     }
 
     // ---- files
+    // the parts of a recording (<name>_0001.<ext> ...) under one row of it, in the place of the
+    // first one; the other files as they are
+    // The parts of a recording under a head: <name>_0001.<ext> ...; a WAV split only at 4 GB keeps
+    // its name for the first part (<name>.<ext>, then _0002 ...). A lone numbered file not being
+    // written is a file of its own
+    function fileGroups(list) {
+        const re = /^(.+)_(\d{4,})(\.[^.]+)$/;
+        const baseOf = (f) => { const m = re.exec(f.name); return m ? m[1] + m[3] : ''; };
+        const groups = new Map();
+        for (const f of list) {
+            const b = baseOf(f);
+            if (b) { if (!groups.has(b)) groups.set(b, { base: b, parts: [] }); groups.get(b).parts.push(f); }
+        }
+        for (const f of list) if (groups.has(f.name)) groups.get(f.name).parts.push(f);
+        const num = (f) => { const m = re.exec(f.name); return m ? Number(m[2]) : 1; };
+        for (const [b, g] of groups) {
+            g.parts.sort((x, y) => num(x) - num(y));
+            if (g.parts.length < 2 && !g.parts.some((f) => partNow(f.name))) groups.delete(b);
+        }
+        const out = [], done = new Set();
+        for (const f of list) {
+            const b = groups.has(f.name) ? f.name : baseOf(f);
+            if (!groups.has(b)) { out.push({ file: f }); continue; }
+            if (!done.has(b)) { done.add(b); out.push(groups.get(b)); }
+        }
+        return out;
+    }
+    const fileRow = (f, dir, part) => `<tr class="${S.fileSel[f.name] ? 'sel' : ''}">
+                  <td><input type="checkbox" class="cbx" data-act="sel" data-arg="${esc(f.name)}"${S.fileSel[f.name] ? ' checked' : ''} aria-label="Select ${esc(f.name)}"></td>
+                  <td class="mono"${part ? ' style="padding-left: 28px"' : ''}>${esc(part && /_\d{4,}\.[^.]+$/.test(f.name) ? '…' + f.name.slice(f.name.lastIndexOf('_')) : f.name)}</td><td class="mono">${esc(f.size)}</td><td class="mono">${esc(f.date)}</td>
+                  ${dir === 'adc' ? `<td>${f.reports.map(([label, file]) => `<a href="/streaming_manager/upload/adc/${encodeURIComponent(file)}" target="_blank">${label}</a>`).join(' · ') || '<span class="hint">-</span>'}</td>` : ''}
+                  <td>${partNow(f.name) ? '<span class="hint">being written</span>' : `<a href="/streaming_manager/upload/${dir}/${encodeURIComponent(f.name)}" download>Download</a>`}</td></tr>`;
+    // the file a stream writes now
+    const partNow = (name) => ['adc', 'gin'].some((k) => stream(k).run && runMode(k) === 2 && String(v(LIM[k].file, '')).split('/').pop() === name);
+    function groupRow(g, dir) {
+        const all = g.parts.every((f) => S.fileSel[f.name]), any = g.parts.some((f) => S.fileSel[f.name]);
+        const live = g.parts.some((f) => partNow(f.name));
+        return `<tr class="${all ? 'sel' : ''}" style="background: rgba(71,178,209,0.08)">
+                  <td><input type="checkbox" class="cbx${any && !all ? ' cbx-mixed' : ''}" data-act="selGroup" data-arg="${esc(g.base)}"${all ? ' checked' : ''} aria-label="Select all the parts of ${esc(g.base)}"></td>
+                  <td class="mono" style="color: var(--value, #e8e8e6)">▾ ${esc(g.base)} · ${g.parts.length} part${g.parts.length === 1 ? '' : 's'}${live ? ' so far' : ''}</td><td></td><td class="mono">${esc(g.parts[0].date)}</td>
+                  ${dir === 'adc' ? '<td></td>' : ''}<td>${live ? '<span style="color: #8fdc97">being recorded</span>' : ''}</td></tr>`;
+    }
     function filesHtml() {
         const list = S.files[S.fileTab];
         const any = list.some((f) => S.fileSel[f.name]);
@@ -736,11 +878,7 @@
               ${S.filesError ? `<p class="hint bad" style="margin: 0">${esc(S.filesError)}</p>` : ''}
               <div style="overflow-x: auto"><table>
                 <thead><tr><th scope="col" style="width: 1%"><input type="checkbox" class="cbx${any && !all ? ' cbx-mixed' : ''}" data-act="selAll"${all ? ' checked' : ''} aria-label="Select all"></th><th scope="col">Name</th><th scope="col">Size</th><th scope="col">Written</th>${dir === 'adc' ? '<th scope="col">Report</th>' : ''}<th scope="col"></th></tr></thead>
-                <tbody>${list.length ? list.map((f) => `<tr class="${S.fileSel[f.name] ? 'sel' : ''}">
-                  <td><input type="checkbox" class="cbx" data-act="sel" data-arg="${esc(f.name)}"${S.fileSel[f.name] ? ' checked' : ''} aria-label="Select ${esc(f.name)}"></td>
-                  <td class="mono">${esc(f.name)}</td><td class="mono">${esc(f.size)}</td><td class="mono">${esc(f.date)}</td>
-                  ${dir === 'adc' ? `<td>${f.reports.map(([label, file]) => `<a href="/streaming_manager/upload/adc/${encodeURIComponent(file)}" target="_blank">${label}</a>`).join(' · ') || '<span class="hint">-</span>'}</td>` : ''}
-                  <td><a href="/streaming_manager/upload/${dir}/${encodeURIComponent(f.name)}" download>Download</a></td></tr>`).join('')
+                <tbody>${list.length ? fileGroups(list).map((g) => g.parts ? groupRow(g, dir) + g.parts.map((f) => fileRow(f, dir, true)).join('') : fileRow(g.file, dir, false)).join('')
                   : `<tr><td colspan="6" class="hint">No files.</td></tr>`}</tbody></table></div>
             </section>`;
     }
@@ -945,6 +1083,31 @@
         uploadGpio: () => pickFile('.bin', (f) => uploadFile(f, 'gpio')),
         bitsel: (el) => { const [p, b] = el.dataset.arg.split(':'); setBit(p, Number(b), el.value === '1'); },
         flag: (el) => C.set(el.dataset.arg, el.checked ? 1 : 0),
+        // the limit of a stream: one kind at a time, a value to start with
+        limKind: (el) => {
+            const key = el.dataset.arg, L = LIM[key];
+            const vals = { [L.samples]: 0, [L.time]: 0, [L.size]: 0 };
+            if (el.value === 'samples') vals[L.samples] = Math.round(perChOf(key) * 60);
+            if (el.value === 'time') vals[L.time] = 600;
+            if (el.value === 'size') vals[L.size] = GIB;
+            setMany(vals);
+        },
+        limVal: (el) => {
+            const key = el.dataset.arg, L = LIM[key], kind = limitKind(key);
+            const n = kind === 'samples' ? toInt(el.value) : kind === 'time' ? parseTimeIn(el.value) : parseSizeIn(el.value);
+            if (!(n > 0) || (kind === 'time' && n > 366 * 86400)) { flash(el); return; }
+            C.set(kind === 'samples' ? L.samples : kind === 'time' ? L.time : L.size, n);
+        },
+        splitKind: (el) => {
+            const L = LIM[el.dataset.arg];
+            setMany({ [L.splitSize]: el.value === 'size' ? GIB : 0, [L.splitTime]: el.value === 'time' ? 300 : 0 });
+        },
+        splitVal: (el) => {
+            const key = el.dataset.arg, L = LIM[key], sk = splitKind(key);
+            const n = sk === 'size' ? parseSizeIn(el.value) : parseTimeIn(el.value);
+            if (!(n > 0) || (sk === 'size' && n < 1048576)) { flash(el); return; }
+            C.set(sk === 'size' ? L.splitSize : L.splitTime, n);
+        },
         int: (el) => {
             const p = el.dataset.arg, n = toInt(el.value);
             const lo = Number(pmin(p, -Infinity)), hi = Number(pmax(p, Infinity));
@@ -1003,6 +1166,11 @@
         fileTab: (el) => { S.fileTab = el.dataset.arg; S.fileSel = {}; refreshFiles(); schedule(); },
         refreshFiles: () => refreshFiles(),
         sel: (el) => { S.fileSel[el.dataset.arg] = el.checked; schedule(); },
+        selGroup: (el) => {
+            const g = fileGroups(S.files[S.fileTab]).find((x) => x.base === el.dataset.arg);
+            if (g) for (const f of g.parts) S.fileSel[f.name] = el.checked;
+            schedule();
+        },
         selAll: () => {
             const list = S.files[S.fileTab];
             const all = list.every((f) => S.fileSel[f.name]);

@@ -163,6 +163,9 @@ auto RecordingView::runOpen() -> void {
     std::shared_ptr<view::Source> src(view::Source::create(m_path).release());
     if (!src)
         return fail("Not a format the viewer reads (BIN, WAV, TDMS, CSV)");
+    // a recording that got no buffer (a trigger that never came, a stop at once): its report says why
+    if (QFileInfo(m_path).size() == 0)
+        return fail("The recording is empty: no data came (a trigger that did not come, or a stop before the first buffer). Its report (.log.txt) tells more.");
     const bool csv = QFileInfo(m_path).suffix().toLower() == "csv";
     bool loaded = false;
     if (csv) {

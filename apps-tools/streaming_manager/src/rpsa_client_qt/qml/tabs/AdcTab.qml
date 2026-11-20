@@ -44,6 +44,61 @@ ColumnLayout {
     }
     readonly property string format: v("format_sd")
 
+    // streaming_improvements 4.11: one limit (samples, a time of the time line, a size of the
+    // data) and one split (a size, a time) of the file
+    readonly property string limKind: Number(v("limit_time_sd")) > 0 ? "time" : Number(v("limit_size_sd")) > 0 ? "size" : Number(v("samples_limit_sd")) > 0 ? "samples" : "none"
+    readonly property string splitKind: Number(v("split_size_sd")) > 0 ? "size" : Number(v("split_time_sd")) > 0 ? "time" : "none"
+    // bytes a second of the file
+    readonly property double dataRate: per * on * (v("data_type_sd") === "VOLT" && format !== "BIN" ? 4 : bytes)
+    function fmtTime(t) { return t >= 3600 && t % 3600 === 0 ? t / 3600 + " h" : t >= 60 && t % 60 === 0 ? t / 60 + " min" : (+t.toFixed(3)) + " s" }
+    function parseTime(text) {
+        const m = /^\s*([0-9]*\.?[0-9]+)\s*(ms|s|sec|m|min|h)?\s*$/i.exec(String(text))
+        if (!m) return NaN
+        const u = (m[2] || "s").toLowerCase()
+        return Number(m[1]) * (u === "ms" ? 0.001 : u === "m" || u === "min" ? 60 : u === "h" ? 3600 : 1)
+    }
+    function fmtSize(b) { return b >= 1073741824 && b % 1073741824 === 0 ? b / 1073741824 + " GB" : b >= 1048576 && b % 1048576 === 0 ? b / 1048576 + " MB" : Theme.bytes(b) }
+    function parseSize(text) {
+        const m = /^\s*([0-9]*\.?[0-9]+)\s*(b|k|kb|m|mb|g|gb)?\s*$/i.exec(String(text))
+        if (!m) return NaN
+        const u = (m[2] || "b").toLowerCase()[0]
+        return Math.round(Number(m[1]) * (u === "k" ? 1024 : u === "m" ? 1048576 : u === "g" ? 1073741824 : 1))
+    }
+    function dur(sec) {
+        if (!(sec >= 0) || !isFinite(sec)) return "-"
+        if (sec < 90) return Math.round(sec) + " s"
+        if (sec < 5400) return Math.round(sec / 60) + " min"
+        return Math.floor(sec / 3600) + " h " + Math.round(sec % 3600 / 60) + " min"
+    }
+    // the limit of a kind; the others go to 0
+    function setLimitKind(kind) {
+        if (kind !== "samples") set("samples_limit_sd", "0")
+        if (kind !== "time") set("limit_time_sd", "0")
+        if (kind !== "size") set("limit_size_sd", "0")
+        if (kind === "samples") set("samples_limit_sd", String(Math.round(per * 60)))
+        if (kind === "time") set("limit_time_sd", "600")
+        if (kind === "size") set("limit_size_sd", "1073741824")
+    }
+    function setLimitValue(text) {
+        const n = limKind === "samples" ? Number(text) : limKind === "time" ? parseTime(text) : parseSize(text)
+        const key = limKind === "samples" ? "samples_limit_sd" : limKind === "time" ? "limit_time_sd" : "limit_size_sd"
+        if (!(n > 0) || (limKind === "samples" && !Number.isInteger(n))) { say(key, "Not a " + (limKind === "time" ? "time: 90 s, 10 min, 2 h" : limKind === "size" ? "size: 500 MB, 2 GB" : "number of samples"), "bad"); return }
+        set(key, String(n))
+    }
+    function setSplitKind(kind) {
+        set("split_size_sd", kind === "size" ? "1073741824" : "0")
+        set("split_time_sd", kind === "time" ? "300" : "0")
+    }
+    function setSplitValue(text) {
+        const n = splitKind === "size" ? parseSize(text) : parseTime(text)
+        const key = splitKind === "size" ? "split_size_sd" : "split_time_sd"
+        if (!(n > 0) || (splitKind === "size" && n < 1048576)) { say(key, splitKind === "size" ? "A size of 1 MB or more: 500 MB, 1 GB" : "A time: 30 s, 5 min, 1 h", "bad"); return }
+        set(key, String(n))
+    }
+    // the bytes the limit takes, about
+    readonly property double limitBytes: limKind === "samples" ? Number(v("samples_limit_sd")) / per * dataRate : limKind === "time" ? Number(v("limit_time_sd")) * dataRate : limKind === "size" ? Number(v("limit_size_sd")) : 0
+    readonly property int partsAbout: limKind === "none" || splitKind === "none" ? 0 : Math.max(1, Math.ceil(splitKind === "size" ? limitBytes / Number(v("split_size_sd")) : limitBytes / dataRate / Number(v("split_time_sd"))))
+
     // the decimations the FPGA takes: 1, 2, 4, 8, 16, then every value up to 65536 (as the page)
     function setDecimation(t) {
         const d = Number(t)
@@ -104,15 +159,57 @@ ColumnLayout {
                 }
             }
             Field {
-                label: "Samples per channel"
-                hint: "0 - until the stop"
+                label: "Stop after"
                 Layout.fillWidth: true
-                TextIn {
+                hint: root.msg("samples_limit_sd") || root.msg("limit_time_sd") || root.msg("limit_size_sd") || (
+                    root.limKind === "samples" ? "= " + root.dur(Number(root.v("samples_limit_sd")) / root.per) + ", about " + Theme.bytes(root.limitBytes)
+                    : root.limKind === "time" ? root.fmtTime(Number(root.v("limit_time_sd"))) + " = " + Theme.count(Number(root.v("limit_time_sd")) * root.per) + " samples/ch, about " + Theme.bytes(root.limitBytes)
+                    : root.limKind === "size" ? "about " + root.dur(root.limitBytes / root.dataRate) + " at " + Theme.bytes(root.dataRate) + "/s"
+                    : "until the stop or a full disk")
+                hintBad: root.msgBad("samples_limit_sd") || root.msgBad("limit_time_sd") || root.msgBad("limit_size_sd")
+                RowLayout {
                     Layout.fillWidth: true
-                    mono: true
-                    value: root.v("samples_limit_sd")
-                    validator: RegularExpressionValidator { regularExpression: /[0-9]{1,19}/ }
-                    onCommitted: (t) => root.set("samples_limit_sd", t === "" ? "0" : t)
+                    spacing: 8
+                    Select {
+                        Layout.fillWidth: true
+                        options: [["none", "the stop"], ["samples", "samples per channel"], ["time", "a time"], ["size", "a size of the data"]]
+                        value: root.limKind
+                        onPicked: (x) => root.setLimitKind(x)
+                    }
+                    TextIn {
+                        objectName: "field:limit"
+                        visible: root.limKind !== "none"
+                        implicitWidth: 120
+                        mono: true
+                        value: root.limKind === "samples" ? root.v("samples_limit_sd") : root.limKind === "time" ? root.fmtTime(Number(root.v("limit_time_sd"))) : root.fmtSize(Number(root.v("limit_size_sd")))
+                        onCommitted: (t) => root.setLimitValue(t)
+                    }
+                }
+            }
+            Field {
+                label: "Split into parts"
+                Layout.fillWidth: true
+                hint: root.msg("split_size_sd") || root.msg("split_time_sd") || (
+                    root.splitKind === "none" ? (root.format === "WAV" ? "one file; a WAV goes on in a new part at 4 GB anyway" : "one file")
+                    : (root.partsAbout ? "about " + root.partsAbout + " parts: " : "") + "…_0001, …_0002; each a whole file with its report")
+                hintBad: root.msgBad("split_size_sd") || root.msgBad("split_time_sd")
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    Select {
+                        Layout.fillWidth: true
+                        options: [["none", "off (one file)"], ["size", "every … of data"], ["time", "every … of time"]]
+                        value: root.splitKind
+                        onPicked: (x) => root.setSplitKind(x)
+                    }
+                    TextIn {
+                        objectName: "field:split"
+                        visible: root.splitKind !== "none"
+                        implicitWidth: 120
+                        mono: true
+                        value: root.splitKind === "size" ? root.fmtSize(Number(root.v("split_size_sd"))) : root.fmtTime(Number(root.v("split_time_sd")))
+                        onCommitted: (t) => root.setSplitValue(t)
+                    }
                 }
             }
             Field {

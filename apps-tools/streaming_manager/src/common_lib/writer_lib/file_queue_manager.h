@@ -21,6 +21,15 @@ class FileQueueManager : public Queue {
     // Queues a chunk for the file thread; false (the chunk dropped) when the thread does not run
     // or the queue is full (queueLimit)
     auto addChunkToWrite(FileChunk::Ptr chunk) -> bool;
+    // the tests: the next `n` chunks refused as by a full queue
+    auto refuseChunks(int n) -> void { m_refuse = n; }
+    // The file thread closes the file after what is queued before and goes on in `name` (the next
+    // part of a recording): queued whatever the queue holds; false when the thread does not run
+    auto addFileSwitch(const std::string& name) -> bool;
+    // the files written so far, the first one too (a switch adds one when the thread takes it)
+    auto filesWritten() -> int { return m_files; }
+    // the name of the file written now
+    auto fileName() -> std::string;
     auto closeFile() -> void;
     auto isWork() -> bool { return m_threadWork && !m_hasErrorWrite; }
     auto isOutOfSpace() -> bool { return m_IsOutOfSpace; }
@@ -31,7 +40,10 @@ class FileQueueManager : public Queue {
     // Writes the next chunk, waiting up to `wait` for one: 0 written, -1 none, 1 not written (error)
     auto writeToFile(std::chrono::milliseconds wait = std::chrono::milliseconds(0)) -> int;
     auto deleteFile() -> void;
+    // all the files of the run (openFile starts again at 0)
     auto getWritedSize() -> uint64_t;
+    // the file written now
+    auto fileSize() -> uint64_t { return m_hasWriteSize; }
     // what the queue holds of the memory it may take, 0..1
     auto queueFill() -> double;
     // The memory the queue may take: what the file takes to write in kMaxFlushSeconds at the
@@ -58,6 +70,10 @@ class FileQueueManager : public Queue {
     // Adds a write to the speed measurement and sets queueLimit from it
     auto measureWrite(uint64_t bytes, std::chrono::steady_clock::duration took) -> void;
     auto closeSyncFd() -> void;
+    // the stream and its write-back on `name`; false when it does not open
+    auto openStream(const std::string& name, bool append) -> bool;
+    // the file thread: the file closed, the next opened (the WAV header comes again)
+    auto switchFile(const std::string& name) -> void;
 
     std::fstream fs;
     std::thread* th;
@@ -76,7 +92,11 @@ class FileQueueManager : public Queue {
     bool m_firstSectionWrite;  // Need for detect first section of wav file
     std::atomic_bool m_IsOutOfSpace;
     uint64_t m_freeSize;
-    std::atomic<uint64_t> m_hasWriteSize;
+    std::atomic<uint64_t> m_hasWriteSize;  // the file written now: the free space is checked per file
+    std::atomic<uint64_t> m_allWritten{0};  // every file of the run
+    std::atomic<int> m_files{0};
+    std::atomic<int> m_refuse{0};
+    std::mutex m_nameMtx;
     uint64_t m_memoryLimit = 0;  // a quarter of the RAM
     std::atomic<uint64_t> m_queueLimit{0};
     std::atomic<double> m_rate{0};

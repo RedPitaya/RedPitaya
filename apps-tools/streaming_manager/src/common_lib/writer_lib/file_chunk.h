@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <ostream>
+#include <string>
 #include <vector>
 
 /**
@@ -34,7 +35,13 @@ class FileChunk {
     // The blocks one after another; false if the stream failed
     auto writeTo(std::ostream& out) const -> bool;
 
+    // A chunk that ends the file and opens the next one (the parts of a recording): no data, the
+    // name of the next file
+    static auto nextFile(std::string name) -> Ptr;
+    auto nextFileName() const -> const std::string& { return m_nextFile; }
+
    private:
+    std::string m_nextFile;
     std::vector<Block> m_blocks;
     std::vector<std::shared_ptr<const void>> m_owners;
     std::uint64_t m_size = 0;

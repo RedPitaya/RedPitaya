@@ -212,11 +212,21 @@ auto recordStatusOf(StreamSession::Impl& p) -> RecordStatus {
     const auto a = p.adc->getRecord();
     // the network: the samples the FPGA gave, the file has none
     fill(st.adc, a.mode, a.running, a.mode == 2 ? a.samples : p.adc->getBoardSamples(), a.limit, a.written, a.writeRate, a.queue, a.file);
+    auto limits = [](StreamRecordStatus& s, const CStreamSettings::FileLimits& l, int part, uint64_t partWritten) {
+        s.limitTime = l.time;
+        s.limitSize = l.size;
+        s.splitSize = l.splitSize;
+        s.splitTime = l.splitTime;
+        s.part = static_cast<uint32_t>(std::max(0, part));
+        s.partWritten = partWritten;
+    };
+    limits(st.adc, a.limits, a.part, a.partWritten);
     st.adc.lostBoard = p.adc->getBoardLost();
     st.adc.lostQueue = p.adc->getFileDropped();
     if (p.gpioIn) {
         const auto g = p.gpioIn->getRecord();
         fill(st.gpioIn, g.mode, g.running, g.mode == 2 ? g.samples : p.gpioIn->getBoardSamples(), g.limit, g.written, g.writeRate, g.queue, g.file);
+        limits(st.gpioIn, g.limits, g.part, g.partWritten);
         st.gpioIn.lostBoard = p.gpioIn->getBoardLost();
     }
     std::error_code ec;

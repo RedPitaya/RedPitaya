@@ -52,6 +52,11 @@ struct Options {
     StreamingType streamign_type{StreamingType::NONE};
     SaveType save_type{SaveType::NONE};
     uint64_t samples{0};  // per channel; 0 - no limit
+    // streaming_improvements 4.11: the files here; 0 - none
+    double limit_time{0};     // seconds of the time line of the stream
+    uint64_t limit_size{0};   // bytes of data
+    uint64_t split_size{0};   // parts of bytes
+    double split_time{0};     // parts of seconds
     bool tdms_time{false};  // a TDMS column with the time of every sample
     // -i, as many as given, in their order: a read (NAME) or a write (NAME=VALUE, cut at the
     // first "=", the value may hold more of them)

@@ -10,7 +10,9 @@
 
 #include <gtest/gtest.h>
 
+#include <sstream>
 #include <string>
+#include "json/json.h"
 #include <vector>
 
 #include "settings_lib/stream_settings.h"
@@ -30,6 +32,8 @@ const std::vector<KeyValue> kAllKeys = {
     {"adc_capture_time", "OFF"},
     {"tdms_time_column", "ON"},
     {"samples_limit_sd", "123456789012"},
+    {"limit_time_sd", "90.5"},
+    {"split_size_sd", "1000000000"},
     {"adc_pass_mode", "FILE"},
     {"resolution", "BIT_8"},
     {"adc_decimation", "8"},
@@ -92,6 +96,8 @@ const std::vector<KeyValue> kAllKeys = {
     {"gpio_in_pass_mode", "FILE"},
     {"gpio_in_format_sd", "VCD"},
     {"gpio_in_samples_limit_sd", "123456789012"},
+    {"gpio_in_limit_size_sd", "5000000"},
+    {"gpio_in_split_time_sd", "60"},
     {"gpio_out_pass_mode", "FILE"},
     {"gpio_out_file_sd", "pattern.bin"},
     {"gpio_out_repeat", "GPIO_REP_ON"},
@@ -371,4 +377,102 @@ TEST(StreamSettingsKeys, TheVoltsOfTheTriggerSurviveTheJsonAndAnyKeyOrder) {
         ASSERT_TRUE(backward.setValue(keys[i], s.getValue(keys[i]))) << keys[i];
     EXPECT_EQ(forward.toJson(), s.toJson());
     EXPECT_EQ(backward.toJson(), s.toJson());
+}
+
+// ---- the limits of a file and its parts (streaming_improvements 4.11)
+
+TEST(StreamSettingsKeys, OneLimitAndOneSplitAtATime) {
+    CStreamSettings s;
+    ASSERT_TRUE(s.setValue("limit_time_sd", "600"));
+    ASSERT_TRUE(s.setValue("limit_size_sd", "2000000000"));
+    EXPECT_EQ(s.getValue("limit_time_sd"), "0") << "the size took its place";
+    EXPECT_EQ(s.getADCLimits().size, 2000000000u);
+    ASSERT_TRUE(s.setValue("split_time_sd", "300"));
+    ASSERT_TRUE(s.setValue("split_size_sd", "1073741824"));
+    EXPECT_EQ(s.getValue("split_time_sd"), "0");
+    EXPECT_EQ(s.getADCLimits().splitSize, 1073741824u);
+    // a 0 clears only its own
+    ASSERT_TRUE(s.setValue("limit_time_sd", "0"));
+    EXPECT_EQ(s.getADCLimits().size, 2000000000u);
+    // the GPIO input has its own
+    EXPECT_EQ(s.getGPIOInLimits().size, 0u);
+    ASSERT_TRUE(s.setValue("gpio_in_split_size_sd", "1000"));
+    EXPECT_EQ(s.getGPIOInLimits().splitSize, 1000u);
+    EXPECT_EQ(s.getADCLimits().splitSize, 1073741824u);
+}
+
+TEST(StreamSettingsKeys, ABadTimeOfALimitIsRejected) {
+    CStreamSettings s;
+    const std::string before = s.toJson();
+    EXPECT_FALSE(s.setValue("limit_time_sd", "-1"));
+    EXPECT_FALSE(s.setValue("split_time_sd", "1e12")) << "more than a year";
+    EXPECT_FALSE(s.setValue("split_time_sd", "nan"));
+    EXPECT_FALSE(s.setValue("limit_size_sd", "-5"));
+    EXPECT_FALSE(s.setValue("gpio_in_limit_time_sd", "x"));
+    EXPECT_EQ(s.getValue("gpio_in_no_such_sd"), "ERROR");
+    EXPECT_EQ(s.toJson(), before);
+    CStreamSettings::FileLimits bad;
+    bad.time = -3;
+    EXPECT_FALSE(s.setADCLimits(bad));
+}
+
+TEST(StreamSettingsKeys, TheLimitsGoThroughTheJson) {
+    CStreamSettings a;
+    CStreamSettings::FileLimits l;
+    l.time = 12.5;
+    l.splitSize = 4096;
+    ASSERT_TRUE(a.setADCLimits(l));
+    CStreamSettings::FileLimits g;
+    g.size = 777;
+    g.splitTime = 3;
+    ASSERT_TRUE(a.setGPIOInLimits(g));
+    CStreamSettings b;
+    ASSERT_TRUE(b.parseJson(a.toJson()));
+    EXPECT_EQ(b.getADCLimits().time, 12.5);
+    EXPECT_EQ(b.getADCLimits().splitSize, 4096u);
+    EXPECT_EQ(b.getGPIOInLimits().size, 777u);
+    EXPECT_EQ(b.getGPIOInLimits().splitTime, 3.0);
+    // a configuration of before has none of them: no limit, one file
+    Json::Value old;
+    std::istringstream in(a.toJson());
+    ASSERT_TRUE(Json::parseFromStream(Json::CharReaderBuilder(), in, &old, nullptr));
+    for (const char* k : {"limit_time_sd", "limit_size_sd", "split_size_sd", "split_time_sd"}) {
+        old["adc_streaming"].removeMember(k);
+        old["gpio_streaming"].removeMember(std::string("gpio_in_") + k);
+    }
+    CStreamSettings c;
+    ASSERT_TRUE(c.parseJson(Json::writeString(Json::StreamWriterBuilder(), old)));
+    EXPECT_EQ(c.getADCLimits().time, 0.0);
+    EXPECT_EQ(c.getADCLimits().splitSize, 0u);
+    EXPECT_EQ(c.getGPIOInLimits().size, 0u);
+}
+
+// The JSON keeps the rule of the keys: one limit and one split at a time
+TEST(StreamSettingsKeys, TheJsonKeepsOneLimitAndOneSplit) {
+    CStreamSettings a;
+    Json::Value j;
+    {
+        std::istringstream in(a.toJson());
+        ASSERT_TRUE(Json::parseFromStream(Json::CharReaderBuilder(), in, &j, nullptr));
+    }
+    // both given: the time, the size of a part
+    j["adc_streaming"]["limit_time_sd"] = 60.0;
+    j["adc_streaming"]["limit_size_sd"] = Json::UInt64(1000000);
+    j["adc_streaming"]["split_size_sd"] = Json::UInt64(2000000);
+    j["adc_streaming"]["split_time_sd"] = 10.0;
+    CStreamSettings b;
+    ASSERT_TRUE(b.parseJson(Json::writeString(Json::StreamWriterBuilder(), j)));
+    EXPECT_EQ(b.getADCLimits().time, 60.0);
+    EXPECT_EQ(b.getADCLimits().size, 0u);
+    EXPECT_EQ(b.getADCLimits().splitSize, 2000000u);
+    EXPECT_EQ(b.getADCLimits().splitTime, 0.0);
+    // the struct alike
+    CStreamSettings::FileLimits both;
+    both.time = 5;
+    both.size = 10;
+    both.splitSize = 20;
+    both.splitTime = 30;
+    ASSERT_TRUE(b.setGPIOInLimits(both));
+    EXPECT_EQ(b.getGPIOInLimits().size, 0u);
+    EXPECT_EQ(b.getGPIOInLimits().splitTime, 0.0);
 }

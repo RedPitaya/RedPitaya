@@ -189,7 +189,15 @@ class CBoard : public QObject {
         uint64_t lostFile = 0;
         double fileRate = 0;   // the measured write speed of the file, bytes per second
         double fileQueue = 0;  // what its queue in memory holds of its limit, 0..1
+        int part = 0;          // the part of the file written now (streaming_improvements 4.11)
+        uint64_t partBytes = 0;
+        QString fileNow;       // its file
     };
+    // the limit of a recording and its parts, as getRecord gives them: limitKind (none, samples,
+    // time, size), frac, left (seconds), doneText, need (bytes the limit takes), part, partBytes,
+    // parts (about how many), splitSize, splitTime
+    auto fillLimit(QVariantMap& r, uint64_t samples, uint64_t written, double limitSamples, double limitTime, double limitSize, double splitSize,
+                   double splitTime, int part, uint64_t partBytes) -> void;
 
     // Error and Warning show with "Errors only"; the console colours them
     enum class Log { Error = 0, Warning = 1, Normal = 2, Detail = 3 };
@@ -204,6 +212,7 @@ class CBoard : public QObject {
     auto updateOffline() -> void;
     auto applyBoardInfo(const BoardInfoMessage& info) -> void;
     auto settings() -> CStreamSettings*;
+    auto recordedFiles() -> QString;
     auto adcStopped(const QString& why, bool error, bool broken = false) -> void;
     auto createStreaming() -> void;
     auto startADCFPGAStreaming() -> void;

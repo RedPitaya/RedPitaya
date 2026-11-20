@@ -178,6 +178,8 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
             p.lastRecord = Record();
             p.lastRecord.mode = p.runMode;
             p.lastRecord.limit = net ? 0 : settings.getADCSamples();
+            if (!net)
+                p.lastRecord.limits = settings.getADCLimits();
         }
         auto decimation = settings.getADCDecimation();
         uint8_t bits = settings.getADCResolution().value == CStreamSettings::Resolution::BIT_8 ? 8 : 16;
@@ -227,6 +229,9 @@ auto ADCStreamServer::start(const CStreamSettings& settings, const ADCStreamOpti
             p.file = CStreamingFile::create(
                 settings.getADCFormat(), path, settings.getADCSamples(), settings.getADCType().value == CStreamSettings::DataType::VOLT, options.testMode, isPlatform);
             p.file->setTDMSTimeColumn(settings.getTDMSTimeColumn().value == CStreamSettings::State::ON);
+            const auto limits = settings.getADCLimits();
+            p.file->setLimits(limits.time, limits.size, settings.adcBufferSeconds(board.adcRate));
+            p.file->setSplit(limits.splitSize, limits.splitTime);
             auto self = std::weak_ptr<Impl>(m_pimpl);
             p.file->stopNotify.connect([self](CStreamingFile::EStopReason r) {
                 auto impl = self.lock();
@@ -460,6 +465,8 @@ auto ADCStreamServer::Impl::refreshRecord() -> void {
     lastRecord.writeRate = file->getWriteRate();
     lastRecord.queue = file->getQueueFill();
     lastRecord.file = file->getCSVFileName();
+    lastRecord.part = file->getPart();
+    lastRecord.partWritten = file->getPartSize();
 }
 
 auto ADCStreamServer::getRunMode() -> int {

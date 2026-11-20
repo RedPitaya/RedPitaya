@@ -41,9 +41,13 @@ Rectangle {
         : need > 0 ? "The limit takes about " + Theme.bytes(need) + (needShort ? ", more than is free: the recording stops when the disk is full, at about " + Math.floor(rec.free / need * 100) + "% of the limit" : "")
         : rec.dataRate > 0 ? "Full in about " + dur(rec.free / rec.dataRate) + " at " + Theme.bytes(rec.dataRate) + "/s (the rate of these settings)" : ""
     function dur(sec) { if (!(sec >= 0) || !isFinite(sec)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h " + String(Math.round(sec % 3600 / 60)).padStart(2, "0") + " min" }
-    readonly property real recFrac: rec.limit ? Math.min(1, (rec.samples || 0) / rec.limit) : (rec.total ? 1 - rec.free / rec.total : 0)
+    // a limit of samples, a time or a size (streaming_improvements 4.11): CBoard::fillLimit
+    readonly property bool hasLimit: !!rec.limitKind && rec.limitKind !== "none"
+    readonly property real recFrac: hasLimit ? (rec.frac || 0) : (rec.total ? 1 - rec.free / rec.total : 0)
+    readonly property bool parted: rec.part > 1 || rec.splitSize > 0 || rec.splitTime > 0
+    readonly property string partText: "part " + rec.part + (rec.parts > 1 ? " of about " + rec.parts : "")
     readonly property string recText: !rec.dest ? "" : sdDest && !rec.known ? "The board does not report its recording (a streaming server older than 2026-11-18)" : rec.running
-        ? (rec.limit ? Math.round(recFrac * 100) + "% of the limit · " + Theme.count(rec.samples) + " of " + Theme.count(rec.limit) + " · about " + dur((rec.limit - rec.samples) / recRate) + " left"
+        ? (hasLimit ? Math.round(recFrac * 100) + "% of the limit · " + rec.doneText + " · about " + dur(rec.left) + " left" + (parted ? " · " + partText : "")
                      : (sdDest ? "SD card" : "PC disk") + " full in about " + dur(rec.free / thru) + " at " + Theme.bytes(thru) + "/s")
           + " · " + Theme.bytes(rec.free) + " free of " + Theme.bytes(rec.total)
         : (sdDest ? "SD card: " : "PC disk: ") + Theme.bytes(rec.free) + " free of " + Theme.bytes(rec.total)
@@ -345,10 +349,17 @@ Rectangle {
             Kv { label: onSd ? "Written on the board" : "Received"; value: onSd ? Theme.bytes(rec.written || 0) : s.online ? Theme.bytes(stats.received || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: onSd ? "SD card" : "Speed"; value: onSd ? (rec.running ? Theme.bytes(root.thru) + "/s · " + Math.round(rec.queue * 100) + " %" : Theme.bytes(rec.free) + " free") : s.online ? Theme.bytes(stats.speed || 0) + "/s" : "-"; valueColor: onSd && rec.running && rec.write > 0 && rec.write < root.dataRate ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: "Samples per channel"; value: onSd ? Theme.count(rec.samples || 0) : s.online ? Theme.count(stats.samples || 0) : "-"; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv {
+                visible: root.parted && rec.part > 0
+                label: "Part"
+                value: rec.part + (rec.parts > 1 ? " of about " + rec.parts : "") + " · " + Theme.bytes(rec.partBytes || 0) + (rec.splitSize > 0 ? " of " + Theme.bytes(rec.splitSize) : "")
+                Layout.fillWidth: true
+                Layout.preferredWidth: 10
+            }
             Kv { label: "Lost on the board"; value: onSd ? Theme.count(rec.lostBoard || 0) : s.online ? Theme.count(stats.lostBoard || 0) : "-"; valueColor: (onSd ? rec.lostBoard : stats.lostBoard) > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: onSd ? "Lost by the SD queue" : "Lost on this PC"; value: onSd ? Theme.count(rec.lostQueue || 0) : s.online ? Theme.count(stats.lostFile || 0) : "-"; valueColor: (onSd ? rec.lostQueue : stats.lostFile) > 0 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             // the write speed of the file on this PC and the fill of its queue in memory (half full: red, the data are lost once it is full)
-            Kv { label: onSd ? "Time left" : "Disk write"; value: onSd ? (rec.running ? (rec.limit ? dur((rec.limit - rec.samples) / recRate) : "SD full in " + dur(rec.free / root.thru)) : (rec.limit && rec.samples >= rec.limit ? "done" : "stopped")) : s.online && stats.fileRate > 0 ? Theme.bytes(stats.fileRate) + "/s · " + Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: !onSd && stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
+            Kv { label: onSd ? "Time left" : "Disk write"; value: onSd ? (rec.running ? (root.hasLimit ? dur(rec.left) : "SD full in " + dur(rec.free / root.thru)) : (root.hasLimit && root.recFrac >= 0.999 ? "done" : "stopped")) : s.online && stats.fileRate > 0 ? Theme.bytes(stats.fileRate) + "/s · " + Math.round((stats.fileQueue || 0) * 100) + " %" : "-"; valueColor: !onSd && stats.fileQueue > 0.5 ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
             Kv { label: "Trigger"; value: s.trigText; valueColor: s.trigNoSource ? Theme.dangerText : Theme.value; Layout.fillWidth: true; Layout.preferredWidth: 10 }
         }
         // the progress of the recording: the limit, else the disk or the SD card
@@ -362,7 +373,7 @@ Rectangle {
                 radius: 3
                 color: Theme.border
                 // before a start to this computer: the disk used, then what the limit takes of it
-                Rectangle { width: parent.width * (root.pcBefore ? 1 - rec.free / rec.total : root.recFrac); height: parent.height; radius: 3; color: rec.limit && !root.pcBefore ? Theme.accent : Theme.muted }
+                Rectangle { width: parent.width * (root.pcBefore ? 1 - rec.free / rec.total : root.recFrac); height: parent.height; radius: 3; color: root.hasLimit && !root.pcBefore ? Theme.accent : Theme.muted }
                 Rectangle {
                     visible: root.pcBefore && root.need > 0
                     x: parent.width * (1 - rec.free / rec.total)

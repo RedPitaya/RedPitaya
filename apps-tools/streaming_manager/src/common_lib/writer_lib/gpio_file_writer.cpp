@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <filesystem>
 
+#include "file_helper.h"
 #include "file_queue_manager.h"
 #include "logger_lib/file_logger.h"
 
@@ -26,27 +27,11 @@ CGpioFileWriter::~CGpioFileWriter() {
     close();
 }
 
-auto CGpioFileWriter::open(const std::string& path, const GpioRecording& recording) -> bool {
-    close();
-    m_rec = recording;
-    m_path = path;
-    m_limited = false;
-    m_position = 0;
-    m_line.reset();
-    m_decoder = bin_lib::GpioInDecoder(recording.rle);
-    m_haveLevels = false;
-    m_periodPs = recording.clock ? static_cast<uint64_t>(std::llround(1e12 * recording.decimation / static_cast<double>(recording.clock))) : 1;
+auto CGpioFileWriter::rate() const -> double {
+    return m_rec.clock ? static_cast<double>(m_rec.clock) / std::max<uint32_t>(1, m_rec.decimation) : 0;
+}
 
-    m_file = std::make_unique<FileQueueManager>(m_testMode);
-    m_file->outSpaceNotify.connect([this]() { outOfSpaceNotify(); });
-    m_file->openFile(path, false);
-    if (!std::filesystem::exists(path)) {
-        m_file.reset();
-        return false;
-    }
-    m_file->startWrite(CStreamSettings::DataFormat::BIN);
-    m_open = true;
-
+auto CGpioFileWriter::newLogger(const std::string& path) -> void {
     m_logger = CFileLogger::create(path + ".log", m_testMode);
     CFileLogger::GpioProperties properties;
     properties.baseRate = m_rec.clock;
@@ -56,25 +41,28 @@ auto CGpioFileWriter::open(const std::string& path, const GpioRecording& recordi
     properties.waitCounter = m_rec.waitCounter;
     m_logger->setGpioProperties(properties);
     m_logger->setGpioSamplesLimit(m_rec.samplesLimit);
+}
 
-    std::vector<uint8_t> head;
+auto CGpioFileWriter::head(std::vector<uint8_t>& out) -> void {
     switch (m_rec.format.value) {
         case CStreamSettings::GPIOFormat::BIN: {
             bin_lib::FileInfo info;
             info.source = bin_lib::Source::GPIO_IN;
             info.clock = m_rec.clock;
             info.decimation = m_rec.decimation;
-            info.startTime = m_rec.startTime;
+            // a part: the time of its first sample
+            const double r = rate();
+            info.startTime = m_rec.startTime && r > 0 ? m_rec.startTime + static_cast<int64_t>(std::llround(static_cast<double>(m_partStart) / r * 1e9)) : m_rec.startTime;
             if (m_rec.triggerMode)
                 info.flags |= bin_lib::FILE_FLAG_TRIGGER_MODE;
             if (m_rec.waitCounter)
                 info.flags |= bin_lib::FILE_FLAG_WAIT_COUNTER;
             info.channels = {{1, bin_lib::SampleType::GPIO_IN_WORD, static_cast<uint16_t>(m_rec.rle ? bin_lib::CHANNEL_FLAG_RLE : 0), 0}};
-            head = bin_lib::fileHeader(info);
+            out = bin_lib::fileHeader(info);
             break;
         }
         case CStreamSettings::GPIOFormat::CSV:
-            text("sample,p,n\n", head);
+            text("sample,p,n\n", out);
             break;
         case CStreamSettings::GPIOFormat::VCD:
             text("$comment Red Pitaya GPIO input, DIO0..7 P and N $end\n"
@@ -84,10 +72,66 @@ auto CGpioFileWriter::open(const std::string& path, const GpioRecording& recordi
                  "$var wire 8 n n[7:0] $end\n"
                  "$upscope $end\n"
                  "$enddefinitions $end\n",
-                 head);
+                 out);
             break;
     }
-    return queue(std::move(head));
+}
+
+auto CGpioFileWriter::open(const std::string& path, const GpioRecording& recording) -> bool {
+    close();
+    m_rec = recording;
+    m_base = path;
+    m_part = 1;
+    m_total = m_partStart = m_allBytes = m_partBytes = 0;
+    const bool parts = !m_testMode && (m_rec.limits.splitSize || m_rec.limits.splitTime > 0);
+    m_path = parts ? partFileName(path, 1) : path;
+    m_limited = false;
+    m_clock.start(m_rec.limits.time, m_rec.bufferSeconds);
+    m_position = 0;
+    m_line.reset();
+    m_decoder = bin_lib::GpioInDecoder(recording.rle);
+    m_haveLevels = false;
+    m_periodPs = recording.clock ? static_cast<uint64_t>(std::llround(1e12 * recording.decimation / static_cast<double>(recording.clock))) : 1;
+
+    m_file = std::make_unique<FileQueueManager>(m_testMode);
+    m_file->outSpaceNotify.connect([this]() { outOfSpaceNotify(); });
+    m_file->openFile(m_path, false);
+    if (!std::filesystem::exists(m_path)) {
+        m_file.reset();
+        return false;
+    }
+    m_file->startWrite(CStreamSettings::DataFormat::BIN);
+    m_open = true;
+    newLogger(m_path);
+    std::vector<uint8_t> h;
+    head(h);
+    m_allBytes += h.size();
+    return queue(std::move(h));
+}
+
+// The part ends after what is queued, the next one starts with its head and its report; the
+// samples of a part count from 0. The decoder goes on: the runs of the lanes do across the parts
+auto CGpioFileWriter::beginPart() -> void {
+    m_partStart = m_total;
+    m_position = 0;
+    m_line.reset();
+    m_haveLevels = false;
+}
+
+auto CGpioFileWriter::nextPart(std::vector<uint8_t>&& h) -> bool {
+    m_part++;
+    m_path = partFileName(m_base, m_part);
+    if (m_logger) {
+        m_logger->setFileWrite(m_file->writeRate(), m_file->queueLimit());
+        if (!m_testMode)
+            m_logger->dumpToFile();
+    }
+    newLogger(m_path);
+    if (!m_file->addFileSwitch(m_path))
+        return false;
+    m_partBytes = 0;
+    m_allBytes += h.size();
+    return queue(std::move(h));
 }
 
 auto CGpioFileWriter::write(const uint32_t* words, size_t count, uint64_t lost, uint64_t wait, uint32_t triggerCount) -> Result {
@@ -97,8 +141,31 @@ auto CGpioFileWriter::write(const uint32_t* words, size_t count, uint64_t lost, 
         return Result::LIMIT;
     if (m_file->isOutOfSpace())
         return Result::FULL;
-    std::vector<uint8_t> out;
+    const auto& lim = m_rec.limits;
+    const double r = rate();
+    // the time limit: a buffer whose data starts past it (after a wait for the trigger) stays out
+    if (lim.time > 0 && r > 0 && static_cast<double>(m_total + lost + wait) >= lim.time * r) {
+        m_limited = true;
+        return Result::LIMIT;
+    }
     const uint64_t samples = bin_lib::gpioInSamples(words, count, m_rec.rle);
+    if (r > 0)
+        m_clock.buffer(static_cast<double>(samples) / r);
+    // the next part: the data of the part, or its time line (the buffer before reached it)
+    bool split = false;
+    if (!m_testMode && m_partBytes > 0) {
+        const bool bySize = lim.splitSize && m_partBytes + count * 4 + 64 > lim.splitSize;
+        const bool byTime = lim.splitTime > 0 && r > 0 && static_cast<double>(m_total - m_partStart) >= lim.splitTime * r;
+        split = bySize || byTime;
+    }
+    // the positions of the new part, the head of its file once the buffer is taken
+    if (split)
+        beginPart();
+    std::vector<uint8_t> h;
+    if (split)
+        head(h);
+    std::vector<uint8_t> out;
+    const uint64_t before = m_position;
     if (m_rec.format.value == CStreamSettings::GPIOFormat::BIN) {
         bin_lib::BlockInfo block;
         block.triggerCount = triggerCount;
@@ -113,15 +180,38 @@ auto CGpioFileWriter::write(const uint32_t* words, size_t count, uint64_t lost, 
             gap(lost + wait, out);
         runs(words, count, out);
     }
+    // the size limit (the heads too): the buffer that would go over it stays out, and no part
+    // of a head only is begun for it
+    if (lim.size && m_allBytes + h.size() + out.size() > lim.size) {
+        m_position = before;
+        m_limited = true;
+        return Result::LIMIT;
+    }
+    if (split && !nextPart(std::move(h)))
+        return m_file->isOutOfSpace() ? Result::FULL : Result::ERROR;
+    m_allBytes += out.size();
+    m_partBytes += out.size();
     if (!queue(std::move(out)))
         return m_file->isOutOfSpace() ? Result::FULL : Result::ERROR;
+    m_total += m_position - before;
     m_logger->addMetric(CFileLogger::EMetric::RECIVE_DATE, count * 4);
     m_logger->addGpioMetric(count * 4, count, samples, lost, wait, triggerCount);
-    if (m_rec.samplesLimit && m_position >= m_rec.samplesLimit) {
+    if ((m_rec.samplesLimit && m_total >= m_rec.samplesLimit) || (lim.time > 0 && r > 0 && static_cast<double>(m_total) >= lim.time * r)) {
         m_limited = true;
         return Result::LIMIT;
     }
     return Result::OK;
+}
+
+auto CGpioFileWriter::timeUp() -> bool {
+    if (!m_open || m_limited || !m_clock.due())
+        return false;
+    m_limited = true;
+    return true;
+}
+
+auto CGpioFileWriter::partBytes() -> uint64_t {
+    return m_file ? m_file->fileSize() : 0;
 }
 
 auto CGpioFileWriter::writtenBytes() -> uint64_t {

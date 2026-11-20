@@ -45,6 +45,14 @@ ApplicationWindow {
     }
     // it closes indeed (closing is also sent when the close is refused)
     signal gone()
+    // the parts of a recording in parts (streaming_improvements 4.11): the one before or after
+    // opens in a window of its own (Recordings.qml)
+    signal openPart(string path)
+    readonly property var partList: {
+        const me = recordings.list.find(r => r.path === win.path)
+        return me && me.partOf ? recordings.list.filter(r => r.partOf === me.partOf).sort((a, b) => a.part - b.part) : []
+    }
+    readonly property int partIdx: partList.findIndex(r => r.path === win.path)
 
     readonly property var info: rv.info
     readonly property double total: info.total || 0
@@ -276,6 +284,13 @@ ApplicationWindow {
                           + (win.info.waited > 0 ? " · waited for a trigger " + Theme.count(win.info.waited) : "")
                 }
             }
+            RowLayout {
+                visible: win.partList.length > 1
+                spacing: 6
+                Btn { kind: "outline"; compact: true; text: "◀"; enabled: win.partIdx > 0; Accessible.name: "The part before"; onClicked: win.openPart(win.partList[win.partIdx - 1].path) }
+                Text { text: "part " + (win.partIdx + 1) + " of " + win.partList.length; color: Theme.value; font.pixelSize: Theme.fsSm; font.family: Theme.mono }
+                Btn { kind: "outline"; compact: true; text: "▶"; enabled: win.partIdx >= 0 && win.partIdx < win.partList.length - 1; Accessible.name: "The part after"; onClicked: win.openPart(win.partList[win.partIdx + 1].path) }
+            }
             Btn { id: fileBtn; kind: "outline"; text: "File ▾"; active: fileMenu.opened; onClicked: fileMenu.popupFor(fileBtn) }
         }
 
@@ -302,7 +317,15 @@ ApplicationWindow {
                     text: "IN" + modelData
                     checked: !win.hidden[modelData]
                     onClicked: { const h = Object.assign({}, win.hidden); h[modelData] = !checked; win.hidden = h }
-                    Rectangle { x: parent.indicator.width + 4; anchors.bottom: parent.bottom; width: 12; height: 3; color: win.color(parent.modelData) }
+                    // the colour of the input under its name (where the text of the box starts)
+                    Rectangle {
+                        x: parent.contentItem.x + parent.contentItem.leftPadding
+                        anchors.bottom: parent.bottom
+                        width: parent.contentItem.contentWidth
+                        height: 3
+                        radius: 1
+                        color: win.color(parent.modelData)
+                    }
                 }
             }
             Item { Layout.fillWidth: true }

@@ -2,7 +2,9 @@
 #define STREAMING_LIB_STREAMING_FILE_H
 
 #include <atomic>
+#include <condition_variable>
 #include <memory>
+#include <thread>
 
 #include "data_lib/signal.hpp"
 #include "logger_lib/file_logger.h"
@@ -10,6 +12,7 @@
 #include "wav_lib/wav_writer.h"
 #include "writer_lib/file_helper.h"
 #include "writer_lib/file_queue_manager.h"
+#include "writer_lib/time_limit_clock.h"
 
 #define FILE_PATH "/home/redpitaya/streaming_files/adc"
 #define ZERO_BUFFER_SIZE 1048576
@@ -58,6 +61,37 @@ class CStreamingFile {
     // wf_* properties of the channels and in the row of every buffer in the group "Buffers")
     auto setTDMSTimeColumn(bool enable) -> void;
 
+    // Besides the sample limit of create(): stop after `seconds` of the time line of the stream
+    // (the trigger waits count) or before the data would go over `bytes`; 0 - none. Taken at a
+    // buffer: the one that crosses the time limit is written, one whose data starts past it is
+    // not. While a trigger is waited for no buffer comes: the time limit ends the recording on the
+    // clock too, once the limit, a buffer and a margin passed (TimeLimitClock); `bufferSeconds`:
+    // about how long a buffer lasts (0 - unknown: learnt from the buffers). Before run().
+    auto setLimits(double seconds, uint64_t bytes, double bufferSeconds = 0) -> void;
+    // the tests: the margin of the clock of the time limit
+    auto setTimeMargin(double seconds) -> void { m_clock.setMargin(seconds); }
+    // The recording in parts of about `bytes` of data or `seconds` of the time line (0 - none):
+    // <name>_0001.<ext>, _0002 ..., each a whole file with its header and its report, its time
+    // line from 0 and the time of its first sample in its header; the stream goes on between
+    // them. A WAV goes on in a new part before 4 GB in any case (32 bit sizes in its header):
+    // without parts asked for, the first file keeps its name and the next ones are _0002 ...
+    // Before run().
+    auto setSplit(uint64_t bytes, double seconds) -> void;
+    // the part the file thread writes now, from 1 (0 before run); the file of it is
+    // getCSVFileName(), its bytes getPartSize(). The stream may be in the next one already: the
+    // three go together on the card
+    auto getPart() -> int;
+    // every file of the recording so far, the first one first
+    auto getFileNames() -> std::vector<std::string>;
+    // bytes in the part written now
+    auto getPartSize() -> uint64_t;
+    // the most a WAV part takes (its header has 32 bit sizes): 4 GB less a margin for a buffer
+    static constexpr uint64_t kWavPartMax = 0xFFFFFFFFull - 64ull * 1024 * 1024;
+    // the tests: a smaller one
+    auto setWavPartMax(uint64_t bytes) -> void { m_wavPartMax = bytes; }
+    // the tests: the next `n` chunks refused as by a full queue
+    auto refuseChunks(int n) -> void { m_file_manager->refuseChunks(n); }
+
    private:
     CStreamingFile(const CStreamingFile&) = delete;
     CStreamingFile(CStreamingFile&&) = delete;
@@ -75,8 +109,40 @@ class CStreamingFile {
     std::string m_host;
     std::string m_port;
     std::string m_filePath;
-    std::string m_file_out;
+    std::string m_file_out;  // the part written now (m_logMtx)
+    std::string m_base;      // the name given to run(): the parts are named from it
+    std::vector<std::string> m_files;  // of the recording (m_logMtx)
     uint64_t m_samples;
+    double m_limitTime = 0;
+    double m_bufferHint = 0;
+    // the time limit on the clock: a thread that stops the recording when it is due
+    TimeLimitClock m_clock;
+    std::thread m_watch;    // m_threadMtx: any thread may stop
+    std::mutex m_threadMtx;
+    std::mutex m_watchMtx;  // m_watchStop
+    std::condition_variable m_watchCv;
+    bool m_watchStop = false;
+    auto startWatch() -> void;
+    auto stopWatch() -> void;
+    uint64_t m_limitSize = 0;
+    uint64_t m_splitSize = 0;
+    uint64_t m_wavPartMax = kWavPartMax;
+    double m_splitTime = 0;
+    std::atomic<int> m_part{0};
+    uint64_t m_partBytes = 0;  // the data given to the part, to the whole recording
+    uint64_t m_allBytes = 0;
+    uint64_t m_partLine = 0;  // samples of the time line (with the gaps) of the part, of all
+    uint64_t m_line = 0;
+    uint64_t m_fileLostDone = 0;  // the file losses of the parts before (their loggers are gone; m_logMtx)
+    bool m_partFresh = true;      // no chunk of the file taken yet: the next one carries its header
+    std::atomic<bool> m_stopped{false};
+    std::mutex m_logMtx;  // m_fileLogger and m_file_out: a part swaps them, other threads read
+    auto logger() -> CFileLogger::Ptr;
+    auto partName(int part) -> std::string;
+    auto nextPart() -> bool;
+    auto resetHeaders() -> void;
+    // the chunk to the file: false when the size limit stops the recording before it
+    auto put(FileChunk::Ptr chunk, DataLib::CDataBuffersPackDMA::Ptr pack, const CFileLogger::Ptr& log) -> bool;
     std::mutex m_stopMtx;
     std::map<DataLib::EDataBuffersPackChannel, uint64_t> m_passSizeSamples;
 
