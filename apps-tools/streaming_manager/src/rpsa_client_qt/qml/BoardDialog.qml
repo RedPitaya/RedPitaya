@@ -44,6 +44,9 @@ Dialog2 {
 
     readonly property var tabs: [
         ["adc", "ADC", true],
+        ["dac", "DAC", !!(b && b.caps.dac)],
+        ["gpio", "GPIO", !!(b && b.caps.gpio)],
+        ["trig", "Triggers", true],
         ["mem", "Memory", true],
         ["set", "Board", true]
     ]
@@ -103,7 +106,7 @@ Dialog2 {
                 y: 18
                 width: sv.availableWidth - 40
                 active: root.b !== null && root.opened
-                sourceComponent: root.tab === "mem" ? memTab : root.tab === "set" ? setTab : root.tab === "pc" ? pcTab : adcTab
+                sourceComponent: root.tab === "mem" ? memTab : root.tab === "set" ? setTab : root.tab === "pc" ? pcTab : root.tab === "trig" ? trigTab : root.tab === "dac" ? dacTab : root.tab === "gpio" ? gpioTab : adcTab
             }
         }
     }
@@ -119,7 +122,10 @@ Dialog2 {
     ]
 
     Component { id: adcTab; AdcTab { b: root.b } }
+    Component { id: dacTab; DacTab { b: root.b } }
+    Component { id: gpioTab; GpioTab { b: root.b } }
     Component { id: memTab; MemoryTab { b: root.b } }
+    Component { id: trigTab; TriggersTab { b: root.b } }
     Component { id: setTab; BoardTab { b: root.b } }
     Component { id: pcTab; PcTab { b: root.b } }
 }

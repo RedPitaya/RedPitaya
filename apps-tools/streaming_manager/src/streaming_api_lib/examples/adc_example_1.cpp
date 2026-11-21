@@ -14,10 +14,18 @@ class Callback : public ADCCallback {
    public:
     uint64_t counter = 0;
     uint64_t fpgaLost = 0;
+    int low = 32767;  // the lowest and the highest code of IN1
+    int high = -32768;
 
     void receivePack(ADCStreamClient* client, ADCPack& pack) override {
         counter += pack.channel1.samples + pack.channel2.samples;
         fpgaLost += std::max({pack.channel1.fpgaLost, pack.channel2.fpgaLost, pack.channel3.fpgaLost, pack.channel4.fpgaLost});
+        // channel1.raw points into the buffer of the client (no copy), valid in this callback
+        const auto& raw = pack.channel1.raw;
+        for (size_t i = 0; i < raw.size(); i++) {
+            low = std::min<int>(low, raw[i]);
+            high = std::max<int>(high, raw[i]);
+        }
 
         if (counter > 50000000) {
             client->notifyStop();
@@ -148,6 +156,7 @@ int main() {
 
     std::cout << "Received samples " << callback->counter << std::endl;
     std::cout << "Number of lost samples " << callback->fpgaLost << std::endl;
+    std::cout << "IN1 codes from " << callback->low << " to " << callback->high << std::endl;
 
     return 0;
 }

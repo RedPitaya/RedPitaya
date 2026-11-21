@@ -2,6 +2,7 @@
 #include "test_helper.h"
 #include "search.h"
 #include "config.h"
+#include "json_events.h"
 
 auto getModelName(uint8_t model) -> std::string {
     // typedef enum {
@@ -161,7 +162,18 @@ auto startSearch(ClientOpt::Options& option) -> bool {
         std::string model = getModelName(item.model);
         std::cout << i++ << ")\t" << (item.mode == broadcast_lib::EMode::AB_SERVER_MASTER ? "MASTER" : "SLAVE") << "\t" << (item.host == "" ? "Unknown" : item.host) << "\t"
                   << model.c_str() << "\n";
+        if (jsonev::on()) {
+            Json::Value b;
+            b["host"] = item.host;
+            b["mac"] = item.mac;
+            b["mode"] = item.mode == broadcast_lib::EMode::AB_SERVER_MASTER ? "master" : "slave";
+            b["model"] = model;
+            b["model_id"] = item.model;
+            b["gpio"] = item.gpio;
+            jsonev::emit("board", b);
+        }
     }
+    std::cout.flush();
     if (list.empty())
         std::cout << "none\n";
     return !list.empty();

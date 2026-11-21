@@ -16,8 +16,9 @@ Rectangle {
         + (errBox.visible ? errBox.implicitHeight + col.spacing : 0)
         + (measBox.visible ? measBox.implicitHeight : 0)
     signal openSettings(string tab)
-    // Start pressed: the dashboard checks the space on the disk first
-    signal startAsked()
+    // Start pressed: the dashboard checks the space on the disk first; all: Start all of this
+    // board, the inputs (ADC, GPIO input) and then the outputs (DAC, GPIO output)
+    signal startAsked(bool all)
 
     BoardStatus { id: s; b: root.b }
     readonly property var stats: b ? b.stats : ({})
@@ -113,12 +114,64 @@ Rectangle {
             }
         }
 
-        // the streams
-        Flow {
+        // the streams, each with its own Start and Stop (streaming_improvements 4.17): in a row
+        // when they fit, four in two rows of two, else one under the other
+        GridLayout {
             id: chips
+            readonly property int count: 1 + (s.hasDac ? 1 : 0) + (s.hasGpio ? 2 : 0)
+            readonly property int fit: Math.max(1, Math.min(count, Math.floor((width + 8) / 238)))
             Layout.fillWidth: true
-            spacing: 6
-            StreamChip { name: "ADC"; text: s.adcText; active: s.running; amber: s.st === "armed" || s.st === "starting" }
+            columns: count === 4 && fit === 3 ? 2 : fit
+            columnSpacing: 8
+            rowSpacing: 8
+            StreamChip {
+                name: "ADC"
+                dotKind: s.st === "armed" || s.st === "starting" || s.st === "stopping" ? "amber" : s.running ? "ok" : s.hasError ? "red" : "grey"
+                line: s.st === "starting" ? "Starting"
+                    : s.st === "stopping" ? "Stopping"
+                    : s.st === "armed" ? "Waiting for a trigger"
+                    : s.st === "sd" ? "Writing to the SD card of the board"
+                    : s.st === "streaming" ? "Recording on this PC" + (root.parted && rec.part > 0 ? " · " + root.partText : "")
+                    : "Stopped"
+                sub: s.adcText
+                running: s.running
+                canRun: s.connected && s.st !== "stopping"
+                onStartClicked: root.startAsked(false)
+                onStopClicked: b.stopStreaming()
+            }
+            StreamChip {
+                visible: s.hasDac
+                name: "DAC"
+                dotKind: s.dacKind
+                line: s.dacLine
+                sub: s.dacFrom
+                running: s.dacRunning
+                canRun: s.dacRunning ? s.dacSt !== "stopping" : s.connected && s.dacReady
+                onStartClicked: b.startDac()
+                onStopClicked: b.stopDac()
+            }
+            StreamChip {
+                visible: s.hasGpio
+                name: "GPIO input"
+                dotKind: s.ginKind
+                line: s.ginLine
+                sub: s.ginSub
+                running: s.ginRunning
+                canRun: s.ginRunning ? s.ginSt !== "stopping" : s.connected && !s.ginOff
+                onStartClicked: b.startGpioIn()
+                onStopClicked: b.stopGpioIn()
+            }
+            StreamChip {
+                visible: s.hasGpio
+                name: "GPIO output"
+                dotKind: s.goutKind
+                line: s.goutLine
+                sub: s.goutSub
+                running: s.goutRunning
+                canRun: s.goutRunning ? s.goutSt !== "stopping" : s.connected && !s.goutOff && s.goutReady
+                onStartClicked: b.startGpioOut()
+                onStopClicked: b.stopGpioOut()
+            }
         }
 
         // preview
@@ -406,12 +459,24 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 8
             visible: s.online
+            // a board with a DAC or GPIO: every stream that is not Off (DiskDialog.go)
             Btn {
-                visible: s.connected || s.running
-                kind: s.running ? "danger" : "primary"
-                text: s.running ? "Stop" : "Start"
+                readonly property bool more: s.hasDac || s.hasGpio
+                readonly property bool any: s.running || s.dacRunning || s.ginRunning || s.goutRunning
+                visible: s.connected || any
+                kind: any ? "danger" : "primary"
+                text: more ? (any ? "Stop all of this board" : "Start all of this board") : (any ? "Stop" : "Start")
                 enabled: s.connected && s.st !== "stopping"
-                onClicked: s.running ? b.stopStreaming() : root.startAsked()
+                onClicked: {
+                    if (any) {
+                        b.stopStreaming()
+                        b.stopDac()
+                        b.stopGpioIn()
+                        b.stopGpioOut()
+                    } else {
+                        root.startAsked(more)
+                    }
+                }
             }
             Btn {
                 visible: !s.connected && !s.running
@@ -448,25 +513,44 @@ Rectangle {
     component StreamChip: Rectangle {
         id: chip
         property string name: ""
-        property string text: ""
-        property bool active: false
-        property bool amber: false
-        property bool dim: false
-        implicitHeight: 24 + Theme.fsAdd
-        implicitWidth: Math.min(chipRow.implicitWidth + 18, col.width)
+        property string dotKind: "grey"
+        property string line: ""
+        property string sub: ""
+        property bool running: false
+        property bool canRun: true
+        signal startClicked()
+        signal stopClicked()
+        Layout.fillWidth: true
+        Layout.preferredWidth: 10
+        implicitHeight: chipCol.implicitHeight + 16
         radius: Theme.radius
         color: Qt.rgba(0, 0, 0, 0.12)
         border.color: Qt.rgba(153 / 255, 153 / 255, 153 / 255, 0.5)
-        opacity: dim ? 0.55 : 1
-        clip: true
-        Row {
-            id: chipRow
-            x: 9
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 6
-            Dot { anchors.verticalCenter: parent.verticalCenter; color: chip.active ? (chip.amber ? Theme.amber : Theme.ok) : "#6a6a68" }
-            Text { text: chip.name; color: Theme.value; font.bold: true; font.pixelSize: Theme.fsSm }
-            Text { text: chip.text; color: Theme.text; font.pixelSize: Theme.fsSm; elide: Text.ElideRight; width: Math.min(implicitWidth, col.width - 80) }
+        ColumnLayout {
+            id: chipCol
+            x: 12; y: 8
+            width: parent.width - 24
+            spacing: 4
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+                Dot {
+                    color: chip.dotKind === "ok" ? Theme.ok : chip.dotKind === "amber" ? Theme.amber : chip.dotKind === "red" ? Theme.redDot : "#6a6a68"
+                    Layout.alignment: Qt.AlignVCenter
+                }
+                Text { text: chip.name; color: Theme.value; font.bold: true; font.pixelSize: Theme.fsMd; Layout.fillWidth: true }
+                Btn {
+                    visible: s.online
+                    compact: true
+                    kind: chip.running ? "danger" : "primary"
+                    text: chip.running ? "Stop" : "Start"
+                    enabled: chip.canRun
+                    Accessible.name: (chip.running ? "Stop " : "Start ") + chip.name
+                    onClicked: chip.running ? chip.stopClicked() : chip.startClicked()
+                }
+            }
+            Text { text: chip.line; color: chip.dotKind === "red" ? Theme.dangerText : Theme.text; font.pixelSize: Theme.fsSm; elide: Text.ElideRight; Layout.fillWidth: true }
+            Text { text: chip.sub; color: Theme.muted; font.pixelSize: Theme.fsSm; elide: Text.ElideRight; Layout.fillWidth: true }
         }
     }
 }

@@ -6,6 +6,28 @@
 #include <string>
 #include <vector>
 
+// The samples of a channel where the client received them, not copied (streaming_improvements
+// 4.15): valid during receivePack only; copy() what is kept. 8 bit samples are int8_t, 16 bit
+// int16_t; operator[] reads either as int16_t. Python: channel.raw is a numpy array of its own
+// copy (int8 or int16), kept as long as wanted.
+struct ADCSamples {
+    const void* data = nullptr;
+    uint32_t count = 0;
+    uint8_t bits = 0;  // 8 or 16; 0 - no data
+
+#ifndef SWIG  // Python: a numpy array instead (streaming.i)
+    auto size() const -> size_t { return count; }
+    auto empty() const -> bool { return count == 0; }
+    auto operator[](size_t i) const -> int16_t { return bits == 8 ? static_cast<const int8_t*>(data)[i] : static_cast<const int16_t*>(data)[i]; }
+    auto copy() const -> std::vector<int16_t> {
+        std::vector<int16_t> v(count);
+        for (size_t i = 0; i < count; i++)
+            v[i] = (*this)[i];
+        return v;
+    }
+#endif
+};
+
 struct ADCChannel {
     uint32_t samples = 0;
     uint8_t bitsPerSample = 0;
@@ -15,7 +37,7 @@ struct ADCChannel {
     uint8_t adcBaseBits = 0;
     uint64_t packId = 0;
     int64_t timeCapture = 0;
-    std::vector<int16_t> raw;
+    ADCSamples raw;
 };
 
 struct ADCPack {
@@ -24,6 +46,23 @@ struct ADCPack {
     ADCChannel channel2;
     ADCChannel channel3;
     ADCChannel channel4;
+};
+
+// The words of a GPIO input buffer where the client received them, not copied
+// (streaming_improvements 4.15): valid during receivePack only; copy() what is kept. Python:
+// pack.words is a numpy array (uint32) of its own copy.
+struct GPIOWords {
+    const uint32_t* data = nullptr;
+    uint32_t count = 0;
+
+#ifndef SWIG  // Python: a numpy array instead (streaming.i)
+    auto size() const -> size_t { return count; }
+    auto empty() const -> bool { return count == 0; }
+    auto operator[](size_t i) const -> uint32_t { return data[i]; }
+    auto begin() const -> const uint32_t* { return data; }
+    auto end() const -> const uint32_t* { return data + count; }
+    auto copy() const -> std::vector<uint32_t> { return std::vector<uint32_t>(data, data + count); }
+#endif
 };
 
 // A buffer of the GPIO input: 32 bit words {N count, N lines, P count, P lines}; with RLE a word
@@ -39,7 +78,7 @@ struct GPIOPack {
     uint16_t triggerBlocks = 0;
     bool rle = false;
     bool triggerMode = false;
-    std::vector<uint32_t> words;
+    GPIOWords words;
 };
 
 // Why the board ended a GPIO file (the file mode: gpio_in_pass_mode / gpio_out_pass_mode = FILE)

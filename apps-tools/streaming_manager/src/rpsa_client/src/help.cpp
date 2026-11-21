@@ -39,6 +39,9 @@ const char* kOverview =
     "  -v, --verbose         report every step\n"
     "  -q, --quiet           only the errors and the result (no progress line)\n"
     "      --reply-timeout=T how long an answer of a board is waited for (default 10s)\n"
+    "      --json            -d -s -o -G: the events as JSON Lines on stdout, one object a\n"
+    "                        line (start, progress every second, part, error, done, board,\n"
+    "                        exit with the code); everything else goes to stderr\n"
     "\n"
     "Times take a unit: 500ms, 5s, 2m; a bare number is in the unit the option names.\n"
     "Long options take - or _: --out-streaming, --tdms-time, --config-file. Values take any case.\n"
@@ -56,7 +59,7 @@ const char* kOverview =
 const char* kDetect =
     "Detect: find the boards on the network (they announce themselves on UDP port 18902).\n"
     "\n"
-    "Usage: %P -d [-t SEC]\n"
+    "Usage: %P -d [-t SEC] [--json]\n"
     "\n"
     "  -d, --detect          the mode\n"
     "  -t, --timeout=SEC     how long to listen, seconds or 500ms, 5s (default 5)\n"
@@ -123,7 +126,7 @@ const char* kStream =
     "The channels, decimation and resolution are the board's settings (%P -c -i ...).\n"
     "\n"
     "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC]\n"
-    "          [--limit-time=T] [--limit-size=SIZE] [--split=SIZE|T] [--tdms_time] [-v]\n"
+    "          [--limit-time=T] [--limit-size=SIZE] [--split=SIZE|T] [--tdms_time] [--json] [-v]\n"
     "\n"
     "  -s, --streaming       the mode\n"
     "  -h, --hosts=IP[,IP]   the boards (default: the first board found)\n"
@@ -159,7 +162,7 @@ const char* kStream =
 const char* kDac =
     "DAC: play a file here on the DAC of the boards over the network.\n"
     "\n"
-    "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [-v]\n"
+    "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [--json] [-v]\n"
     "\n"
     "  -o, --out_streaming   the mode\n"
     "  -h, --hosts=IP[,IP]   the boards (default: the first board found)\n"
@@ -177,8 +180,8 @@ const char* kGpio =
     "GPIO: the DIO0..7_P and DIO0..7_N lines of one board. The input goes into a file here, a file\n"
     "here goes to the output, or both at once (one connection: the board serves one client).\n"
     "\n"
-    "Usage: %P -G [-h IP] --in FILE [-f bin|csv|vcd] [-l SAMPLES] [-t MSEC] [-v]\n"
-    "       %P -G [-h IP] --out FILE.bin [-r inf|COUNT] [--gaps] [-v]\n"
+    "Usage: %P -G [-h IP] --in FILE [-f bin|csv|vcd] [-l SAMPLES] [-t MSEC] [--json] [-v]\n"
+    "       %P -G [-h IP] --out FILE.bin [-r inf|COUNT] [--gaps] [--json] [-v]\n"
     "       %P -G [-h IP] --in FILE --out FILE.bin ...\n"
     "\n"
     "  -G, --gpio            the mode\n"
@@ -227,6 +230,8 @@ const char* kExamples =
     "  Two channels at decimation 64, 10 s into WAV files in ./data:\n"
     "    %P -c -h 192.168.1.10 -i channel_state_1=ON -i channel_state_2=ON -i adc_decimation=64\n"
     "    %P -s -h 192.168.1.10 -f wav -d data -t 10s\n"
+    "  A script follows a 10 min recording in parts of 1 GB (JSON Lines on stdout):\n"
+    "    %P -s -h 192.168.1.10 -f bin --limit-time=10m --split=1G --json | jq -c 'select(.event != \"progress\")'\n"
     "  One million samples per channel of two boards as TDMS with the time column:\n"
     "    %P -s -h 192.168.1.10,192.168.1.11 -f tdms -l 1000000 --tdms_time\n"
     "  Save the settings of a board here, change them, write them back for good:\n"
@@ -252,12 +257,12 @@ struct Section {
 
 const std::map<std::string, Section>& sections() {
     static const std::map<std::string, Section> s = {
-        {"detect", {kDetect, "Usage: %P -d [-t SEC]\n"}},
+        {"detect", {kDetect, "Usage: %P -d [-t SEC] [--json]\n"}},
         {"config", {kConfig, "Usage: %P -c [-h IPs] -g V|V1|VV|F | -s M|F [-f FILE] | -i NAME[=VALUE] [-i ...] [-w] [-v]\n"}},
         {"remote", {kRemote, "Usage: %P -r [-h IPs] -m start|stop|start_stop|start_dac|stop_dac|start_stop_dac|watch|status [-t MSEC] [-v]\n"}},
-        {"stream", {kStream, "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC] [--limit-time=T] [--limit-size=SIZE] [--split=SIZE|T] [--tdms_time] [-v]\n"}},
-        {"dac", {kDac, "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [-v]\n"}},
-        {"gpio", {kGpio, "Usage: %P -G [-h IP] [--in FILE [-f bin|csv|vcd] [-l SAMPLES]] [--out FILE.bin [-r inf|COUNT] [--gaps]] [-t MSEC] [-v]\n"}},
+        {"stream", {kStream, "Usage: %P -s [-h IPs] -f tdms|wav|csv|bin [-d DIR] [-l SAMPLES] [-m raw|volt] [-t MSEC] [--limit-time=T] [--limit-size=SIZE] [--split=SIZE|T] [--tdms_time] [--json] [-v]\n"}},
+        {"dac", {kDac, "Usage: %P -o [-h IPs] -f tdms|wav|bin -d FILE [-r inf|COUNT] [--json] [-v]\n"}},
+        {"gpio", {kGpio, "Usage: %P -G [-h IP] [--in FILE [-f bin|csv|vcd] [-l SAMPLES]] [--out FILE.bin [-r inf|COUNT] [--gaps]] [-t MSEC] [--json] [-v]\n"}},
         {"formats", {kFormats, ""}},
         {"examples", {kExamples, ""}},
     };

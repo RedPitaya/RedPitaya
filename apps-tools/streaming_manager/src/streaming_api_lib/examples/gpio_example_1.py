@@ -11,6 +11,7 @@ import sys
 import threading
 import time
 
+import numpy as np
 import streaming
 
 
@@ -29,13 +30,16 @@ class GpioHandler(streaming.GPIOCallback):
         with self.lock:
             self.packs += 1
             self.lost += pack.fpgaLost
-            for w in pack.words:
-                p = w & 0xFF  # the P lines
-                self.samples += ((w >> 8) & 0xFF) + 1 if pack.rle else 1
-                if p != self.last:
-                    self.changes += 1
-                self.last = p
-                self.words += 1
+            # pack.words: a numpy array (uint32) of the words of the buffer, the whole buffer at once
+            w = pack.words
+            if w.size == 0:
+                return
+            p = (w & 0xFF).astype(np.int64)  # the P lines
+            self.samples += int((((w >> 8) & 0xFF) + 1).sum()) if pack.rle else int(w.size)
+            before = np.concatenate(([self.last], p[:-1]))
+            self.changes += int(np.count_nonzero(p != before))
+            self.last = int(p[-1])
+            self.words += int(w.size)
 
     def connected(self, client, host):
         print("GPIO connected to", host)

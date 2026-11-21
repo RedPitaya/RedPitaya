@@ -7,6 +7,7 @@
 #include "dac_streaming.h"
 #include "gpio_client.h"
 #include "help.h"
+#include "json_events.h"
 #include "logger_lib/file_logger.h"
 #include "options.h"
 #include "remote.h"
@@ -61,26 +62,46 @@ int main(int argc, char* argv[]) {
             break;
     }
 
+    // --json: the events on stdout, the rest on stderr; no panel, no progress lines
+    if (opt.json) {
+        if (!jsonev::enable()) {
+            aprintf(stderr, "[ERROR] --json: stdout cannot be taken for the events\n");
+            return EXIT_FAILED;
+        }
+        opt.quiet = true;
+    }
+    auto finish = [](int code) { return jsonev::on() ? jsonev::exitCode(code) : code; };
+
     g_cl = std::make_shared<ClientNetConfigManager>("", false);
     installTermSignalHandler();
     setOptions(opt);
     setReplyTimeout(opt.reply_timeout_ms);
 
     if (opt.mode == ClientOpt::Mode::SEARCH)
-        return startSearch(opt) ? EXIT_OK : EXIT_NO_BOARD;
+        return finish(startSearch(opt) ? EXIT_OK : EXIT_NO_BOARD);
 
     if (opt.hosts.size() == 0) {
         auto host = startSearch();
         if (host == "") {
             aprintf(stderr, "[ERROR] No board found: none answered the broadcast in 1 s. Give the board with -h IP\n");
-            return EXIT_NO_BOARD;
+            if (jsonev::on()) {
+                Json::Value e;
+                e["message"] = "No board found: none answered the broadcast in 1 s";
+                jsonev::emit("error", e);
+            }
+            return finish(EXIT_NO_BOARD);
         }
         opt.hosts.push_back(host);
     }
 
     if (!connectConfigServer(g_cl, opt)) {
         g_cl = nullptr;
-        return EXIT_NO_BOARD;
+        if (jsonev::on()) {
+            Json::Value e;
+            e["message"] = "No connection to the configuration port of the board";
+            jsonev::emit("error", e);
+        }
+        return finish(EXIT_NO_BOARD);
     }
 
     bool ok = true;
@@ -96,5 +117,5 @@ int main(int argc, char* argv[]) {
         ok = startGPIO(g_cl, opt);
 
     g_cl = nullptr;
-    return ok ? EXIT_OK : EXIT_FAILED;
+    return finish(ok ? EXIT_OK : EXIT_FAILED);
 }

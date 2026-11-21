@@ -203,7 +203,9 @@ auto GPIOStreamClient::Impl::runInput(uint32_t blockSize) -> void {
                 out.triggerMode = h.flags & DataLib::GPIO_FLAG_TRIGGER_MODE;
                 auto words = std::min<size_t>(h.dataSize, buffer->getDataLenght()) / 4;
                 auto data = static_cast<const uint32_t*>(buffer->getMappedDataMemory());
-                out.words.assign(data, data + words);
+                // the words stay in the buffer of the client: no copy (streaming_improvements 4.15)
+                out.words.data = data;
+                out.words.count = static_cast<uint32_t>(words);
                 m_callback->receivePack(owner, out);
             }
         }

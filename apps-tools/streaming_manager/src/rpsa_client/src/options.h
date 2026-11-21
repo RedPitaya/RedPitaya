@@ -35,6 +35,7 @@ struct Options {
     int timeout{5};             // detect, remote, streaming: milliseconds
     int reply_timeout_ms{10000};  // how long an answer of a board is waited for
     bool quiet{false};            // only the errors and the result
+    bool json{false};             // --json: the events as JSON Lines on stdout (streaming_improvements 4.13)
     std::vector<std::string> hosts{};
 
     ConfGet conf_get{ConfGet::NONE};

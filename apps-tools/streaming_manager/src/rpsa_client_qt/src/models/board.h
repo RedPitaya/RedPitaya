@@ -10,6 +10,7 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <thread>
 
 #include "broadcast_lib/asio_broadcast_socket.h"
 #include "config_net_lib/client_net_config_manager.h"
@@ -18,6 +19,9 @@
 #include "src/models/consolemodel.h"
 #include "streaming_lib/streaming_file.h"
 #include "uio_lib/memory_manager.h"
+
+// the GPIO output file (reader_lib): not included here, its header does not go after Qt (emit)
+class CGpioFileReader;
 
 // One board: its settings connection, its ADC stream to a file on this computer and what the
 // dashboard shows of it. Lives on the GUI thread; the network handlers post their work to it.
@@ -59,6 +63,29 @@ class CBoard : public QObject {
     // (hh:mm:ss), count (errors since it was cleared); empty while there is none. Cleared by a
     // start that goes or by dismissError().
     Q_PROPERTY(QVariantMap error READ getError NOTIFY errorChanged)
+    // The DAC (streaming_improvements 4.17): state stopped, connecting, playing, stopping, board
+    // (the board stopped it while it played), error; source pc (a file of this computer sent to
+    // the board) or sd (a file of its SD card); file, path, sent (bytes), rate (bytes a second),
+    // pass, passes (0: until the stop), onePack (the file fits a block: the board repeats it),
+    // done (the whole file is sent, the board plays the rest), seconds, text (why it stopped)
+    Q_PROPERTY(QVariantMap dacState READ getDacState NOTIFY dacChanged)
+    // The file of this computer the DAC plays (pcValue dacFile), read on a thread: path, reading,
+    // ok, error, format, channels (1, 2: OUT1, OUT2; 3 both), bits, bytes (of samples, all channels),
+    // samples (per channel), fileRate (WAV: its sample rate), size (of the file)
+    Q_PROPERTY(QVariantMap dacFile READ getDacFile NOTIFY dacFileChanged)
+    // The GPIO (streaming_improvements 4.17), as rpsa_client -G: in and out, each a map of
+    // state (stopped, connecting, recording (in) or playing (out), sd (in: the board writes its
+    // SD card), stopping, board (the board stopped it), error), source (pc, sd), file, path,
+    // seconds, text (why it stopped), armed (waits for a trigger, as the board says).
+    // in: packs, samples, words, bytes, lost, waited, rle, limitKind, limit (samples or seconds),
+    // frac, rate (samples a second); sd: known, written, part. out: words, bytes, rate (bytes a
+    // second), whole (the whole file is sent), waited (clocks the output waited for data, told by
+    // the board at its stop), passes (0: until the stop)
+    Q_PROPERTY(QVariantMap gpioState READ getGpioState NOTIFY gpioChanged)
+    // The file of this computer the GPIO output plays (pcValue gpioOutFile), read on a thread:
+    // path, reading, ok, error, kind (in: a recording of the input, out: output words), rle,
+    // words, samples, clock, decimation, size
+    Q_PROPERTY(QVariantMap gpioFile READ getGpioFile NOTIFY gpioFileChanged)
     // bumped when the settings of the board change: bindings that read value() depend on it
     Q_PROPERTY(int settingsRev READ settingsRev NOTIFY settingsChanged)
     Q_PROPERTY(bool settingsLoaded READ settingsLoaded NOTIFY settingsChanged)
@@ -105,6 +132,13 @@ class CBoard : public QObject {
     auto getTrigger() -> QVariantMap;
     auto getRecord() -> QVariantMap;
     auto getError() -> QVariantMap;
+    auto getDacState() -> QVariantMap;
+    auto getDacFile() -> QVariantMap;
+    auto isDacRunning() -> bool;
+    auto getGpioState() -> QVariantMap;
+    auto getGpioFile() -> QVariantMap;
+    auto isGpioInRunning() -> bool;
+    auto isGpioOutRunning() -> bool;
     // the bytes a recording to this computer takes with the limit of the settings (0: no limit
     // or the board writes its own card) and the bytes a second of its data
     auto expectedBytes() -> double;
@@ -157,6 +191,21 @@ class CBoard : public QObject {
     Q_INVOKABLE void softwareTrigger();
     Q_INVOKABLE void reconnect();
     Q_INVOKABLE void dismissError();
+    // The DAC: with dac_pass_mode DAC_NET the file of this computer (pcValue dacFile, dacRepeat
+    // once / times / inf, dacTimes) is sent to the board; with DAC_FILE the board plays its own
+    // file and only the start goes there
+    Q_INVOKABLE void startDac();
+    Q_INVOKABLE void stopDac();
+    // The GPIO input: with gpio_in_pass_mode NET into a file of this computer (pcValue
+    // gpioInFormat, gpioInLimitKind none / samples / time, gpioInLimit), with FILE the board
+    // writes its SD card. The output: with gpio_out_pass_mode NET the file of this computer
+    // (pcValue gpioOutFile, gpioOutRepeat once / times / inf, gpioOutTimes, gpioOutGaps), with
+    // FILE the board plays gpio_out_file_sd. pcValue gpioInOff, gpioOutOff: Start all of the
+    // board leaves them out
+    Q_INVOKABLE void startGpioIn();
+    Q_INVOKABLE void stopGpioIn();
+    Q_INVOKABLE void startGpioOut();
+    Q_INVOKABLE void stopGpioOut();
 
     auto startStreaming(QDateTime time) -> void;
     // a line from Start all / Stop all in the console of the board; error: also on the card,
@@ -174,6 +223,10 @@ class CBoard : public QObject {
     void triggerChanged();
     void recordChanged();
     void errorChanged();
+    void dacChanged();
+    void dacFileChanged();
+    void gpioChanged();
+    void gpioFileChanged();
     void settingsChanged();
     void pcSettingsChanged();
     // a stream lost data (for Stop all on loss)
@@ -219,7 +272,8 @@ class CBoard : public QObject {
     auto closeStreaming() -> void;
     auto updateSpeed() -> void;
     auto pollTrigger() -> void;
-    auto fileBaseName() -> QString;
+    // the name of a recording by the template, at `when` (else the start of the ADC)
+    auto fileBaseName(const QDateTime& when = QDateTime()) -> QString;
     auto pcKey(const QString& key) -> QString;
     auto setLink(const QString& link) -> bool;
     auto adcSummary() -> QString;
@@ -294,6 +348,124 @@ class CBoard : public QObject {
     uint64_t m_pcFree = 0;
     uint64_t m_pcTotal = 0;
     auto pollRecord() -> void;
+
+    // the DAC
+    struct SDacRun {
+        QString path;
+        int format = 0;    // CStreamSettings::DataFormat
+        int repeat = 0;    // 0 once, 1 N times, 2 until the stop
+        int times = 1;
+        bool gaps = false;
+        uint32_t blockSize = 0;
+        uint64_t fileBytes = 0;  // of samples, every channel
+    };
+    // what the sender thread ends with
+    enum class DacEnd { Done, Stopped, NoConnection, Lost, FileError };
+    auto connectDacHandlers() -> void;
+    auto setDacState(const QString& state, const QString& text = QString()) -> void;
+    auto dacStopped(const QString& why, bool error) -> void;
+    auto startDacSender() -> void;
+    auto dacSender(SDacRun run) -> void;
+    auto dacSenderEnded(DacEnd end, const QString& text) -> void;
+    auto joinDacSender() -> void;
+    auto readDacFile() -> void;
+    auto dacSummary() -> QString;
+
+    QString m_dacState = "stopped";
+    QString m_dacSource = "pc";
+    QString m_dacPath;
+    QString m_dacText;
+    bool m_dacStopRequested = false;
+    bool m_dacDone = false;
+    int m_dacGen = 0;  // a start: the timeouts of an older one do nothing
+    qint64 m_dacStart = 0;
+    qint64 m_dacEnd = 0;  // the stop: the time and the rate of the run stay
+    SDacRun m_dacRun;
+    std::thread m_dacThread;
+    std::atomic<bool> m_dacTerminate{false};
+    std::atomic<bool> m_dacConnected{false};
+    std::atomic<uint64_t> m_dacSent{0};
+    std::mutex m_dacNetMtx;
+    net_lib::CAsioNet::Ptr m_dacNet;  // the data connection of the sender, to close it from here
+
+    QVariantMap m_dacFile;
+    std::thread m_dacFileThread;
+    bool m_dacFileBusy = false;
+    bool m_dacFileAgain = false;  // the file changed while it was read: read it again
+
+    // the GPIO: a direction runs on a thread of its own (as rpsa_client -G)
+    enum class GpioEnd { None, Stopped, Done, Limit, TimeUp, FileError, DiskFull, NoConnection, Lost };
+    struct SGpioIn {
+        bool opened = false;
+        uint64_t packs = 0, samples = 0, words = 0, bytes = 0, lost = 0, waited = 0;
+        bool rle = false;
+        QString file;  // the part written now
+        int part = 0;
+    };
+    struct SGpioOut {
+        bool connected = false;
+        uint64_t words = 0, bytes = 0;
+    };
+    struct SGpioDir {
+        QString state = "stopped";
+        QString source = "pc";
+        QString path;
+        QString text;
+        bool stopRequested = false;
+        bool stopSent = false;
+        bool boardDone = false;  // the board answered the stop or stopped it itself
+        bool boardError = false;
+        QString boardText;
+        GpioEnd end = GpioEnd::None;  // what the thread ended with
+        QString endText;
+        int gen = 0;
+        qint64 start = 0;
+        qint64 stop = 0;
+        std::thread thread;
+        std::atomic<bool> terminate{false};
+        std::atomic<bool> running{false};  // the thread
+    };
+    auto connectGpioHandlers() -> void;
+    auto gpioRunning(const SGpioDir& d) -> bool;
+    auto setGpioState(SGpioDir& d, const QString& state, const QString& text = QString()) -> void;
+    // the board ended a direction (error: a refusal or a failure), or the thread did
+    auto gpioBoardStopped(bool out, const QString& why, bool error) -> void;
+    auto gpioThreadEnded(bool out) -> void;
+    auto gpioFinish(bool out) -> void;
+    auto gpioStopSent(bool out) -> void;
+    auto gpioInRun(QString path, int format, uint32_t blockSize, uint64_t samplesLimit, double timeLimit) -> void;
+    auto gpioClock() -> double;
+    auto gpioOutRun(std::shared_ptr<CGpioFileReader> reader, uint32_t blockSize) -> void;
+    auto readGpioFile() -> void;
+    auto gpioInSummary() -> QString;
+    auto gpioOutSummary() -> QString;
+
+    SGpioDir m_gin;
+    SGpioDir m_gout;
+    // what the thread of a start of this computer gets once the board is ready
+    int m_ginFormat = 0;  // CStreamSettings::GPIOFormat
+    uint32_t m_gpioBlock = 0;
+    std::shared_ptr<CGpioFileReader> m_goutReader;
+    std::mutex m_gpioMtx;  // the counters of the threads
+    SGpioIn m_ginStat;
+    SGpioOut m_goutStat;
+    bool m_goutWhole = false;   // the whole file is sent
+    uint64_t m_goutWaited = 0;  // clocks, at the stop
+    int m_goutPasses = 1;  // 0: until the stop
+    uint64_t m_ginLimitSamples = 0;
+    double m_ginLimitTime = 0;
+    double m_ginRate = 0;  // samples a second of the lines
+    // the board: the record of the input on its SD card, the trigger
+    StreamRecordStatus m_sdGpioIn;
+    bool m_gpioInArmed = false;
+    bool m_gpioOutArmed = false;
+    uint32_t m_gpioInTriggers = 0;
+    uint64_t m_gpioOutWait = 0;
+
+    QVariantMap m_gpioFile;
+    std::thread m_gpioFileThread;
+    bool m_gpioFileBusy = false;
+    bool m_gpioFileAgain = false;
 };
 
 #endif  // BOARD_H

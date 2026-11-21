@@ -55,6 +55,9 @@ void BoardsModel::removeBoard(const QString& ip) {
             continue;
         auto b = m_boards[i];
         b->stopStreaming();
+        b->stopDac();
+        b->stopGpioIn();
+        b->stopGpioOut();
         beginRemoveRows(QModelIndex(), i, i);
         m_boards.removeAt(i);
         endRemoveRows();
@@ -101,7 +104,8 @@ QObject* BoardsModel::boardByName(const QString& name) {
 }
 
 auto BoardsModel::summary() -> QVariantMap {
-    int online = 0, running = 0, manual = 0, errors = 0;
+    // others: boards whose DAC or GPIO runs (Stop all stops them too)
+    int online = 0, running = 0, manual = 0, errors = 0, others = 0;
     double speed = 0, received = 0, lost = 0;
     QString master;
     int masters = 0;
@@ -110,6 +114,8 @@ auto BoardsModel::summary() -> QVariantMap {
             online++;
         if (b->getIsADCStarted())
             running++;
+        if (b->isDacRunning() || b->isGpioInRunning() || b->isGpioOutRunning())
+            others++;
         if (b->isManual())
             manual++;
         if (!b->getError().isEmpty())
@@ -127,6 +133,7 @@ auto BoardsModel::summary() -> QVariantMap {
     m["boards"] = int(m_boards.size());
     m["online"] = online;
     m["running"] = running;
+    m["others"] = others;
     m["manual"] = manual;
     m["errors"] = errors;
     m["broadcast"] = int(m_boards.size()) - manual;
@@ -230,11 +237,19 @@ void BoardsModel::stopAll() {
     Q_EMIT startingChanged();
     // the masters first: the slaves stop getting the clock and the trigger
     for (auto& b : m_boards)
-        if (b->getIsMaster())
+        if (b->getIsMaster()) {
             b->stopStreaming();
+            b->stopDac();
+            b->stopGpioIn();
+            b->stopGpioOut();
+        }
     for (auto& b : m_boards)
-        if (!b->getIsMaster())
+        if (!b->getIsMaster()) {
             b->stopStreaming();
+            b->stopDac();
+            b->stopGpioIn();
+            b->stopGpioOut();
+        }
 }
 
 void BoardsModel::triggerAll() {

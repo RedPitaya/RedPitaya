@@ -1,4 +1,5 @@
 #include <atomic>
+#include <filesystem>
 #include "streaming.h"
 #include "records.h"
 #include "config.h"
@@ -7,6 +8,7 @@
 #include "net_lib/asio_net.h"
 #include "remote.h"
 #include "settings_lib/stream_settings.h"
+#include "json_events.h"
 #include "streaming_lib/streaming_file.h"
 #include "test_helper.h"
 #include "panel.h"
@@ -28,6 +30,23 @@ std::atomic<int> g_runClientCounter;
 std::atomic<int> g_clientsRunning(0);
 std::map<std::string, std::string> g_files;  // the file of each board
 std::map<std::string, bool> g_endedByBoard;  // the board or the connection ended it, not this client
+// --json (streaming_improvements 4.13), under g_smutex: the file object of each board while it
+// streams, the files of its recording at its end, the parts told so far
+std::map<std::string, std::weak_ptr<streaming_lib::CStreamingFile>> g_fileObj;
+std::map<std::string, std::vector<std::string>> g_fileList;
+std::map<std::string, size_t> g_partsTold;
+std::map<std::string, std::string> g_stopReason;  // why each board ended (the done event)
+
+// an error of a board as an event too (--json)
+static auto jsonError(const std::string& host, const std::string& text) -> void {
+    if (!jsonev::on())
+        return;
+    Json::Value e;
+    if (!host.empty())
+        e["host"] = host;
+    e["message"] = text;
+    jsonev::emit("error", e);
+}
 // the levels of the channels since the panel took them: min and max in % of the full scale
 struct Levels {
     std::array<int, 4> min{{101, 101, 101, 101}};
@@ -242,10 +261,31 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
     }
     g_file_manager->setLimits(g_soption.limit_time, g_soption.limit_size, bufferSeconds);
     g_file_manager->setSplit(g_soption.split_size, g_soption.split_time);
+    // why the file ended by itself: a limit, the clock of the time limit, a full disk
+    auto fileStop = std::make_shared<std::atomic<int>>(-1);
+    g_file_manager->stopNotify.connect([fileStop](streaming_lib::CStreamingFile::EStopReason r) { *fileStop = static_cast<int>(r); });
     g_file_manager->run(host + "_" + g_filenameDate);
     {
         const std::lock_guard lock(g_smutex);
         g_files[host] = g_file_manager->getCSVFileName();
+        g_fileObj[host] = g_file_manager;
+        g_partsTold[host] = 1;
+    }
+    if (jsonev::on()) {
+        static const char* formats[] = {"", "TDMS", "WAV", "CSV", "BIN"};
+        Json::Value e;
+        e["host"] = host;
+        e["file"] = g_file_manager->getCSVFileName();
+        e["format"] = formats[(int)g_soption.streamign_type];
+        e["volts"] = convert_v;
+        Json::Value lim;
+        lim["samples"] = Json::UInt64(g_soption.samples);
+        lim["time"] = g_soption.limit_time;
+        lim["size"] = Json::UInt64(g_soption.limit_size);
+        lim["split_size"] = Json::UInt64(g_soption.split_size);
+        lim["split_time"] = g_soption.split_time;
+        e["limits"] = lim;
+        jsonev::emit("start", e);
     }
 
     auto g_s_file_w = std::weak_ptr<streaming_lib::CStreamingFile>(g_file_manager);
@@ -342,11 +382,14 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
     g_asionet->start();
     auto beginTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
     auto curTime = beginTime;
+    bool timedOut = false;
     while (g_file_manager->isFileThreadWork() && !g_terminate[host]) {
         sleepMs(1);
         if (g_soption.timeout >= 0) {
-            if (curTime - beginTime >= g_soption.timeout)
+            if (curTime - beginTime >= g_soption.timeout) {
+                timedOut = true;
                 break;
+            }
             curTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now()).time_since_epoch().count();
         }
         if (g_soption.verbous) {
@@ -355,15 +398,30 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
     }
 
     // not the time, the limit or Ctrl+C: the board or the connection ended it
-    if (g_terminate[host] && !sig_exit_flag && g_file_manager->isFileThreadWork()) {
+    const bool byBoard = g_terminate[host] && !sig_exit_flag && g_file_manager->isFileThreadWork();
+    if (byBoard) {
         const std::lock_guard lock(g_smutex);
         g_endedByBoard[host] = true;
     }
     g_file_manager->stopAndFlush();
+    // after the stop: one that began on another thread (a limit) has told its reason by now
+    {
+        const int r = *fileStop;
+        const char* why = r == streaming_lib::CStreamingFile::REACH_LIMIT ? (g_file_manager->endedOnTheClock() ? "clock" : "limit")
+                          : r == streaming_lib::CStreamingFile::OUT_SPACE ? "disk_full"
+                          : timedOut                                       ? "timeout"
+                          : sig_exit_flag                                  ? "stopped"
+                          : byBoard                                        ? "board"
+                          : g_streamFailed                                 ? "error"
+                                                                           : "stopped";
+        const std::lock_guard lock(g_smutex);
+        g_stopReason[host] = why;
+    }
     {
         // a recording in parts: the first, the last and how many
         const auto files = g_file_manager->getFileNames();
         const std::lock_guard lock(g_smutex);
+        g_fileList[host] = files;
         if (files.size() > 1)
             g_files[host] = files.front() + " ... " + files.back() + " (" + std::to_string(files.size()) + " parts)";
     }
@@ -518,6 +576,80 @@ static auto streamingPanel(const std::map<std::string, Levels>& levels, bool key
     return lines;
 }
 
+// --json: a progress event a board, a part event for each new part
+static auto jsonProgress() -> void {
+    const auto stats = statSnapshot();
+    const double secs = statSeconds();
+    std::map<std::string, std::weak_ptr<streaming_lib::CStreamingFile>> objs;
+    {
+        const std::lock_guard lock(g_smutex);
+        objs = g_fileObj;
+    }
+    for (auto& [host, w] : objs) {
+        HostStat st;
+        if (stats.count(host))
+            st = stats.at(host);
+        TrigInfo trig;
+        {
+            const std::lock_guard lock(g_trigMutex);
+            if (g_trig.count(host))
+                trig = g_trig[host];
+        }
+        double q = 0, disk = 0;
+        {
+            const std::lock_guard lock(g_levelsMutex);
+            if (g_queue.count(host))
+                q = g_queue[host];
+            if (g_diskRate.count(host))
+                disk = g_diskRate[host];
+        }
+        const char* state = g_endedByBoard.count(host) && g_endedByBoard.at(host) ? "stopped"
+                            : g_terminate.count(host) && g_terminate[host]          ? "done"
+                            : trig.known && trig.armed                              ? "armed"
+                            : st.bytes == 0                                         ? "connecting"
+                                                                                    : "streaming";
+        Json::Value e;
+        e["host"] = host;
+        e["state"] = state;
+        e["seconds"] = secs;
+        e["samples"] = Json::UInt64(st.samples);
+        e["bytes"] = Json::UInt64(st.bytes);
+        e["rate"] = secs > 0 ? st.bytes / secs : 0.0;
+        e["lost_board"] = Json::UInt64(st.lost);
+        e["lost_file"] = Json::UInt64(st.fileLost);
+        e["queue"] = q;
+        e["disk_rate"] = disk;
+        if (trig.on) {
+            Json::Value t;
+            t["known"] = trig.known;
+            t["armed"] = trig.armed;
+            t["count"] = Json::UInt64(trig.count);
+            e["trigger"] = t;
+        }
+        if (auto f = w.lock()) {
+            e["part"] = f->getPart();
+            e["file"] = f->getCSVFileName();
+            e["part_bytes"] = Json::UInt64(f->getPartSize());
+            // the parts begun since the last event
+            const auto names = f->getFileNames();
+            size_t told = 1;
+            {
+                const std::lock_guard lock(g_smutex);
+                told = g_partsTold[host];
+                g_partsTold[host] = std::max(told, names.size());
+            }
+            for (size_t k = told; k < names.size(); k++) {
+                Json::Value p;
+                p["host"] = host;
+                p["part"] = Json::UInt64(k + 1);
+                p["file"] = names[k];
+                jsonev::emit("part", p);
+            }
+        }
+        jsonev::emit("progress", e);
+    }
+}
+
 // a line a board for a log or a pipe: the state, the samples, the data, the rate, the losses
 static auto plainLines() -> std::vector<std::string> {
     const auto stats = statSnapshot();
@@ -646,6 +778,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
                 started++;
             } else if (kv.second == StateRunnedHosts::TCP) {
                 aprintf(stderr, "%s [ERROR] %s has no active channel: rpsa_client -c -h %s -i channel_state_1=ON\n", getTS(": ").c_str(), kv.first.c_str(), kv.first.c_str());
+                jsonError(kv.first, "no active channel (channel_state_N=ON)");
                 g_streamFailed = true;
             }
         }
@@ -674,6 +807,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
             if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
                 g_streamFailed = true;
                 aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
+                jsonError(host, err.message());
             }
             stopStreaming(host);
         });
@@ -687,18 +821,21 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         cl->serverStoppedMemErrorNofiy.connect([](std::string host) {
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: not enough DMA memory on the board\n", getTS(": ").c_str(), host.c_str());
+            jsonError(host, "Streaming stopped: not enough DMA memory on the board");
             stopStreaming(host);
         });
 
         cl->serverStoppedMemModifyNofiy.connect([](std::string host) {
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the memory of the board was split again (a new block_size)\n", getTS(": ").c_str(), host.c_str());
+            jsonError(host, "Streaming stopped: the memory of the board was split again (a new block_size)");
             stopStreaming(host);
         });
 
         cl->serverStoppedNoActiveChannelsNofiy.connect([](std::string host) {
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: no active channel (channel_state_N=ON)\n", getTS(": ").c_str(), host.c_str());
+            jsonError(host, "Streaming stopped: no active channel (channel_state_N=ON)");
             stopStreaming(host);
         });
 
@@ -706,12 +843,14 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the board did not start the ADC: the settings or the board (journalctl -u redpitaya_streaming on the board)\n",
                     getTS(": ").c_str(), host.c_str());
+            jsonError(host, "Streaming stopped: the board did not start the ADC: the settings or the board (journalctl -u redpitaya_streaming on the board)");
             stopStreaming(host);
         });
 
         cl->serverStoppedSDFullNofiy.connect([](std::string host) {
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the SD card of the board is full\n", getTS(": ").c_str(), host.c_str());
+            jsonError(host, "Streaming stopped: the SD card of the board is full");
             stopStreaming(host);
         });
 
@@ -760,6 +899,8 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
                         sig_exit_flag = true;
                         stopStreaming();
                     }
+                } else if (jsonev::on() && tick > 0 && tick % 4 == 0) {
+                    jsonProgress();
                 } else if (plain && tick > 0 && tick % (PLAIN_PROGRESS_MS / 250) == 0) {
                     for (auto& l : plainLines())
                         aprintf(stdout, "%s\n", l.c_str());
@@ -782,6 +923,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
                 continue;
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] %s ended the streaming early: %s\n", getTS(": ").c_str(), host.c_str(), endedText(cl->isConnected(host)));
+            jsonError(host, std::string("ended the streaming early: ") + endedText(cl->isConnected(host)));
         }
 
         remote_opt.remote_mode = ClientOpt::RemoteMode::STOP;
@@ -797,8 +939,50 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         }
         for (auto& [host, file] : g_files)
             aprintf(stdout, "%s\n", resultLine(host, g_soption.streamign_type == ClientOpt::StreamingType::CSV ? file + " (and its .csv)" : file, !g_endedByBoard[host]).c_str());
+        if (jsonev::on()) {
+            const auto stats = statSnapshot();
+            const double secs = statSeconds();
+            const std::lock_guard lock(g_smutex);
+            for (auto& [host, file] : g_files) {
+                HostStat st;
+                if (stats.count(host))
+                    st = stats.at(host);
+                Json::Value e;
+                e["host"] = host;
+                e["ok"] = !g_endedByBoard[host];
+                e["reason"] = g_stopReason.count(host) ? g_stopReason[host] : std::string("error");
+                e["seconds"] = secs;
+                e["samples"] = Json::UInt64(st.samples);
+                e["bytes"] = Json::UInt64(st.bytes);
+                e["lost_board"] = Json::UInt64(st.lost);
+                e["lost_file"] = Json::UInt64(st.fileLost);
+                Json::Value files(Json::arrayValue), csv(Json::arrayValue);
+                const auto list = g_fileList.count(host) ? g_fileList[host] : std::vector<std::string>{file};
+                // the parts begun after the last progress event
+                for (size_t k = g_partsTold.count(host) ? g_partsTold[host] : list.size(); k < list.size(); k++) {
+                    Json::Value p;
+                    p["host"] = host;
+                    p["part"] = Json::UInt64(k + 1);
+                    p["file"] = list[k];
+                    jsonev::emit("part", p);
+                }
+                for (auto& f : list) {
+                    files.append(f);
+                    // CSV: each part converted next to it
+                    std::error_code ec;
+                    const auto c = std::filesystem::path(f).replace_extension(".csv").string();
+                    if (g_soption.streamign_type == ClientOpt::StreamingType::CSV && std::filesystem::exists(c, ec))
+                        csv.append(c);
+                }
+                e["files"] = files;
+                if (g_soption.streamign_type == ClientOpt::StreamingType::CSV)
+                    e["csv"] = csv;
+                jsonev::emit("done", e);
+            }
+        }
     } else {
         aprintf(stderr, "%s [ERROR] Can't start streaming on the boards\n", getTS(": ").c_str());
+        jsonError("", "Can't start streaming on the boards");
         g_streamFailed = true;
     }
     g_converter.clear();

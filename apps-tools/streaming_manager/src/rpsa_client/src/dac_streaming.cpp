@@ -1,5 +1,6 @@
 #include <filesystem>
 #include "panel.h"
+#include "json_events.h"
 #include "test_helper.h"
 #include "config.h"
 #include <chrono>
@@ -344,6 +345,13 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
                 conf.verbous = g_dac_soption.verbous;
                 g_dacRunning++;
                 dac_clients.push_back(std::thread(dac_runClient, conf, blockSizes[kv.first]));
+                if (jsonev::on()) {
+                    Json::Value e;
+                    e["host"] = kv.first;
+                    e["file"] = g_dac_soption.dac_file;
+                    e["repeat"] = g_dac_soption.dac_repeat == (int)ClientOpt::RepeatDAC::INF ? Json::Value("inf") : Json::Value(Json::Int64(g_dac_soption.dac_repeat));
+                    jsonev::emit("start", e);
+                }
             }
         }
 
@@ -360,8 +368,26 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
             // without a terminal: a line a board every few seconds (streaming_improvements 3.4)
             const bool plain = !panel.enabled() && plainProgressWanted(g_dac_soption);
             auto lastPlain = nowMs();
+            auto lastJson = nowMs();
             while (g_dacRunning > 0) {
                 const double secs = (nowMs() - g_dac_start) / 1000.0;
+                // --json: a progress event a board every second
+                if (jsonev::on() && nowMs() - lastJson >= 1000) {
+                    lastJson = nowMs();
+                    const std::lock_guard lock(g_dac_smutex);
+                    for (auto& [host, bytes] : g_dac_bytesTotal) {
+                        Json::Value e;
+                        e["host"] = host;
+                        e["state"] = g_dac_lost[host] ? "stopped" : g_dac_connected[host] ? "playing" : "connecting";
+                        e["seconds"] = secs;
+                        e["bytes"] = Json::UInt64(bytes);
+                        e["rate"] = secs > 0 ? bytes / secs : 0.0;
+                        e["pass"] = Json::UInt64(fileBytes ? bytes / fileBytes + 1 : 1);
+                        e["repeat"] = inf ? Json::Value("inf") : Json::Value(Json::Int64(g_dac_soption.dac_repeat));
+                        e["position"] = fileBytes ? (double)(bytes % fileBytes) / fileBytes : 0.0;
+                        jsonev::emit("progress", e);
+                    }
+                }
                 if (!panel.enabled()) {
                     if (plain && nowMs() - lastPlain >= PLAIN_PROGRESS_MS) {
                         lastPlain = nowMs();
@@ -421,8 +447,15 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
         if (!g_dac_lost.empty())
             sleepMs(300);  // the closed config connection is seen
         for (auto& [host, lost] : g_dac_lost) {
-            if (lost)
+            if (lost) {
                 aprintf(stderr, "%s [ERROR] %s ended the DAC streaming early: %s\n", getTS(": ").c_str(), host.c_str(), endedText(cl->isConnected(host)));
+                if (jsonev::on()) {
+                    Json::Value e;
+                    e["host"] = host;
+                    e["message"] = std::string("ended the DAC streaming early: ") + endedText(cl->isConnected(host));
+                    jsonev::emit("error", e);
+                }
+            }
         }
         const double secs = (nowMs() - g_dac_start) / 1000.0;
         const bool repeats = g_dac_soption.dac_repeat == (int)ClientOpt::RepeatDAC::INF;
@@ -430,9 +463,24 @@ auto startDACStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Op
             const std::string hint = repeats && !g_dac_lost[host] ? "; the board repeats it until: rpsa_client -r -h " + host + " -m stop_dac" : "";
             aprintf(stdout, "%s %s: sent %s of %s in %.1f s%s\n", g_dac_lost[host] ? "Stopped:" : "Done:", host.c_str(), sizeText(bytes).c_str(),
                     g_dac_soption.dac_file.c_str(), secs, hint.c_str());
+            if (jsonev::on()) {
+                Json::Value e;
+                e["host"] = host;
+                e["ok"] = !g_dac_lost[host];
+                e["seconds"] = secs;
+                e["bytes"] = Json::UInt64(bytes);
+                e["file"] = g_dac_soption.dac_file;
+                e["repeats_on_board"] = repeats && !g_dac_lost[host];
+                jsonev::emit("done", e);
+            }
         }
     } else {
         aprintf(stderr, "%s [ERROR] Can't start the DAC streaming on the boards\n", getTS(": ").c_str());
+        if (jsonev::on()) {
+            Json::Value e;
+            e["message"] = "Can't start the DAC streaming on the boards";
+            jsonev::emit("error", e);
+        }
         g_dacFailed = true;
     }
     return !g_dacFailed;

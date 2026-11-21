@@ -16,6 +16,10 @@
         <file>qml/ProfileApplyDialog.qml</file>
         <file>qml/tabs/AdcTab.qml</file>
         <file>qml/tabs/AdcTrigger.qml</file>
+        <file>qml/tabs/DacTab.qml</file>
+        <file>qml/tabs/GpioTab.qml</file>
+        <file>qml/tabs/limits.js</file>
+        <file>qml/tabs/TriggersTab.qml</file>
         <file>qml/tabs/MemoryTab.qml</file>
         <file>qml/tabs/BoardTab.qml</file>
         <file>qml/tabs/PcTab.qml</file>

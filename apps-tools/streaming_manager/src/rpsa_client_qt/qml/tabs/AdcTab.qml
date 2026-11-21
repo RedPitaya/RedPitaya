@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import "../ui"
+import "limits.js" as Lim
 
 // ADC: where the data goes, the inputs and the sampling (as the ADC page of the board)
 ColumnLayout {
@@ -50,26 +51,11 @@ ColumnLayout {
     readonly property string splitKind: Number(v("split_size_sd")) > 0 ? "size" : Number(v("split_time_sd")) > 0 ? "time" : "none"
     // bytes a second of the file
     readonly property double dataRate: per * on * (v("data_type_sd") === "VOLT" && format !== "BIN" ? 4 : bytes)
-    function fmtTime(t) { return t >= 3600 && t % 3600 === 0 ? t / 3600 + " h" : t >= 60 && t % 60 === 0 ? t / 60 + " min" : (+t.toFixed(3)) + " s" }
-    function parseTime(text) {
-        const m = /^\s*([0-9]*\.?[0-9]+)\s*(ms|s|sec|m|min|h)?\s*$/i.exec(String(text))
-        if (!m) return NaN
-        const u = (m[2] || "s").toLowerCase()
-        return Number(m[1]) * (u === "ms" ? 0.001 : u === "m" || u === "min" ? 60 : u === "h" ? 3600 : 1)
-    }
-    function fmtSize(b) { return b >= 1073741824 && b % 1073741824 === 0 ? b / 1073741824 + " GB" : b >= 1048576 && b % 1048576 === 0 ? b / 1048576 + " MB" : Theme.bytes(b) }
-    function parseSize(text) {
-        const m = /^\s*([0-9]*\.?[0-9]+)\s*(b|k|kb|m|mb|g|gb)?\s*$/i.exec(String(text))
-        if (!m) return NaN
-        const u = (m[2] || "b").toLowerCase()[0]
-        return Math.round(Number(m[1]) * (u === "k" ? 1024 : u === "m" ? 1048576 : u === "g" ? 1073741824 : 1))
-    }
-    function dur(sec) {
-        if (!(sec >= 0) || !isFinite(sec)) return "-"
-        if (sec < 90) return Math.round(sec) + " s"
-        if (sec < 5400) return Math.round(sec / 60) + " min"
-        return Math.floor(sec / 3600) + " h " + Math.round(sec % 3600 / 60) + " min"
-    }
+    function fmtTime(t) { return Lim.fmtTime(t) }
+    function parseTime(text) { return Lim.parseTime(text) }
+    function fmtSize(b) { return Lim.fmtSize(b, Theme.bytes(b)) }
+    function parseSize(text) { return Lim.parseSize(text) }
+    function dur(sec) { return Lim.dur(sec) }
     // the limit of a kind; the others go to 0
     function setLimitKind(kind) {
         if (kind !== "samples") set("samples_limit_sd", "0")

@@ -39,24 +39,46 @@
 %template(StringList) std::list<std::string>;
 %template(BoolArray4) std::array<bool, 4>;
 
-%typemap(out) std::vector<int16_t>* %{
-    if (!$1) {
-        Py_RETURN_NONE;
+// The samples of an ADC channel and the words of a GPIO buffer (streaming_improvements 4.15): a
+// numpy array of their own copy, one memcpy (the buffer of the client is reused after the
+// callback); numpy is imported at the first one
+%{
+static PyObject* rpNumpyArray(const void* data, size_t bytes, const char* dtype) {
+    static PyObject* frombuffer = nullptr;
+    if (!frombuffer) {
+        PyObject* np = PyImport_ImportModule("numpy");
+        if (!np)
+            return nullptr;
+        frombuffer = PyObject_GetAttrString(np, "frombuffer");
+        Py_DECREF(np);
+        if (!frombuffer)
+            return nullptr;
     }
-    $result = PyList_New($1->size());
-    if (!$result) {
-        return NULL;
-    }
-    for(size_t i = 0; i < $1->size(); ++i)
-    {
-        PyObject* item = PyLong_FromLongLong((*$1)[i]);
-        if (!item) {
-            Py_DECREF($result);
-            return NULL;
-        }
-        PyList_SET_ITEM($result, i, item);
-    }
+    // a bytearray: the array is writable and owns the data
+    PyObject* owner = PyByteArray_FromStringAndSize(data && bytes ? static_cast<const char*>(data) : "", data ? static_cast<Py_ssize_t>(bytes) : 0);
+    if (!owner)
+        return nullptr;
+    PyObject* array = PyObject_CallFunction(frombuffer, "Os", owner, dtype);
+    Py_DECREF(owner);
+    return array;
+}
 %}
+
+%typemap(out) ADCSamples* %{
+    $result = rpNumpyArray($1->data, (size_t)$1->count * ($1->bits == 8 ? 1 : 2), $1->bits == 8 ? "int8" : "int16");
+    if (!$result)
+        SWIG_fail;
+%}
+
+%typemap(out) GPIOWords* %{
+    $result = rpNumpyArray($1->data, (size_t)$1->count * 4, "uint32");
+    if (!$result)
+        SWIG_fail;
+%}
+
+// C++ only: Python sees the arrays
+%ignore ADCSamples;
+%ignore GPIOWords;
 
 // Handle ch1: Use the 'size' argument for the length
 %typemap(directorin) int8_t* ch1_8Bit {

@@ -34,6 +34,7 @@ class GpioHandler : public GPIOCallback {
         std::lock_guard<std::mutex> lock(m);
         packs++;
         lost += pack.fpgaLost;
+        // pack.words points into the buffer of the client (no copy), valid in this callback
         for (uint32_t w : pack.words) {
             const int p = w & 0xFF;                                   // the P lines
             samples += pack.rle ? ((w >> 8) & 0xFF) + 1 : 1;          // the samples of the P lane

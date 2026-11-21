@@ -142,6 +142,7 @@ auto CStreamingFile::startWatch() -> void {
             if (m_clock.due()) {
                 lock.unlock();
                 aprintf(stdout, "The time limit of %.3f s passed on the clock with no buffer to end it (a trigger not come)\n", m_limitTime);
+                m_byClock = true;
                 stop(CStreamingFile::REACH_LIMIT, true);
                 return;  // nothing of the object after the stop: it may go now
             }
@@ -262,6 +263,7 @@ auto CStreamingFile::run(std::string _prefix, std::string _fileName) -> void {
 
     resetHeaders();
     m_stopped = false;
+    m_byClock = false;
     m_partBytes = m_allBytes = m_partLine = m_line = 0;
     m_base = _fileName == "" ? getNewFileName(m_fileType, m_filePath, _prefix) : _fileName;
     m_part = 1;

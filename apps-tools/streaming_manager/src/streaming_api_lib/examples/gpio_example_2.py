@@ -50,7 +50,8 @@ class CsvWriter(streaming.GPIOCallback):
             self.p.position += gap
             self.n.position += gap
             self.lost += pack.fpgaLost
-            for w in pack.words:
+            # pack.words: a numpy array (uint32); a list of ints is faster word by word
+            for w in pack.words.tolist():
                 # {N count, N lines, P count, P lines}; without RLE a word is one sample
                 self.p.take(w & 0xFF, ((w >> 8) & 0xFF) + 1 if pack.rle else 1)
                 self.n.take((w >> 16) & 0xFF, ((w >> 24) & 0xFF) + 1 if pack.rle else 1)

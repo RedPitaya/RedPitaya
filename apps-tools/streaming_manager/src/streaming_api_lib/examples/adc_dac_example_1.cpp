@@ -54,17 +54,18 @@ class ADCCallbackHandler : public ADCCallback {
 
         bool found = false;
 
-        // Analyze raw data for signal presence
-        for (const auto& sample : channel.raw) {
-            if (std::abs(sample) > SIGNAL_THRESHOLD) {
+        // Analyze raw data for signal presence: channel.raw points into the buffer of the client
+        // (no copy), valid in this callback only; [] reads 8 and 16 bit samples alike
+        for (size_t i = 0; i < channel.raw.size(); i++) {
+            if (std::abs(channel.raw[i]) > SIGNAL_THRESHOLD) {
                 found = true;
                 break;
             }
         }
 
-        // If signal detected, save data to shared buffer
+        // If signal detected, save a copy of the data to the shared buffer
         if (found) {
-            g_list.push(channel.raw);
+            g_list.push(channel.raw.copy());
             std::cout << "Signal detected! Saved " << channel.raw.size() << " samples to DAC buffer" << std::endl;
         }
     }

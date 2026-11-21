@@ -43,21 +43,16 @@ class ADCCallbackHandler(streaming.ADCCallback):
         print(f"ADC error {host} code {code}")
 
     def analyzeSignal(self, channel):
-        if channel.samples == 0 or not hasattr(channel, 'raw') or not channel.raw:
+        # channel.raw: a numpy array (int16, int8 at 8 bit) of its own copy of the samples
+        raw = channel.raw
+        if channel.samples == 0 or raw.size == 0:
             return
 
-        found = False
-
-        # Analyze raw data for signal presence
-        for sample in channel.raw:
-            if abs(sample) > SIGNAL_THRESHOLD:
-                found = True
-                break
-
-        # If signal detected, save data to shared buffer
-        if found:
-            g_list.put(channel.raw)
-            print(f"Signal detected! Saved {len(channel.raw)} samples to DAC buffer")
+        # Analyze raw data for signal presence: the whole buffer at once
+        if np.abs(raw.astype(np.int32)).max() > SIGNAL_THRESHOLD:
+            # The array may be kept: it is not the buffer of the client
+            g_list.put(raw)
+            print(f"Signal detected! Saved {raw.size} samples to DAC buffer")
 
 # ==================== DAC Callback Class ====================
 class DACCallbackHandler(streaming.DACCallback):
@@ -86,9 +81,8 @@ class DACCallbackHandler(streaming.DACCallback):
             # Get data from queue
             data = g_list.get_nowait()
 
-            # Convert to numpy array if needed
-            if not isinstance(data, np.ndarray):
-                data = np.array(data, dtype=np.int16)
+            # 16 bit for the DAC (an 8 bit capture is int8)
+            data = np.asarray(data, dtype=np.int16)
 
             samplesToSend = min(size, len(data))
 

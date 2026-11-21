@@ -65,6 +65,7 @@ list(APPEND src
             ${PROJECT_SOURCE_DIR}/src/config.cpp
             ${PROJECT_SOURCE_DIR}/src/dac_streaming.cpp
             ${PROJECT_SOURCE_DIR}/src/help.cpp
+            ${PROJECT_SOURCE_DIR}/src/json_events.cpp
             ${PROJECT_SOURCE_DIR}/src/gpio_client.cpp
             ${PROJECT_SOURCE_DIR}/src/panel.cpp
             ${PROJECT_SOURCE_DIR}/src/main.cpp

@@ -13,6 +13,7 @@
 #include "logger_lib/file_logger.h"
 #include "net_lib/asio_net.h"
 #include "panel.h"
+#include "json_events.h"
 #include "reader_lib/gpio_file_reader.h"
 #include "remote.h"
 #include "test_helper.h"
@@ -433,6 +434,17 @@ auto startGPIO(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
         inThread = std::thread(runInput, host, sizes[host], option.gpio_in_file, format, (uint64_t)option.samples, option.timeout, outStarted);
     if (outStarted)
         outThread = std::thread(runOutput, host, sizes[host], reader, option.timeout);
+    if (jsonev::on()) {
+        for (int d = 0; d < 2; d++) {
+            if (!(d ? outStarted : inStarted))
+                continue;
+            Json::Value e;
+            e["host"] = host;
+            e["direction"] = d ? "out" : "in";
+            e["file"] = d ? option.gpio_out_file : option.gpio_in_file;
+            jsonev::emit("start", e);
+        }
+    }
 
     // the panel while it runs; the output ends with its file, the input with the time, the
     // limit or the stop
@@ -449,7 +461,39 @@ auto startGPIO(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
         // without a terminal: a line every few seconds (streaming_improvements 3.4)
         const bool plain = !panel.enabled() && plainProgressWanted(option);
         auto lastPlain = nowMs();
+        auto lastJson = nowMs();
         while (running()) {
+            // --json: a progress event a direction every second
+            if (jsonev::on() && nowMs() - lastJson >= 1000) {
+                lastJson = nowMs();
+                const double secs = (nowMs() - begin) / 1000.0;
+                if (inStarted) {
+                    const std::lock_guard a(g_in.m);
+                    Json::Value e;
+                    e["host"] = host;
+                    e["direction"] = "in";
+                    e["state"] = g_in.lost || g_in.fileError ? "stopped" : g_in.done ? "done" : g_in.packs ? "recording" : "waiting";
+                    e["seconds"] = secs;
+                    e["samples"] = Json::UInt64(g_in.samples);
+                    e["words"] = Json::UInt64(g_in.words);
+                    e["bytes"] = Json::UInt64(g_in.bytes);
+                    e["lost"] = Json::UInt64(g_in.lostSamples);
+                    e["waited"] = Json::UInt64(g_in.waitSamples);
+                    jsonev::emit("progress", e);
+                }
+                if (outStarted) {
+                    const std::lock_guard b(g_out.m);
+                    Json::Value e;
+                    e["host"] = host;
+                    e["direction"] = "out";
+                    e["state"] = g_out.lost ? "stopped" : g_out.fileEnded ? "playing out" : g_out.connected ? "playing" : "connecting";
+                    e["seconds"] = secs;
+                    e["words"] = Json::UInt64(g_out.words);
+                    e["bytes"] = Json::UInt64(g_out.bytes);
+                    e["rate"] = secs > 0 ? g_out.bytes / secs : 0.0;
+                    jsonev::emit("progress", e);
+                }
+            }
             if (plain && nowMs() - lastPlain >= PLAIN_PROGRESS_MS) {
                 lastPlain = nowMs();
                 const double secs = (nowMs() - begin) / 1000.0;
@@ -549,6 +593,26 @@ auto startGPIO(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
         aprintf(stdout, "%s %s: GPIO input %llu samples (%llu words%s), lost %llu, waited %llu; %s\n", why ? "Stopped:" : "Done:", host.c_str(),
                 (unsigned long long)g_in.samples, (unsigned long long)g_in.words, g_in.rle ? ", RLE" : "", (unsigned long long)g_in.lostSamples,
                 (unsigned long long)g_in.waitSamples, g_in.opened ? option.gpio_in_file.c_str() : "no file");
+        if (jsonev::on()) {
+            if (why) {
+                Json::Value r;
+                r["host"] = host;
+                r["direction"] = "in";
+                r["message"] = std::string("ended the GPIO input early: ") + why;
+                jsonev::emit("error", r);
+            }
+            Json::Value e;
+            e["host"] = host;
+            e["direction"] = "in";
+            e["ok"] = why == nullptr;
+            e["samples"] = Json::UInt64(g_in.samples);
+            e["words"] = Json::UInt64(g_in.words);
+            e["rle"] = g_in.rle;
+            e["lost"] = Json::UInt64(g_in.lostSamples);
+            e["waited"] = Json::UInt64(g_in.waitSamples);
+            e["file"] = g_in.opened ? option.gpio_in_file : std::string();
+            jsonev::emit("done", e);
+        }
     }
     if (outStarted) {
         const std::lock_guard b(g_out.m);
@@ -559,6 +623,24 @@ auto startGPIO(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Options& o
         }
         aprintf(stdout, "%s %s: GPIO output %llu words of %s%s; the output waited %llu clocks for data\n", why ? "Stopped:" : "Done:", host.c_str(),
                 (unsigned long long)g_out.words, option.gpio_out_file.c_str(), g_out.fileEnded ? " (the whole file)" : "", (unsigned long long)g_outWait.load());
+        if (jsonev::on()) {
+            if (why) {
+                Json::Value r;
+                r["host"] = host;
+                r["direction"] = "out";
+                r["message"] = std::string("ended the GPIO output early: ") + why;
+                jsonev::emit("error", r);
+            }
+            Json::Value e;
+            e["host"] = host;
+            e["direction"] = "out";
+            e["ok"] = why == nullptr;
+            e["words"] = Json::UInt64(g_out.words);
+            e["file"] = option.gpio_out_file;
+            e["whole_file"] = g_out.fileEnded;
+            e["waited_clocks"] = Json::UInt64(g_outWait.load());
+            jsonev::emit("done", e);
+        }
     }
     return ok;
 }

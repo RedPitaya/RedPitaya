@@ -13,6 +13,9 @@ Dialog2 {
     title: "Not enough space on this PC"
     // the board of the Start, null for Start all
     property var board: null
+    // the other streams of the board too (Start all of this board on its card): the inputs first
+    // (ADC, GPIO input), then the outputs (DAC, GPIO output); not those set Off or with no file
+    property bool all: false
     property var shortage: ({})
     // what the limit of a board is: samples or a time of its inputs, or a size of the data
     function limitText(row) {
@@ -27,15 +30,27 @@ Dialog2 {
     }
 
     function go() {
-        if (board)
+        if (board) {
             board.startStreaming()
-        else
+            if (!all)
+                return
+            const caps = board.caps
+            if (caps.gpio && String(board.pcValue("gpioInOff")) !== "true")
+                board.startGpioIn()
+            if (caps.dac && (board.value("dac_pass_mode") === "DAC_FILE" ? board.value("file_sd") !== "" : String(board.pcValue("dacFile") || "") !== ""))
+                board.startDac()
+            if (caps.gpio && String(board.pcValue("gpioOutOff")) !== "true"
+                && (board.value("gpio_out_pass_mode") === "FILE" ? board.value("gpio_out_file_sd") !== "" : String(board.pcValue("gpioOutFile") || "") !== ""))
+                board.startGpioOut()
+        } else {
             boards.runAll()
+        }
     }
 
     // starts at once when the recordings fit
-    function start(b) {
+    function start(b, others) {
         board = b
+        all = !!others
         shortage = boards.diskShortage(b ? b.ip : "")
         if (!shortage.need) {
             go()

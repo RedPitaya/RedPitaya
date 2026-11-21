@@ -45,7 +45,7 @@ ApplicationWindow {
         onOpenApp: appDialog.open()
         onAddBoard: addDialog.open()
         onOpenProfiles: profilesDialog.open()
-        onAskStart: (board) => diskDialog.start(board)
+        onAskStart: (board, all) => diskDialog.start(board, all)
     }
     DiskDialog { id: diskDialog }
 
@@ -76,14 +76,18 @@ ApplicationWindow {
     // profiles (the dialog) | psave:<index>:<name> (the save dialog of that board, the name typed) | psavego |
     // papply:<name>[:<index>] (the apply dialog of the profile, that board or all) | papplygo |
     // pimport:<path> | pexport:<name>:<path> (Import / Export JSON of the profiles, the result in the log) |
-    // type:<key>=<text> (types into the field of that setting in the open board dialog, as the user)
+    // type:<key>=<text> (types into the field of that setting in the open board dialog, as the user) |
+    // startdac:<index> | stopdac:<index> | startboard:<index> (Start all of this board: the inputs, then the outputs) | stopboard:<index> |
+    // startgpioin:<index> | stopgpioin:<index> | startgpioout:<index> | stopgpioout:<index> | gpio:<index> (its gpioState and gpioFile in the log) |
+    // pcset:<index>:<key>=<value> (a setting of the board kept on this computer, as dacFile) |
+    // dac:<index> (its dacState and dacFile in the log) | click:<objectName> (clicks that control in the open board dialog) | value:<index>:<key> (a setting of the board in the log)
     // <index> may be the IP of the board instead (the order of the boards follows the broadcast)
-    function findField(item, key) {
+    function findField(item, key, name) {
         if (!item) return null
-        if (item.objectName === "field:" + key) return item
+        if (item.objectName === (name ? key : "field:" + key)) return item
         const kids = item.children || []
         for (let i = 0; i < kids.length; i++) {
-            const f = findField(kids[i], key)
+            const f = findField(kids[i], key, name)
             if (f) return f
         }
         return null
@@ -137,7 +141,27 @@ ApplicationWindow {
                     if (f) { f.text = kv[1]; f.committed(kv[1]) }
                     else console.warn("type: no field " + kv[0])
                 }
+                else if (p[0] === "click") {
+                    const c = win.findField(boardDialog.contentItem, p.slice(1).join(":"), true)
+                    if (c) c.clicked()
+                    else console.warn("click: no control " + p.slice(1).join(":"))
+                }
                 else if (p[0] === "trigger" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).softwareTrigger()
+                else if (p[0] === "startdac" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).startDac()
+                else if (p[0] === "stopdac" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).stopDac()
+                else if (p[0] === "startboard" && win.scriptBoard(p[1])) diskDialog.start(win.scriptBoard(p[1]), true)
+                else if (p[0] === "stopboard" && win.scriptBoard(p[1])) { const b = win.scriptBoard(p[1]); b.stopStreaming(); b.stopDac(); b.stopGpioIn(); b.stopGpioOut() }
+                else if (p[0] === "startgpioin" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).startGpioIn()
+                else if (p[0] === "stopgpioin" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).stopGpioIn()
+                else if (p[0] === "startgpioout" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).startGpioOut()
+                else if (p[0] === "stopgpioout" && win.scriptBoard(p[1])) win.scriptBoard(p[1]).stopGpioOut()
+                else if (p[0] === "gpio" && win.scriptBoard(p[1])) console.log("gpio: " + JSON.stringify(win.scriptBoard(p[1]).gpioState) + " file: " + JSON.stringify(win.scriptBoard(p[1]).gpioFile))
+                else if (p[0] === "pcset" && win.scriptBoard(p[1])) {
+                    const kv = p.slice(2).join(":").split("=")
+                    win.scriptBoard(p[1]).setPcValue(kv[0], kv.slice(1).join("="))
+                }
+                else if (p[0] === "dac" && win.scriptBoard(p[1])) console.log("dac: " + JSON.stringify(win.scriptBoard(p[1]).dacState) + " file: " + JSON.stringify(win.scriptBoard(p[1]).dacFile))
+                else if (p[0] === "value" && win.scriptBoard(p[1])) console.log("value: " + p[2] + "=" + win.scriptBoard(p[1]).value(p[2]))
                 else if (p[0] === "cards") app.view = "cards"
                 else if (p[0] === "app") appDialog.open()
                 else if (p[0] === "add") addDialog.open()

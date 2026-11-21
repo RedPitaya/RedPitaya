@@ -70,6 +70,8 @@ class CStreamingFile {
     auto setLimits(double seconds, uint64_t bytes, double bufferSeconds = 0) -> void;
     // the tests: the margin of the clock of the time limit
     auto setTimeMargin(double seconds) -> void { m_clock.setMargin(seconds); }
+    // the time limit ended the recording on the clock, no buffer came (a REACH_LIMIT stop)
+    auto endedOnTheClock() -> bool { return m_byClock; }
     // The recording in parts of about `bytes` of data or `seconds` of the time line (0 - none):
     // <name>_0001.<ext>, _0002 ..., each a whole file with its header and its report, its time
     // line from 0 and the time of its first sample in its header; the stream goes on between
@@ -122,6 +124,7 @@ class CStreamingFile {
     std::mutex m_watchMtx;  // m_watchStop
     std::condition_variable m_watchCv;
     bool m_watchStop = false;
+    std::atomic<bool> m_byClock{false};
     auto startWatch() -> void;
     auto stopWatch() -> void;
     uint64_t m_limitSize = 0;

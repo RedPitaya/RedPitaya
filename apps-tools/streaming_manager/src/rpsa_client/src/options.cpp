@@ -21,6 +21,7 @@ static struct option long_options_broadcast[] = {
     {"timeout", required_argument, 0, 't'},
     {"quiet", no_argument, 0, 'q'},
     {"reply-timeout", required_argument, 0, 'R'},  // long only
+    {"json", no_argument, 0, 'J'},  // long only
     {0, 0, 0, 0}};
 
 static constexpr char optstring_broadcast[] = ":dt:q";
@@ -71,6 +72,7 @@ static struct option long_options_streaming[] = {
     {"split", required_argument, 0, 1003},
     {"quiet", no_argument, 0, 'q'},
     {"reply-timeout", required_argument, 0, 'R'},  // long only
+    {"json", no_argument, 0, 'J'},  // long only
     {0, 0, 0, 0}};
 
 static constexpr char optstring_streaming[] = ":sh:f:d:l:m:t:vq";
@@ -86,6 +88,7 @@ static struct option long_options_dac_streaming[] = {
     {"verbose", no_argument, 0, 'v'},
     {"quiet", no_argument, 0, 'q'},
     {"reply-timeout", required_argument, 0, 'R'},  // long only
+    {"json", no_argument, 0, 'J'},  // long only
     {0, 0, 0, 0}};
 
 static constexpr char optstring_dac_streaming[] = ":oh:f:d:r:vq";
@@ -103,6 +106,7 @@ static struct option long_options_gpio[] = {
     {"verbose", no_argument, 0, 'v'},
     {"quiet", no_argument, 0, 'q'},
     {"reply-timeout", required_argument, 0, 'R'},
+    {"json", no_argument, 0, 'J'},  // long only
     {0, 0, 0, 0}};
 
 static constexpr char optstring_gpio[] = ":Gh:f:r:l:t:vq";
@@ -307,10 +311,14 @@ static auto same(const char* a, const char* b) -> bool {
     return strcasecmp(a, b) == 0;
 }
 
-// the options every mode takes: --quiet, --reply-timeout
+// the options every mode takes: --quiet, --reply-timeout; --json where its table has it
 static auto commonOption(ClientOpt::Options& opt, int ch) -> bool {
     if (ch == 'q') {
         opt.quiet = true;
+        return true;
+    }
+    if (ch == 'J') {
+        opt.json = true;
         return true;
     }
     if (ch == 'R') {

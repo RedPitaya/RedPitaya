@@ -1,15 +1,24 @@
 #!/usr/bin/python3
 
+import numpy as np
 import streaming
 
 
 class Callback(streaming.ADCCallback):
     counter = 0
     fpgaLost = 0
+    low = None   # the lowest and the highest code of IN1
+    high = None
 
     def receivePack(self,client,n):
         self.counter = self.counter + n.channel1.samples + n.channel2.samples
         self.fpgaLost = self.fpgaLost + max([n.channel1.fpgaLost, n.channel2.fpgaLost, n.channel3.fpgaLost, n.channel4.fpgaLost])
+        # channel1.raw: a numpy array (int16, int8 at 8 bit) of the samples of the buffer
+        raw = n.channel1.raw
+        if raw.size:
+            lo, hi = int(raw.min()), int(raw.max())
+            self.low = lo if self.low is None else min(self.low, lo)
+            self.high = hi if self.high is None else max(self.high, hi)
         # Count the number of samples received and stop streaming
         if (self.counter > 5e7):
             client.notifyStop()
@@ -146,3 +155,4 @@ obj.wait()
 
 print("Received samples", callback.counter)
 print("Number of lost samples", callback.fpgaLost)
+print("IN1 codes from", callback.low, "to", callback.high)

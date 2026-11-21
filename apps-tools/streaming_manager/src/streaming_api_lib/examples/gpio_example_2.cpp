@@ -58,6 +58,7 @@ class CsvWriter : public GPIOCallback {
         p.gap(pack.fpgaLost + pack.fpgaWait);
         n.gap(pack.fpgaLost + pack.fpgaWait);
         lost += pack.fpgaLost;
+        // pack.words points into the buffer of the client (no copy), valid in this callback
         for (uint32_t w : pack.words) {
             // {N count, N lines, P count, P lines}; without RLE a word is one sample
             p.take(f, w & 0xFF, pack.rle ? ((w >> 8) & 0xFF) + 1 : 1);

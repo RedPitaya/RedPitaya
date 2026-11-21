@@ -132,7 +132,7 @@ target_compile_definitions(rpsa_client_qt
 target_link_libraries(rpsa_client_qt
   PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Quick Qt${QT_VERSION_MAJOR}::QuickControls2 Qt${QT_VERSION_MAJOR}::Network Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Svg Qt${QT_VERSION_MAJOR}::Qml  Qt${QT_VERSION_MAJOR}::Widgets)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE config_net_lib dac_streaming_lib converter_lib streaming_lib data_lib settings_lib uio_lib logger_lib)
+target_link_libraries(${PROJECT_NAME} PRIVATE config_net_lib dac_streaming_lib converter_lib streaming_lib reader_lib writer_lib bin_lib data_lib settings_lib uio_lib logger_lib)
 
 
 if(NOT WIN32)

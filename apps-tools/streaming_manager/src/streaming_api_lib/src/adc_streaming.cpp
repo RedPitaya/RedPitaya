@@ -121,6 +121,7 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient* client, std::string host,
                     ADCPack pack_py;
                     pack_py.host = host;
 
+                    // the samples stay in the buffer of the client: no copy (streaming_improvements 4.15)
                     auto setChannelData = [](ADCChannel& channel, DataLib::CDataBufferDMA::Ptr buff) {
                         if (buff) {
                             channel.bitsPerSample = buff->getBitBySample();
@@ -131,19 +132,10 @@ auto ADCStreamClient::Impl::runClient(ADCStreamClient* client, std::string host,
                             channel.attenuator_1_20 = buff->getADCMode();
                             channel.packId = buff->getADCPackId();
                             channel.timeCapture = buff->getTimeCapture();
-                            channel.raw.reserve(channel.samples);
-                            if (channel.bitsPerSample == 8) {
-                                auto data = reinterpret_cast<int8_t*>(buff->getMappedDataMemory());
-                                for (size_t k = 0; k < channel.samples; k++) {
-                                    channel.raw.push_back(data[k]);
-                                }
-                            }
-
-                            if (channel.bitsPerSample == 16) {
-                                auto data = reinterpret_cast<int16_t*>(buff->getMappedDataMemory());
-                                for (size_t k = 0; k < channel.samples; k++) {
-                                    channel.raw.push_back(data[k]);
-                                }
+                            if (channel.bitsPerSample == 8 || channel.bitsPerSample == 16) {
+                                channel.raw.data = buff->getMappedDataMemory();
+                                channel.raw.count = channel.samples;
+                                channel.raw.bits = channel.bitsPerSample;
                             }
                         }
                     };
