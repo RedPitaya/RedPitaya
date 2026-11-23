@@ -104,6 +104,7 @@ CBoard::~CBoard() {
         m_dacFileThread.join();
     for (auto* d : {&m_gin, &m_gout}) {
         d->terminate = true;
+        gpioDisconnect(*d);
         if (d->thread.joinable())
             d->thread.join();
     }
@@ -1508,8 +1509,9 @@ auto CBoard::connectDacHandlers() -> void {
     // the board waits for the data of this computer
     cm->serverDacStartedNofiy.connect([this](std::string&) {
         post([this]() {
-            if (m_dacState != "connecting")
+            if (m_dacState != "connecting" || m_dacThread.joinable())
                 return;
+            m_dacStaleStops = 0;
             if (m_dacSource == "sd") {
                 m_configManager->sendDACServerStop(m_ip.toStdString());
                 dacStopped("the board waits for the data of a client (dac_pass_mode is DAC_NET now): start it again", true);
@@ -1523,6 +1525,7 @@ auto CBoard::connectDacHandlers() -> void {
         post([this]() {
             if (m_dacState != "connecting")
                 return;
+            m_dacStaleStops = 0;
             if (m_dacSource == "pc") {
                 m_configManager->sendDACServerStop(m_ip.toStdString());
                 dacStopped("the board plays a file of its own SD card (dac_pass_mode is DAC_FILE now), not the file of this computer: start it again", true);
@@ -1536,7 +1539,16 @@ auto CBoard::connectDacHandlers() -> void {
     auto stopped = [this](const char* why, bool error) {
         return [this, why, error](std::string&) { post([this, why, error]() { dacStopped(why, error); }); };
     };
-    cm->serverDacStoppedNofiy.connect(stopped("", false));
+    // the plain STOPPED: the answer to a stop; one of an older run is dropped while a start connects
+    cm->serverDacStoppedNofiy.connect([this](std::string&) {
+        post([this]() {
+            if (m_dacStaleStops > 0 && m_dacState == "connecting") {
+                m_dacStaleStops--;
+                return;
+            }
+            dacStopped("", false);
+        });
+    });
     cm->serverDacStoppedSDDoneNofiy.connect(stopped("the file is played", false));
     cm->serverDacStoppedSDEmptyNofiy.connect(stopped("the file on the SD card is empty", true));
     cm->serverDacStoppedSDBrokenNofiy.connect(stopped("the file on the SD card is broken or not of its type (file_type_sd)", true));
@@ -1648,6 +1660,9 @@ auto CBoard::dacStopped(const QString& why, bool error) -> void {
         return;
     const bool requested = m_dacStopRequested;
     const bool sending = m_dacThread.joinable() && !m_dacDone;
+    // given up on (no confirmation) or sent and not waited for: its STOPPED may come later
+    if (why == "the board did not confirm the stop" || why.startsWith("no data connection") || why.startsWith("the file cannot be read"))
+        m_dacStaleStops = 1;
     m_dacTerminate = true;
     m_dacEnd = QDateTime::currentMSecsSinceEpoch();
     m_dacGen++;
@@ -1678,6 +1693,7 @@ auto CBoard::startDacSender() -> void {
     m_dacSent = 0;
     m_dacStart = QDateTime::currentMSecsSinceEpoch();
     addLog("The board waits for the data on port " + QString::number(NET_DAC_STREAMING_PORT), Log::Detail);
+    m_dacRun.gen = m_dacGen;
     m_dacThread = std::thread(&CBoard::dacSender, this, m_dacRun);
 }
 
@@ -1685,6 +1701,12 @@ auto CBoard::joinDacSender() -> void {
     if (!m_dacThread.joinable())
         return;
     m_dacTerminate = true;
+    {
+        // a send blocked on a board that does not read ends only with its connection
+        std::lock_guard lock(m_dacNetMtx);
+        if (m_dacNet)
+            m_dacNet->disconnect();
+    }
     m_dacThread.join();
 }
 
@@ -1791,7 +1813,12 @@ auto CBoard::dacSender(SDacRun run) -> void {
         end = DacEnd::FileError;
         text = e.what();
     }
-    post([this, end, text]() { dacSenderEnded(end, text); });
+    // the end of an older run (stopped, maybe started again since) changes nothing of this one
+    const int gen = run.gen;
+    post([this, end, text, gen]() {
+        if (gen == m_dacGen)
+            dacSenderEnded(end, text);
+    });
 }
 
 auto CBoard::dacSenderEnded(DacEnd end, const QString& text) -> void {
@@ -2040,15 +2067,16 @@ auto CBoard::connectGpioHandlers() -> void {
     cm->serverGpioInStartedNofiy.connect([this](std::string&) {
         post([this]() {
             auto& d = m_gin;
-            if (d.state != "connecting")
+            if (d.state != "connecting" || d.running || d.thread.joinable())
                 return;
+            d.staleStops = 0;
             if (d.source == "sd") {
                 gpioStopSent(false);
                 gpioBoardStopped(false, "the board waits for a client (gpio_in_pass_mode is NET now): start it again", true);
                 return;
             }
             d.running = true;
-            d.thread = std::thread(&CBoard::gpioInRun, this, d.path, m_ginFormat, m_gpioBlock, m_ginLimitSamples, m_ginLimitTime);
+            d.thread = std::thread(&CBoard::gpioInRun, this, d.path, m_ginFormat, m_gpioBlock, m_ginLimitSamples, m_ginLimitTime, d.gen);
             setGpioState(d, "recording");
             addLog("GPIO input: the board sends, recording to " + QDir::toNativeSeparators(d.path));
             dismissError();  // a start that goes
@@ -2059,6 +2087,7 @@ auto CBoard::connectGpioHandlers() -> void {
             auto& d = m_gin;
             if (d.state != "connecting")
                 return;
+            d.staleStops = 0;
             if (d.source == "pc") {
                 gpioStopSent(false);
                 gpioBoardStopped(false, "the board writes the input to its own SD card (gpio_in_pass_mode is FILE now): start it again", true);
@@ -2072,15 +2101,16 @@ auto CBoard::connectGpioHandlers() -> void {
     cm->serverGpioOutStartedNofiy.connect([this](std::string&) {
         post([this]() {
             auto& d = m_gout;
-            if (d.state != "connecting")
+            if (d.state != "connecting" || d.running || d.thread.joinable())
                 return;
+            d.staleStops = 0;
             if (d.source == "sd") {
                 gpioStopSent(true);
                 gpioBoardStopped(true, "the board waits for the data of a client (gpio_out_pass_mode is NET now): start it again", true);
                 return;
             }
             d.running = true;
-            d.thread = std::thread(&CBoard::gpioOutRun, this, m_goutReader, m_gpioBlock);
+            d.thread = std::thread(&CBoard::gpioOutRun, this, m_goutReader, m_gpioBlock, d.gen);
             m_goutReader = nullptr;
             addLog("GPIO output: the board waits for the data on port " + QString::number(NET_GPIO_OUT_STREAMING_PORT), Log::Detail);
         });
@@ -2090,6 +2120,7 @@ auto CBoard::connectGpioHandlers() -> void {
             auto& d = m_gout;
             if (d.state != "connecting")
                 return;
+            d.staleStops = 0;
             if (d.source == "pc") {
                 gpioStopSent(true);
                 gpioBoardStopped(true, "the board plays a file of its own SD card (gpio_out_pass_mode is FILE now), not the file of this computer: start it again", true);
@@ -2107,7 +2138,15 @@ auto CBoard::connectGpioHandlers() -> void {
         return [this, why, error](std::string&) { post([this, why, error]() { gpioBoardStopped(true, why, error); }); };
     };
     const char* const config = "the board did not start it: the settings, no GPIO block in the FPGA or the data port taken (see its log: journalctl -u redpitaya_streaming)";
-    cm->serverGpioInStoppedNofiy.connect(in("", false));
+    cm->serverGpioInStoppedNofiy.connect([this](std::string&) {
+        post([this]() {
+            if (m_gin.staleStops > 0 && m_gin.state == "connecting") {
+                m_gin.staleStops--;
+                return;
+            }
+            gpioBoardStopped(false, "", false);
+        });
+    });
     cm->serverGpioInStoppedMemErrorNofiy.connect(in("not enough DMA memory for the GPIO input (Memory tab)", true));
     cm->serverGpioInStoppedConfigErrorNofiy.connect(in(config, true));
     cm->serverGpioInStoppedSDFullNofiy.connect(in("the SD card is full", true));
@@ -2115,6 +2154,10 @@ auto CBoard::connectGpioHandlers() -> void {
     cm->serverGpioInStoppedSDBrokenNofiy.connect(in("the file on the SD card could not be written", true));
     cm->serverGpioOutStoppedNofiy.connect([this](std::string&, uint64_t wait) {
         post([this, wait]() {
+            if (m_gout.staleStops > 0 && m_gout.state == "connecting") {
+                m_gout.staleStops--;
+                return;
+            }
             m_goutWaited = wait;
             gpioBoardStopped(true, "", false);
         });
@@ -2136,8 +2179,10 @@ void CBoard::startGpioIn() {
     auto& d = m_gin;
     if (gpioRunning(d))
         return;
-    if (d.thread.joinable())
+    if (d.thread.joinable()) {
+        gpioDisconnect(d);
         d.thread.join();
+    }
     if (!m_connected) {
         addLog("Not connected to the board", Log::Error);
         return;
@@ -2210,8 +2255,10 @@ void CBoard::startGpioOut() {
     auto& d = m_gout;
     if (gpioRunning(d))
         return;
-    if (d.thread.joinable())
+    if (d.thread.joinable()) {
+        gpioDisconnect(d);
         d.thread.join();
+    }
     if (!m_connected) {
         addLog("Not connected to the board", Log::Error);
         return;
@@ -2334,6 +2381,13 @@ auto CBoard::gpioStopSent(bool out) -> void {
     });
 }
 
+// closes the data connection of a direction's thread (from the GUI thread, before a join)
+auto CBoard::gpioDisconnect(SGpioDir& d) -> void {
+    std::lock_guard lock(d.netMtx);
+    if (d.net)
+        d.net->disconnect();
+}
+
 // the board ended a direction: its answer to the stop, a stop of its own or a refusal
 auto CBoard::gpioBoardStopped(bool out, const QString& why, bool error) -> void {
     auto& d = out ? m_gout : m_gin;
@@ -2394,8 +2448,12 @@ auto CBoard::gpioFinish(bool out) -> void {
     if (!gpioRunning(d))
         return;
     d.terminate = true;
-    if (d.thread.joinable())
+    // a stop the board did not answer: its STOPPED may still come during the next start
+    d.staleStops = d.stopSent && !d.boardDone ? 1 : 0;
+    if (d.thread.joinable()) {
+        gpioDisconnect(d);
         d.thread.join();
+    }
     d.running = false;
     d.stop = QDateTime::currentMSecsSinceEpoch();
     d.gen++;
@@ -2449,7 +2507,7 @@ auto CBoard::gpioFinish(bool out) -> void {
 }
 
 // The input of the board into the file, on a thread of its own (runInput of rpsa_client -G)
-auto CBoard::gpioInRun(QString path, int format, uint32_t blockSize, uint64_t samplesLimit, double timeLimit) -> void {
+auto CBoard::gpioInRun(QString path, int format, uint32_t blockSize, uint64_t samplesLimit, double timeLimit, int gen) -> void {
     GpioEnd end = GpioEnd::Stopped;
     QString text;
     try {
@@ -2467,6 +2525,10 @@ auto CBoard::gpioInRun(QString path, int format, uint32_t blockSize, uint64_t sa
         std::mutex writerMtx;
         std::atomic<bool> connected{false}, closing{false}, limit{false}, fileError{false}, full{false}, lost{false}, opened{false};
         auto net = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_ip.toStdString(), NET_GPIO_IN_STREAMING_PORT, buffers);
+        {
+            std::lock_guard lock(m_gin.netMtx);
+            m_gin.net = net;
+        }
         net->setPackID(DataLib::ID_PACK_GPIO);
         net->clientConnectNotify.connect([&](std::string&) { connected = true; });
         net->clientErrorNotify.connect([&](std::error_code) {
@@ -2572,6 +2634,10 @@ auto CBoard::gpioInRun(QString path, int format, uint32_t blockSize, uint64_t sa
             std::this_thread::sleep_for(std::chrono::milliseconds(20));
         }
         closing = true;
+        {
+            std::lock_guard lock(m_gin.netMtx);
+            m_gin.net = nullptr;
+        }
         net->stop();
         std::lock_guard wl(writerMtx);
         writer.close();
@@ -2579,8 +2645,14 @@ auto CBoard::gpioInRun(QString path, int format, uint32_t blockSize, uint64_t sa
         end = GpioEnd::FileError;
         text = e.what();
     }
+    {
+        std::lock_guard lock(m_gin.netMtx);  // an exception may have skipped it
+        m_gin.net = nullptr;
+    }
     m_gin.running = false;
-    post([this, end, text]() {
+    post([this, end, text, gen]() {
+        if (gen != m_gin.gen)
+            return;  // an older run: finished (and joined) already
         m_gin.end = end;
         m_gin.endText = text;
         gpioThreadEnded(false);
@@ -2589,7 +2661,7 @@ auto CBoard::gpioInRun(QString path, int format, uint32_t blockSize, uint64_t sa
 
 // The file on the output; the connection closes after the last word: the board plays what it
 // got and stops by itself (runOutput of rpsa_client -G)
-auto CBoard::gpioOutRun(std::shared_ptr<CGpioFileReader> reader, uint32_t blockSize) -> void {
+auto CBoard::gpioOutRun(std::shared_ptr<CGpioFileReader> reader, uint32_t blockSize, int gen) -> void {
     GpioEnd end = GpioEnd::Stopped;
     QString text;
     try {
@@ -2604,6 +2676,10 @@ auto CBoard::gpioOutRun(std::shared_ptr<CGpioFileReader> reader, uint32_t blockS
 
         std::atomic<bool> connected{false}, closing{false}, lost{false};
         auto net = net_lib::CAsioNet::create(net_lib::M_CLIENT, m_ip.toStdString(), NET_GPIO_OUT_STREAMING_PORT, nullptr);
+        {
+            std::lock_guard lock(m_gout.netMtx);
+            m_gout.net = net;
+        }
         net->clientConnectNotify.connect([&](std::string&) { connected = true; });
         net->clientErrorNotify.connect([&](std::error_code) {
             if (!closing)
@@ -2660,13 +2736,23 @@ auto CBoard::gpioOutRun(std::shared_ptr<CGpioFileReader> reader, uint32_t blockS
             }
         }
         closing = true;
+        {
+            std::lock_guard lock(m_gout.netMtx);
+            m_gout.net = nullptr;
+        }
         net->stop();
     } catch (std::exception& e) {
         end = GpioEnd::FileError;
         text = QString("the file cannot be read: ") + e.what();
     }
+    {
+        std::lock_guard lock(m_gout.netMtx);  // an exception may have skipped it
+        m_gout.net = nullptr;
+    }
     m_gout.running = false;
-    post([this, end, text]() {
+    post([this, end, text, gen]() {
+        if (gen != m_gout.gen)
+            return;  // an older run: finished (and joined) already
         m_gout.end = end;
         m_gout.endText = text;
         gpioThreadEnded(true);

@@ -358,6 +358,7 @@ class CBoard : public QObject {
         bool gaps = false;
         uint32_t blockSize = 0;
         uint64_t fileBytes = 0;  // of samples, every channel
+        int gen = 0;             // m_dacGen of the run: the end of an older sender does nothing
     };
     // what the sender thread ends with
     enum class DacEnd { Done, Stopped, NoConnection, Lost, FileError };
@@ -378,6 +379,9 @@ class CBoard : public QObject {
     bool m_dacStopRequested = false;
     bool m_dacDone = false;
     int m_dacGen = 0;  // a start: the timeouts of an older one do nothing
+    // a stop the board did not confirm (or not waited for): its STOPPED may still come while the
+    // next start connects, and must not end it
+    int m_dacStaleStops = 0;
     qint64 m_dacStart = 0;
     qint64 m_dacEnd = 0;  // the stop: the time and the rate of the run stay
     SDacRun m_dacRun;
@@ -424,7 +428,13 @@ class CBoard : public QObject {
         std::thread thread;
         std::atomic<bool> terminate{false};
         std::atomic<bool> running{false};  // the thread
+        // the data connection of the thread, to close it from here: a send blocked on a board
+        // that does not read never sees terminate
+        std::mutex netMtx;
+        net_lib::CAsioNet::Ptr net;
+        int staleStops = 0;  // as m_dacStaleStops
     };
+    auto gpioDisconnect(SGpioDir& d) -> void;
     auto connectGpioHandlers() -> void;
     auto gpioRunning(const SGpioDir& d) -> bool;
     auto setGpioState(SGpioDir& d, const QString& state, const QString& text = QString()) -> void;
@@ -433,9 +443,9 @@ class CBoard : public QObject {
     auto gpioThreadEnded(bool out) -> void;
     auto gpioFinish(bool out) -> void;
     auto gpioStopSent(bool out) -> void;
-    auto gpioInRun(QString path, int format, uint32_t blockSize, uint64_t samplesLimit, double timeLimit) -> void;
+    auto gpioInRun(QString path, int format, uint32_t blockSize, uint64_t samplesLimit, double timeLimit, int gen) -> void;
     auto gpioClock() -> double;
-    auto gpioOutRun(std::shared_ptr<CGpioFileReader> reader, uint32_t blockSize) -> void;
+    auto gpioOutRun(std::shared_ptr<CGpioFileReader> reader, uint32_t blockSize, int gen) -> void;
     auto readGpioFile() -> void;
     auto gpioInSummary() -> QString;
     auto gpioOutSummary() -> QString;
