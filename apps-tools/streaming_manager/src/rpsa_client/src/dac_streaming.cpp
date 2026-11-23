@@ -185,6 +185,19 @@ auto dac_runClient(DACSettingsClient conf, uint32_t blockSize) -> void {
     if (!g_dac_connected[conf.host]) {
         aprintf(stderr, "%s [ERROR] %s: no data connection for the DAC within %.1f s\n", getTS(": ").c_str(), conf.host.c_str(), replyTimeout() / 1000.0);
         g_dacFailed = true;
+        if (jsonev::on()) {
+            // this board never sent: it is not among the boards of the done events
+            Json::Value e;
+            e["host"] = conf.host;
+            e["message"] = "no data connection for the DAC";
+            jsonev::emit("error", e);
+            Json::Value d;
+            d["host"] = conf.host;
+            d["ok"] = false;
+            d["bytes"] = Json::UInt64(0);
+            d["file"] = conf.dac_file;
+            jsonev::emit("done", d);
+        }
     }
 
     if (g_dac_connected[conf.host]) {

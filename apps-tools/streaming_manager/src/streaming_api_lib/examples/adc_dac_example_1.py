@@ -15,6 +15,17 @@ g_list = queue.Queue()
 adcClient = None
 dacClient = None
 
+
+# A capture as codes of the other width: an 8 bit capture (int8) holds the high byte of a 16 bit one
+def to16(data):
+    data = np.asarray(data)
+    return data.astype(np.int16) << 8 if data.dtype == np.int8 else data.astype(np.int16)
+
+
+def to8(data):
+    data = np.asarray(data)
+    return data.astype(np.int8) if data.dtype == np.int8 else (data >> 8).astype(np.int8)
+
 # ==================== ADC Callback Class ====================
 class ADCCallbackHandler(streaming.ADCCallback):
     def __init__(self):
@@ -49,7 +60,8 @@ class ADCCallbackHandler(streaming.ADCCallback):
             return
 
         # Analyze raw data for signal presence: the whole buffer at once
-        if np.abs(raw.astype(np.int32)).max() > SIGNAL_THRESHOLD:
+        # the threshold is in 16 bit codes: an 8 bit capture is scaled to them
+        if np.abs(to16(raw).astype(np.int32)).max() > SIGNAL_THRESHOLD:
             # The array may be kept: it is not the buffer of the client
             g_list.put(raw)
             print(f"Signal detected! Saved {raw.size} samples to DAC buffer")
@@ -81,8 +93,8 @@ class DACCallbackHandler(streaming.DACCallback):
             # Get data from queue
             data = g_list.get_nowait()
 
-            # 16 bit for the DAC (an 8 bit capture is int8)
-            data = np.asarray(data, dtype=np.int16)
+            # 16 bit for the DAC (an 8 bit capture is scaled up)
+            data = to16(data)
 
             samplesToSend = min(size, len(data))
 
@@ -126,11 +138,8 @@ class DACCallbackHandler(streaming.DACCallback):
 
             data = g_list.get_nowait()
 
-            # Convert 16-bit to 8-bit by taking the most significant byte
-            if isinstance(data, np.ndarray):
-                data_8bit = (data >> 8).astype(np.int8)
-            else:
-                data_8bit = np.array([(x >> 8) & 0xFF for x in data], dtype=np.int8)
+            # 8 bit for the DAC: the high byte of a 16 bit capture, an 8 bit one as it is
+            data_8bit = to8(data)
 
             samplesToSend = min(size, len(data_8bit))
 

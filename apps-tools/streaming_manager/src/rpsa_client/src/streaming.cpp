@@ -36,6 +36,14 @@ std::map<std::string, std::weak_ptr<streaming_lib::CStreamingFile>> g_fileObj;
 std::map<std::string, std::vector<std::string>> g_fileList;
 std::map<std::string, size_t> g_partsTold;
 std::map<std::string, std::string> g_stopReason;  // why each board ended (the done event)
+std::map<std::string, bool> g_hostFailed;  // the board stopped its stream with an error (under g_smutex)
+
+// a board stopped its stream with an error: the run fails, its done event says error
+static auto failHost(const std::string& host) -> void {
+    g_streamFailed = true;
+    const std::lock_guard lock(g_smutex);
+    g_hostFailed[host] = true;
+}
 
 // an error of a board as an event too (--json)
 static auto jsonError(const std::string& host, const std::string& text) -> void {
@@ -407,14 +415,16 @@ auto runClient(std::string host, StateRunnedHosts, uint32_t size, adc_channels_t
     // after the stop: one that began on another thread (a limit) has told its reason by now
     {
         const int r = *fileStop;
+        const std::lock_guard lock(g_smutex);
+        const bool failed = g_hostFailed.count(host) && g_hostFailed[host];
         const char* why = r == streaming_lib::CStreamingFile::REACH_LIMIT ? (g_file_manager->endedOnTheClock() ? "clock" : "limit")
                           : r == streaming_lib::CStreamingFile::OUT_SPACE ? "disk_full"
                           : timedOut                                       ? "timeout"
                           : sig_exit_flag                                  ? "stopped"
+                          : failed                                         ? "error"
                           : byBoard                                        ? "board"
                           : g_streamFailed                                 ? "error"
                                                                            : "stopped";
-        const std::lock_guard lock(g_smutex);
         g_stopReason[host] = why;
     }
     {
@@ -603,11 +613,17 @@ static auto jsonProgress() -> void {
             if (g_diskRate.count(host))
                 disk = g_diskRate[host];
         }
-        const char* state = g_endedByBoard.count(host) && g_endedByBoard.at(host) ? "stopped"
-                            : g_terminate.count(host) && g_terminate[host]          ? "done"
-                            : trig.known && trig.armed                              ? "armed"
-                            : st.bytes == 0                                         ? "connecting"
-                                                                                    : "streaming";
+        bool ended = false;
+        {
+            const std::lock_guard lock(g_smutex);
+            ended = g_endedByBoard.count(host) && g_endedByBoard.at(host);
+        }
+        auto f = w.lock();
+        const char* state = ended                               ? "stopped"
+                            : !f || !f->isFileThreadWork()      ? "done"
+                            : trig.known && trig.armed          ? "armed"
+                            : st.bytes == 0                     ? "connecting"
+                                                                : "streaming";
         Json::Value e;
         e["host"] = host;
         e["state"] = state;
@@ -626,7 +642,7 @@ static auto jsonProgress() -> void {
             t["count"] = Json::UInt64(trig.count);
             e["trigger"] = t;
         }
-        if (auto f = w.lock()) {
+        if (f) {
             e["part"] = f->getPart();
             e["file"] = f->getCSVFileName();
             e["part_bytes"] = Json::UInt64(f->getPartSize());
@@ -715,6 +731,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
     resetStreamingCounter();
     g_files.clear();
     g_endedByBoard.clear();
+    g_hostFailed.clear();
 
     ClientOpt::Options remote_opt = g_soption;
     remote_opt.mode = ClientOpt::Mode::REMOTE;
@@ -723,6 +740,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
     std::map<std::string, StateRunnedHosts> runned_hosts;
     if (!startRemote(cl, remote_opt, nullptr, &runned_hosts)) {
         aprintf(stdout, "%s Can't stop streaming on remote machines\n", getTS(": ").c_str());
+        jsonError("", "Can't stop streaming on remote machines");
         return false;
     }
 
@@ -730,12 +748,14 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
     auto hosts = cl->getHosts();
     if (!requestMemoryBlockSize(cl, hosts, &blockSizes, remote_opt.verbous)) {
         aprintf(stdout, "%s Can't get block sizes\n", getTS(": ").c_str());
+        jsonError("", "Can't get block sizes");
         return false;
     }
 
     std::map<std::string, adc_channels_t> activeChannels;
     if (!requestActiveChannels(cl, hosts, &activeChannels, remote_opt.verbous)) {
         aprintf(stdout, "%s Can't get active channels\n", getTS(": ").c_str());
+        jsonError("", "Can't get active channels");
         return false;
     }
 
@@ -756,6 +776,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
                         kv.first.c_str(),
                         kv.first.c_str(),
                         kv.first.c_str());
+                jsonError(kv.first, "the board writes the ADC to its own SD card (adc_pass_mode=FILE), not to this client");
                 local = true;
             }
         }
@@ -767,6 +788,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         }
         if (runned_hosts.empty()) {
             aprintf(stderr, "%s [ERROR] No board started the streaming\n", getTS(": ").c_str());
+            jsonError("", "No board started the streaming");
             g_converter.clear();
             return false;
         }
@@ -805,7 +827,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
 
         cl->errorNofiy.connect([](ClientNetConfigManager::Errors errors, std::string host, std::error_code err) {
             if (errors == ClientNetConfigManager::Errors::SERVER_INTERNAL) {
-                g_streamFailed = true;
+                failHost(host);
                 aprintf(stderr, "%s Error: %s %s\n", getTS(": ").c_str(), host.c_str(), err.message().c_str());
                 jsonError(host, err.message());
             }
@@ -819,28 +841,28 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         });
 
         cl->serverStoppedMemErrorNofiy.connect([](std::string host) {
-            g_streamFailed = true;
+            failHost(host);
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: not enough DMA memory on the board\n", getTS(": ").c_str(), host.c_str());
             jsonError(host, "Streaming stopped: not enough DMA memory on the board");
             stopStreaming(host);
         });
 
         cl->serverStoppedMemModifyNofiy.connect([](std::string host) {
-            g_streamFailed = true;
+            failHost(host);
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the memory of the board was split again (a new block_size)\n", getTS(": ").c_str(), host.c_str());
             jsonError(host, "Streaming stopped: the memory of the board was split again (a new block_size)");
             stopStreaming(host);
         });
 
         cl->serverStoppedNoActiveChannelsNofiy.connect([](std::string host) {
-            g_streamFailed = true;
+            failHost(host);
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: no active channel (channel_state_N=ON)\n", getTS(": ").c_str(), host.c_str());
             jsonError(host, "Streaming stopped: no active channel (channel_state_N=ON)");
             stopStreaming(host);
         });
 
         cl->serverStoppedConfigErrorNofiy.connect([](std::string host) {
-            g_streamFailed = true;
+            failHost(host);
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the board did not start the ADC: the settings or the board (journalctl -u redpitaya_streaming on the board)\n",
                     getTS(": ").c_str(), host.c_str());
             jsonError(host, "Streaming stopped: the board did not start the ADC: the settings or the board (journalctl -u redpitaya_streaming on the board)");
@@ -848,7 +870,7 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         });
 
         cl->serverStoppedSDFullNofiy.connect([](std::string host) {
-            g_streamFailed = true;
+            failHost(host);
             aprintf(stderr, "%s [ERROR] Streaming stopped: %s: the SD card of the board is full\n", getTS(": ").c_str(), host.c_str());
             jsonError(host, "Streaming stopped: the SD card of the board is full");
             stopStreaming(host);
@@ -919,8 +941,8 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
         if (!g_endedByBoard.empty())
             sleepMs(300);  // the closed config connection is seen
         for (auto& [host, ended] : g_endedByBoard) {
-            if (!ended)
-                continue;
+            if (!ended || (g_hostFailed.count(host) && g_hostFailed[host]))
+                continue;  // a board that said its error was reported then
             g_streamFailed = true;
             aprintf(stderr, "%s [ERROR] %s ended the streaming early: %s\n", getTS(": ").c_str(), host.c_str(), endedText(cl->isConnected(host)));
             jsonError(host, std::string("ended the streaming early: ") + endedText(cl->isConnected(host)));
@@ -928,9 +950,10 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
 
         remote_opt.remote_mode = ClientOpt::RemoteMode::STOP;
         if (!startRemote(cl, remote_opt, nullptr, &runned_hosts)) {
+            // the files are written: their results and done events follow, the run fails
             aprintf(stdout, "%s Can't stop streaming on remote machines\n", getTS(": ").c_str());
-            g_converter.clear();
-            return false;
+            jsonError("", "Can't stop streaming on remote machines");
+            g_streamFailed = true;
         }
 
         if (g_soption.verbous) {
@@ -990,9 +1013,10 @@ auto startStreaming(std::shared_ptr<ClientNetConfigManager> cl, ClientOpt::Optio
 }
 
 auto streamingSIGHandler() -> void {
+    // the flag first: a client thread that sees the stop must know it is this client's
+    sig_exit_flag = true;
     stopCSV();
     stopStreaming();
-    sig_exit_flag = true;
 }
 
 auto stopCSV() -> void {

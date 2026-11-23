@@ -1,11 +1,13 @@
 #include "json_events.h"
 
 #include <chrono>
+#include <csignal>
 #include <cstdio>
 #include <ctime>
 #include <mutex>
 
 #ifdef _WIN32
+#include <windows.h>
 #include <fcntl.h>
 #include <io.h>
 #define DUP _dup
@@ -23,6 +25,38 @@
 namespace {
 std::mutex g_mtx;
 FILE* g_out = nullptr;  // the stdout of the process
+int g_errors = 0;
+
+#ifdef _WIN32
+// the strings of the client (file names, paths) are in the ANSI code page on Windows; JSON is UTF-8
+auto utf8(const std::string& a) -> std::string {
+    if (a.empty())
+        return a;
+    const int wn = MultiByteToWideChar(CP_ACP, 0, a.data(), static_cast<int>(a.size()), nullptr, 0);
+    if (wn <= 0)
+        return a;
+    std::wstring w(wn, L'\0');
+    MultiByteToWideChar(CP_ACP, 0, a.data(), static_cast<int>(a.size()), w.data(), wn);
+    const int n = WideCharToMultiByte(CP_UTF8, 0, w.data(), wn, nullptr, 0, nullptr, nullptr);
+    if (n <= 0)
+        return a;
+    std::string u(n, '\0');
+    WideCharToMultiByte(CP_UTF8, 0, w.data(), wn, u.data(), n, nullptr, nullptr);
+    return u;
+}
+auto toUtf8(Json::Value& v) -> void {
+    if (v.isString())
+        v = utf8(v.asString());
+    else if (v.isArray())
+        for (auto& x : v)
+            toUtf8(x);
+    else if (v.isObject())
+        for (const auto& k : v.getMemberNames())
+            toUtf8(v[k]);
+}
+#else
+auto toUtf8(Json::Value&) -> void {}
+#endif
 
 auto timeText() -> std::string {
     const auto now = std::chrono::system_clock::now();
@@ -57,6 +91,10 @@ auto jsonev::enable() -> bool {
         return false;
     // the rest of the client prints to stdout: to stderr from now on
     DUP2(FILENO(stderr), FILENO(stdout));
+#ifndef _WIN32
+    // a reader that went away (| head, | jq ended) must not end the recording: the events are lost
+    signal(SIGPIPE, SIG_IGN);
+#endif
     return true;
 }
 
@@ -74,6 +112,9 @@ auto jsonev::emit(const std::string& event, Json::Value fields) -> void {
     o["time"] = timeText();
     for (const auto& k : fields.getMemberNames())
         o[k] = fields[k];
+    toUtf8(o);
+    if (event == "error")
+        g_errors++;
     Json::StreamWriterBuilder b;
     b["indentation"] = "";
     b["emitUTF8"] = true;
@@ -82,7 +123,17 @@ auto jsonev::emit(const std::string& event, Json::Value fields) -> void {
     fflush(g_out);
 }
 
+auto jsonev::errors() -> int {
+    const std::lock_guard lock(g_mtx);
+    return g_errors;
+}
+
 auto jsonev::exitCode(int code) -> int {
+    if (code != 0 && errors() == 0) {
+        Json::Value e;
+        e["message"] = "the run failed: the reason is on stderr";
+        emit("error", e);
+    }
     Json::Value f;
     f["code"] = code;
     emit("exit", f);

@@ -21,8 +21,11 @@ auto enable() -> bool;
 auto on() -> bool;
 // one line: {"event": event, "time": ..., fields...}
 auto emit(const std::string& event, Json::Value fields = Json::Value(Json::objectValue)) -> void;
-// the exit code as the last line; returns it
+// the exit code as the last line; returns it. A failed run without an error event gets one
+// first (its reason is on stderr)
 auto exitCode(int code) -> int;
+// error events written so far
+auto errors() -> int;
 
 }  // namespace jsonev
 
