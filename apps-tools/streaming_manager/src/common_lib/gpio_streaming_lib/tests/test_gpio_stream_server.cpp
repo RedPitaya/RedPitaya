@@ -164,9 +164,12 @@ struct InputClient {
         return headers.size();
     }
 
+    // the network goes first, its thread joined: a pack it still delivers must not reach the
+    // members below, which go before it otherwise
     ~InputClient() {
         if (net)
             net->stop();
+        net = nullptr;
     }
 };
 
@@ -195,9 +198,11 @@ struct OutputClient {
         return net->sendSyncData(pack);
     }
 
+    // as the input client: the network and its thread go before the members its handlers use
     ~OutputClient() {
         if (net)
             net->stop();
+        net = nullptr;
     }
 };
 
