@@ -291,6 +291,15 @@ ApplicationWindow {
                 Text { text: "part " + (win.partIdx + 1) + " of " + win.partList.length; color: Theme.value; font.pixelSize: Theme.fsSm; font.family: Theme.mono }
                 Btn { kind: "outline"; compact: true; text: "▶"; enabled: win.partIdx >= 0 && win.partIdx < win.partList.length - 1; Accessible.name: "The part after"; onClicked: win.openPart(win.partList[win.partIdx + 1].path) }
             }
+            // the window of the plot on the time line of the recording
+            Text {
+                visible: rv.error === ""
+                readonly property int d: win.digits(win.to - win.from)
+                text: win.fmtT(win.from, d) + " – " + win.fmtT(win.to, d) + " · " + win.dur(win.to - win.from)
+                color: Theme.value
+                font.family: Theme.mono
+                font.pixelSize: Theme.fsSm
+            }
             Btn { id: fileBtn; kind: "outline"; text: "File ▾"; active: fileMenu.opened; onClicked: fileMenu.popupFor(fileBtn) }
         }
 
@@ -346,13 +355,6 @@ ApplicationWindow {
             Btn { kind: "outline"; compact: true; text: "−"; Accessible.name: "Zoom out"; onClicked: win.zoom(2) }
             Btn { kind: "outline"; compact: true; text: "+"; Accessible.name: "Zoom in"; onClicked: win.zoom(0.5) }
             Btn { kind: "outline"; compact: true; text: "Table"; active: win.showTable; onClicked: win.showTable = !win.showTable }
-            Text {
-                readonly property int d: win.digits(win.to - win.from)
-                text: win.fmtT(win.from, d) + " – " + win.fmtT(win.to, d) + " · " + win.dur(win.to - win.from)
-                color: Theme.value
-                font.family: Theme.mono
-                font.pixelSize: Theme.fsSm
-            }
         }
 
         // find a level: marks where an input goes through it, as the trigger of a board
@@ -396,34 +398,45 @@ ApplicationWindow {
                     table.tab = "marks"
                 }
             }
-            RowLayout {
+            // two groups: the second goes to a line of its own when the window is narrow or the text large
+            ColumnLayout {
                 id: searchRow
                 anchors.fill: parent
                 anchors.margins: 8
                 anchors.leftMargin: 12
-                spacing: 10
-                Text { text: "Find"; color: Theme.text; font.bold: true; font.pixelSize: Theme.fsMd }
-                Select {
-                    implicitWidth: 86
-                    implicitHeight: 24 + Theme.fsAdd
-                    options: win.inputs.map(i => [i, "IN" + i])
-                    value: searchBar.input
-                    onPicked: (x) => searchBar.input = Number(x)
-                    Accessible.name: "Input"
+                spacing: 6
+                Flow {
+                    Layout.fillWidth: true
+                    spacing: 10
+                    RowLayout {
+                        spacing: 10
+                        Text { text: "Find"; color: Theme.text; font.bold: true; font.pixelSize: Theme.fsMd }
+                        Select {
+                            implicitWidth: 86
+                            implicitHeight: 24 + Theme.fsAdd
+                            options: win.inputs.map(i => [i, "IN" + i])
+                            value: searchBar.input
+                            onPicked: (x) => searchBar.input = Number(x)
+                            Accessible.name: "Input"
+                        }
+                        Seg { small: true; options: ["Rising", "Falling", "Both"]; currentIndex: ["rising", "falling", "both"].indexOf(searchBar.edge); onPicked: (i) => searchBar.edge = ["rising", "falling", "both"][i] }
+                        Label2 { text: "Level"; kind: "hint" }
+                        TextIn { free: true; mono: true; implicitWidth: 80; topPadding: 0; bottomPadding: 0; implicitHeight: Math.max(24 + Theme.fsAdd, Math.ceil(font.pixelSize * 1.5) + 4); text: searchBar.level; bad: searchBar.level.trim() !== "" && !isFinite(searchBar.levelV); onTextChanged: searchBar.level = text; onAccepted: searchBar.go(); Accessible.name: "Level in volts" }
+                        Label2 { text: "V ± "; kind: "hint" }
+                        TextIn { free: true; mono: true; implicitWidth: 70; topPadding: 0; bottomPadding: 0; implicitHeight: Math.max(24 + Theme.fsAdd, Math.ceil(font.pixelSize * 1.5) + 4); text: searchBar.hyst; bad: !(searchBar.hystV >= 0); onTextChanged: searchBar.hyst = text; onAccepted: searchBar.go(); Accessible.name: "Hysteresis in volts" }
+                        Label2 { text: "V · apart ≥"; kind: "hint"; ToolTip.visible: apartHover.hovered; ToolTip.text: "Not closer than this to the mark before"; HoverHandler { id: apartHover } }
+                        TextIn { free: true; mono: true; implicitWidth: 60; topPadding: 0; bottomPadding: 0; implicitHeight: Math.max(24 + Theme.fsAdd, Math.ceil(font.pixelSize * 1.5) + 4); text: searchBar.gapMs; bad: !(Number(searchBar.gapMs) >= 0); onTextChanged: searchBar.gapMs = text; onAccepted: searchBar.go(); Accessible.name: "Not closer than, ms" }
+                        Label2 { text: win.rate > 0 ? "ms" : "samples"; kind: "hint" }
+                    }
+                    RowLayout {
+                        spacing: 10
+                        Seg { small: true; options: win.hasSel ? ["Whole", "Window", "Selection"] : ["Whole", "Window"]; currentIndex: ["whole", "window", "selection"].indexOf(searchBar.scope); onPicked: (i) => searchBar.scope = ["whole", "window", "selection"][i] }
+                        Btn { kind: "primary"; compact: true; text: "Find"; enabled: searchBar.valid && win.busy.what !== "find"; onClicked: searchBar.go() }
+                        Btn { kind: "outline"; compact: true; text: "+ Mark"; ToolTip.visible: hovered; ToolTip.text: "A mark in the middle of the window; or double click on the plot"; onClicked: { rv.addMark(Math.round((win.from + win.to) / 2), searchBar.input) } }
+                        Btn { kind: "outline"; compact: true; text: "Clear"; enabled: win.markList.length > 0; ToolTip.visible: hovered; ToolTip.text: "All the marks go"; onClicked: { rv.clearMarks(); win.markIdx = -1 } }
+                    }
                 }
-                Seg { small: true; options: ["Rising", "Falling", "Both"]; currentIndex: ["rising", "falling", "both"].indexOf(searchBar.edge); onPicked: (i) => searchBar.edge = ["rising", "falling", "both"][i] }
-                Label2 { text: "Level"; kind: "hint" }
-                TextIn { free: true; mono: true; implicitWidth: 80; implicitHeight: 24 + Theme.fsAdd; text: searchBar.level; bad: searchBar.level.trim() !== "" && !isFinite(searchBar.levelV); onTextChanged: searchBar.level = text; onAccepted: searchBar.go(); Accessible.name: "Level in volts" }
-                Label2 { text: "V ± "; kind: "hint" }
-                TextIn { free: true; mono: true; implicitWidth: 70; implicitHeight: 24 + Theme.fsAdd; text: searchBar.hyst; bad: !(searchBar.hystV >= 0); onTextChanged: searchBar.hyst = text; onAccepted: searchBar.go(); Accessible.name: "Hysteresis in volts" }
-                Label2 { text: "V · apart ≥"; kind: "hint"; ToolTip.visible: apartHover.hovered; ToolTip.text: "Not closer than this to the mark before"; HoverHandler { id: apartHover } }
-                TextIn { free: true; mono: true; implicitWidth: 60; implicitHeight: 24 + Theme.fsAdd; text: searchBar.gapMs; bad: !(Number(searchBar.gapMs) >= 0); onTextChanged: searchBar.gapMs = text; onAccepted: searchBar.go(); Accessible.name: "Not closer than, ms" }
-                Label2 { text: win.rate > 0 ? "ms" : "samples"; kind: "hint" }
-                Seg { small: true; options: win.hasSel ? ["Whole", "Window", "Selection"] : ["Whole", "Window"]; currentIndex: ["whole", "window", "selection"].indexOf(searchBar.scope); onPicked: (i) => searchBar.scope = ["whole", "window", "selection"][i] }
-                Btn { kind: "primary"; compact: true; text: "Find"; enabled: searchBar.valid && win.busy.what !== "find"; onClicked: searchBar.go() }
-                Label2 { Layout.fillWidth: true; Layout.minimumWidth: 40; kind: searchBar.statusBad ? "bad" : "hint"; wrapMode: Text.NoWrap; elide: Text.ElideRight; text: searchBar.status; ToolTip.visible: statusHover.hovered && text !== ""; ToolTip.text: text; HoverHandler { id: statusHover } }
-                Btn { kind: "outline"; compact: true; text: "+ Mark"; ToolTip.visible: hovered; ToolTip.text: "A mark in the middle of the window; or double click on the plot"; onClicked: { rv.addMark(Math.round((win.from + win.to) / 2), searchBar.input) } }
-                Btn { kind: "outline"; compact: true; text: "Clear"; enabled: win.markList.length > 0; ToolTip.visible: hovered; ToolTip.text: "All the marks go"; onClicked: { rv.clearMarks(); win.markIdx = -1 } }
+                Label2 { Layout.fillWidth: true; visible: searchBar.status !== ""; kind: searchBar.statusBad ? "bad" : "hint"; wrapMode: Text.NoWrap; elide: Text.ElideRight; text: searchBar.status; ToolTip.visible: statusHover.hovered && text !== ""; ToolTip.text: text; HoverHandler { id: statusHover } }
             }
         }
 

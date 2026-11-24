@@ -164,7 +164,8 @@ ColumnLayout {
 
     GridLayout {
         Layout.fillWidth: true
-        columns: width > 900 ? 2 : 1
+        // two cards side by side only where the table of the lines fits in half (a larger text makes it wider)
+        columns: width > Math.max(900, 2 * (lines.implicitWidth + 36) + columnSpacing) ? 2 : 1
         columnSpacing: 16
         rowSpacing: 16
 
@@ -426,7 +427,7 @@ ColumnLayout {
             GridLayout {
                 id: lines
                 columns: 11
-                columnSpacing: 10
+                columnSpacing: 6
                 rowSpacing: 8
                 Item { Layout.preferredWidth: 1; Layout.preferredHeight: 1 }
                 Repeater {
