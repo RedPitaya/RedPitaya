@@ -15,16 +15,16 @@ print("rp_api_250.rp_spi_load_via_fpga(\"/opt/redpitaya/lib/configs/AD9613BCPZ-2
 res = rp_api_250.rp_spi_load_via_fpga("/opt/redpitaya/lib/configs/AD9613BCPZ-250.xml")
 print(res)
 
-print("rp_api_250.rp_write_to_spi_fpga(\"/dev/mem\",0x40000000,0x50,0xFF,0)")
-res = rp_api_250.rp_write_to_spi_fpga("/dev/mem",0x40000000,0x50,0xFF,0)
+print("rp_api_250.rp_write_to_spi_fpga(\"/dev/uio/api@40000000\",0x40000000,0x50,0xFF,0)")
+res = rp_api_250.rp_write_to_spi_fpga("/dev/uio/api@40000000",0x40000000,0x50,0xFF,0)
 print(res)
 
-print("rp_api_250.rp_read_from_spi_fpga(\"/dev/mem\",0x40000000,0x50,0x14)")
-res = rp_api_250.rp_read_from_spi_fpga("/dev/mem",0x40000000,0x50,0x14)
+print("rp_api_250.rp_read_from_spi_fpga(\"/dev/uio/api@40000000\",0x40000000,0x50,0x14)")
+res = rp_api_250.rp_read_from_spi_fpga("/dev/uio/api@40000000",0x40000000,0x50,0x14)
 print(res)
 
-print("rp_api_250.rp_write_to_spi_fpga(\"/dev/mem\",0x40000000,0x50,0xFF,1)")
-res = rp_api_250.rp_write_to_spi_fpga("/dev/mem",0x40000000,0x50,0xFF,1)
+print("rp_api_250.rp_write_to_spi_fpga(\"/dev/uio/api@40000000\",0x40000000,0x50,0xFF,1)")
+res = rp_api_250.rp_write_to_spi_fpga("/dev/uio/api@40000000",0x40000000,0x50,0xFF,1)
 print(res)
 
 
