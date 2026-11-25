@@ -26,7 +26,8 @@ Item {
     readonly property real recFrac: hasLimit ? (rec.frac || 0) : (rec.total ? 1 - rec.free / rec.total : 0)
     function dur(sec) { if (!(sec >= 0) || !isFinite(sec)) return "-"; sec = Math.round(sec); return sec < 90 ? sec + " s" : sec < 5400 ? Math.round(sec / 60) + " min" : Math.floor(sec / 3600) + " h" }
 
-    readonly property real rowHeight: header ? 28 + Theme.fsAdd : 56 + Theme.fsAdd
+    // a row grows with its state block (a larger text makes it taller)
+    readonly property real rowHeight: header ? 28 + Theme.fsAdd : Math.max(56 + Theme.fsAdd, stateCol.implicitHeight + 12)
     implicitHeight: rowHeight + (errLine.visible ? errLine.implicitHeight + 8 : 0)
 
     RowLayout {
@@ -66,31 +67,35 @@ Item {
             Layout.preferredWidth: longestState.width + 44; Layout.minimumWidth: longestState.width + 44; Layout.maximumWidth: longestState.width + 44
             implicitHeight: 24
             Text { visible: root.header; text: "STATE"; color: Theme.muted; font.pixelSize: Theme.fsXs; anchors.verticalCenter: parent.verticalCenter }
-            Badge { id: stateBadge; visible: !root.header; text: s.stateText; kind: s.stateKind; anchors.verticalCenter: parent.verticalCenter; anchors.verticalCenterOffset: -9 * ((dacText.visible ? 1 : 0) + (gpioText.visible ? 1 : 0)) }
-            // the DAC (streaming_improvements 4.17): its state in a word or two
-            Text {
-                id: dacText
-                visible: !root.header && s.hasDac && s.connected
-                anchors.top: stateBadge.bottom
-                anchors.topMargin: 3
+            // the state, the DAC and the GPIO under it: one block in the middle of the row
+            Column {
+                id: stateCol
+                visible: !root.header
+                anchors.verticalCenter: parent.verticalCenter
                 width: parent.width
-                elide: Text.ElideRight
-                text: "DAC: " + (s.dacSt === "playing" ? (s.dac.source === "sd" ? "playing from SD" : "playing" + (s.dac.passes !== 1 && !s.dac.onePack ? " · pass " + s.dac.pass + (s.dac.passes > 0 ? "/" + s.dac.passes : "") : ""))
-                    : s.dacSt === "connecting" ? "starting" : s.dacSt === "stopping" ? "stopping" : s.dacSt === "board" ? "stopped by the board" : s.dacSt === "error" ? "error" : "stopped")
-                color: s.dacKind === "ok" ? Theme.okText : s.dacKind === "red" ? Theme.dangerText : Theme.muted
-                font.pixelSize: Theme.fsXs
-            }
-            // the GPIO: each direction in a word
-            Text {
-                id: gpioText
-                visible: !root.header && s.hasGpio && s.connected
-                anchors.top: dacText.visible ? dacText.bottom : stateBadge.bottom
-                anchors.topMargin: dacText.visible ? 1 : 3
-                width: parent.width
-                elide: Text.ElideRight
-                text: s.gpioShortText
-                color: s.ginKind === "red" || s.goutKind === "red" ? Theme.dangerText : s.ginKind === "ok" || s.goutKind === "ok" ? Theme.okText : Theme.muted
-                font.pixelSize: Theme.fsXs
+                spacing: 2
+                Badge { id: stateBadge; text: s.stateText; kind: s.stateKind }
+                // the DAC (streaming_improvements 4.17): its state in a word or two
+                Text {
+                    id: dacText
+                    visible: s.hasDac && s.connected
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: "DAC: " + (s.dacSt === "playing" ? (s.dac.source === "sd" ? "playing from SD" : "playing" + (s.dac.passes !== 1 && !s.dac.onePack ? " · pass " + s.dac.pass + (s.dac.passes > 0 ? "/" + s.dac.passes : "") : ""))
+                        : s.dacSt === "connecting" ? "starting" : s.dacSt === "stopping" ? "stopping" : s.dacSt === "board" ? "stopped by the board" : s.dacSt === "error" ? "error" : "stopped")
+                    color: s.dacKind === "ok" ? Theme.okText : s.dacKind === "red" ? Theme.dangerText : Theme.muted
+                    font.pixelSize: Theme.fsXs
+                }
+                // the GPIO: each direction in a word
+                Text {
+                    id: gpioText
+                    visible: s.hasGpio && s.connected
+                    width: parent.width
+                    elide: Text.ElideRight
+                    text: s.gpioShortText
+                    color: s.ginKind === "red" || s.goutKind === "red" ? Theme.dangerText : s.ginKind === "ok" || s.goutKind === "ok" ? Theme.okText : Theme.muted
+                    font.pixelSize: Theme.fsXs
+                }
             }
         }
         Item {
