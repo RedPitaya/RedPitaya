@@ -25,13 +25,16 @@ typedef struct {
     void* context;
     int struct_size;  ///< only used to reserve dummy memory space for testing
 
+    // DMA (common/dma.cpp): AXI DMA registers through uio, the ring in /dev/rp_resmem
     std::string dma_dev;
-    size_t dma_size;
-    int dma_fd;
-    //volatile void *dma_mem;
+    int dma_reg_fd = -1;
+    volatile uint32_t* dma_regs = NULL;
+    int dma_mem_fd = -1;
+    void* dma_mem = NULL;     ///< the whole reserved region
+    uint32_t dma_phys = 0;    ///< physical address of the region
+    size_t dma_mem_size = 0;  ///< size of the region
+    size_t dma_size = 0;      ///< the ring of the capture, from the start of the region
 } rp_handle_uio_t;
-
-typedef enum { RP_DMA_SINGLE, RP_DMA_CYCLIC, RP_DMA_STOP_RX } RP_DMA_CTRL;
 
 typedef struct {
     bool inProcess;
@@ -60,28 +63,6 @@ typedef struct {
         last_indexNonRLE = 0;
     }
 } rp_acq_data_t;
-
-#define STOP_TX 0
-#define STOP_RX 1
-#define CYCLIC_TX 2
-#define CYCLIC_RX 3
-#define SINGLE_RX 10
-#define SINGLE_TX 11
-#define SIMPLE_RX 18  //blocking until complete
-#define SIMPLE_TX 17  //blocking until complete
-#define SIMPLE 12     //blocking until complete
-#define STATUS 20
-#define TIMEOUT 21
-
-#define STATUS_STOPPED 0
-#define STATUS_READY 1
-#define STATUS_BUSSY 2
-#define STATUS_ERROR 3
-
-// Parameter index for ioctl
-#define SET_RX_SGMNT_CNT 16
-#define SET_RX_SGMNT_SIZE 15
-// #define SET_DELAY_INT 17
 
 #define RP_TRG_LOA_PAT_MASK (1 << 1)  ///< logic analyzer pattern trigger
 #define RP_TRG_LOA_SWE_MASK (1 << 0)  ///< logic analyzer software trigger

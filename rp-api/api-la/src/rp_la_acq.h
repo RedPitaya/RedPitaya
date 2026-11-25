@@ -97,7 +97,6 @@ int rp_LaAcqStopAcq(rp_handle_uio_t* handle);
 int rp_LaAcqTriggerAcq(rp_handle_uio_t* handle);
 int rp_LaAcqAcqIsStopped(rp_handle_uio_t* handle, bool* status);
 int rp_LaAcqGlobalTrigSet(rp_handle_uio_t* handle, uint32_t mask);
-int rp_LaAcqRead(rp_handle_uio_t* handle, int timeout_s, bool* isTimeout);
 
 int rp_LaAcqSetConfig(rp_handle_uio_t* handle, uint32_t mask);
 int rp_LaAcqSetCntConfig(rp_handle_uio_t* handle, rp_la_cfg_regset_t a_reg);

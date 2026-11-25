@@ -22,12 +22,11 @@
 #include "rp.h"
 #include "rp_la_acq.h"
 
-// One period of the cyclic DMA. It must fit one AXI DMA buffer descriptor
-// (xlnx,sg-length-width = 23: 8 MB - 1).
+// The DMA ring grows in steps of this size, at most to the DMA capacity
 #define SEG_SIZE (1024 * 1024 * 4)
 
-// Size of the reserved memory region (device tree, buffer@2000000_b)
-static uint32_t g_reservedSize = 0;
+// The AXI DMA of the LA capture (axi_dma_2 of the logic project) as generic-uio
+#define LA_DMA_DEVICE "/dev/uio/la_dma@80420000"
 
 #define CHECK_REGSET                               \
     {                                              \
@@ -57,22 +56,17 @@ int rp_LaAcqOpen(const char* dev, rp_handle_uio_t* handle) {
         return status;
     }
 
-    uint32_t start = 0, size = 0;
-    status = rp_dmaReservedMemory(&start, &size);
+    status = rp_dmaOpen(LA_DMA_DEVICE, handle);
     if (status != RP_OK) {
-        ERROR_LOG("Error getting reserved memory size.")
-        return -1;
+        ERROR_LOG("Error open the LA DMA")
+        common_Close(handle);
+        return status;
     }
 
-    if (SEG_SIZE > size) {
-        ERROR_LOG("The reserved memory size (0x%X) is less than the segment size (0x%X).", size, SEG_SIZE)
-        return -1;
-    }
-    g_reservedSize = size;
     // One segment until a capture sets the ring size (rp_LaAcqSetBufferSize)
-    status = rp_dmaOpen("/dev/axi:rprx@2", handle, SEG_SIZE, 1);
+    status = rp_LaAcqSetBufferSize(handle, SEG_SIZE);
     if (status != RP_OK) {
-        ERROR_LOG("Error open device /dev/axi:rprx@2")
+        rp_LaAcqClose(handle);
         return status;
     }
 
@@ -85,37 +79,31 @@ int rp_LaAcqOpen(const char* dev, rp_handle_uio_t* handle) {
     return RP_OK;
 }
 
-/** Sets the DMA ring for the next capture: whole segments, at most the reserved region */
+/** Sets the DMA ring for the next capture: whole segments, at most the DMA capacity */
 int rp_LaAcqSetBufferSize(rp_handle_uio_t* handle, size_t bytes) {
-    size_t maxSegments = g_reservedSize / SEG_SIZE;
+    size_t capacity = rp_dmaCapacity(handle);
+    if (capacity < SEG_SIZE) {
+        ERROR_LOG("The DMA capacity (0x%zX) is less than the segment size (0x%X).", capacity, SEG_SIZE)
+        return RP_EOMD;
+    }
     size_t segments = (bytes + SEG_SIZE - 1) / SEG_SIZE;
     if (segments == 0)
         segments = 1;
-    if (segments > maxSegments)
-        segments = maxSegments;
-    if (segments == 0) {
-        ERROR_LOG("The reserved memory size (0x%X) is less than the segment size (0x%X).", g_reservedSize, SEG_SIZE)
-        return RP_EOMD;
-    }
-    rp_setSgmntS(handle, SEG_SIZE);
-    rp_setSgmntC(handle, segments);
-    handle->dma_size = segments * SEG_SIZE;
-    return RP_OK;
+    size_t ring = segments > capacity / SEG_SIZE ? capacity : segments * SEG_SIZE;
+    return rp_dmaSetRing(handle, ring);
 }
 
 int rp_LaAcqClose(rp_handle_uio_t* handle) {
+    int dmaStatus = rp_dmaClose(handle);
+    if (dmaStatus != RP_OK) {
+        ERROR_LOG("Error close dma device")
+    }
+
     int status = common_Close(handle);
     if (status != RP_OK) {
         return status;
     }
-
-    status = rp_dmaClose(handle);
-    if (status != RP_OK) {
-        ERROR_LOG("Error close dma device")
-        return status;
-    }
-
-    return RP_OK;
+    return dmaStatus;
 }
 
 int rp_LaAcqDefaultSettings(rp_handle_uio_t* handle) {
@@ -179,7 +167,10 @@ int rp_LaAcqRunAcq(rp_handle_uio_t* handle) {
 
     CHECK_REGSET
 
-    rp_dmaCtrl(handle, RP_DMA_CYCLIC);
+    int status = rp_dmaStart(handle);
+    if (status != RP_OK) {
+        return status;
+    }
     return rp_LaAcqSetControl(handle, RP_CTL_STA_MASK);
 }
 
@@ -187,7 +178,7 @@ int rp_LaAcqStopAcq(rp_handle_uio_t* handle) {
 
     CHECK_REGSET
 
-    rp_dmaCtrl(handle, RP_DMA_STOP_RX);
+    rp_dmaStop(handle);
     return rp_LaAcqSetControl(handle, RP_CTL_STO_MASK);
 }
 
@@ -219,13 +210,6 @@ int rp_LaAcqGlobalTrigSet(rp_handle_uio_t* handle, uint32_t mask) {
     rp_la_acq_regset_t* regset = (rp_la_acq_regset_t*)handle->regset;
     iowrite32(mask, &regset->trig_mask);
     return RP_OK;
-}
-
-int rp_LaAcqRead(rp_handle_uio_t* handle, int timeout_s, bool* isTimeout) {
-
-    CHECK_REGSET
-
-    return rp_dmaRead(handle, timeout_s, isTimeout);
 }
 
 int rp_LaAcqSetConfig(rp_handle_uio_t* handle, uint32_t mask) {

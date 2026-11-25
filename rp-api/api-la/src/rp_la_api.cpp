@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #include <mutex>
 
@@ -327,6 +326,15 @@ int rp_GetIsTimeout(bool* isTimeout) {
     return RP_OK;
 }
 
+/** The DMA ring (the start of the reserved region, mapped while the unit is open) */
+static const int16_t* dmaRing() {
+    if (g_la_acq_handle.dma_mem == NULL || g_la_acq_handle.dma_size == 0) {
+        ERROR_LOG("The LA DMA is not open")
+        return NULL;
+    }
+    return (const int16_t*)g_la_acq_handle.dma_mem;
+}
+
 /*
  * Walks the RLE ring backwards from the last written word until the requested
  * number of samples is covered. Returns the first word, the number of words and
@@ -377,32 +385,24 @@ static int findCaptureRLE(const int16_t* map, uint32_t* first, uint32_t* blocks,
 
 int rp_GetCapturedBlocksRLE(uint32_t* noOfBlocks) {
     std::lock_guard lock(g_data_mtx);
-    int16_t* map = (int16_t*)mmap(NULL, g_la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, g_la_acq_handle.dma_fd, 0);
-    if (map == MAP_FAILED) {
-        ERROR_LOG("Failed to mmap");
+    const int16_t* map = dmaRing();
+    if (map == NULL) {
         return RP_EMMD;
     }
     uint32_t first, adjust, trig;
     findCaptureRLE(map, &first, noOfBlocks, &adjust, &trig);
-    if (munmap(map, g_la_acq_handle.dma_size) == -1) {
-        ERROR_LOG("Failed to munmap");
-        return RP_EUMD;
-    }
     return RP_OK;
 }
 
 int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples) {
     std::lock_guard lock(g_data_mtx);
-    TRACE_SHORT("Dma size %d dev %s", g_la_acq_handle.dma_size, g_la_acq_handle.dma_dev.c_str())
-    int16_t* map = (int16_t*)mmap(NULL, g_la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, g_la_acq_handle.dma_fd, 0);
-    if (map == MAP_FAILED) {
-        ERROR_LOG("Failed to mmap");
-        rp_CloseUnit();
+    TRACE_SHORT("Dma size %zu dev %s", g_la_acq_handle.dma_size, g_la_acq_handle.dma_dev.c_str())
+    const int16_t* map = dmaRing();
+    if (map == NULL) {
         return RP_EMMD;
     }
 
     if (g_acq_data.buf == NULL || g_acq_data.buf_size == 0) {
-        munmap(map, g_la_acq_handle.dma_size);
         ERROR_LOG("Buffer for writing is not set")
         return RP_EOP;
     }
@@ -420,7 +420,6 @@ int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples) {
     if ((uint64_t)blockCount * 2 > g_acq_data.buf_size) {
         ERROR_LOG("The data buffer (%zu bytes) is smaller than the capture (%u bytes)", g_acq_data.buf_size, blockCount * 2)
         *noOfBlocks = blockCount;
-        munmap(map, g_la_acq_handle.dma_size);
         return RP_EOOR;
     }
 
@@ -442,22 +441,14 @@ int rp_GetValuesRLE(uint32_t* noOfBlocks, uint64_t* noOfSamples) {
     g_acq_data.trig_blockIndexRLE = blockCount - trigBlock;
     TRACE_SHORT("Post trig_blockIndexRLE %d last_blockIndexRLE %d blockCount %d", g_acq_data.trig_blockIndexRLE, g_acq_data.last_blockIndexRLE, blockCount)
     *noOfBlocks = blockCount;
-
-    if (munmap(map, g_la_acq_handle.dma_size) == -1) {
-        ERROR_LOG("Failed to munmap");
-        return RP_EUMD;
-    }
-
     return RP_OK;
 };
 
 int rp_GetValues(uint32_t* noOfSamples) {
     std::lock_guard lock(g_data_mtx);
-    TRACE_SHORT("Dma size %d dev %s", g_la_acq_handle.dma_size, g_la_acq_handle.dma_dev.c_str())
-    int16_t* map = (int16_t*)mmap(NULL, g_la_acq_handle.dma_size, PROT_READ | PROT_WRITE, MAP_SHARED, g_la_acq_handle.dma_fd, 0);
+    TRACE_SHORT("Dma size %zu dev %s", g_la_acq_handle.dma_size, g_la_acq_handle.dma_dev.c_str())
+    const int16_t* map = dmaRing();
     if (map == NULL) {
-        ERROR_LOG("Failed to mmap");
-        rp_CloseUnit();
         return RP_EMMD;
     }
 
@@ -499,11 +490,6 @@ int rp_GetValues(uint32_t* noOfSamples) {
         for (uint32_t i = 0; i < (*noOfSamples); i++) {
             g_acq_data.buf[i] = map[first_sample + i];
         }
-    }
-
-    if (munmap(map, g_la_acq_handle.dma_size) == -1) {
-        ERROR_LOG("Failed to munmap");
-        return RP_EUMD;
     }
 
     return RP_OK;

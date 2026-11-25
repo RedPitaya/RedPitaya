@@ -240,7 +240,7 @@ class CLAController {
     // Progress of the running decode over all enabled decoders, 0..1; -1 when no decode runs
     auto getDecodeProgress() -> float;
 
-    // Size of the reserved memory region for the DMA ring (device tree), bytes
+    // Bytes the DMA ring can take: the reserved memory region less the DMA descriptors
     auto getReservedMemorySize() -> uint64_t;
 
     // Memory a capture copy may still take: MemAvailable less a quarter of it (at least 8 MB)

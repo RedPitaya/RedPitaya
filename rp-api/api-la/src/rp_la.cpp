@@ -591,9 +591,9 @@ auto CLAController::removeDelegate() -> void {
 
 auto CLAController::getReservedMemorySize() -> uint64_t {
     uint32_t start = 0, size = 0;
-    if (rp_dmaReservedMemory(&start, &size) != RP_OK)
+    if (rp_dmaReservedMemory(&start, &size) != RP_OK || size <= RP_DMA_DESC_AREA)
         return 0;
-    return size;
+    return (size - RP_DMA_DESC_AREA) & ~7u;
 }
 
 auto CLAController::getUsableMemory() -> uint64_t {
