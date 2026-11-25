@@ -54,7 +54,7 @@ class CMemoryManager {
     auto setDACMemoryStreamMode(bool enable) -> void;
 
     // The memory comes from the rp_resmem driver as pages the kernel can pin: the network can
-    // send it with MSG_ZEROCOPY. False with /dev/mem (and for the heap of the host build).
+    // send it with MSG_ZEROCOPY. False for a "no-map" region (and for the heap of the host build).
     auto isZeroCopy() const -> bool { return m_zeroCopy; }
 
    private:

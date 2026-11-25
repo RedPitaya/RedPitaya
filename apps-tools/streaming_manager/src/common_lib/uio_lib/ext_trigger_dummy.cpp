@@ -6,10 +6,6 @@ auto CExtTrigger::create(const std::vector<UioT>&) -> Ptr {
     return Ptr();
 }
 
-auto CExtTrigger::createDevMem() -> Ptr {
-    return Ptr();
-}
-
 CExtTrigger::CExtTrigger(int _fd, void* _regset, size_t _regsetSize)
     : m_Fd(_fd),
       m_Regset(_regset),

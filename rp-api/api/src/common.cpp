@@ -284,31 +284,12 @@ int cmn_GetResmemRegion(uint32_t* _startAddress, uint32_t* _size) {
     return RP_OK;
 }
 
-/*
- * The reserved DMA region: from the rp_resmem driver when it is loaded, else from the
- * device tree (images without the driver).
- */
+/** The reserved DMA region, from the sysfs of the rp_resmem driver */
 int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     *_startAddress = 0;
     *_size = 0;
-    if (cmn_GetResmemRegion(_startAddress, _size) == RP_OK) {
-        return RP_OK;
-    }
-    int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
-        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
-        return RP_EOMD;
-    }
-    uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // unsigned: no sign extension of bytes >= 0x80
-    int sz = read(fd, &data, 8);
-
-    if (close(fd) < 0) {
-        return RP_EOMD;
-    }
-    if (sz == 8) {
-        *_startAddress = (uint32_t)data[0] << 24 | (uint32_t)data[1] << 16 | (uint32_t)data[2] << 8 | data[3];
-        *_size = (uint32_t)data[4] << 24 | (uint32_t)data[5] << 16 | (uint32_t)data[6] << 8 | data[7];
-    } else {
+    if (cmn_GetResmemRegion(_startAddress, _size) != RP_OK) {
+        ERROR_LOG("Error reading %s{base,size}: is the rp_resmem driver loaded?", RP_RESMEM_SYSFS);
         return RP_EOMD;
     }
     return RP_OK;

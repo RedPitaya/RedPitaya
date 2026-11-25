@@ -47,22 +47,6 @@ auto CExtTrigger::create(const std::vector<UioT>& uioList) -> Ptr {
     return Ptr();
 }
 
-auto CExtTrigger::createDevMem() -> Ptr {
-    int fd = open("/dev/mem", O_RDWR | O_SYNC);
-    if (fd == -1) {
-        ERROR_LOG("Error: open /dev/mem")
-        return Ptr();
-    }
-    size_t size = getpagesize();
-    void* regset = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, base_address);
-    if (regset == MAP_FAILED) {
-        ERROR_LOG("Error: mmap 0x%X", (uint32_t)base_address)
-        close(fd);
-        return Ptr();
-    }
-    return std::make_shared<CExtTrigger>(fd, regset, size);
-}
-
 CExtTrigger::CExtTrigger(int _fd, void* _regset, size_t _regsetSize)
     : m_Fd(_fd),
       m_Regset(_regset),

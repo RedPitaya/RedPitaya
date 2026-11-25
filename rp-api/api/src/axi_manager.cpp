@@ -14,7 +14,6 @@
 #include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
@@ -39,8 +38,6 @@ std::shared_ptr<CHolder> g_holder = NULL;
 std::mutex g_mutex;
 
 static int g_mem_fd = -1;
-// mmap offset of the region start: its base for /dev/rp_resmem, 0 for /dev/mem
-static uint32_t g_map_base = 0;
 
 int osc_axi_map(size_t size, size_t offset, void** mapped);
 int osc_axi_unmap(size_t size, void** mapped);
@@ -72,7 +69,7 @@ int osc_axi_map(size_t size, size_t offset, void** mapped) {
                   sysconf(_SC_PAGESIZE));
         return RP_EMMD;
     }
-    *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, g_mem_fd, offset - g_map_base);
+    *mapped = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, g_mem_fd, offset - g_startRegion);
     if (*mapped == MAP_FAILED) {
         ERROR_LOG("Error osc_axi_map: %s\n", strerror(errno));
         return RP_EMMD;
@@ -97,36 +94,17 @@ int osc_axi_unmap(size_t size, void** mapped) {
     return RP_OK;
 }
 
-/*
- * Opens the reserved region: through the rp_resmem driver when it is loaded (no /dev/mem
- * needed, the pages can be pinned), else /dev/mem with O_SYNC. Both map the memory
- * write-combined. The region itself (g_startRegion) comes from the driver too, see
- * cmn_GetReservedMemory(). RP_API_RESMEM=0 forces /dev/mem.
- */
-static int openRegion() {
-    const char* env = getenv("RP_API_RESMEM");
-    bool useResmem = !(env != NULL && strcmp(env, "0") == 0);
-    uint32_t base = 0, size = 0;
-    if (useResmem && cmn_GetResmemRegion(&base, &size) == RP_OK) {
-        int fd = open(RP_RESMEM_DEVICE, O_RDWR);
-        if (fd >= 0) {
-            g_map_base = base;
-            return fd;
-        }
-        WARNING("Error open %s: %s, /dev/mem is used", RP_RESMEM_DEVICE, strerror(errno));
-    }
-    g_map_base = 0;
-    return open("/dev/mem", O_RDWR | O_SYNC);
-}
-
 int axi_initManager() {
     std::lock_guard lock(g_mutex);
     if (g_mem_fd == -1) {
         ECHECK(axi_getOSReservedRegion(&g_startRegion, &g_sizeRegion))
         g_reserved.clear();
         g_index = 0;
-        g_mem_fd = openRegion();
+        // the reserved region through the rp_resmem driver (linux drivers/redpitaya/rp_resmem.c);
+        // the mmap offset is relative to the region start
+        g_mem_fd = open(RP_RESMEM_DEVICE, O_RDWR);
         if (g_mem_fd < 0) {
+            ERROR_LOG("Error open %s: %s", RP_RESMEM_DEVICE, strerror(errno));
             g_mem_fd = -1;
             return RP_EOMD;
         }

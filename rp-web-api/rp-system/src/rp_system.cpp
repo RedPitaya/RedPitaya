@@ -153,22 +153,19 @@ uint32_t getCurrentRAMSize() {
     return ram;
 }
 
+/** Size of the reserved DMA region, from the sysfs of the rp_resmem driver (linux drivers/redpitaya/rp_resmem.c) */
 uint32_t getReservedMemory() {
-    int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
-        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
+    FILE* f = fopen("/sys/class/misc/rp_resmem/size", "r");
+    if (f == NULL) {
+        fprintf(stderr, "[FATAL ERROR] Error open: /sys/class/misc/rp_resmem/size\n");
         return 0;
     }
-    uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // unsigned: no sign extension of bytes >= 0x80
-    int sz = read(fd, &data, 8);
-
-    if (close(fd) < 0) {
-        return 0;
+    unsigned long long size = 0;
+    if (fscanf(f, "%llx", &size) != 1 || size > UINT32_MAX) {
+        size = 0;
     }
-    if (sz == 8) {
-        return (uint32_t)data[4] << 24 | (uint32_t)data[5] << 16 | (uint32_t)data[6] << 8 | data[7];
-    }
-    return 0;
+    fclose(f);
+    return (uint32_t)size;
 }
 
 auto availableSpace(std::string dst, uint64_t* availableSize, uint64_t* fullSize) -> int {

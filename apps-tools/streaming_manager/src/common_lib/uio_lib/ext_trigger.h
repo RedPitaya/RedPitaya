@@ -27,9 +27,6 @@ class CExtTrigger {
 
     // Looks for the GPIO block (rp_gpio@40200000) or the 250-12 node (rp_ext_trig@40200000).
     static auto create(const std::vector<UioT>& uioList) -> Ptr;
-    // For a 250-12 bitstream whose device tree has no node for the register: maps it through /dev/mem.
-    // Only for a board where 0x40200000 is implemented, an unmapped AXI address hangs the bus.
-    static auto createDevMem() -> Ptr;
 
     CExtTrigger(int _fd, void* _regset, size_t _regsetSize);
     ~CExtTrigger();

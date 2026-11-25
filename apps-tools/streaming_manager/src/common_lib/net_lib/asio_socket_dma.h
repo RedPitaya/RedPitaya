@@ -54,7 +54,7 @@ class CAsioSocketDMA {
     // from a later send or flushZeroCopy(). A broken connection releases every pack at once.
     auto sendSyncBuffer(DataLib::CDataBuffersPackDMA::Ptr _buffer, Release release) -> bool;
     // Zero copy for the sends with a release; the pack memory must be pinnable (the rp_resmem
-    // driver mapping, not /dev/mem: the kernel refuses that one and the send copies). At most
+    // driver mapping of a region with struct pages, else the send copies). At most
     // maxPending packs wait for their completion, a send waits beyond that (0: for every pack).
     // The writer of the ring needs a free pack while the sender waits for a full one: see
     // zeroCopyMaxPending(), or the two wait for each other. Before start.

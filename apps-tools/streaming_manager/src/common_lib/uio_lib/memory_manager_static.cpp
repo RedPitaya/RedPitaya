@@ -21,31 +21,8 @@
 
 using namespace uio_lib;
 
-int getReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
-    *_startAddress = 0;
-    *_size = 0;
-    int fd = 0;
-    if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
-        fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");
-        return -1;
-    }
-    uint8_t data[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // unsigned: no sign extension of bytes >= 0x80
-    int sz = read(fd, &data, 8);
-
-    if (close(fd) < 0) {
-        return -1;
-    }
-    if (sz == 8) {
-        *_startAddress = (uint32_t)data[0] << 24 | (uint32_t)data[1] << 16 | (uint32_t)data[2] << 8 | data[3];
-        *_size = (uint32_t)data[4] << 24 | (uint32_t)data[5] << 16 | (uint32_t)data[6] << 8 | data[7];
-    } else {
-        return -1;
-    }
-    return 0;
-}
-
-// The rp_resmem driver (linux drivers/redpitaya/rp_resmem.c) maps the same region without
-// /dev/mem, page by page, so the network can send it without copying. Its sysfs holds the region.
+// The reserved region through the rp_resmem driver (linux drivers/redpitaya/rp_resmem.c): mapped page
+// by page, so the network can send it without copying. Its sysfs holds the region.
 #define RESMEM_DEVICE "/dev/rp_resmem"
 #define RESMEM_SYSFS "/sys/class/misc/rp_resmem/"
 
@@ -59,7 +36,7 @@ static bool readSysfsValue(const char* name, unsigned long long* value) {
     return ok;
 }
 
-// RP_STREAMING_RESMEM=0 keeps /dev/mem, RP_STREAMING_ZEROCOPY=0 the copying send (comparisons).
+// RP_STREAMING_ZEROCOPY=0 sends with a copy (comparisons)
 static bool envOff(const char* name) {
     const char* v = getenv(name);
     return v && strcmp(v, "0") == 0;
@@ -72,53 +49,25 @@ auto CMemoryManager::instance() -> Ptr {
 
 CMemoryManager::CMemoryManager()
     : m_lowReservedAddress(0), m_highReservedAddress(0), m_mem_fd(0), m_memory(MAP_FAILED), m_blockSize(MR_MEMORY_BLOCK_SIZE + DataLib::sizeHeader()), m_dacStreamMode(false) {
-    if (getReservedMemory(&m_startRAMAddress, &m_ramSize)) {
-        FATAL("Unable to get the reserved memory area.")
+    unsigned long long base = 0, size = 0, zeroCopy = 0;
+    if (!readSysfsValue("base", &base) || !readSysfsValue("size", &size) || !readSysfsValue("zerocopy", &zeroCopy) || size == 0) {
+        FATAL("Error reading %s{base,size,zerocopy}: is the rp_resmem driver loaded?", RESMEM_SYSFS)
     }
+    m_startRAMAddress = static_cast<uint32_t>(base);
+    m_ramSize = static_cast<uint32_t>(size);
     m_lowReservedAddress = m_startRAMAddress;
     m_highReservedAddress = m_startRAMAddress + m_ramSize;
-
-    unsigned long long base = 0, size = 0, zeroCopy = 0;
-    if (!envOff("RP_STREAMING_RESMEM") && readSysfsValue("base", &base) && readSysfsValue("size", &size) && readSysfsValue("zerocopy", &zeroCopy)) {
-        m_mem_fd = open(RESMEM_DEVICE, O_RDWR);
-        if (m_mem_fd >= 0) {
-            if (base != m_startRAMAddress || size != m_ramSize)
-                WARNING("%s holds 0x%llX size 0x%llX, the device tree region is 0x%X size 0x%X: the driver's is used", RESMEM_DEVICE, base,
-                        size, m_startRAMAddress, m_ramSize)
-            m_startRAMAddress = static_cast<uint32_t>(base);
-            m_ramSize = static_cast<uint32_t>(size);
-            m_lowReservedAddress = m_startRAMAddress;
-            m_highReservedAddress = m_startRAMAddress + m_ramSize;
-            m_memory = mmap(NULL, m_ramSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_mem_fd, 0);
-            if (m_memory == MAP_FAILED) {
-                WARNING("Error mmap %s, /dev/mem is used", RESMEM_DEVICE)
-                close(m_mem_fd);
-                m_mem_fd = -1;
-            } else {
-                m_zeroCopy = zeroCopy == 1 && !envOff("RP_STREAMING_ZEROCOPY");
-            }
-        }
+    m_mem_fd = open(RESMEM_DEVICE, O_RDWR);
+    if (m_mem_fd < 0) {
+        FATAL("Error opening device: %s", RESMEM_DEVICE)
     }
-    TRACE_SHORT("Reserved memory 0x%X - 0x%X through %s%s", m_lowReservedAddress, m_highReservedAddress, m_memory != MAP_FAILED ? RESMEM_DEVICE : "/dev/mem",
-                m_zeroCopy ? ", zero copy send" : "")
-
+    m_memory = mmap(NULL, m_ramSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_mem_fd, 0);
     if (m_memory == MAP_FAILED) {
-        m_mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-        if (m_mem_fd < 0) {
-            FATAL("Error opening device: /dev/mem")
-        }
-
-        if (m_lowReservedAddress % sysconf(_SC_PAGESIZE) != 0) {
-            FATAL(
-                "Error size. offset %% sysconf(_SC_PAGESIZE) = %ld  must be zero. sysconf(_SC_PAGESIZE) = %ld\n", (m_lowReservedAddress % sysconf(_SC_PAGESIZE)), sysconf(_SC_PAGESIZE))
-        }
-
-        m_memory = mmap(NULL, m_ramSize, PROT_READ | PROT_WRITE, MAP_SHARED, m_mem_fd, m_lowReservedAddress);
+        FATAL("Error mmap %s", RESMEM_DEVICE)
     }
+    m_zeroCopy = zeroCopy == 1 && !envOff("RP_STREAMING_ZEROCOPY");
+    TRACE_SHORT("Reserved memory 0x%X - 0x%X%s", m_lowReservedAddress, m_highReservedAddress, m_zeroCopy ? ", zero copy send" : "")
 
-    if (m_memory == MAP_FAILED) {
-        FATAL("Error mmap memory")
-    }
     if (!setReserverdMemory(MM_ADC, MIN_ADC_BLOCK * m_blockSize)) {
         FATAL("Can't reserve memory for ADC")
     }
