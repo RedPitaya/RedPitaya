@@ -262,9 +262,38 @@ rp_acq_ac_dc_mode_calib_t convertPower(rp_acq_ac_dc_mode_t ch) {
     return RP_AC_CALIB;
 }
 
+static bool cmn_ReadResmemValue(const char* name, unsigned long long* value) {
+    char path[128];
+    snprintf(path, sizeof(path), "%s%s", RP_RESMEM_SYSFS, name);
+    FILE* f = fopen(path, "r");
+    if (f == NULL) {
+        return false;
+    }
+    bool ok = fscanf(f, "%llx", value) == 1;
+    fclose(f);
+    return ok;
+}
+
+int cmn_GetResmemRegion(uint32_t* _startAddress, uint32_t* _size) {
+    unsigned long long base = 0, size = 0;
+    if (!cmn_ReadResmemValue("base", &base) || !cmn_ReadResmemValue("size", &size) || size == 0 || base + size > 0x100000000ull) {
+        return RP_EOMD;
+    }
+    *_startAddress = (uint32_t)base;
+    *_size = (uint32_t)size;
+    return RP_OK;
+}
+
+/*
+ * The reserved DMA region: from the rp_resmem driver when it is loaded, else from the
+ * device tree (images without the driver).
+ */
 int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size) {
     *_startAddress = 0;
     *_size = 0;
+    if (cmn_GetResmemRegion(_startAddress, _size) == RP_OK) {
+        return RP_OK;
+    }
     int fd = 0;
     if ((fd = open("/sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg", O_RDONLY)) == -1) {
         fprintf(stderr, "[FATAL ERROR] Error open: /sys/firmware/devicetree/base/reserved-memory/buffer@2000000_b/reg\n");

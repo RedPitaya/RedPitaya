@@ -106,6 +106,11 @@ int cmn_AreBitsSet(volatile uint32_t field, uint32_t bits, uint32_t mask, bool* 
 
 int cmn_GetReservedMemory(uint32_t* _startAddress, uint32_t* _size);
 
+// rp_resmem driver (linux drivers/redpitaya/rp_resmem.c): the reserved DMA region without /dev/mem
+#define RP_RESMEM_DEVICE "/dev/rp_resmem"
+#define RP_RESMEM_SYSFS "/sys/class/misc/rp_resmem/"
+int cmn_GetResmemRegion(uint32_t* _startAddress, uint32_t* _size);
+
 int cmn_CalculateBitShiftFor16BitMode();
 double cmn_GetSampleTimeNS();
 
