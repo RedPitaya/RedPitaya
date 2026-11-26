@@ -97,4 +97,12 @@ then
     bash "$HTTPS_CHECK"
 fi
 
+# With the web login on (settings page), the websocket servers are reached through nginx only:
+# their ports are closed to the network again after a boot.
+SETTINGS_SH=/opt/redpitaya/www/apps/main_menu/scripts/settings.sh
+if [[ -f "$SETTINGS_SH" ]]
+then
+    bash "$SETTINGS_SH" web-auth-firewall boot > /dev/null
+fi
+
 # Here you can specify commands for autorun at system startup

@@ -186,7 +186,8 @@
     // the bug report: the module builds it (RP_COMMAND 1), its progress comes over the socket of
     // the module (port 9099, /wsm over https), then /get_bug_report gives the archive
     function bugReport() {
-        const url = https() ? 'wss://' + location.host + '/wsm' : 'ws://' + location.hostname + ':9099';
+        const proxy = https() || document.cookie.indexOf('rp_ws_proxy=1') >= 0;
+        const url = proxy ? (https() ? 'wss://' : 'ws://') + location.host + '/wsm' : 'ws://' + location.hostname + ':9099';
         const back = document.createElement('div');
         back.className = 'dlg-back';
         back.innerHTML = '<div class="dlg" role="dialog" aria-modal="true" aria-labelledby="br-t">' +
@@ -495,6 +496,55 @@
         $('jp-btn').textContent = set ? 'Change password' : 'Set password';
     }
 
+    function renderWebAuth() {
+        const w = (S.status && S.status.web_auth) || {};
+        const on = !!w.enabled, pw = !!w.password;
+        const tag = $('web-state');
+        tag.textContent = on ? 'on' : 'off';
+        tag.className = on ? 'tag' : 'tag tag-w';
+        $('sw-web').checked = on;
+        $('sw-web').disabled = !pw;
+        $('web-note').textContent = pw ? (on ? 'Forgot the password? Over SSH: rm /etc/redpitaya/web_auth.json' : 'Switch it on: this browser stays logged in.') : 'Set a password first.';
+        $('wp-btn').textContent = pw ? 'Change password' : 'Set password';
+        $('logout').classList.toggle('hidden', !on);
+        $('web-http').classList.toggle('hidden', location.protocol === 'https:');
+    }
+
+    function wpState() {
+        const a = $('wp1').value, b = $('wp2').value;
+        const mismatch = b.length > 0 && a !== b;
+        $('wp-mismatch').classList.toggle('hidden', !mismatch);
+        $('wp2').classList.toggle('badb', mismatch);
+        $('wp-btn').disabled = a.length === 0 || a !== b;
+    }
+
+    // the login settings; the server gives this browser a session whenever the login stays on, and
+    // the page reloads so its sockets go through nginx (or back to their ports)
+    async function setWebAuth(body, okText) {
+        const msg = $('wp-msg');
+        msg.className = 'msg';
+        msg.textContent = '';
+        // before the request: its answer sets or clears the cookie
+        const wasProxy = document.cookie.indexOf('rp_ws_proxy=1') >= 0;
+        try {
+            const r = await postJSON('/set_web_auth', body);
+            const res = await r.json().catch(() => ({}));
+            if (!r.ok || !res.ok) throw new Error(res.error || 'The settings were not changed');
+            $('wp1').value = '';
+            $('wp2').value = '';
+            msg.className = 'msg ok';
+            msg.textContent = okText;
+            if (res.enabled !== wasProxy) {
+                setTimeout(() => location.reload(), 1200);
+            }
+        } catch (err) {
+            msg.className = 'msg bad';
+            msg.textContent = err.message;
+        }
+        wpState();
+        loadStatus();
+    }
+
     function jpState() {
         const a = $('jp1').value, b = $('jp2').value;
         const mismatch = b.length > 0 && a !== b;
@@ -639,6 +689,7 @@
         renderBoard();
         renderNet();
         renderSecurity();
+        renderWebAuth();
         renderFooter();
     }
 
@@ -700,6 +751,21 @@
         $('pw1').addEventListener('input', pwState);
         $('pw2').addEventListener('input', pwState);
         $('pw-form').addEventListener('submit', changePassword);
+        $('wp1').addEventListener('input', wpState);
+        $('wp2').addEventListener('input', wpState);
+        $('web-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const a = $('wp1').value;
+            if (a && a === $('wp2').value) setWebAuth({ password: a }, 'The password is set.');
+        });
+        $('sw-web').addEventListener('change', async (e) => {
+            const on = e.target.checked;
+            if (!on && !(await CLIENT.ask({ title: 'Switch the web login off', text: 'Anyone on the network uses the web interface again, and the ports of the application sockets open.', ok: 'Switch off', danger: true }))) {
+                e.target.checked = true;
+                return;
+            }
+            setWebAuth({ enabled: on }, on ? 'The login is on.' : 'The login is off.');
+        });
         $('jp1').addEventListener('input', jpState);
         $('jp2').addEventListener('input', jpState);
         $('jup-form').addEventListener('submit', (e) => {

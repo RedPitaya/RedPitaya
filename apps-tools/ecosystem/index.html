@@ -118,17 +118,23 @@
                     <h4 class="modal-title" id="bazaar_naLabel">Reboot</h4>
                 </div>
                 <div class="modal-body">
-                    <p>Would you like to reboot or poweroff your Red Pitaya?</p>
+                    <p id="reboot_text">Would you like to reboot or poweroff your Red Pitaya?</p>
                 </div>
                 <div class="modal-footer">
-                    <div class="bazaar-link" style="float: left;width: 30%;margin-right: 5%;">
-                        <a href="#" data-dismiss="modal" id="reboot_confirm" class="list-group-item btn">Reboot</a>
-                    </div>
-                    <div class="bazaar-link" style="float: left; width: 30%;">
-                        <a href="#" data-dismiss="modal" id="poweroff_confirm" class="list-group-item btn">Poweroff</a>
-                    </div>
-                    <div class="bazaar-link" style="float: left;width: 30%;margin-left: 5%;">
-                        <a href="#" data-dismiss="modal" class="list-group-item btn">Cancel</a>
+                    <!-- Log out: only while the web login is on and this browser is logged in -->
+                    <div style="display: flex; gap: 4%;">
+                        <div class="bazaar-link" style="flex: 1;">
+                            <a href="#" data-dismiss="modal" id="reboot_confirm" class="list-group-item btn">Reboot</a>
+                        </div>
+                        <div class="bazaar-link" style="flex: 1;">
+                            <a href="#" data-dismiss="modal" id="poweroff_confirm" class="list-group-item btn">Poweroff</a>
+                        </div>
+                        <div class="bazaar-link" id="logout_item" style="flex: 1; display: none;">
+                            <a href="/auth_logout" id="logout_confirm" class="list-group-item btn">Log out</a>
+                        </div>
+                        <div class="bazaar-link" style="flex: 1;">
+                            <a href="#" data-dismiss="modal" class="list-group-item btn">Cancel</a>
+                        </div>
                     </div>
                 </div>
             </div>

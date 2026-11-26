@@ -1,0 +1,82 @@
+<!--
+ *
+ * Red Pitaya: the login page of the web interface (nginx conf/lua/auth.lua). Shown only while the
+ * web login is on (settings page, Passwords). Self-contained: without a session nginx serves only
+ * this page, /favicon.ico and the flame icon.
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>Red Pitaya - Log in</title>
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; background: #343433; color: #cdcccc; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 14px; line-height: 1.42857143; }
+        .box { width: min(380px, 100%); box-sizing: border-box; background: #2b2b2a; border: 1px solid #999; padding: 28px 24px 24px; display: flex; flex-direction: column; gap: 18px; }
+        .head { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+        .head img { width: 64px; height: 64px; }
+        h1 { margin: 0; font-size: 20px; font-weight: 400; color: #e2e1e1; }
+        p { margin: 0; color: #a8a8a6; font-size: 13px; text-align: center; }
+        form { display: flex; flex-direction: column; gap: 14px; }
+        label { font-size: 12px; font-weight: 700; color: #cdcccc; display: flex; flex-direction: column; gap: 6px; }
+        input { height: 36px; box-sizing: border-box; border: 1px solid #8a8a88; border-radius: 3px; padding: 0 10px; font: inherit; font-size: 14px; background: rgba(0, 0, 0, .15); color: #e8e8e6; }
+        input:focus { outline: none; border-color: #47b2d1; }
+        button { height: 36px; border-radius: 3px; border: 1px solid #47b2d1; background: #47b2d1; color: #000; font: inherit; font-weight: 700; cursor: pointer; }
+        button:hover { background: #69d4d1; }
+        button[disabled] { opacity: .45; cursor: wait; }
+        .msg { min-height: 18px; font-size: 13px; color: #ff8f86; }
+    </style>
+</head>
+
+<body>
+    <main class="box">
+        <div class="head"><img src="/assets/images/rp_flame.png" alt="Red Pitaya"><h1>Log in</h1></div>
+        <p>The web interface of this board asks for its password. The owner sets it on the Settings page (Passwords).</p>
+        <form id="f">
+            <label>Password<input id="pw" type="password" autocomplete="current-password" autofocus required></label>
+            <button id="go" type="submit">Log in</button>
+            <div class="msg" id="msg" role="alert"></div>
+        </form>
+    </main>
+    <script>
+        (function () {
+            'use strict';
+            // back to the page that asked for the login: a path of this board only
+            var next = new URLSearchParams(location.search).get('next') || '/';
+            if (next.charAt(0) !== '/' || next.charAt(1) === '/' || next.charAt(1) === '\\') next = '/';
+            document.getElementById('f').addEventListener('submit', function (e) {
+                e.preventDefault();
+                var go = document.getElementById('go'), msg = document.getElementById('msg');
+                go.disabled = true;
+                msg.textContent = '';
+                fetch('/auth_login', {
+                    method: 'POST', cache: 'no-store', credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: document.getElementById('pw').value })
+                }).then(function (r) {
+                    return r.json().catch(function () { return {}; }).then(function (j) {
+                        if (r.ok && j.ok) {
+                            location.replace(next);
+                            return;
+                        }
+                        msg.textContent = j.error || 'The login failed';
+                        go.disabled = false;
+                        document.getElementById('pw').select();
+                    });
+                }).catch(function () {
+                    msg.textContent = 'No answer from the board';
+                    go.disabled = false;
+                });
+            });
+        })();
+    </script>
+</body>
+
+</html>

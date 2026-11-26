@@ -350,6 +350,11 @@
         var mc = new Hammer(myElement);
         mc.on('swipe', onSwipe);
         $("#reboot").click(function(event) {
+            // the web login sets rp_ws_proxy=1 with the session (nginx conf/lua/auth.lua)
+            var loggedIn = document.cookie.indexOf('rp_ws_proxy=1') >= 0;
+            $('#logout_item').toggle(loggedIn);
+            $('#reboot_text').text(loggedIn ? 'Would you like to reboot or poweroff your Red Pitaya, or log out?'
+                                            : 'Would you like to reboot or poweroff your Red Pitaya?');
             $('#reboot_dialog').modal("show");
         });
         $("#reboot_confirm").click(function(event) {

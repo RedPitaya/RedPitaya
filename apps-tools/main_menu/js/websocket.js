@@ -3,9 +3,9 @@
     // App configuration
     RP_WS_CLIENT.config = {};
     RP_WS_CLIENT.config.server_ip = ''; // Leave empty on production, it is used for testing only
-    // Over https, through nginx (/wsm): a plain ws:// would be blocked as mixed content.
-    RP_WS_CLIENT.config.socket_url = window.location.protocol === 'https:'
-        ? 'wss://' + window.location.host + '/wsm'
+    // Over https, through nginx (/wsm): a plain ws:// would be blocked as mixed content. Also with the web login on: its ports are closed then.
+    RP_WS_CLIENT.config.socket_url = (window.location.protocol === 'https:' || document.cookie.indexOf('rp_ws_proxy=1') >= 0)
+        ? (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/wsm'
         : 'ws://' + (RP_WS_CLIENT.config.server_ip.length ? RP_WS_CLIENT.config.server_ip : window.location.hostname) + ':9099';
     RP_WS_CLIENT.config.debug = true
 

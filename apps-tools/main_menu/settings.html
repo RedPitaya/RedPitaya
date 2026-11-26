@@ -49,6 +49,7 @@
                 <span class="pill">OS <b id="pill-os" class="hi">&mdash;</b></span>
                 <span class="pill">calibration <b id="pill-calib">&mdash;</b></span>
                 <span class="pill hidden" id="pill-clock">clock <b class="bad">missing</b></span>
+                <a href="/auth_logout" class="btn btn-g btn-sm hidden" id="logout">Log out</a>
                 <a href="https://redpitaya.readthedocs.io/en/latest/" target="_blank" rel="noopener" aria-label="Help" style="display: flex; margin-left: 8px"><img src="img/help_icon.png" alt="" style="width: 26px; height: 26px"></a>
             </div>
         </header>
@@ -178,6 +179,18 @@
                             <div class="frow"><label for="pw1">New password</label><input id="pw1" class="inp" type="password" autocomplete="new-password" maxlength="128"></div>
                             <div class="frow"><label for="pw2">Confirm password</label><input id="pw2" class="inp" type="password" autocomplete="new-password" maxlength="128"><p class="note bad hidden" id="pw-mismatch">The passwords do not match</p></div>
                             <div class="acts acts-in"><button class="btn btn-p" type="submit" id="pw-btn" disabled>Change password</button><span class="msg" id="pw-msg"></span></div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Web interface login</h2><span class="tag" id="web-state"></span></div>
+                        <p class="sub">Off: anyone on the network uses this web interface, its applications and Jupyter. On: the browser asks for this password first (once a week per browser), the application sockets are reached only through the web server and their ports are closed. SSH, SCPI and the streaming server are not affected.</p>
+                        <div class="banner hidden" id="web-http"><span>The page came over plain http: the password crosses the network readable. Switch HTTPS on in the <a href="/network_manager/">Network Manager</a>.</span></div>
+                        <form id="web-form" autocomplete="off">
+                            <div class="frow"><label for="wp1">New password</label><input id="wp1" class="inp" type="password" autocomplete="new-password" maxlength="128"></div>
+                            <div class="frow"><label for="wp2">Confirm password</label><input id="wp2" class="inp" type="password" autocomplete="new-password" maxlength="128"><p class="note bad hidden" id="wp-mismatch">The passwords do not match</p></div>
+                            <div class="acts acts-in"><button class="btn btn-p" type="submit" id="wp-btn" disabled>Set password</button><span class="msg" id="wp-msg"></span></div>
+                            <div class="frow"><label for="sw-web">Login</label><div class="row"><input id="sw-web" class="flipswitch" type="checkbox" data-on="ON" data-off="OFF" disabled></div><p class="note" id="web-note">Set a password first.</p></div>
                         </form>
                     </div>
 

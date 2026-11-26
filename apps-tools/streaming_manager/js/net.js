@@ -274,7 +274,8 @@
     // liveness: the classes of <body> drive the overlays of ../assets (inverted: a class hides one)
     const RP_CLIENT = {
         client_id: (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
-        socket_url: https ? 'wss://' + location.host + '/wsc' : 'ws://' + location.hostname + ':9091',
+        // through nginx over https and when the web login is on (its ports are closed then)
+        socket_url: (https || document.cookie.indexOf('rp_ws_proxy=1') >= 0) ? (https ? 'wss://' : 'ws://') + location.host + '/wsc' : 'ws://' + location.hostname + ':9091',
         ws: null,
         ping: -1,
         lastPing: -1,

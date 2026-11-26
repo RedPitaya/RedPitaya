@@ -8,6 +8,9 @@
 #   settings.sh stored        the stored settings of the applications
 #   settings.sh remove <dir>  removes the stored settings of one application
 #   settings.sh remove-all    removes the stored settings of all applications
+#   settings.sh web-auth-firewall on|off|boot
+#                             closes (on) or opens (off) the ports of the websocket servers to the
+#                             network; boot: as web_auth.json says
 #   settings.sh jupyter-password
 #                             sets the password of Jupyter from stdin (one line; empty: no
 #                             password) and restarts it
@@ -18,6 +21,12 @@ APPS_WWW=/opt/redpitaya/www/apps
 # the Jupyter service runs as root: its configuration is in /root/.jupyter; the JSON file is read
 # after jupyter_notebook_config.py of the image and holds only the password
 JUPYTER_PASSWORD_FILE=/root/.jupyter/jupyter_server_config.json
+# the web login (nginx conf/lua/auth.lua)
+WEB_AUTH_FILE=/etc/redpitaya/web_auth.json
+# reached through nginx only while the web login is on: 9002 (/wss), 9091 (/wsc), 9092 (/wsu),
+# 9099 (/wsm), 9900 (/wsd); the servers listen on IPv4 only. The port 81 server of nginx asks for
+# the login itself (nginx.conf): it listens on IPv6 too, which the kernel cannot filter.
+WEB_AUTH_PORTS="9002 9091 9092 9099 9900"
 
 # a JSON string from a shell value
 js() {
@@ -83,8 +92,14 @@ status() {
         jupyter_password=true
     fi
 
-    printf '{"uptime":%d,"dma_next":%d,"boot":{"total":%d,"used":%d},"led":%d,"fsck":%s,"root_default":%s,"jupyter_password":%s,"eth0":%s,"wlan0":%s}\n' \
-        "${uptime:-0}" "$dma_next" "${boot_total:-0}" "${boot_used:-0}" "${led:-0}" "$fsck" "$root_default" "$jupyter_password" "$(iface eth0)" "$(iface wlan0)"
+    local web_on=false web_pw=false
+    if [ -s "$WEB_AUTH_FILE" ]; then
+        grep -q '"hash" *: *"pbkdf2' "$WEB_AUTH_FILE" && web_pw=true
+        $web_pw && grep -q '"enabled" *: *true' "$WEB_AUTH_FILE" && web_on=true
+    fi
+
+    printf '{"uptime":%d,"dma_next":%d,"boot":{"total":%d,"used":%d},"led":%d,"fsck":%s,"root_default":%s,"jupyter_password":%s,"web_auth":{"enabled":%s,"password":%s},"eth0":%s,"wlan0":%s}\n' \
+        "${uptime:-0}" "$dma_next" "${boot_total:-0}" "${boot_used:-0}" "${led:-0}" "$fsck" "$root_default" "$jupyter_password" "$web_on" "$web_pw" "$(iface eth0)" "$(iface wlan0)"
 }
 
 # the name of the application that owns a settings directory: <app>_<board> or <app>
@@ -156,12 +171,39 @@ json.dump({"PasswordIdentityProvider": {"hashed_password": passwd(sys.stdin.read
     printf '{"ok":true}\n'
 }
 
+# Its own chain in INPUT. The kernel of the board has no nf_tables, no REJECT target and no IPv6
+# tables: iptables-legacy, IPv4, DROP. The loopback stays open, nginx reaches the servers there.
+web_auth_firewall() {
+    local mode=$1 t p
+    if [ "$mode" = boot ]; then
+        mode=off
+        if [ -s "$WEB_AUTH_FILE" ] && grep -q '"enabled" *: *true' "$WEB_AUTH_FILE" && grep -q '"hash" *: *"pbkdf2' "$WEB_AUTH_FILE"; then
+            mode=on
+        fi
+    fi
+    for t in /usr/sbin/iptables-legacy; do
+        [ -x "$t" ] || continue
+        $t -N RP_WEB_AUTH 2>/dev/null
+        $t -F RP_WEB_AUTH
+        while $t -D INPUT -j RP_WEB_AUTH 2>/dev/null; do :; done
+        if [ "$mode" = on ]; then
+            $t -A RP_WEB_AUTH -i lo -j RETURN
+            for p in $WEB_AUTH_PORTS; do
+                $t -A RP_WEB_AUTH -p tcp --dport "$p" -j DROP
+            done
+            $t -I INPUT -j RP_WEB_AUTH
+        fi
+    done
+    printf '{"ok":true,"firewall":"%s"}\n' "$mode"
+}
+
 case "$1" in
     status) status ;;
     stored) stored ;;
     remove) remove "$2" ;;
     remove-all) remove_all ;;
     jupyter-password) jupyter_password ;;
+    web-auth-firewall) web_auth_firewall "$2" ;;
     *)
         printf '{"ok":false,"error":"unknown command"}\n'
         exit 1
