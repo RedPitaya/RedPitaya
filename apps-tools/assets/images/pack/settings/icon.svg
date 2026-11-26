@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<!-- Settings: the tile of the main page (design canvas "Red Pitaya Settings Page", S3). 128/256/512.png are made from it. -->
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#575756"/><stop offset=".45" stop-color="#3b3b3a"/><stop offset="1" stop-color="#262625"/></linearGradient></defs>
+<rect x="2" y="2" width="124" height="124" rx="26" fill="url(#bg)" stroke="#ffffff" stroke-opacity=".16"/>
+<g transform="translate(7.7 7.7) scale(.88)" fill="none" stroke="#47b2d1" stroke-width="6" stroke-linejoin="round">
+<path d="M102.8 54.4 L113.5 57.0 L113.5 71.0 L102.8 73.6 L98.3 84.6 L104.0 94.0 L94.0 104.0 L84.6 98.3 L73.6 102.8 L71.0 113.5 L57.0 113.5 L54.4 102.8 L43.4 98.3 L34.0 104.0 L24.0 94.0 L29.7 84.6 L25.2 73.6 L14.5 71.0 L14.5 57.0 L25.2 54.4 L29.7 43.4 L24.0 34.0 L34.0 24.0 L43.4 29.7 L54.4 25.2 L57.0 14.5 L71.0 14.5 L73.6 25.2 L84.6 29.7 L94.0 24.0 L104.0 34.0 L98.3 43.4 Z"/>
+<rect x="49" y="49" width="30" height="30" rx="3" fill="#47b2d1" stroke="none"/>
+<g stroke-width="4" stroke-linecap="round"><line x1="56" y1="44" x2="56" y2="40"/><line x1="56" y1="84" x2="56" y2="88"/><line x1="44" y1="56" x2="40" y2="56"/><line x1="84" y1="56" x2="88" y2="56"/><line x1="64" y1="44" x2="64" y2="40"/><line x1="64" y1="84" x2="64" y2="88"/><line x1="44" y1="64" x2="40" y2="64"/><line x1="84" y1="64" x2="88" y2="64"/><line x1="72" y1="44" x2="72" y2="40"/><line x1="72" y1="84" x2="72" y2="88"/><line x1="44" y1="72" x2="40" y2="72"/><line x1="84" y1="72" x2="88" y2="72"/></g>
+</g>
+</svg>

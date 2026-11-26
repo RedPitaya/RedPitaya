@@ -17,7 +17,7 @@
         description: "System tools for configuring your Red Pitaya",
         image_path: "../assets/images/pack/system",
         image_sizes: "128;256;512",
-        applications: ["updater", "wifi", "licmngr", "calib_app"]
+        applications: ["settings", "updater", "wifi", "licmngr", "calib_app"]
     }, {
         name: "Development",
         description: "Documentation, tutorials and a lot of interesting stuff",
@@ -266,6 +266,12 @@
             image_path: "../streaming_manager/info/icon",
             image_sizes: "128;256;512",
             check_online: false, licensable: false, callback: undefined, type: 'run' },
+        { id: "settings", name: "Settings",
+            description: "Information about the board, sensors, system settings, root password",
+            url: "/main_menu/settings.html",
+            image_path: "../assets/images/pack/settings",
+            image_sizes: "128;256;512",
+            check_online: false, licensable: false, callback: undefined, type: 'run' },
         { id: "wifi", name: "Network manager",
             description: "Simple way to establish wireless connection with the Red Pitaya",
             url: "/network_manager/",
@@ -355,127 +361,13 @@
             setTimeout(function() { window.close(); }, 1000);
         });
 
-        $("#delete_settings_id").click(function(event) {
-            $.ajax({
-                method: "GET",
-                url: '/delete_settings'
-            })
-            .done(function(result) {
-                $("#sysinfo_dialog").modal("hide");
-            });
-        });
-
+        // the settings page replaces the System Info / System settings dialog
         $("#info").click(function(event) {
-
-
-            $.ajax({
-                    method: "GET",
-                    url: '/get_sysinfo'
-                })
-                .done(function(result) {
-                    try {
-                        const obj = JSON.parse(result);
-                        var model = obj['name'];
-                        var is_slave = obj['is_slave'];
-                        var is_valid_model = obj['is_model_valid'];
-                        if (is_slave.includes('slave mode')) model += " / Streaming Slave";
-                        $('#SI_B_MODEL').text(model);
-                        $('#SI_MAC').text(obj['mac']);
-                        $('#SI_DNA').text(obj['dna']);
-                        $('#SI_ECOSYSTEM').text(obj['ecosystem']['version'] + '-' + obj['ecosystem']['revision']);
-                        $('#SI_LINUX').text(obj['linux']);
-
-                        if (is_valid_model == "0"){
-                            $("#IS_VALID_MODEL").removeAttr("style");
-                        }
-
-                        var fpga_list = obj['fpga']
-                        $("#FPGA_LIST_TABLE_ID tr").remove();
-                        Object.keys(obj['fpga']).forEach(element => {
-                            $('#FPGA_LIST_TABLE_ID tbody').append('<tr style="height:40px;"><td>'+ element +'</td><td>'+ fpga_list[element] +'</td></tr>');
-                        });
-                    } catch (error) {
-                        console.error(error);
-                    }
-                })
-
-            $.ajax({
-                    method: "GET",
-                    url: '/get_led_status'
-                })
-                .done(function(msg) {
-                    msg = msg.trim();
-                    if (msg === "1" || msg === "2"){
-                        var chkBox = document.getElementById('fsck_chbox');
-                        chkBox.checked = true
-                        if (msg === "2"){
-                            $.ajax({
-                                method: "GET",
-                                url: '/set_led_status?enable=true'
-                            });
-                        }
-                    }
-                    if (msg === "0"){
-                        var chkBox = document.getElementById('fsck_chbox');
-                        chkBox.checked = false
-                    }
-
-                    console.log("LED STATUS ",msg)
-                })
-                .fail(function(msg) {
-                    console.log("LED STATUS fail")
-                });
-
-            $.ajax({
-                method: "GET",
-                url: '/get_fsck_status'
-            })
-            .done(function(msg) {
-                msg = msg.trim().split(" ").slice(-1)[0];
-                var chkBox = document.getElementById('fsck_chbox');
-                chkBox.checked = (msg !== "-1");
-
-                console.log("FSCK STATUS ",msg)
-            })
-            .fail(function(msg) {
-                console.log("FSCK STATUS fail")
-            });
-
-            $('#sysinfo_dialog').modal("show");
+            window.location = '/main_menu/settings.html';
         });
 
         $("#ext_con_but").click(function(event) {
             $('#ext_connections_dialog').modal("show");
-        });
-
-        $('#fsck_chbox').click(function(event){
-            var chkBox = document.getElementById('fsck_chbox');
-            if (chkBox.checked){
-                $.ajax({
-                    method: "GET",
-                    url: '/set_fsck?enable=true'
-                });
-            }else{
-                $.ajax({
-                    method: "GET",
-                    url: '/set_fsck?enable=false'
-                });
-            }
-        });
-
-        $('#led_chbox').click(function(event){
-            var chkBox = document.getElementById('led_chbox');
-            if (chkBox.checked){
-                $.ajax({
-                    method: "GET",
-                    url: '/set_led_status?enable=true'
-                });
-            }else{
-                $.ajax({
-                    method: "GET",
-                    url: '/set_led_status?enable=false'
-                });
-            }
         });
     });
 

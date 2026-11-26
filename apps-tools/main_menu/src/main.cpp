@@ -6,6 +6,7 @@
 #include <thread>
 
 #include <pwd.h>
+#include <string.h>
 #include <unistd.h>
 #include <filesystem>
 #include <fstream>
@@ -39,8 +40,47 @@ CStringParameter g_last_release("RP_LAST_RELEASE", CBaseParameter::RO, "", 250);
 
 CIntParameter adc_base_rate("RP_ADC_BASE_RATE", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
 CIntParameter dac_base_rate("RP_DAC_BASE_RATE", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
+// the rates of the board model: the settings page offers to go back to them
+CIntParameter adc_base_rate_default("RP_ADC_BASE_RATE_DEFAULT", CBaseParameter::RO, 0, 0, 0, INT32_MAX);
+CIntParameter dac_base_rate_default("RP_DAC_BASE_RATE_DEFAULT", CBaseParameter::RO, 0, 0, 0, INT32_MAX);
 CIntParameter rp_command("RP_COMMAND", CBaseParameter::RW, 0, 0, 0, INT32_MAX);
 CBooleanParameter calib_error_state("RP_CALIB_ERROR_STATE", CBaseParameter::RO, false, 0);
+
+/*
+ * A base rate: the user-defined value when there is one, else the default of the model. Read from
+ * the file and not from the loaded profile, which keeps what it read when it was loaded.
+ */
+static uint32_t baseRateDefault(const char* key) {
+    uint32_t value = 0;
+    if (rp_HPGetUserDefinedDefault(key, &value) != RP_HP_OK) {
+        value = strcmp(key, "fast_adc_rate") == 0 ? rp_HPGetBaseFastADCSpeedHzOrDefault() : rp_HPGetBaseFastDACSpeedHzOrDefault();
+    }
+    return value;
+}
+
+static uint32_t baseRate(const char* key) {
+    uint32_t value = 0;
+    if (rp_HPGetUserDefinedValue(key, &value) != RP_HP_OK) {
+        value = baseRateDefault(key);
+    }
+    return value;
+}
+
+// A new rate: the default of the model removes the user-defined value, any other one is stored
+static void setBaseRate(const char* key, CIntParameter& param) {
+    int old = param.Value();
+    param.Update();
+    if (param.Value() <= 0) {
+        param.SendValue(old);
+        return;
+    }
+    if ((uint32_t)param.Value() == baseRateDefault(key)) {
+        rp_HPDeleteUserDefinedValue(key);
+    } else {
+        rp_HPWriteUserDefinedValue(key, param.Value());
+    }
+    param.SendValue(baseRate(key));
+}
 
 // Reads the calibration error flag and pushes it to the UI only on change.
 static void updateCalibrationErrorState(bool force) {
@@ -98,8 +138,10 @@ int rp_app_init(void) {
 
     updateCalibrationErrorState(true);
 
-    adc_base_rate.SendValue(rp_HPGetBaseFastADCSpeedHzOrDefault());
-    dac_base_rate.SendValue(rp_HPGetBaseFastDACSpeedHzOrDefault());
+    adc_base_rate_default.SendValue(baseRateDefault("fast_adc_rate"));
+    dac_base_rate_default.SendValue(baseRateDefault("fast_dac_rate"));
+    adc_base_rate.SendValue(baseRate("fast_adc_rate"));
+    dac_base_rate.SendValue(baseRate("fast_dac_rate"));
 
     g_server = std::make_shared<rp_websocket::CWEBServer>();
     g_server->startServer(WEBPORT);
@@ -154,25 +196,11 @@ void UpdateParams(void) {
 
 void OnNewParams(void) {
     if (adc_base_rate.NewValue() != adc_base_rate.Value()) {
-        int old = adc_base_rate.Value();
-        adc_base_rate.Update();
-        if (adc_base_rate.Value() > 0) {
-            rp_HPWriteUserDefinedValue("fast_adc_rate", adc_base_rate.Value());
-        }
-        if (adc_base_rate.Value() == 0) {
-            adc_base_rate.SendValue(old);
-        }
+        setBaseRate("fast_adc_rate", adc_base_rate);
     }
 
     if (dac_base_rate.NewValue() != dac_base_rate.Value()) {
-        int old = dac_base_rate.Value();
-        dac_base_rate.Update();
-        if (dac_base_rate.Value() > 0) {
-            rp_HPWriteUserDefinedValue("fast_dac_rate", dac_base_rate.Value());
-        }
-        if (dac_base_rate.Value() == 0) {
-            dac_base_rate.SendValue(old);
-        }
+        setBaseRate("fast_dac_rate", dac_base_rate);
     }
 
     if (rp_command.IsNewValue()) {

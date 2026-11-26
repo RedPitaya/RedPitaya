@@ -1,0 +1,218 @@
+<!--
+ *
+ * Red Pitaya settings: the information about the board and the system settings
+ *
+ * (c) Red Pitaya  http://www.redpitaya.com
+ *
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Red Pitaya - Settings</title>
+    <link rel="icon" href="../assets/images/pack/settings/128.png">
+    <link rel="stylesheet" href="../assets/loader.css?1">
+    <link rel="stylesheet" href="../assets/lpulse.css?1">
+    <link rel="stylesheet" href="../assets/usermis.css?1">
+    <link rel="stylesheet" href="css/settings.css?1">
+    <script src="js/settings_net.js?1"></script>
+    <script src="js/settings.js?1"></script>
+</head>
+
+<body class="user_lost connection_lost">
+    <div id="loader-wrapper">
+        <div id="loader"></div>
+    </div>
+    <div id="user-wrapper">
+        <div id="user"></div>
+        <div id="user-desc">Device is already in use by another user.</div>
+    </div>
+    <div id="pulse-wrapper">
+        <div id="pulse"></div>
+        <div id="pulse-desc">Connection with device is lost.</div>
+    </div>
+
+    <div id="app" class="app">
+        <div class="strip">&nbsp;</div>
+        <header class="app-h">
+            <a href="/" title="Back to the applications" aria-label="Back to the applications" style="display: flex; align-items: center"><img src="../assets/images/navigation_arrow_left.png" alt="" style="height: 22px"></a>
+            <img src="../assets/images/navigation_logo.png" alt="Red Pitaya" style="width: 110px">
+            <div class="title">Settings</div>
+            <div class="tail">
+                <span class="pill" id="pill-model">&mdash;</span>
+                <span class="pill">OS <b id="pill-os" class="hi">&mdash;</b></span>
+                <span class="pill">calibration <b id="pill-calib">&mdash;</b></span>
+                <span class="pill hidden" id="pill-clock">clock <b class="bad">missing</b></span>
+                <a href="https://redpitaya.readthedocs.io/en/latest/" target="_blank" rel="noopener" aria-label="Help" style="display: flex; margin-left: 8px"><img src="img/help_icon.png" alt="" style="width: 26px; height: 26px"></a>
+            </div>
+        </header>
+        <div class="app-b">
+            <nav id="nav" class="app-nav" aria-label="Settings sections">
+                <div class="nav-g">Overview</div>
+                <button class="nav-b" type="button" data-go="device">Device</button>
+                <button class="nav-b" type="button" data-go="sensors">Sensors</button>
+                <div class="nav-g">Settings</div>
+                <button class="nav-b" type="button" data-go="system">System<span class="dot hidden" id="nav-dot" aria-label="Reboot required"></span></button>
+                <div class="nav-g">Security</div>
+                <button class="nav-b" type="button" data-go="security">Root password</button>
+                <div class="nav-g">Maintenance</div>
+                <button class="nav-b" type="button" data-go="maint">Maintenance</button>
+                <div class="foot">
+                    <div class="sep"></div>
+                    <div class="kvl"><span>Temperature</span><b id="ft-temp">&mdash;</b></div>
+                    <div class="kvl"><span>CPU load</span><b id="ft-cpu">&mdash;</b></div>
+                    <div class="kvl"><span>Uptime</span><b id="ft-up">&mdash;</b></div>
+                </div>
+            </nav>
+
+            <main id="main" class="app-main">
+                <div id="reboot-banner" class="banner hidden">
+                    <span id="reboot-text"></span>
+                    <button class="btn btn-g btn-sm" type="button" data-act="reboot" style="margin-left: auto">Reboot now</button>
+                </div>
+
+                <!-- Device -->
+                <section class="sec" data-sec="device">
+                    <div class="sec-top">
+                        <div class="sec-h"><h1>Device</h1><p class="sub">Everything a support request needs, on one sheet.</p></div>
+                        <div class="row">
+                            <span class="msg ok hidden" id="copied">Copied to the clipboard</span>
+                            <button class="btn btn-g" type="button" data-act="copy-all">Copy all</button>
+                            <button class="btn btn-g" type="button" data-act="bug-report" id="bug-btn">Download bug report</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="sheet">
+                            <table class="kvt"><caption>Board</caption><tbody id="t-board"></tbody></table>
+                            <table class="kvt"><caption>Software</caption><tbody id="t-soft"></tbody></table>
+                            <table class="kvt"><caption>Memory and storage</caption><tbody id="t-mem"></tbody></table>
+                            <table class="kvt"><caption>FPGA images</caption><tbody id="t-fpga"></tbody></table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sensors -->
+                <section class="sec" data-sec="sensors">
+                    <div class="sec-top">
+                        <div class="sec-h"><h1>Sensors</h1><p class="sub">Measured by the XADC of the Zynq.</p></div>
+                        <span class="pill"><b class="ok">&#9679;</b> live</span>
+                    </div>
+                    <div class="grid2">
+                        <div class="card">
+                            <div class="card-h"><h2 class="card-t">Temperature</h2><span class="sv" id="s-temp">&mdash;</span></div>
+                            <div class="gauge"><i id="g-temp"></i><span class="lim" style="left: 85%"></span></div>
+                            <div class="scale"><span>0 &deg;C</span><span>85 &deg;C limit</span><span>100 &deg;C</span></div>
+                            <svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="Temperature over the last minute"><line x1="0" y1="59" x2="300" y2="59" class="base"></line><path id="p-temp" d=""></path></svg>
+                            <div class="scale"><span>60 s ago</span><span id="s-temp-mm"></span><span>now</span></div>
+                        </div>
+                        <div class="card">
+                            <div class="card-h"><h2 class="card-t">CPU load</h2><span class="sv" id="s-cpu">&mdash;</span></div>
+                            <div class="gauge"><i id="g-cpu"></i></div>
+                            <div class="scale"><span>0 %</span><span>100 %</span></div>
+                            <svg class="spark" viewBox="0 0 300 60" preserveAspectRatio="none" role="img" aria-label="CPU load over the last minute"><line x1="0" y1="59" x2="300" y2="59" class="base"></line><path id="p-cpu" d=""></path></svg>
+                            <div class="scale"><span>60 s ago</span><span id="s-cpu-mm"></span><span>now</span></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Supply voltages</h2><span class="sub">The bar spans &plusmn;5 % of the nominal; the mark is the measured value.</span></div>
+                        <div class="scroll">
+                            <table class="vt">
+                                <thead><tr><th>Rail</th><th>Nominal</th><th>Measured</th><th>Deviation</th><th style="width: 34%">Range</th><th></th></tr></thead>
+                                <tbody id="t-volt"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- System -->
+                <section class="sec" data-sec="system">
+                    <div class="sec-h"><h1>System</h1><p class="sub">Settings of the board shared by all applications. Every change is saved at once.</p></div>
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Clock rates</h2><span class="sub" id="rate-model"></span></div>
+                        <p class="sub">Change them only when the board runs from an external clock. The applications take the sample rate and the time axis from them; a running application picks a change up after a restart.</p>
+                        <div>
+                            <div class="frow"><label for="rate-adc">ADC base rate</label>
+                                <div class="row"><div class="unit"><input id="rate-adc" class="inp" inputmode="decimal" data-rate="RP_ADC_BASE_RATE"><span>MHz</span></div><span class="tag" id="tag-adc"></span><button class="lnkb hidden" type="button" data-reset="RP_ADC_BASE_RATE" id="reset-adc"></button></div></div>
+                            <div class="frow"><label for="rate-dac">DAC base rate</label>
+                                <div class="row"><div class="unit"><input id="rate-dac" class="inp" inputmode="decimal" data-rate="RP_DAC_BASE_RATE"><span>MHz</span></div><span class="tag" id="tag-dac"></span><button class="lnkb hidden" type="button" data-reset="RP_DAC_BASE_RATE" id="reset-dac"></button></div></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Reserved memory for DMA</h2><span class="sub" id="dma-head"></span></div>
+                        <p class="sub">Streaming, the logic analyzer and the AXI mode of the API capture into this memory. Linux does not use it: a larger buffer leaves less RAM to the system.</p>
+                        <div class="seg" role="radiogroup" aria-label="Reserved memory for DMA" id="dma-seg"></div>
+                        <div class="memwrap">
+                            <div class="mem"><i id="m-dma" style="background: #47b2d1"></i><i id="m-used" style="background: #cdcccc"></i></div>
+                            <div class="legend">
+                                <span><b style="background: #47b2d1"></b><span id="l-dma">DMA</span></span>
+                                <span><b style="background: #cdcccc"></b><span id="l-used">Linux used</span></span>
+                                <span><b style="background: #444"></b><span id="l-free">free</span></span>
+                                <span style="margin-left: auto" id="l-ram"></span>
+                            </div>
+                        </div>
+                        <p class="sub" id="dma-note"></p>
+                    </div>
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Board</h2></div>
+                        <div>
+                            <div class="frow"><label for="sw-led">LEDs</label><div class="row"><input id="sw-led" class="flipswitch" type="checkbox" data-on="ON" data-off="OFF"><span class="msg ok hidden" id="led-saved">Saved</span></div><p class="note">The yellow (SD card), red (heartbeat) and Ethernet connector LEDs. Turn them off in a dark lab or for a light-sensitive measurement.</p></div>
+                            <div class="frow"><label for="sw-fsck">File system check at boot</label><div class="row"><input id="sw-fsck" class="flipswitch" type="checkbox" data-on="ON" data-off="OFF"><span class="msg ok hidden" id="fsck-saved">Saved</span></div><p class="note">Repairs the SD card after a power loss; the boot takes longer.</p></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Security -->
+                <section class="sec" data-sec="security">
+                    <div class="sec-h"><h1>Security</h1><p class="sub">Access to the board from the network.</p></div>
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Root password</h2></div>
+                        <p class="sub">The password of the root user: SSH, the serial console and the web terminal. Out of the box it is <span class="mono hi">root</span>; change it before the board goes on a shared network.</p>
+                        <form id="pw-form" autocomplete="off">
+                            <div class="frow"><label for="pw1">New password</label><input id="pw1" class="inp" type="password" autocomplete="new-password" maxlength="128"></div>
+                            <div class="frow"><label for="pw2">Confirm password</label><input id="pw2" class="inp" type="password" autocomplete="new-password" maxlength="128"><p class="note bad hidden" id="pw-mismatch">The passwords do not match</p></div>
+                            <div class="acts acts-in"><button class="btn btn-p" type="submit" id="pw-btn" disabled>Change password</button><span class="msg" id="pw-msg"></span></div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Maintenance -->
+                <section class="sec" data-sec="maint">
+                    <div class="sec-h"><h1>Maintenance</h1><p class="sub">Software, network, stored data and power.</p></div>
+                    <div class="grid2">
+                        <div class="card">
+                            <div class="card-h"><h2 class="card-t">Software</h2><a href="/updater/?type=run" class="btn btn-g">Open Updater</a></div>
+                            <table class="kvt"><tbody id="t-msoft"></tbody></table>
+                        </div>
+                        <div class="card">
+                            <div class="card-h"><h2 class="card-t">Network</h2><a href="/network_manager/" class="btn btn-g">Open Network Manager</a></div>
+                            <table class="kvt"><tbody id="t-net"></tbody></table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Stored application settings</h2><button class="btn btn-d" type="button" data-act="remove-all" id="rm-all">Remove all</button></div>
+                        <p class="sub">Each application keeps its last settings and starts with them. Remove them when an application misbehaves after an update. The calibration and the network settings are not touched.</p>
+                        <table class="vt" id="t-stored-wrap">
+                            <thead><tr><th>Application</th><th>Saved</th><th style="width: 1%"></th></tr></thead>
+                            <tbody id="t-stored"></tbody>
+                        </table>
+                        <p class="sub empty hidden" id="stored-empty">No stored settings: every application starts with its defaults.</p>
+                    </div>
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Power</h2></div>
+                        <div>
+                            <div class="frow"><span class="l">Reboot</span><div><button class="btn btn-g" type="button" data-act="reboot">Reboot</button></div><p class="note">The running application stops. The page reconnects by itself when the board is back.</p></div>
+                            <div class="frow"><span class="l">Power off</span><div><button class="btn btn-d" type="button" data-act="poweroff">Power off</button></div><p class="note">Shut down before you pull the power: the SD card stays consistent. To start again, switch the power off and on.</p></div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+
+</html>

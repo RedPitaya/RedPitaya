@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<!-- Settings: the icon of the header of the main page. 25/50.png are made from it. -->
+<g fill="none" stroke="#e8e8e6" stroke-width="11" stroke-linejoin="round"><path d="M102.8 54.4 L113.5 57.0 L113.5 71.0 L102.8 73.6 L98.3 84.6 L104.0 94.0 L94.0 104.0 L84.6 98.3 L73.6 102.8 L71.0 113.5 L57.0 113.5 L54.4 102.8 L43.4 98.3 L34.0 104.0 L24.0 94.0 L29.7 84.6 L25.2 73.6 L14.5 71.0 L14.5 57.0 L25.2 54.4 L29.7 43.4 L24.0 34.0 L34.0 24.0 L43.4 29.7 L54.4 25.2 L57.0 14.5 L71.0 14.5 L73.6 25.2 L84.6 29.7 L94.0 24.0 L104.0 34.0 L98.3 43.4 Z"/>
+<rect x="49" y="49" width="30" height="30" rx="3" fill="#e8e8e6" stroke="none"/></g>
+</svg>
