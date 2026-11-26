@@ -21,6 +21,7 @@
 #include <unistd.h>  // Needed for open() and close()
 #include <unistd.h>
 #include <algorithm>
+#include <mutex>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -1204,23 +1205,7 @@ int hp_cmn_GetFromConfig(rp_HPeModels_t model, const std::string& path, bool& no
 }
 
 int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value) {
-    std::string path;
-
-    if (strcmp(key, "fast_adc_rate") == 0)
-        path = ADC_BASE_RATE_PATH;
-    if (strcmp(key, "fast_dac_rate") == 0)
-        path = DAC_BASE_RATE_PATH;
-    if (strcmp(key, "gen_min_speed") == 0)
-        path = GEN_MIN_RATE_PATH;
-    if (strcmp(key, "gen_max_speed") == 0)
-        path = GEN_MAX_RATE_PATH;
-    if (strcmp(key, "spec_max_rate") == 0)
-        path = SPEC_ADC_PATH;
-    if (strcmp(key, "adc_low_pass") == 0)
-        path = ADC_LP_FILTER_PATH;
-    if (strcmp(key, "dac_low_pass") == 0)
-        path = DAC_LP_FILTER_PATH;
-
+    std::string path = hp_cmn_KeyPath(key);
     if (path == "")
         return RP_HP_EU;
 
@@ -1238,23 +1223,7 @@ int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value) {
 }
 
 int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key) {
-    std::string path;
-
-    if (strcmp(key, "fast_adc_rate") == 0)
-        path = ADC_BASE_RATE_PATH;
-    if (strcmp(key, "fast_dac_rate") == 0)
-        path = DAC_BASE_RATE_PATH;
-    if (strcmp(key, "gen_min_speed") == 0)
-        path = GEN_MIN_RATE_PATH;
-    if (strcmp(key, "gen_max_speed") == 0)
-        path = GEN_MAX_RATE_PATH;
-    if (strcmp(key, "spec_max_rate") == 0)
-        path = SPEC_ADC_PATH;
-    if (strcmp(key, "adc_low_pass") == 0)
-        path = ADC_LP_FILTER_PATH;
-    if (strcmp(key, "dac_low_pass") == 0)
-        path = DAC_LP_FILTER_PATH;
-
+    std::string path = hp_cmn_KeyPath(key);
     if (path == "")
         return RP_HP_EU;
 
@@ -1268,7 +1237,36 @@ int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key) {
     return RP_HP_EU;
 }
 
+// The profile values before the user-defined ones replace them, by the path of their file
+static std::mutex g_defaults_mutex;
+static std::map<std::string, uint32_t> g_defaults;
+
+std::string hp_cmn_KeyPath(const char* key) {
+    static const std::map<std::string, std::string> paths = {
+        {"fast_adc_rate", ADC_BASE_RATE_PATH}, {"fast_dac_rate", DAC_BASE_RATE_PATH}, {"gen_min_speed", GEN_MIN_RATE_PATH},
+        {"gen_max_speed", GEN_MAX_RATE_PATH},  {"spec_max_rate", SPEC_ADC_PATH},       {"adc_low_pass", ADC_LP_FILTER_PATH},
+        {"dac_low_pass", DAC_LP_FILTER_PATH}};
+    auto it = key ? paths.find(key) : paths.end();
+    return it == paths.end() ? std::string() : it->second;
+}
+
+int hp_cmn_GetDefault(const char* key, uint32_t* value) {
+    std::string path = hp_cmn_KeyPath(key);
+    if (path == "" || value == nullptr)
+        return RP_HP_EU;
+    std::lock_guard lock(g_defaults_mutex);
+    auto it = g_defaults.find(path);
+    if (it == g_defaults.end())
+        return RP_HP_EU;
+    *value = it->second;
+    return RP_HP_OK;
+}
+
 void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_HPeModels_t boardModel) {
+    {
+        std::lock_guard lock(g_defaults_mutex);
+        g_defaults[path] = original;
+    }
     bool noerror = true;
     int rate = hp_cmn_GetFromConfig(boardModel, path, noerror);
     target = (noerror) ? rate : original;

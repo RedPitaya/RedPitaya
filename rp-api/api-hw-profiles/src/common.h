@@ -119,6 +119,8 @@ void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_
 int hp_cmn_GetFromConfig(rp_HPeModels_t model, const std::string& path, bool& noerror);
 int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value);
 int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key);
+std::string hp_cmn_KeyPath(const char* key);
+int hp_cmn_GetDefault(const char* key, uint32_t* value);
 
 auto createDirectory(const std::string& _path) -> bool;
 

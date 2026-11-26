@@ -675,6 +675,24 @@ int rp_HPWriteUserDefinedValue(const char* key, int value);
 */
 int rp_HPDeleteUserDefinedValue(const char* key);
 
+/**
+* Reads a user-defined value from its file (not from the loaded profile, which keeps what it read at its load).
+* @param key - The key identifier, as for rp_HPWriteUserDefinedValue.
+* @param value - The stored value.
+* @return If the function is successful, the return value is RP_OK.
+* If there is no user-defined value for the key, the return value is any of RP_HP_E* values.
+*/
+int rp_HPGetUserDefinedValue(const char* key, uint32_t* value);
+
+/**
+* Reads the value of the profile that a user-defined value replaces (the default of the board model).
+* @param key - The key identifier, as for rp_HPWriteUserDefinedValue.
+* @param value - The default value.
+* @return If the function is successful, the return value is RP_OK.
+* If the function is unsuccessful (e.g., an unknown key), the return value is any of RP_HP_E* values that indicate an error.
+*/
+int rp_HPGetUserDefinedDefault(const char* key, uint32_t* value);
+
 #ifdef __cplusplus
 }
 #endif

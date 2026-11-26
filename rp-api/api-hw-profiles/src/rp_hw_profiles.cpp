@@ -1045,6 +1045,35 @@ int rp_HPWriteUserDefinedValue(const char* key, int value) {
     return ret;
 }
 
+int rp_HPGetUserDefinedValue(const char* key, uint32_t* value) {
+    rp_HPeModels_t model;
+    auto ret = rp_HPGetModel(&model);
+    if (ret != RP_HP_OK) {
+        return ret;
+    }
+    std::string path = hp_cmn_KeyPath(key);
+    if (path == "" || value == nullptr) {
+        return RP_HP_EU;
+    }
+    // read from the file every time: the profile keeps what it read when it was loaded
+    bool noerror = false;
+    int v = hp_cmn_GetFromConfig(model, path, noerror);
+    if (!noerror || v <= 0) {
+        return RP_HP_EU;
+    }
+    *value = (uint32_t)v;
+    return RP_HP_OK;
+}
+
+int rp_HPGetUserDefinedDefault(const char* key, uint32_t* value) {
+    int state;
+    // the profile records its values before the user-defined ones replace them
+    if (getProfile(&state) == nullptr) {
+        return state;
+    }
+    return hp_cmn_GetDefault(key, value);
+}
+
 int rp_HPDeleteUserDefinedValue(const char* key) {
     rp_HPeModels_t model;
     auto ret = rp_HPGetModel(&model);
