@@ -12,7 +12,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>  // Needed for O_RDONLY and O_CLOEXEC
-#include <pwd.h>
+#include <sys/stat.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -250,17 +250,6 @@ bool g_is_valid = false;
 // "STEM_125-14_TI_v1.3"
 // "STEM_65-16_TI_v1.3"
 
-const std::string& hp_cmn_GetHomeDirectory() {
-    static const std::string homeDir = []() -> std::string {
-        struct passwd* pw = getpwuid(getuid());
-        if (pw && pw->pw_dir) {
-            return std::string(pw->pw_dir);
-        }
-        return "";
-    }();
-    return homeDir;
-}
-
 void hp_checkModel(std::string& model, std::string& eth_mac, bool* is_valid) {
     auto modelLower = model;
     std::transform(modelLower.begin(), modelLower.end(), modelLower.begin(), [](unsigned char c) { return std::tolower(c); });
@@ -405,6 +394,8 @@ static void hp_cacheStore(const std::string& model, const std::string& mac) {
     }
 
     fprintf(f, "%s %s %s\n", HP_CACHE_MAGIC, model.c_str(), mac.empty() ? "-" : mac.c_str());
+    // readable by the processes that do not run as root (mkstemp makes it 0600)
+    fchmod(fd, 0644);
     fclose(f);
 
     if (rename(tmp, HP_CACHE_PATH) != 0) {
@@ -1191,8 +1182,7 @@ void hp_cmn_PrintPivotTable(char* _keys) {
 }
 
 int hp_cmn_GetFromConfig(rp_HPeModels_t model, const std::string& path, bool& noerror) {
-    static auto home_path = hp_cmn_GetHomeDirectory();
-    std::ifstream file(home_path + path + std::to_string((int)model) + ".conf");
+    std::ifstream file(path + std::to_string((int)model) + ".conf");
     int value = 0;
     if (file.is_open()) {
         file >> value;
@@ -1209,11 +1199,10 @@ int hp_cmn_WriteConfig(rp_HPeModels_t model, const char* key, int value) {
     if (path == "")
         return RP_HP_EU;
 
-    static auto home_path = hp_cmn_GetHomeDirectory();
-    if (!createDirectory(home_path + SETTINGS_PATH)) {
+    if (!createDirectory(SETTINGS_PATH)) {
         return RP_HP_EU;
     }
-    std::ofstream file(home_path + path + std::to_string((int)model) + ".conf");
+    std::ofstream file(path + std::to_string((int)model) + ".conf");
     if (file.is_open()) {
         file << value;
         file.close();
@@ -1227,8 +1216,7 @@ int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key) {
     if (path == "")
         return RP_HP_EU;
 
-    static auto home_path = hp_cmn_GetHomeDirectory();
-    std::string full_path = home_path + path + std::to_string((int)model) + ".conf";
+    std::string full_path = path + std::to_string((int)model) + ".conf";
 
     if (std::remove(full_path.c_str()) == 0) {
         return RP_HP_OK;

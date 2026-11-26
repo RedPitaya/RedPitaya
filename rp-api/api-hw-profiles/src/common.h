@@ -16,14 +16,17 @@
 #include <string>
 #include "rp_hw-profiles.h"
 
-#define SETTINGS_PATH "/.config/redpitaya/"
-#define ADC_BASE_RATE_PATH "/.config/redpitaya/fast_adc_rate_"
-#define DAC_BASE_RATE_PATH "/.config/redpitaya/fast_dac_rate_"
-#define SPEC_ADC_PATH "/.config/redpitaya/fast_adc_spectrum_resolution_"
-#define ADC_LP_FILTER_PATH "/.config/redpitaya/fast_adc_low_pass_filter_"
-#define DAC_LP_FILTER_PATH "/.config/redpitaya/fast_dac_low_pass_filter_"
-#define GEN_MIN_RATE_PATH "/.config/redpitaya/gen_min_speed_"
-#define GEN_MAX_RATE_PATH "/.config/redpitaya/gen_max_speed_"
+// The user-defined values of the profile, one file per key and board model
+// (<path><model>.conf): board-wide, written by root (the settings page, the profiles tool) and
+// read by every process, also the SCPI and streaming servers that do not run as root.
+#define SETTINGS_PATH "/etc/redpitaya/"
+#define ADC_BASE_RATE_PATH SETTINGS_PATH "fast_adc_rate_"
+#define DAC_BASE_RATE_PATH SETTINGS_PATH "fast_dac_rate_"
+#define SPEC_ADC_PATH SETTINGS_PATH "fast_adc_spectrum_resolution_"
+#define ADC_LP_FILTER_PATH SETTINGS_PATH "fast_adc_low_pass_filter_"
+#define DAC_LP_FILTER_PATH SETTINGS_PATH "fast_dac_low_pass_filter_"
+#define GEN_MIN_RATE_PATH SETTINGS_PATH "gen_min_speed_"
+#define GEN_MAX_RATE_PATH SETTINGS_PATH "gen_max_speed_"
 
 typedef struct {
     // Signed value

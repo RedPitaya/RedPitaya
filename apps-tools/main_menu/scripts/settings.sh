@@ -16,7 +16,16 @@
 #                             password) and restarts it
 #
 
-APPS_CONFIG=/root/.config/redpitaya/apps
+# the stored settings of the applications, by the user they run as: root (the web applications
+# in nginx) and redpitaya (the streaming server); an entry is <owner>/<directory>
+APPS_CONFIG_ROOT=/root/.config/redpitaya/apps
+APPS_CONFIG_REDPITAYA=/home/redpitaya/.config/redpitaya/apps
+apps_config() {
+    case "$1" in
+        root) printf '%s' "$APPS_CONFIG_ROOT" ;;
+        redpitaya) printf '%s' "$APPS_CONFIG_REDPITAYA" ;;
+    esac
+}
 APPS_WWW=/opt/redpitaya/www/apps
 # the Jupyter service runs as root: its configuration is in /root/.jupyter; the JSON file is read
 # after jupyter_notebook_config.py of the image and holds only the password
@@ -118,35 +127,44 @@ app_name() {
 }
 
 stored() {
-    local first=true dir name mtime
+    local first=true owner base path dir name mtime
     printf '['
-    if [ -d "$APPS_CONFIG" ]; then
-        for path in "$APPS_CONFIG"/*/; do
+    for owner in root redpitaya; do
+        base=$(apps_config "$owner")
+        [ -d "$base" ] || continue
+        for path in "$base"/*/; do
             [ -d "$path" ] || continue
             dir=$(basename "$path")
             name=$(app_name "$dir")
             mtime=$(find "$path" -printf '%T@\n' 2>/dev/null | sort -n | tail -1 | cut -d. -f1)
             $first || printf ','
             first=false
-            printf '{"dir":%s,"name":%s,"mtime":%d}' "$(js "$dir")" "$(js "$name")" "${mtime:-0}"
+            printf '{"dir":%s,"name":%s,"mtime":%d}' "$(js "$owner/$dir")" "$(js "$name")" "${mtime:-0}"
         done
-    fi
+    done
     printf ']\n'
 }
 
 remove() {
-    local dir=$1
-    # a directory name only: no path, no dots
-    if ! [[ "$dir" =~ ^[A-Za-z0-9_-]+$ ]] || [ ! -d "$APPS_CONFIG/$dir" ]; then
+    local entry=$1 owner dir base
+    # <owner>/<directory name>: no other path, no dots
+    if ! [[ "$entry" =~ ^(root|redpitaya)/([A-Za-z0-9_-]+)$ ]]; then
         printf '{"ok":false,"error":"no such settings"}\n'
         return 1
     fi
-    rm -rf -- "${APPS_CONFIG:?}/$dir"
+    owner=${BASH_REMATCH[1]}
+    dir=${BASH_REMATCH[2]}
+    base=$(apps_config "$owner")
+    if [ ! -d "$base/$dir" ]; then
+        printf '{"ok":false,"error":"no such settings"}\n'
+        return 1
+    fi
+    rm -rf -- "${base:?}/$dir"
     printf '{"ok":true}\n'
 }
 
 remove_all() {
-    rm -rf -- "${APPS_CONFIG:?}"/*
+    rm -rf -- "${APPS_CONFIG_ROOT:?}"/* "${APPS_CONFIG_REDPITAYA:?}"/*
     printf '{"ok":true}\n'
 }
 

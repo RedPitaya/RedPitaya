@@ -36,7 +36,7 @@ struct Options {
 #endif
         background = false;
 #ifdef RP_PLATFORM
-        conf_file = std::string("/root/.config/redpitaya/apps/streaming/streaming_config.json");
+        conf_file = std::string("/home/redpitaya/.config/redpitaya/apps/streaming/streaming_config.json");
 #else
         conf_file = std::string("./server.conf");
 #endif

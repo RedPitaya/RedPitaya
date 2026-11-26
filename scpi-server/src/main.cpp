@@ -46,9 +46,11 @@
 #define SIZE_ALIGMENT 64
 
 #define SCPI_ERROR_QUEUE_SIZE 16
-#define CONFIG_FILE_UART "/root/.scpi_uart"
-#define CONFIG_FILE_ARDUINO "/root/.scpi_arduino"
-#define CONFIG_FILE_ARDUINO_TCP "/root/.scpi_arduino_tcp"
+// The mode of the server, set by the SCPI page (scpi_manager/nginx.conf, as root); the server
+// runs as redpitaya and reads them from /etc/redpitaya
+#define CONFIG_FILE_UART "/etc/redpitaya/scpi_uart"
+#define CONFIG_FILE_ARDUINO "/etc/redpitaya/scpi_arduino"
+#define CONFIG_FILE_ARDUINO_TCP "/etc/redpitaya/scpi_arduino_tcp"
 
 #define XSTR(s) STR(s)
 #define STR(s) #s

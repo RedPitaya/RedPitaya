@@ -73,7 +73,7 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\n"
         "\t--background          -b        Run service in background.\n"
         "\t--file=PATH           -f FILE   Path to configuration file.\n"
-        "\t                                By default uses the config file /root/.config/redpitaya/apps/streaming/streaming_config.json.\n"
+        "\t                                By default uses the config file /home/redpitaya/.config/redpitaya/apps/streaming/streaming_config.json.\n"
         "\t--listen=ADDRESS      -l ADDRESS The address of the board the config and data ports listen on,\n"
         "\t                                for example 127.0.0.1 for the clients of the board only.\n"
         "\t                                By default every interface.\n"
@@ -83,7 +83,7 @@ auto ClientOpt::usage(char const* progName) -> void {
         "\t--version             -V        The version of the server.\n"
         "\n"
         "\t Example:\n"
-        "\t\t%s -b -f /root/.streaming_config_new.json\n";
+        "\t\t%s -b -f /home/redpitaya/streaming_config_new.json\n";
 
     auto n = name.c_str();
     printWithLog(LOG_INFO, stdout, format, n, n, n);

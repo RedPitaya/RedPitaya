@@ -38,7 +38,7 @@ auto gpioFileList() -> std::string;
 // Global variables
 // ============================================================================
 
-static constexpr char config_file[] = "/root/.config/redpitaya/apps/streaming/streaming_config.json";
+static constexpr char config_file[] = "/home/redpitaya/.config/redpitaya/apps/streaming/streaming_config.json";
 // set by streaming-server, which runs this module as the service of the page
 std::string g_configFile = config_file;
 std::string g_listenHost;
