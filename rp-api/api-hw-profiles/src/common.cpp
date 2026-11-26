@@ -1237,9 +1237,18 @@ int hp_cmn_DeleteConfig(rp_HPeModels_t model, const char* key) {
     return RP_HP_EU;
 }
 
-// The profile values before the user-defined ones replace them, by the path of their file
-static std::mutex g_defaults_mutex;
-static std::map<std::string, uint32_t> g_defaults;
+// The profile values before the user-defined ones replace them, by the path of their file.
+// Constructed on first use: applyRate() runs from static initialisers of other units (lcr_meter
+// in the statically linked scpi-server), before a namespace-scope object would exist.
+static std::mutex& defaultsMutex() {
+    static std::mutex m;
+    return m;
+}
+
+static std::map<std::string, uint32_t>& defaults() {
+    static std::map<std::string, uint32_t> m;
+    return m;
+}
 
 std::string hp_cmn_KeyPath(const char* key) {
     static const std::map<std::string, std::string> paths = {
@@ -1254,9 +1263,9 @@ int hp_cmn_GetDefault(const char* key, uint32_t* value) {
     std::string path = hp_cmn_KeyPath(key);
     if (path == "" || value == nullptr)
         return RP_HP_EU;
-    std::lock_guard lock(g_defaults_mutex);
-    auto it = g_defaults.find(path);
-    if (it == g_defaults.end())
+    std::lock_guard lock(defaultsMutex());
+    auto it = defaults().find(path);
+    if (it == defaults().end())
         return RP_HP_EU;
     *value = it->second;
     return RP_HP_OK;
@@ -1264,8 +1273,8 @@ int hp_cmn_GetDefault(const char* key, uint32_t* value) {
 
 void applyRate(uint32_t& target, uint32_t original, const std::string& path, rp_HPeModels_t boardModel) {
     {
-        std::lock_guard lock(g_defaults_mutex);
-        g_defaults[path] = original;
+        std::lock_guard lock(defaultsMutex());
+        defaults()[path] = original;
     }
     bool noerror = true;
     int rate = hp_cmn_GetFromConfig(boardModel, path, noerror);
