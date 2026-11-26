@@ -121,6 +121,13 @@ scpi_result_t RP_SetLogMode(scpi_t* context);
 scpi_result_t RP_SetRetOnError(scpi_t* context);
 bool getRetOnError();
 
+/**
+ * A device path a client may open with I2C:DEV / SPI:INIT:DEV: "<prefix><digits>" or, with
+ * dotted, "<prefix><digits>.<digits>" (/dev/i2c-0, /dev/spidev2.0). Anything else is refused:
+ * the server would open whatever path the network sends.
+ */
+bool isDevicePath(const char* path, size_t len, const char* prefix, bool dotted);
+
 uint8_t getADCChannels(scpi_t* context);
 uint8_t getDACChannels(scpi_t* context);
 uint32_t getDACRate(scpi_t* context);

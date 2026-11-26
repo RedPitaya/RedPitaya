@@ -47,6 +47,10 @@ scpi_result_t RP_SPI_InitDev(scpi_t* context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
         return SCPI_RES_ERR;
     }
+    if (!isDevicePath(param, param_len, "/dev/spidev", true)) {
+        SCPI_LOG_ERR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE, "Not an SPI device: /dev/spidevN.M expected.");
+        return SCPI_RES_ERR;
+    }
     strncpy(dev, param, param_len);
     auto result = rp_SPI_InitDevice(dev);
     if (RP_HW_OK != result) {

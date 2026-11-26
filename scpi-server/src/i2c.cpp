@@ -42,6 +42,10 @@ scpi_result_t RP_I2C_Dev(scpi_t* context) {
         SCPI_LOG_ERR(SCPI_ERROR_MISSING_PARAMETER, "Missing first parameter.");
         return SCPI_RES_ERR;
     }
+    if (!isDevicePath(param, param_len, "/dev/i2c-", false)) {
+        SCPI_LOG_ERR(SCPI_ERROR_ILLEGAL_PARAMETER_VALUE, "Not an I2C device: /dev/i2c-N expected.");
+        return SCPI_RES_ERR;
+    }
     strncpy(dev, param, param_len);
     auto result = rp_I2C_InitDevice(dev, dev_address);
     if (RP_HW_OK != result) {

@@ -8,6 +8,7 @@
  * (c) Red Pitaya  http://www.redpitaya.com
  */
 
+#include <string.h>
 #include <math.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -402,4 +403,32 @@ void stopAllThreads(scpi_t* context) {
     RP_LOG_INFO("%s", "Stopping the sweep generation service")
     stopLCR();
     RP_LOG_INFO("%s", "Stopping the lcr service")
+}
+
+bool isDevicePath(const char* path, size_t len, const char* prefix, bool dotted) {
+    size_t plen = strlen(prefix);
+    if (path == NULL || len <= plen || len > 64 || strncmp(path, prefix, plen) != 0) {
+        return false;
+    }
+    size_t i = plen;
+    auto digits = [&]() {
+        size_t start = i;
+        while (i < len && path[i] >= '0' && path[i] <= '9') {
+            i++;
+        }
+        return i > start;
+    };
+    if (!digits()) {
+        return false;
+    }
+    if (dotted) {
+        if (i >= len || path[i] != '.') {
+            return false;
+        }
+        i++;
+        if (!digits()) {
+            return false;
+        }
+    }
+    return i == len;
 }
