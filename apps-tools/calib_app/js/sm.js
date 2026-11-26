@@ -113,8 +113,11 @@ $(function() {
 
     // Stop the application when page is unloaded
     $(window).on('beforeunload', function() {
-        SM.ws.onclose = function() {}; // disable onclose handler first
-        SM.ws.close();
+        // the page may close before its socket is open
+        if (SM.ws) {
+            SM.ws.onclose = function() {}; // disable onclose handler first
+            SM.ws.close();
+        }
         $.ajax({
             url: SM.config.stop_app_url,
             async: false

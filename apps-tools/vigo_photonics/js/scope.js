@@ -1971,8 +1971,11 @@ $(function() {
 
     // Stop the application when page is unloaded
     $(window).on('beforeunload', function() {
-        OSC.ws.onclose = function() {}; // disable onclose handler first
-        OSC.ws.close();
+        // the page may close before its socket is open
+        if (OSC.ws) {
+            OSC.ws.onclose = function() {}; // disable onclose handler first
+            OSC.ws.close();
+        }
         $.ajax({
             url: OSC.config.stop_app_url,
             async: false

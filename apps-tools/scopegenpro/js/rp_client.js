@@ -233,7 +233,10 @@ $(function() {
     });
 
     $(window).on('beforeunload', function() {
-        RP_CLIENT.ws.onclose = function() {}; // disable onclose handler first
-        RP_CLIENT.ws.close();
+        // the page may close before its socket is open
+        if (RP_CLIENT.ws) {
+            RP_CLIENT.ws.onclose = function() {}; // disable onclose handler first
+            RP_CLIENT.ws.close();
+        }
     });
 })

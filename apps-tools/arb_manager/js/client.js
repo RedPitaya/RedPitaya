@@ -193,8 +193,11 @@ $(function() {
         var target = document.activeElement.href
         console.log(document.activeElement.href)
         if (!target.includes("/arb_mananger/")){
-            CLIENT.ws.onclose = function() {}; // disable onclose handler first
-            CLIENT.ws.close();
+            // the page may close before its socket is open
+            if (CLIENT.ws) {
+                CLIENT.ws.onclose = function() {}; // disable onclose handler first
+                CLIENT.ws.close();
+            }
             $.get(
                 CLIENT.config.stop_app_url
             )

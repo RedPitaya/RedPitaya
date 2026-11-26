@@ -196,8 +196,11 @@
 $(function() {
     // Stop the application when page is unloaded
     $(window).on('beforeunload', function() {
-        CLIENT.ws.onclose = function() {}; // disable onclose handler first
-        CLIENT.ws.close();
+        // the page may close before its socket is open
+        if (CLIENT.ws) {
+            CLIENT.ws.onclose = function() {}; // disable onclose handler first
+            CLIENT.ws.close();
+        }
         $.ajax({
             url: CLIENT.config.stop_app_url,
             async: false

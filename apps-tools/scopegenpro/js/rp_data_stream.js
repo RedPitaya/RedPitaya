@@ -159,7 +159,10 @@
 // Page onload event handler
 $(function() {
     $(window).on('beforeunload', function() {
-        RP_DATA_STREAM.ws.onclose = function() {}; // disable onclose handler first
-        RP_DATA_STREAM.ws.close();
+        // the page may close before its socket is open
+        if (RP_DATA_STREAM.ws) {
+            RP_DATA_STREAM.ws.onclose = function() {}; // disable onclose handler first
+            RP_DATA_STREAM.ws.close();
+        }
     });
 })
