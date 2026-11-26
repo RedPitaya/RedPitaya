@@ -474,11 +474,61 @@
             $('pw2').value = '';
             msg.className = 'msg ok';
             msg.textContent = 'The password is changed. Use it for the next login.';
+            loadStatus();
         } catch (err) {
             msg.className = 'msg bad';
             msg.textContent = err.message;
         }
         pwState();
+    }
+
+    function renderSecurity() {
+        const st = S.status;
+        if (!st) return;
+        $('root-default').classList.toggle('hidden', !st.root_default);
+        $('nav-dot-sec').classList.toggle('hidden', !st.root_default);
+        const set = !!st.jupyter_password;
+        const tag = $('jup-state');
+        tag.textContent = set ? 'password set' : 'no password';
+        tag.className = set ? 'tag' : 'tag tag-w';
+        $('jp-remove').classList.toggle('hidden', !set);
+        $('jp-btn').textContent = set ? 'Change password' : 'Set password';
+    }
+
+    function jpState() {
+        const a = $('jp1').value, b = $('jp2').value;
+        const mismatch = b.length > 0 && a !== b;
+        $('jp-mismatch').classList.toggle('hidden', !mismatch);
+        $('jp2').classList.toggle('badb', mismatch);
+        $('jp-btn').disabled = a.length === 0 || a !== b;
+    }
+
+    // Jupyter restarts with the new password and takes about half a minute to answer again
+    async function setJupyterPassword(password) {
+        const msg = $('jp-msg');
+        msg.className = 'msg';
+        msg.textContent = '';
+        const busy = busyDialog('Jupyter password', (password ? 'Setting the password' : 'Removing the password') + ' and restarting Jupyter…');
+        try {
+            const r = await postJSON('/set_jupyter_password', { password: password });
+            const res = await r.json().catch(() => ({}));
+            if (!r.ok || !res.ok) throw new Error(res.error || 'The password was not changed');
+            const end = Date.now() + 120000;
+            while (Date.now() < end) {
+                const a = await fetch('/jlab/api/status', { cache: 'no-store' }).then((x) => x.status).catch(() => 0);
+                if (a && a !== 502 && a !== 504) break;
+                await new Promise((res2) => setTimeout(res2, 2000));
+            }
+            busy.done();
+            $('jp1').value = '';
+            $('jp2').value = '';
+            msg.className = 'msg ok';
+            msg.textContent = password ? 'Jupyter asks for the new password now.' : 'Jupyter opens without a password now.';
+        } catch (err) {
+            busy.fail(err.message);
+        }
+        jpState();
+        loadStatus();
     }
 
     // ---------------------------------------------------------------------------------------
@@ -588,6 +638,7 @@
         renderDma();
         renderBoard();
         renderNet();
+        renderSecurity();
         renderFooter();
     }
 
@@ -649,6 +700,18 @@
         $('pw1').addEventListener('input', pwState);
         $('pw2').addEventListener('input', pwState);
         $('pw-form').addEventListener('submit', changePassword);
+        $('jp1').addEventListener('input', jpState);
+        $('jp2').addEventListener('input', jpState);
+        $('jup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const a = $('jp1').value;
+            if (a && a === $('jp2').value) setJupyterPassword(a);
+        });
+        $('jp-remove').addEventListener('click', async () => {
+            if (await CLIENT.ask({ title: 'Remove the Jupyter password', text: 'Jupyter opens without a password again: anyone on the network gets a root terminal in it.', ok: 'Remove', danger: true })) {
+                setJupyterPassword('');
+            }
+        });
 
         loadSysinfo();
         loadStatus();

@@ -15,7 +15,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Red Pitaya - Settings</title>
-    <link rel="icon" href="../assets/images/pack/settings/128.png">
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../assets/loader.css?1">
     <link rel="stylesheet" href="../assets/lpulse.css?1">
     <link rel="stylesheet" href="../assets/usermis.css?1">
@@ -59,7 +60,7 @@
                 <div class="nav-g">Settings</div>
                 <button class="nav-b" type="button" data-go="system">System<span class="dot hidden" id="nav-dot" aria-label="Reboot required"></span></button>
                 <div class="nav-g">Security</div>
-                <button class="nav-b" type="button" data-go="security">Root password</button>
+                <button class="nav-b" type="button" data-go="security">Passwords<span class="dot hidden" id="nav-dot-sec" aria-label="The root password is the default one"></span></button>
                 <div class="nav-g">Maintenance</div>
                 <button class="nav-b" type="button" data-go="maint">Maintenance</button>
                 <div class="foot">
@@ -168,14 +169,25 @@
 
                 <!-- Security -->
                 <section class="sec" data-sec="security">
-                    <div class="sec-h"><h1>Security</h1><p class="sub">Access to the board from the network.</p></div>
+                    <div class="sec-h"><h1>Passwords</h1><p class="sub">Access to the board from the network.</p></div>
                     <div class="card">
                         <div class="card-h"><h2 class="card-t">Root password</h2></div>
                         <p class="sub">The password of the root user: SSH, the serial console and the web terminal. Out of the box it is <span class="mono hi">root</span>; change it before the board goes on a shared network.</p>
+                        <div class="banner hidden" id="root-default"><span>The root password is still the default <span class="mono">root</span>: anyone who knows it can log in to the board over SSH and the web console.</span></div>
                         <form id="pw-form" autocomplete="off">
                             <div class="frow"><label for="pw1">New password</label><input id="pw1" class="inp" type="password" autocomplete="new-password" maxlength="128"></div>
                             <div class="frow"><label for="pw2">Confirm password</label><input id="pw2" class="inp" type="password" autocomplete="new-password" maxlength="128"><p class="note bad hidden" id="pw-mismatch">The passwords do not match</p></div>
                             <div class="acts acts-in"><button class="btn btn-p" type="submit" id="pw-btn" disabled>Change password</button><span class="msg" id="pw-msg"></span></div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-h"><h2 class="card-t">Jupyter password</h2><span class="tag" id="jup-state"></span></div>
+                        <p class="sub">Jupyter (Python programming, <span class="mono hi">/jlab</span>) runs as root: its terminal and notebooks control the whole board. Without a password anyone on the network can open it. With a password Jupyter asks for it once per browser.</p>
+                        <form id="jup-form" autocomplete="off">
+                            <div class="frow"><label for="jp1">New password</label><input id="jp1" class="inp" type="password" autocomplete="new-password" maxlength="128"></div>
+                            <div class="frow"><label for="jp2">Confirm password</label><input id="jp2" class="inp" type="password" autocomplete="new-password" maxlength="128"><p class="note bad hidden" id="jp-mismatch">The passwords do not match</p></div>
+                            <div class="acts acts-in"><button class="btn btn-p" type="submit" id="jp-btn" disabled>Set password</button><button class="btn btn-d hidden" type="button" id="jp-remove">Remove password</button><span class="msg" id="jp-msg"></span></div>
                         </form>
                     </div>
                 </section>

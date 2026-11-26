@@ -8,10 +8,16 @@
 #   settings.sh stored        the stored settings of the applications
 #   settings.sh remove <dir>  removes the stored settings of one application
 #   settings.sh remove-all    removes the stored settings of all applications
+#   settings.sh jupyter-password
+#                             sets the password of Jupyter from stdin (one line; empty: no
+#                             password) and restarts it
 #
 
 APPS_CONFIG=/root/.config/redpitaya/apps
 APPS_WWW=/opt/redpitaya/www/apps
+# the Jupyter service runs as root: its configuration is in /root/.jupyter; the JSON file is read
+# after jupyter_notebook_config.py of the image and holds only the password
+JUPYTER_PASSWORD_FILE=/root/.jupyter/jupyter_server_config.json
 
 # a JSON string from a shell value
 js() {
@@ -65,8 +71,20 @@ status() {
         fsck=true
     fi
 
-    printf '{"uptime":%d,"dma_next":%d,"boot":{"total":%d,"used":%d},"led":%d,"fsck":%s,"eth0":%s,"wlan0":%s}\n' \
-        "${uptime:-0}" "$dma_next" "${boot_total:-0}" "${boot_used:-0}" "${led:-0}" "$fsck" "$(iface eth0)" "$(iface wlan0)"
+    # the root password is still the one of the image (root)
+    local root_default=false hash
+    hash=$(awk -F: '$1 == "root" {print $2}' /etc/shadow)
+    if [ -n "$hash" ] && perl -e 'exit(crypt("root", $ARGV[0]) eq $ARGV[0] ? 0 : 1)' "$hash"; then
+        root_default=true
+    fi
+
+    local jupyter_password=false
+    if [ -s "$JUPYTER_PASSWORD_FILE" ] && grep -q '"hashed_password": *"[^"]' "$JUPYTER_PASSWORD_FILE"; then
+        jupyter_password=true
+    fi
+
+    printf '{"uptime":%d,"dma_next":%d,"boot":{"total":%d,"used":%d},"led":%d,"fsck":%s,"root_default":%s,"jupyter_password":%s,"eth0":%s,"wlan0":%s}\n' \
+        "${uptime:-0}" "$dma_next" "${boot_total:-0}" "${boot_used:-0}" "${led:-0}" "$fsck" "$root_default" "$jupyter_password" "$(iface eth0)" "$(iface wlan0)"
 }
 
 # the name of the application that owns a settings directory: <app>_<board> or <app>
@@ -117,11 +135,33 @@ remove_all() {
     printf '{"ok":true}\n'
 }
 
+# The password of Jupyter: the hash of jupyter_server (argon2) in its own configuration file; an
+# empty password removes the file, Jupyter opens without one again. Restarts the service.
+jupyter_password() {
+    local password
+    IFS= read -r password || true
+    if [ -z "$password" ]; then
+        rm -f "$JUPYTER_PASSWORD_FILE"
+    else
+        mkdir -p "$(dirname "$JUPYTER_PASSWORD_FILE")"
+        local tmp="$JUPYTER_PASSWORD_FILE.new"
+        ( umask 077; printf '%s' "$password" | python3 -c '
+import json, sys
+from jupyter_server.auth import passwd
+json.dump({"PasswordIdentityProvider": {"hashed_password": passwd(sys.stdin.read())}}, sys.stdout, indent=2)
+' > "$tmp" ) || { rm -f "$tmp"; printf '{"ok":false,"error":"the password could not be hashed"}\n'; return 1; }
+        mv "$tmp" "$JUPYTER_PASSWORD_FILE"
+    fi
+    systemctl restart jupyter
+    printf '{"ok":true}\n'
+}
+
 case "$1" in
     status) status ;;
     stored) stored ;;
     remove) remove "$2" ;;
     remove-all) remove_all ;;
+    jupyter-password) jupyter_password ;;
     *)
         printf '{"ok":false,"error":"unknown command"}\n'
         exit 1
